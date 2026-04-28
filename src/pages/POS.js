@@ -185,9 +185,41 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
             <strong style={{ textTransform: 'capitalize' }}>
               {receipt.payment_method === 'mobile_money'
                 ? 'Mobile Money'
+                : receipt.payment_method === 'mixed'
+                ? 'Split (mixed)'
                 : receipt.payment_method}
             </strong>
           </div>
+          {/* Split-tender breakdown — only shown when the sale was paid via
+              multiple methods. Mirrors what we send to the printed receipt
+              below so the customer can see e.g. "Cash $10 / EcoCash $15". */}
+          {receipt.payment_method === 'mixed' && Array.isArray(receipt.payments_data) && receipt.payments_data.length > 0 && (
+            <div
+              style={{
+                marginBottom: 6,
+                paddingLeft: 8,
+                borderLeft: '3px solid #1a6b3a',
+              }}
+            >
+              {receipt.payments_data.map((leg, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    fontSize: 11,
+                    color: '#374151',
+                  }}
+                >
+                  <span style={{ textTransform: 'capitalize' }}>
+                    {leg.method === 'mobile_money' ? 'EcoCash' : leg.method}
+                    {leg.reference ? ` · ${leg.reference}` : ''}
+                  </span>
+                  <span>{fmt(parseFloat(leg.amount) || 0, 'zwd')}</span>
+                </div>
+              ))}
+            </div>
+          )}
           {receipt.amount_tendered > receipt.total && (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: '#6b7280' }}>Change:</span>
@@ -219,7 +251,14 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
                   <tr style="font-weight:bold;font-size:14px"><td>TOTAL</td><td style="text-align:right">$${parseFloat(receipt.total || 0).toFixed(2)}</td></tr>
                 </table>
                 <hr style="border:none;border-top:1px dashed #ccc"/>
-                <p style="text-align:center;font-size:10px;color:#666">Payment: ${receipt.payment_method === 'mobile_money' ? 'Mobile Money' : receipt.payment_method}</p>
+                <p style="text-align:center;font-size:10px;color:#666">Payment: ${receipt.payment_method === 'mobile_money' ? 'Mobile Money' : receipt.payment_method === 'mixed' ? 'Split' : receipt.payment_method}</p>
+                ${receipt.payment_method === 'mixed' && Array.isArray(receipt.payments_data) && receipt.payments_data.length > 0
+                  ? '<table style="width:100%;font-size:10px;color:#666;margin-top:-6px">' +
+                      receipt.payments_data.map((leg) =>
+                        `<tr><td style="padding:1px 0">&nbsp;&nbsp;${leg.method === 'mobile_money' ? 'EcoCash' : (leg.method || '')}${leg.reference ? ' · ' + leg.reference : ''}</td><td style="text-align:right;padding:1px 0">$${(parseFloat(leg.amount) || 0).toFixed(2)}</td></tr>`
+                      ).join('') +
+                    '</table>'
+                  : ''}
                 <p style="text-align:center;font-size:10px;color:#666">Thank you for shopping with us!</p>
               </body></html>`);
               printWin.document.close();
@@ -599,6 +638,16 @@ export default function POS() {
   const [tax, setTax] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [amountTendered, setAmountTendered] = useState('');
+  // Split-tender ("mixed") payments: customer pays e.g. $10 cash + $15 EcoCash
+  // on one ticket. When `splitMode` is on, the cashier maintains a list of
+  // legs (method + amount) instead of choosing a single method, and we send
+  // `payments_data` to the backend. Backend auto-flips payment_method to
+  // 'mixed' when the array contains 2+ distinct methods.
+  const [splitMode, setSplitMode] = useState(false);
+  const [splitPayments, setSplitPayments] = useState([
+    { method: 'cash', amount: '', reference: '' },
+    { method: 'mobile_money', amount: '', reference: '' },
+  ]);
   const [receipt, setReceipt] = useState(null);
   const [showReceipt, setShowReceipt] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
@@ -907,6 +956,12 @@ export default function POS() {
     setLoyaltyMember(null);
     setDiscountReason('');
     setDiscountNotes('');
+    // Reset split-tender mode so the next ticket starts on a single method.
+    setSplitMode(false);
+    setSplitPayments([
+      { method: 'cash', amount: '', reference: '' },
+      { method: 'mobile_money', amount: '', reference: '' },
+    ]);
   };
 
   // Broadcast current state to customer-facing display every render.
@@ -1089,6 +1144,46 @@ export default function POS() {
       }
     }
 
+    // Split-tender validation. We must collect at least the grand total
+    // across the legs before submitting; backend will reject otherwise. The
+    // last leg can be cash with overage (change given), but at minimum the
+    // sum needs to cover the bill so the cashier can't accidentally
+    // undercharge by a few cents.
+    let payments_data_payload = null;
+    let effective_payment_method = paymentMethod;
+    let effective_amount_tendered = parseFloat(amountTendered) || grandTotal;
+    if (splitMode) {
+      const cleanedLegs = splitPayments
+        .map((p) => ({
+          method: p.method,
+          amount: parseFloat(p.amount) || 0,
+          reference: (p.reference || '').trim(),
+        }))
+        .filter((p) => p.amount > 0 && p.method);
+      if (cleanedLegs.length === 0) {
+        alert('Add at least one payment leg with an amount greater than zero, or switch off split mode.');
+        return;
+      }
+      const tenderedSum = cleanedLegs.reduce((s, p) => s + p.amount, 0);
+      if (tenderedSum + 0.0001 < grandTotal) {
+        alert(
+          `Split payments total ${tenderedSum.toFixed(2)} but the sale is ${grandTotal.toFixed(2)}. Add the remaining ${(grandTotal - tenderedSum).toFixed(2)} before completing.`
+        );
+        return;
+      }
+      payments_data_payload = cleanedLegs.map((p) => {
+        const leg = { method: p.method, amount: p.amount };
+        if (p.reference) leg.reference = p.reference;
+        return leg;
+      });
+      // Distinct methods → backend will auto-set 'mixed'. We pre-set it here
+      // so optimistic receipt rendering shows the right label even before
+      // the response lands.
+      const distinctMethods = new Set(cleanedLegs.map((p) => p.method));
+      effective_payment_method = distinctMethods.size > 1 ? 'mixed' : cleanedLegs[0].method;
+      effective_amount_tendered = tenderedSum;
+    }
+
     const saleData = {
       session: activeSessions[0].id,
       customer_name: loyaltyMember
@@ -1105,10 +1200,13 @@ export default function POS() {
       discount: discountAmount,
       tax: taxAmount,
       total: grandTotal,
-      payment_method: paymentMethod,
-      amount_tendered: parseFloat(amountTendered) || grandTotal,
-      change_given: Math.max(0, (parseFloat(amountTendered) || grandTotal) - grandTotal),
+      payment_method: effective_payment_method,
+      amount_tendered: effective_amount_tendered,
+      change_given: Math.max(0, effective_amount_tendered - grandTotal),
     };
+    if (payments_data_payload) {
+      saleData.payments_data = payments_data_payload;
+    }
 
     if (ageVerification && !ageVerification.skipped) {
       saleData.age_verified_by = ageVerification.verifiedBy || null;
@@ -1701,50 +1799,234 @@ export default function POS() {
               {/* Payment Method Buttons */}
               <div style={S.paymentBtns}>
                 <button
-                  onClick={() => setPaymentMethod('cash')}
+                  onClick={() => { setSplitMode(false); setPaymentMethod('cash'); }}
                   style={{
                     ...S.paymentBtn,
-                    ...(paymentMethod === 'cash' ? S.paymentBtnActive : {}),
+                    ...(!splitMode && paymentMethod === 'cash' ? S.paymentBtnActive : {}),
                   }}
                 >
                   💵 Cash
                 </button>
                 <button
-                  onClick={() => setPaymentMethod('mobile_money')}
+                  onClick={() => { setSplitMode(false); setPaymentMethod('mobile_money'); }}
                   style={{
                     ...S.paymentBtn,
-                    ...(paymentMethod === 'mobile_money' ? S.paymentBtnActive : {}),
+                    ...(!splitMode && paymentMethod === 'mobile_money' ? S.paymentBtnActive : {}),
                   }}
                 >
                   📱 EcoCash
                 </button>
                 <button
-                  onClick={() => setPaymentMethod('card')}
+                  onClick={() => { setSplitMode(false); setPaymentMethod('card'); }}
                   style={{
                     ...S.paymentBtn,
-                    ...(paymentMethod === 'card' ? S.paymentBtnActive : {}),
+                    ...(!splitMode && paymentMethod === 'card' ? S.paymentBtnActive : {}),
                   }}
                 >
                   💳 Card
                 </button>
+                <button
+                  onClick={() => setSplitMode((v) => !v)}
+                  title="Split payment across multiple methods (e.g. cash + EcoCash)"
+                  style={{
+                    ...S.paymentBtn,
+                    ...(splitMode ? S.paymentBtnActive : {}),
+                  }}
+                >
+                  🔀 Split
+                </button>
               </div>
 
-              {/* Amount Tendered */}
-              <div style={S.section}>
-                <div style={S.sectionLabel}>Amount Tendered</div>
-                <input
-                  type="number"
-                  placeholder="0"
-                  value={amountTendered}
-                  onChange={(e) => setAmountTendered(e.target.value)}
-                  style={S.input}
-                />
-                {change > 0 && (
-                  <div style={S.changeDisplay}>
-                    Change: {fmt(change, 'zwd')}
+              {/* Split-tender editor — only visible when Split mode is on. */}
+              {splitMode ? (
+                <div
+                  style={{
+                    background: '#f9fafb',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: 8,
+                    padding: 10,
+                    marginTop: 8,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: '#374151',
+                      marginBottom: 6,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                    }}
+                  >
+                    <span>Payment Legs</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSplitPayments((legs) => [
+                          ...legs,
+                          { method: 'cash', amount: '', reference: '' },
+                        ])
+                      }
+                      style={{
+                        padding: '2px 8px',
+                        background: '#fff',
+                        border: '1px dashed #1a6b3a',
+                        color: '#1a6b3a',
+                        borderRadius: 6,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      + Add leg
+                    </button>
                   </div>
-                )}
-              </div>
+                  {splitPayments.map((leg, idx) => (
+                    <div
+                      key={idx}
+                      style={{ display: 'flex', gap: 6, marginBottom: 6 }}
+                    >
+                      <select
+                        value={leg.method}
+                        onChange={(e) =>
+                          setSplitPayments((legs) =>
+                            legs.map((l, i) =>
+                              i === idx ? { ...l, method: e.target.value } : l
+                            )
+                          )
+                        }
+                        style={{
+                          flex: '1 1 110px',
+                          padding: '6px 4px',
+                          border: '1px solid #d1d5db',
+                          borderRadius: 6,
+                          fontSize: 12,
+                          background: '#fff',
+                        }}
+                      >
+                        <option value="cash">Cash</option>
+                        <option value="mobile_money">EcoCash / Mobile</option>
+                        <option value="card">Card</option>
+                        <option value="bank_transfer">Bank Transfer</option>
+                      </select>
+                      <input
+                        type="number"
+                        step="0.01"
+                        placeholder="Amount"
+                        value={leg.amount}
+                        onChange={(e) =>
+                          setSplitPayments((legs) =>
+                            legs.map((l, i) =>
+                              i === idx ? { ...l, amount: e.target.value } : l
+                            )
+                          )
+                        }
+                        style={{
+                          flex: '1 1 90px',
+                          padding: '6px 8px',
+                          border: '1px solid #d1d5db',
+                          borderRadius: 6,
+                          fontSize: 12,
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSplitPayments((legs) =>
+                            legs.length > 1
+                              ? legs.filter((_, i) => i !== idx)
+                              : legs
+                          )
+                        }
+                        title={
+                          splitPayments.length > 1
+                            ? 'Remove this leg'
+                            : 'Need at least one leg'
+                        }
+                        disabled={splitPayments.length <= 1}
+                        style={{
+                          padding: '0 8px',
+                          background: '#fff',
+                          border: '1px solid #fecaca',
+                          color:
+                            splitPayments.length <= 1 ? '#fca5a5' : '#dc2626',
+                          borderRadius: 6,
+                          fontSize: 14,
+                          cursor:
+                            splitPayments.length <= 1
+                              ? 'not-allowed'
+                              : 'pointer',
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  {/* Live tender vs total tracker */}
+                  {(() => {
+                    const tendered = splitPayments.reduce(
+                      (s, p) => s + (parseFloat(p.amount) || 0),
+                      0
+                    );
+                    const remaining = grandTotal - tendered;
+                    const over = tendered - grandTotal;
+                    return (
+                      <div
+                        style={{
+                          marginTop: 6,
+                          padding: '6px 8px',
+                          borderRadius: 6,
+                          fontSize: 11,
+                          fontWeight: 600,
+                          background:
+                            remaining > 0
+                              ? '#fef3c7'
+                              : over > 0
+                              ? '#dbeafe'
+                              : '#dcfce7',
+                          color:
+                            remaining > 0
+                              ? '#92400e'
+                              : over > 0
+                              ? '#1e40af'
+                              : '#166534',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                        }}
+                      >
+                        <span>Tendered: {fmt(tendered, 'zwd')}</span>
+                        <span>
+                          {remaining > 0
+                            ? `Need ${fmt(remaining, 'zwd')}`
+                            : over > 0
+                            ? `Change ${fmt(over, 'zwd')}`
+                            : 'Exact'}
+                        </span>
+                      </div>
+                    );
+                  })()}
+                </div>
+              ) : (
+                /* Amount Tendered (single-method mode only) */
+                <div style={S.section}>
+                  <div style={S.sectionLabel}>Amount Tendered</div>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={amountTendered}
+                    onChange={(e) => setAmountTendered(e.target.value)}
+                    style={S.input}
+                  />
+                  {change > 0 && (
+                    <div style={S.changeDisplay}>
+                      Change: {fmt(change, 'zwd')}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Discount — reason required, manager-gated */}
               <div style={S.section}>
