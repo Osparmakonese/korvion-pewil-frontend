@@ -9,6 +9,7 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import MobileInstallPrompt from './MobileInstallPrompt';
 
 const T = {
   cream:   '#faf6ef',
@@ -156,6 +157,11 @@ export default function MobileLandingPage() {
           }}>No card · install in under a minute</span>
         </Link>
       </div>
+
+      {/* PWA install nudge — fires on first visit if the visitor is on
+          a phone and Pewil isn't already installed. Self-gates on
+          beforeinstallprompt (Chrome/Android) or iOS detection. */}
+      <MobileInstallPrompt />
     </div>
   );
 }

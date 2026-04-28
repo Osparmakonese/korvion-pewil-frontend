@@ -8,6 +8,7 @@ import {
 } from '../api/retailApi';
 import { fmt } from '../utils/format';
 import AIInsightCard from '../components/AIInsightCard';
+import MobileCashierSessions from '../components/MobileCashierSessions';
 
 /* --- Open Session Modal --- */
 function OpenSessionModal({ isOpen, onClose, onSubmit, loading }) {
@@ -552,6 +553,23 @@ export default function CashierSessions() {
   const [showOpenModal, setShowOpenModal] = useState(false);
   const [closingSession, setClosingSession] = useState(null);
 
+  // Mobile branch — phones get the locked-design list. Open/Close modals
+  // already render below at the bottom of the JSX tree, so we render them
+  // inside the mobile branch's fragment too. Hooks declared before any
+  // conditional return so React's hook order stays consistent.
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' && window.innerWidth <= 500
+  );
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 500);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, []);
+
   const { data: sessions = [], isLoading } = useQuery({
     queryKey: ['retail-cashier-sessions-page'],
     queryFn: getCashierSessions,
@@ -610,6 +628,41 @@ export default function CashierSessions() {
     }
     return { type: 'variance', label: 'Variance' };
   };
+
+  // Mobile branch — keep all the same modals so open/close/x-report
+  // flows still work; the only change is that the list itself becomes
+  // a phone-native card stack.
+  if (isMobile) {
+    return (
+      <>
+        <MobileCashierSessions
+          onOpenSession={() => setShowOpenModal(true)}
+          onCloseSession={(s) => setClosingSession(s)}
+          onViewSession={(s) => setXReportSession(s)}
+        />
+        <OpenSessionModal
+          isOpen={showOpenModal}
+          onClose={() => setShowOpenModal(false)}
+          onSubmit={(data) => openMut.mutate(data)}
+          loading={openMut.isPending}
+        />
+        <CloseSessionModal
+          isOpen={!!closingSession}
+          onClose={() => setClosingSession(null)}
+          onSubmit={handleCloseSession}
+          session={closingSession}
+          loading={closeMut.isPending}
+          blindClose={blindClose}
+          varianceThreshold={varianceThreshold}
+        />
+        <XReportModal
+          isOpen={!!xReportSession}
+          onClose={() => setXReportSession(null)}
+          session={xReportSession}
+        />
+      </>
+    );
+  }
 
   return (
     <div style={S.page}>
