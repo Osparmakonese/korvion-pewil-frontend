@@ -22,6 +22,7 @@ import { requireAgeVerification } from '../utils/ageVerify';
 import QuickTilesPanel from '../components/QuickTilesPanel';
 import ScannerLanePOS from '../components/ScannerLanePOS';
 import DarkSupermarketPOS from '../components/DarkSupermarketPOS';
+import MobilePOS from '../components/MobilePOS';
 import POSImmersiveControls from '../components/POSImmersiveControls';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
@@ -652,6 +653,24 @@ export default function POS() {
   const [showReceipt, setShowReceipt] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Mobile breakpoint detection. ≤ 500px gets the locked mobile design
+  // (Frame 1/2 of mobile-mockups/PEWIL_MOBILE_PREVIEW_2026-04-26.html).
+  // Wider viewports keep the existing desktop POS untouched. Listener
+  // updates on rotation / window resize so the cashier can switch
+  // between phone and tablet without a reload.
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' && window.innerWidth <= 500
+  );
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 500);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, []);
 
   // Batch 1: usability pack
   const [priceCheckMode, setPriceCheckMode] = useState(false);
@@ -1318,6 +1337,57 @@ export default function POS() {
     if (!immersive) setHasAutoFocused(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [immersive]);
+
+  // ──────────────────────────────────────────────────────────────────
+  // Mobile render branch — phone-first POS lane.
+  // Wins over theme settings: when the cashier is on a phone we always
+  // give them the locked mobile design (Frame 1 of mobile-mockups/
+  // PEWIL_MOBILE_PREVIEW_2026-04-26.html). Reuses every state slice and
+  // handler from this component — same backend payload, same offline
+  // queue, same split-tender. Only the visual layer is new.
+  // ──────────────────────────────────────────────────────────────────
+  if (isMobile) {
+    return (
+      <>
+        <MobilePOS
+          cart={cart}
+          removeFromCart={removeFromCart}
+          updateCartQty={updateCartQty}
+          barcode={barcode}
+          setBarcode={setBarcode}
+          handleBarcodeSubmit={handleBarcodeSubmit}
+          barcodeInputRef={barcodeInputRef}
+          subtotal={subtotal}
+          discountAmount={discountAmount}
+          taxAmount={taxAmount}
+          grandTotal={grandTotal}
+          change={change}
+          paymentMethod={paymentMethod}
+          setPaymentMethod={setPaymentMethod}
+          amountTendered={amountTendered}
+          setAmountTendered={setAmountTendered}
+          splitMode={splitMode}
+          setSplitMode={setSplitMode}
+          splitPayments={splitPayments}
+          setSplitPayments={setSplitPayments}
+          handleCompleteSale={handleCompleteSale}
+          handleSuspendSale={handleSuspendSale}
+          createSaleMutPending={createSaleMut.isPending}
+          offline={offline}
+          pendingCount={pendingCount}
+          user={user}
+        />
+        <ReceiptModal
+          isOpen={showReceipt}
+          onClose={() => {
+            setShowReceipt(false);
+            barcodeInputRef.current?.focus();
+          }}
+          receipt={receipt}
+        />
+      </>
+    );
+  }
 
   // ──────────────────────────────────────────────────────────────────
   // Pick n Pay / SAP CAR scanner-lane render branch.
