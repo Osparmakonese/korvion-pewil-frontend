@@ -1,17 +1,37 @@
 {
   "short_name": "Pewil",
-  "name": "Pewil — Farm & Retail Management",
-  "description": "Farm management and retail POS platform built for African businesses",
+  "name": "Pewil — Run your shop from your pocket",
+  "description": "Sell, track stock, close the till and read your numbers from a phone. Farm and retail management built for Zimbabwean operators.",
   "icons": [
     { "src": "favicon.ico", "sizes": "64x64 32x32 24x24 16x16", "type": "image/x-icon" },
-    { "src": "logo192.png", "type": "image/png", "sizes": "192x192", "purpose": "any maskable" },
-    { "src": "logo512.png", "type": "image/png", "sizes": "512x512", "purpose": "any maskable" }
+    { "src": "logo192.png", "type": "image/png", "sizes": "192x192", "purpose": "any" },
+    { "src": "logo192.png", "type": "image/png", "sizes": "192x192", "purpose": "maskable" },
+    { "src": "logo512.png", "type": "image/png", "sizes": "512x512", "purpose": "any" },
+    { "src": "logo512.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" }
   ],
-  "start_url": "/app",
+  "start_url": "/app?utm_source=pwa",
+  "id": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
-  "theme_color": "#1f3d26",
-  "background_color": "#fff7ec",
+  "theme_color": "#1a6b3a",
+  "background_color": "#faf6ef",
   "scope": "/",
-  "categories": ["business", "productivity", "finance"]
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["business", "productivity", "finance"],
+  "shortcuts": [
+    {
+      "name": "Open POS",
+      "short_name": "POS",
+      "description": "Jump straight to the cashier lane",
+      "url": "/app?utm_source=pwa_shortcut&tab=pos"
+    },
+    {
+      "name": "Today's sales",
+      "short_name": "Sales",
+      "description": "Today's revenue and recent activity",
+      "url": "/app?utm_source=pwa_shortcut&tab=dashboard"
+    }
+  ]
 }

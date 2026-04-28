@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import MobileLandingPage from '../components/MobileLandingPage';
 
 // =========================================================================
 // Pewil public landing — ported from landing_designs/design_4_alt_three_operators.html
@@ -270,7 +271,24 @@ const LandingPage = () => {
   const { enterDemo, loadingModule, demoError } = useDemoEntry();
   const demoLoading = Boolean(loadingModule);
 
+  // Mobile breakpoint — phones get the locked Frame 4 layout instead
+  // of the dense desktop landing. Hooks declared before any return so
+  // hook ordering stays consistent across viewport flips.
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' && window.innerWidth <= 500
+  );
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 500);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, []);
+
   if (user) return <Navigate to="/app" replace />;
+  if (isMobile) return <MobileLandingPage />;
 
   return (
     <div className="pl-root">

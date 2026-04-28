@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   getRetailDashboard,
@@ -6,6 +6,7 @@ import {
 import { fmt } from '../utils/format';
 import { useAuth } from '../context/AuthContext';
 import AIInsightCard from '../components/AIInsightCard';
+import MobileRetailDashboard from '../components/MobileRetailDashboard';
 
 /* ─── Skeleton Loader ─── */
 function Skeleton({ w, h, r, mb }) {
@@ -346,11 +347,33 @@ const S = {
 export default function RetailDashboard() {
   const { user } = useAuth() || {};
 
+  // Mobile breakpoint detection. Stays hook-ordering safe: declared
+  // before any conditional return so React sees the same hook count
+  // across renders even if the viewport flips between mobile/desktop.
+  // The actual return-MobileRetailDashboard happens AFTER useQuery so
+  // we never break the hook ordering rule.
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' && window.innerWidth <= 500
+  );
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 500);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, []);
+
   const { data: dashboard, isLoading: sumLoading, error: dashboardError } = useQuery({
     queryKey: ['retail-dashboard'],
     queryFn: getRetailDashboard,
     staleTime: 30000,
   });
+
+  // Mobile branch — phones get the locked Frame 3 layout. Returns AFTER
+  // the useQuery above so hooks fire in the same order every render.
+  if (isMobile) return <MobileRetailDashboard />;
 
   // Safely extract data from dashboard API response
   const summary = dashboard ? {

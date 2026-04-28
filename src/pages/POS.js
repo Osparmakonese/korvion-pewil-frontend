@@ -23,6 +23,7 @@ import QuickTilesPanel from '../components/QuickTilesPanel';
 import ScannerLanePOS from '../components/ScannerLanePOS';
 import DarkSupermarketPOS from '../components/DarkSupermarketPOS';
 import MobilePOS from '../components/MobilePOS';
+import MobileSaleComplete from '../components/MobileSaleComplete';
 import POSImmersiveControls from '../components/POSImmersiveControls';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
@@ -1377,7 +1378,10 @@ export default function POS() {
           pendingCount={pendingCount}
           user={user}
         />
-        <ReceiptModal
+        {/* Frame 5 — fullscreen sale-complete confirmation. Replaces the
+            centered ReceiptModal at mobile widths so the cashier sees a
+            phone-native success screen instead of a desktop overlay. */}
+        <MobileSaleComplete
           isOpen={showReceipt}
           onClose={() => {
             setShowReceipt(false);
@@ -2315,3 +2319,4 @@ export default function POS() {
     </div>
   );
 }
+
