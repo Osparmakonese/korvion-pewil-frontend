@@ -213,72 +213,123 @@ export default function Layout({
         </button>
       </div>
 
-      {/* Mobile more drawer — Miller's Law: grouped into 5 sections */}
+      {/* Mobile More drawer — restyled 2026-04-28 to match Frame 6 of the
+          locked mobile mockup. Profile card up top, optional trial banner,
+          then grouped iOS-style menu rows. Each row drives the same
+          activeTab change as the desktop sidebar so behaviour is
+          unchanged — only the visual layer is new. */}
       {showMobileMore && (
         <>
           <div
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 400 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(20,16,8,0.55)', zIndex: 400 }}
             onClick={() => setShowMobileMore(false)}
           />
           <div style={{
             position: 'fixed', bottom: 0, left: 0, right: 0,
-            background: '#fff', borderRadius: '20px 20px 0 0',
-            padding: 20, maxHeight: '75vh', overflowY: 'auto', zIndex: 450,
+            background: '#faf6ef',
+            borderRadius: '28px 28px 0 0',
+            padding: '12px 20px calc(28px + env(safe-area-inset-bottom, 0px))',
+            maxHeight: '85vh', overflowY: 'auto', zIndex: 450,
+            boxShadow: '0 -10px 40px rgba(0,0,0,0.25)',
+            fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
           }}>
-            {/* Drag handle */}
-            <div style={{ width: 36, height: 4, background: '#e5e7eb', borderRadius: 2, margin: '0 auto 16px' }} />
+            {/* Grabber */}
+            <div style={{ width: 44, height: 4, background: '#e6dec8', borderRadius: 999, margin: '4px auto 14px' }} />
 
-            {/* User info */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid #e5e7eb' }}>
-              <div style={{ width: 36, height: 36, borderRadius: '50%', background: ac.bg, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>
-                {initials(user?.username || '')}
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>{user?.username || 'User'}</div>
-                <div style={{ fontSize: 11, color: '#9ca3af', textTransform: 'capitalize' }}>{role}</div>
+            {/* Profile card */}
+            <div style={{
+              background: 'linear-gradient(135deg, #fff, #f9efd9)',
+              border: '1px solid #e6dec8',
+              borderRadius: 18,
+              padding: 16,
+              marginBottom: 16,
+              display: 'flex', alignItems: 'center', gap: 14,
+            }}>
+              <div style={{
+                width: 52, height: 52, borderRadius: '50%',
+                background: 'linear-gradient(135deg, #f4a743, #d9562c)',
+                color: '#fff', fontWeight: 700, fontSize: 18,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flex: '0 0 52px',
+              }}>{initials(user?.username || '')}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: '#1a1812' }}>
+                  {user?.username || 'User'}
+                </div>
+                <div style={{ marginTop: 3, fontSize: 11, color: '#8a8474', display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span style={{
+                    background: 'rgba(26,107,58,0.10)', color: '#1a6b3a',
+                    padding: '2px 8px', borderRadius: 999, fontWeight: 700,
+                    textTransform: 'capitalize',
+                  }}>{role}</span>
+                  <span>{user?.tenant_name ? `Pewil ${activeModule === 'retail' ? 'Retail' : 'Farm'}` : 'Pewil'}</span>
+                </div>
               </div>
               <button
                 onClick={() => { setShowMobileMore(false); onLogout(); }}
-                style={{ background: 'none', border: '1px solid #e5e7eb', borderRadius: 8, padding: '6px 12px', fontSize: 11, color: '#c0392b', fontWeight: 600, cursor: 'pointer' }}
+                style={{
+                  background: '#fff', border: '1px solid #e6dec8',
+                  borderRadius: 10, padding: '8px 12px',
+                  fontSize: 11, color: '#c0392b', fontWeight: 700, cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
               >
                 Logout
               </button>
             </div>
 
-            {/* Miller's Law + Proximity: Sectioned grid with headers */}
+            {/* Grouped menu rows — one card per drawer section.
+                Single-module rule: DRAWER_SECTIONS already filtered by module. */}
             {DRAWER_SECTIONS.map((section, sIdx) => {
               const visibleItems = section.items.filter(t => !t.ownerOnly || role === 'owner');
               if (visibleItems.length === 0) return null;
               return (
-                <div key={section.label} style={{ marginBottom: sIdx < DRAWER_SECTIONS.length - 1 ? 18 : 0 }}>
-                  {/* Proximity Law: section header separates groups */}
+                <div key={section.label} style={{ marginBottom: sIdx < DRAWER_SECTIONS.length - 1 ? 14 : 0 }}>
                   <div style={{
-                    fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase',
-                    letterSpacing: '0.06em', marginBottom: 8, paddingLeft: 2,
+                    fontSize: 10, fontWeight: 700, color: '#8a8474',
+                    textTransform: 'uppercase', letterSpacing: '0.08em',
+                    margin: '0 6px 8px',
                   }}>
                     {section.label}
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-                    {visibleItems.map(t => {
+                  <div style={{
+                    background: '#fff',
+                    border: '1px solid #e6dec8',
+                    borderRadius: 16,
+                    overflow: 'hidden',
+                  }}>
+                    {visibleItems.map((t, idx) => {
                       const isActive = activeTab === t.key;
+                      const isLast = idx === visibleItems.length - 1;
                       return (
                         <button
                           key={t.key}
                           onClick={() => goTab(t.key)}
                           style={{
-                            /* Von Restorff: active item visually distinct */
-                            background: isActive ? moduleAccentBg : '#fff',
-                            border: `1.5px solid ${isActive ? moduleAccent : '#e5e7eb'}`,
-                            borderRadius: 12, padding: '12px 8px', textAlign: 'center',
-                            cursor: 'pointer', display: 'flex', flexDirection: 'column',
-                            alignItems: 'center', gap: 3,
-                            boxShadow: isActive ? `0 0 0 2px ${moduleAccentRing}` : 'none',
-                            transition: 'all 0.15s ease',
+                            width: '100%',
+                            display: 'flex', alignItems: 'center', gap: 12,
+                            padding: '13px 14px',
+                            background: isActive ? 'rgba(26,107,58,0.06)' : 'transparent',
+                            border: 'none',
+                            borderBottom: isLast ? 'none' : '1px solid #f3ecdc',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            fontFamily: 'inherit',
                           }}
                         >
-                          <span style={{ fontSize: 26 }}>{t.emoji}</span>
-                          <span style={{ fontSize: 12, fontWeight: isActive ? 700 : 600, color: isActive ? moduleAccent : '#111827' }}>{t.label}</span>
-                          <span style={{ fontSize: 9, color: '#6b7280' }}>{t.sub}</span>
+                          <span style={{
+                            width: 32, height: 32, borderRadius: 10,
+                            background: isActive ? 'rgba(26,107,58,0.12)' : '#f5ede0',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 14,
+                          }}>{t.emoji}</span>
+                          <span style={{
+                            flex: 1,
+                            fontWeight: isActive ? 700 : 600,
+                            fontSize: 13,
+                            color: isActive ? '#1a6b3a' : '#1a1812',
+                          }}>{t.label}</span>
+                          <span style={{ color: '#8a8474', fontSize: 14 }}>›</span>
                         </button>
                       );
                     })}
