@@ -10,6 +10,7 @@ import {
   getExpiringProducts,
   getStockAdjustments,
 } from '../api/retailApi';
+import MobileProducts from '../components/MobileProducts';
 import { useAuth } from '../context/AuthContext';
 import { fmt } from '../utils/format';
 import { confirm } from '../utils/confirm';
@@ -546,6 +547,23 @@ export default function Products() {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
 
+  // Mobile branch — phones get the locked-design product list. The
+  // existing "Add Product" modal stays mounted under the desktop view
+  // so we render it under MobileProducts too; FAB / row taps drive the
+  // same setShowModal / setEditingProduct state.
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' && window.innerWidth <= 500
+  );
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 500);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, []);
+
   const isOwnerOrManager = user?.role === 'owner' || user?.role === 'manager';
   const isWorker = user?.role === 'worker';
 
@@ -629,6 +647,35 @@ export default function Products() {
     window.addEventListener('pewil-primary-action', handler);
     return () => window.removeEventListener('pewil-primary-action', handler);
   }, []);
+
+  // Mobile branch returns AFTER all hooks above so React's hook-ordering
+  // rule stays consistent across viewport flips. The existing desktop
+  // <AddProductModal> is rendered alongside MobileProducts so the
+  // owner/manager can tap a row or the FAB to edit/add products on
+  // mobile too — same modal, same submit path, same data.
+  if (isMobile) {
+    return (
+      <>
+        <MobileProducts
+          onAddProduct={() => { setEditingProduct(null); setShowModal(true); }}
+          onEditProduct={(p) => { setEditingProduct(p); setShowModal(true); }}
+        />
+        {!isWorker && (
+          <AddProductModal
+            isOpen={showModal}
+            onClose={() => {
+              setShowModal(false);
+              setEditingProduct(null);
+            }}
+            onSubmit={handleAddProduct}
+            categories={categories}
+            loading={createMut.isPending || updateMut.isPending}
+            initialData={editingProduct}
+          />
+        )}
+      </>
+    );
+  }
 
   return (
     <div style={S.page}>
