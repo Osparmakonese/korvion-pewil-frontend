@@ -16,15 +16,15 @@
 import React, { useEffect, useState } from 'react';
 
 const T = {
-  cream:   '#faf6ef',
-  cream2:  '#f5ede0',
-  ink:     '#1a1812',
-  inkSoft: '#4b4636',
-  muted:   '#8a8474',
-  line:    '#e6dec8',
+  cream:   '#ffffff',
+  cream2:  '#f9fafb',
+  ink:     '#111827',
+  inkSoft: '#374151',
+  muted:   '#6b7280',
+  line:    '#e5e7eb',
   green:   '#1a6b3a',
-  orange:  '#d9562c',
-  orange2: '#f4a743',
+  orange:  '#c77700',
+  orange2: '#e09a2b',
 };
 
 const STORAGE_KEY = 'pewil_install_prompt_dismissed_v1';
@@ -126,7 +126,7 @@ export default function MobileInstallPrompt() {
       boxShadow: '0 18px 50px rgba(28,22,10,0.18), 0 6px 16px rgba(28,22,10,0.10)',
       padding: 14,
       display: 'flex', alignItems: 'center', gap: 12,
-      fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+      fontFamily: "'Inter', system-ui, sans-serif",
       WebkitFontSmoothing: 'antialiased',
     }}>
       <div style={{

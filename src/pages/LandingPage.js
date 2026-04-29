@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import MobileLandingPage from '../components/MobileLandingPage';
 
 // =========================================================================
 // Pewil public landing — ported from landing_designs/design_4_alt_three_operators.html
@@ -240,12 +239,40 @@ const PL_CSS = `
     .pl-nav-links{display:none}
   }
   @media (max-width:560px){
+    .pl-hero{padding:48px 0 40px}
     .pl-hero h1{font-size:36px}
+    .pl-hero-sub{font-size:15px;margin-bottom:24px}
+    .pl-hero-actions{flex-direction:column}
+    .pl-hero-actions .pl-btn{justify-content:center}
+    .pl-ribbon{grid-template-columns:1fr;max-width:100%;margin-top:36px}
+    .pl-ribbon-tile{aspect-ratio:16/10}
+    .pl-three{padding:60px 0}
+    .pl-three-grid{grid-template-columns:1fr;gap:16px}
+    .pl-three-head h2{font-size:28px}
+    .pl-thread{padding:60px 0}
+    .pl-thread-head h2{font-size:30px}
     .pl-thread-grid{grid-template-columns:1fr}
-    .pl-proof-grid{grid-template-columns:1fr}
-    .pl-foot-grid{grid-template-columns:1fr}
+    .pl-parity{padding:50px 0}
+    .pl-parity-head h2{font-size:24px}
+    .pl-parity-row{grid-template-columns:1fr}
+    .pl-parity-row.head{display:none}
+    .pl-parity-row > div{padding:14px 16px;border-bottom:1px solid #f3f4f6}
+    .pl-parity-q{background:#f9fafb;font-weight:700}
+    .pl-parity-farm::before{content:'Farmer · ';font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#1a6b3a}
+    .pl-parity-small::before{content:'Small shop · ';font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#c77700}
+    .pl-parity-chain::before{content:'Chain · ';font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#111827}
+    .pl-proof{padding:50px 0}
+    .pl-proof-head h2{font-size:24px}
+    .pl-proof-grid{grid-template-columns:1fr;gap:12px}
+    .pl-stat{padding:20px 18px}
+    .pl-stat-val{font-size:32px}
+    .pl-cta{padding:60px 0}
+    .pl-cta h2{font-size:28px}
+    .pl-cta-actions{flex-direction:column}
+    .pl-cta-actions .pl-btn{justify-content:center}
+    .pl-foot{padding:40px 0 24px}
+    .pl-foot-grid{grid-template-columns:1fr;gap:24px}
     .pl-wrap{padding:0 22px}
-    .pl-cta h2{font-size:30px}
   }
 `;
 
@@ -271,24 +298,11 @@ const LandingPage = () => {
   const { enterDemo, loadingModule, demoError } = useDemoEntry();
   const demoLoading = Boolean(loadingModule);
 
-  // Mobile breakpoint — phones get the locked Frame 4 layout instead
-  // of the dense desktop landing. Hooks declared before any return so
-  // hook ordering stays consistent across viewport flips.
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' && window.innerWidth <= 500
-  );
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth <= 500);
-    window.addEventListener('resize', onResize);
-    window.addEventListener('orientationchange', onResize);
-    return () => {
-      window.removeEventListener('resize', onResize);
-      window.removeEventListener('orientationchange', onResize);
-    };
-  }, []);
-
+  // Mobile and desktop now render the same landing — the existing PL_CSS
+  // @media rules collapse it to single-column at phone widths. No
+  // separate MobileLandingPage component (removed 2026-04-28). One
+  // marketing brand, one landing.
   if (user) return <Navigate to="/app" replace />;
-  if (isMobile) return <MobileLandingPage />;
 
   return (
     <div className="pl-root">
