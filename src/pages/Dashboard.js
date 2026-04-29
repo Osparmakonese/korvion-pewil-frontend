@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getDashboard, getLowStock, getHealthScore, getBriefing, getAchievements, getSeasonalComparison } from '../api/farmApi';
 import { fmt, qty, cropEmoji, cropGradient, initials, avatarColor, IMAGES, cropImage, getHeroImage, HERO_IMAGES } from '../utils/format';
 import { useAuth } from '../context/AuthContext';
 import FieldModal from '../components/FieldModal';
 import AIInsightCard from '../components/AIInsightCard';
+import MobileFarmDashboard from '../components/MobileFarmDashboard';
 
 /* ─── Design 3 — Living Africa tokens ─── */
 const TOKENS = {
@@ -126,12 +127,32 @@ const S = {
 export default function Dashboard({ activeModule = 'farm' }) {
   const { user } = useAuth();
   const [selectedField, setSelectedField] = useState(null);
+
+  // Mobile breakpoint — phones get the locked Frame 3 (farm-flavored)
+  // layout via MobileFarmDashboard. Hooks declared before any conditional
+  // return so React's hook ordering stays consistent across viewport flips.
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' && window.innerWidth <= 500
+  );
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 500);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, []);
+
   const { data, isLoading, error, refetch } = useQuery({ queryKey: ['dashboard'], queryFn: getDashboard });
   const { data: lowStock = [] } = useQuery({ queryKey: ['lowStock'], queryFn: getLowStock });
   const { data: healthScore } = useQuery({ queryKey: ['healthScore'], queryFn: getHealthScore, staleTime: 60000 });
   const { data: briefing } = useQuery({ queryKey: ['briefing'], queryFn: getBriefing, staleTime: 60000 });
   const { data: achievementsData } = useQuery({ queryKey: ['achievements'], queryFn: getAchievements, staleTime: 60000 });
   const { data: seasonal } = useQuery({ queryKey: ['seasonalComparison'], queryFn: getSeasonalComparison, staleTime: 60000 });
+
+  // Mobile branch — render after all hooks above (hook ordering rule).
+  if (isMobile) return <MobileFarmDashboard />;
 
   if (isLoading) return <SkeletonDash />;
   if (error) return (

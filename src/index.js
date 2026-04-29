@@ -89,8 +89,13 @@ root.render(
   </Sentry.ErrorBoundary>
 );
 
-// Kill any stale CRA/Workbox service worker from prior builds and DO NOT register a new one.
-// Previous registrations precached index.html + hashed chunks; when Vercel rotated filenames,
-// returning users got stuck on the old bundle. Kept as unregister() to scrub SWs from old
-// clients on next visit. Do NOT flip back to register() without a new caching strategy.
-serviceWorkerRegistration.unregister();
+// Service worker re-enabled 2026-04-28 with a network-first strategy that
+// won't repeat the 2026-04-23 stale-bundle bug. See src/service-worker.js
+// for the full strategy comment. The new SW NEVER precaches; navigation +
+// JS/CSS are network-first so a fresh deploy is always served first;
+// stable static assets (icons, fonts, manifest) are cache-first.
+//
+// On the first load after this lands, returning users with the old
+// kill-shim SW will have it auto-unregister and reload, then the new SW
+// installs. From that point forward the PWA is offline-capable.
+serviceWorkerRegistration.register();
