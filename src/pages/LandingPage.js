@@ -240,12 +240,40 @@ const PL_CSS = `
     .pl-nav-links{display:none}
   }
   @media (max-width:560px){
+    .pl-hero{padding:48px 0 40px}
     .pl-hero h1{font-size:36px}
+    .pl-hero-sub{font-size:15px;margin-bottom:24px}
+    .pl-hero-actions{flex-direction:column}
+    .pl-hero-actions .pl-btn{justify-content:center}
+    .pl-ribbon{grid-template-columns:1fr;max-width:100%;margin-top:36px}
+    .pl-ribbon-tile{aspect-ratio:16/10}
+    .pl-three{padding:60px 0}
+    .pl-three-grid{grid-template-columns:1fr;gap:16px}
+    .pl-three-head h2{font-size:28px}
+    .pl-thread{padding:60px 0}
+    .pl-thread-head h2{font-size:30px}
     .pl-thread-grid{grid-template-columns:1fr}
-    .pl-proof-grid{grid-template-columns:1fr}
-    .pl-foot-grid{grid-template-columns:1fr}
+    .pl-parity{padding:50px 0}
+    .pl-parity-head h2{font-size:24px}
+    .pl-parity-row{grid-template-columns:1fr}
+    .pl-parity-row.head{display:none}
+    .pl-parity-row > div{padding:14px 16px;border-bottom:1px solid #f3f4f6}
+    .pl-parity-q{background:#f9fafb;font-weight:700}
+    .pl-parity-farm::before{content:'Farmer · ';font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#1a6b3a}
+    .pl-parity-small::before{content:'Small shop · ';font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#c77700}
+    .pl-parity-chain::before{content:'Chain · ';font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#111827}
+    .pl-proof{padding:50px 0}
+    .pl-proof-head h2{font-size:24px}
+    .pl-proof-grid{grid-template-columns:1fr;gap:12px}
+    .pl-stat{padding:20px 18px}
+    .pl-stat-val{font-size:32px}
+    .pl-cta{padding:60px 0}
+    .pl-cta h2{font-size:28px}
+    .pl-cta-actions{flex-direction:column}
+    .pl-cta-actions .pl-btn{justify-content:center}
+    .pl-foot{padding:40px 0 24px}
+    .pl-foot-grid{grid-template-columns:1fr;gap:24px}
     .pl-wrap{padding:0 22px}
-    .pl-cta h2{font-size:30px}
   }
 `;
 
@@ -271,9 +299,11 @@ const LandingPage = () => {
   const { enterDemo, loadingModule, demoError } = useDemoEntry();
   const demoLoading = Boolean(loadingModule);
 
-  // Mobile breakpoint — phones get the locked Frame 4 layout instead
-  // of the dense desktop landing. Hooks declared before any return so
-  // hook ordering stays consistent across viewport flips.
+  // Mobile breakpoint — phones get the proper-mobile MobileLandingPage
+  // (segmented tabs, persona scroll, accordion parity, sticky CTA).
+  // Desktop landing (PL_CSS below) renders unchanged at >500px. Same
+  // palette + Inter + Playfair across both so brand stays unified.
+  // Hooks declared before any conditional return.
   const [isMobile, setIsMobile] = useState(
     typeof window !== 'undefined' && window.innerWidth <= 500
   );
@@ -469,7 +499,7 @@ const LandingPage = () => {
                   <li>POS that's faster than the till you already use</li>
                   <li>Stock that counts itself with every sale</li>
                   <li>Supplier books out of the WhatsApp thread</li>
-                  <li>ZIMRA fiscal native &mdash; not a plugin</li>
+                  <li>Tax authority native (ZIMRA today, more rails as we grow) &mdash; not a plugin</li>
                   <li>Built for the shop that opens at six</li>
                 </ul>
                 <div className="pl-op-price">

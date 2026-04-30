@@ -248,11 +248,10 @@ input, select, textarea, button {
   .mobile-wa-btn { background: #25D366; color: #fff; border: none; border-radius: 20px; padding: 7px 12px; font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 4px; cursor: pointer; }
   .mobile-avatar { width: 32px; height: 32px; border-radius: 50%; background: #1a6b3a; color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
-  /* Bottom nav — restyled 2026-04-28 to match the locked mobile design
-     (mobile-mockups/PEWIL_MOBILE_PREVIEW_2026-04-26.html). Cream + green
-     palette, blurred glass surface, rounded green pill on the active
-     tab's icon. Class names (.bottom-nav, .bn-tab, etc.) are preserved
-     so Layout.js continues to work without changes. */
+  /* Bottom nav — palette unified with desktop landing (2026-04-28).
+     White surface, ink text, green pill on active tab's icon. Class
+     names (.bottom-nav, .bn-tab, etc.) are preserved so Layout.js
+     continues to work without changes. */
   .bottom-nav {
     display: grid !important;
     grid-template-columns: repeat(5, 1fr);
@@ -261,14 +260,14 @@ input, select, textarea, button {
     left: 0;
     right: 0;
     height: 76px;
-    background: rgba(255, 253, 245, 0.92);
+    background: rgba(255, 255, 255, 0.94);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    border-top: 1px solid #e6dec8;
+    border-top: 1px solid #e5e7eb;
     z-index: 500;
     align-items: center;
     padding: 6px 8px calc(18px + env(safe-area-inset-bottom, 0px));
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
   }
   .bn-tab {
     display: flex;
@@ -280,7 +279,7 @@ input, select, textarea, button {
     border: none;
     background: none;
     position: relative;
-    color: #8a8474;
+    color: #6b7280;
   }
   .bn-tab .bn-icon {
     font-size: 20px;
@@ -308,7 +307,7 @@ input, select, textarea, button {
     position: absolute;
     top: -2px;
     right: calc(50% - 22px);
-    background: #d9562c;
+    background: #c77700;
     color: #fff;
     font-size: 9px;
     font-weight: 700;
@@ -321,117 +320,109 @@ input, select, textarea, button {
   /* Content padding for bottom nav (taller bar -> more padding) */
   .page-content-mobile { padding-bottom: 88px !important; }
 
-  /* ── LOCKED MOBILE LANGUAGE — global pass for tabs we haven't built
-        dedicated <MobileX /> components for yet. Surfaces Settings,
-        Billing, Customers, Loss Prevention, Reports, Suppliers, etc.
-        with the cream + green palette and gentler typography so they
-        don't feel like cramped desktop pages on a phone.
-        See mobile-mockups/PEWIL_MOBILE_PREVIEW_2026-04-26.html. ── */
+  /* ── MOBILE LANGUAGE — palette unified with desktop landing (2026-04-28).
+        Pages we haven't built dedicated <MobileX /> components for
+        (Settings, Billing, Customers, Loss Prevention, Suppliers, etc.)
+        render in the same green/amber/ink + Inter palette as the desktop
+        landing, just stacked single-column for phone width. ── */
 
-  /* Page surface itself becomes cream, not the harsh white. */
-  body, html { background: #faf6ef; }
+  /* Page surface stays white to match desktop, not a tinted cream. */
+  body, html { background: #fff; }
   main.page-content-mobile {
     background: transparent !important;
-    color: #1a1812;
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
+    color: #111827;
+    font-family: 'Inter', system-ui, sans-serif !important;
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Page-level cards (any direct child of main) get the locked card
-     treatment — white surface, soft cream border, generous rounding. */
+  /* Page-level cards get the desktop card treatment — white surface,
+     light gray border, generous rounding. */
   main.page-content-mobile > section,
   main.page-content-mobile > article,
   main.page-content-mobile > .card,
   main.page-content-mobile > [data-mobile-card] {
     background: #fff;
-    border: 1px solid #e6dec8;
+    border: 1px solid #e5e7eb;
     border-radius: 16px;
     margin-bottom: 12px;
     padding: 14px;
   }
 
-  /* Heading typography aligned with mockup. Big numbers get Playfair. */
+  /* Heading typography matches desktop. Playfair for headings. */
   main.page-content-mobile h1 {
     font-family: 'Playfair Display', Georgia, serif !important;
     font-weight: 700 !important;
     font-size: 26px !important;
     letter-spacing: -0.01em !important;
     margin: 0 0 8px !important;
-    color: #1a1812 !important;
+    color: #111827 !important;
   }
   main.page-content-mobile h2 {
     font-size: 17px !important;
     font-weight: 700 !important;
     margin: 0 0 6px !important;
-    color: #1a1812 !important;
+    color: #111827 !important;
   }
   main.page-content-mobile h3 {
     font-size: 14px !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.06em !important;
-    color: #4b4636 !important;
+    color: #374151 !important;
     margin: 0 0 8px !important;
   }
 
-  /* Buttons — primary actions become ink+cream pill, secondary stays
-     neutral. We target unclassed buttons to catch the bulk of pages
-     that haven't been mobile-redesigned yet. */
+  /* Buttons — primary actions match desktop pl-btn-dark style. */
   main.page-content-mobile button.primary,
   main.page-content-mobile button[type="submit"]:not(.bn-tab) {
-    background: #1a1812 !important;
-    color: #faf6ef !important;
+    background: #111827 !important;
+    color: #fff !important;
     border: none !important;
-    border-radius: 14px !important;
-    padding: 14px 18px !important;
-    font-weight: 800 !important;
+    border-radius: 999px !important;
+    padding: 14px 24px !important;
+    font-weight: 600 !important;
     font-size: 14px !important;
-    letter-spacing: 0.02em !important;
     width: 100% !important;
     cursor: pointer;
   }
 
-  /* Form inputs picked up the safety-net 16px font earlier; here we add
-     the locked surface style — white card, cream border, generous radius. */
+  /* Form inputs — white card, gray border, generous radius. */
   main.page-content-mobile input:not([type=checkbox]):not([type=radio]):not([type=range]),
   main.page-content-mobile select,
   main.page-content-mobile textarea {
     background: #fff !important;
-    border: 1px solid #e6dec8 !important;
+    border: 1px solid #d1d5db !important;
     border-radius: 12px !important;
     padding: 12px 14px !important;
-    color: #1a1812 !important;
+    color: #111827 !important;
     font-family: inherit !important;
   }
 
-  /* Mobile header (the small top bar before the bottom nav) — quieter
-     in the locked language. Matches the cream surface, sticks under
-     the iOS status bar safe area. */
+  /* Mobile header — frosted white to match desktop nav. */
   .mobile-header {
-    background: rgba(255, 253, 245, 0.92) !important;
+    background: rgba(255, 255, 255, 0.94) !important;
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    border-bottom: 1px solid #e6dec8 !important;
+    border-bottom: 1px solid #e5e7eb !important;
     padding: calc(8px + env(safe-area-inset-top, 0px)) 16px 8px !important;
   }
   .mobile-header .mh-brand,
-  .mobile-header .mh-right { color: #1a1812; }
+  .mobile-header .mh-right { color: #111827; }
 
-  /* Tables on mobile become readable card-stack style, not horizontal
-     scrollers (already mostly done above; here we soften the visual). */
+  /* Tables on mobile — desktop palette. */
   main.page-content-mobile table {
     background: #fff;
-    border: 1px solid #e6dec8;
+    border: 1px solid #e5e7eb;
     border-radius: 14px;
     overflow: hidden;
   }
   main.page-content-mobile table th,
   main.page-content-mobile table td {
-    border-color: #f3ecdc !important;
+    border-color: #f3f4f6 !important;
   }
   main.page-content-mobile table th {
-    background: #f5ede0 !important;
-    color: #4b4636 !important;
+    background: #f9fafb !important;
+    color: #374151 !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.06em !important;

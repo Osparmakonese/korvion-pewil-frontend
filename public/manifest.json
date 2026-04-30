@@ -1,7 +1,7 @@
 {
   "short_name": "Pewil",
   "name": "Pewil — Run your shop from your pocket",
-  "description": "Sell, track stock, close the till and read your numbers from a phone. Farm and retail management built for Zimbabwean operators.",
+  "description": "Sell, track stock, close the till and read your numbers from a phone. Farm and retail management for African operators.",
   "icons": [
     { "src": "favicon.ico", "sizes": "64x64 32x32 24x24 16x16", "type": "image/x-icon" },
     { "src": "logo192.png", "type": "image/png", "sizes": "192x192", "purpose": "any" },

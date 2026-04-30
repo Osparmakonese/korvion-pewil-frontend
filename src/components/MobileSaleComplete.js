@@ -13,15 +13,15 @@ import React from 'react';
 import { fmt } from '../utils/format';
 
 const T = {
-  cream:   '#faf6ef',
-  cream2:  '#f5ede0',
-  ink:     '#1a1812',
-  inkSoft: '#4b4636',
-  muted:   '#8a8474',
-  line:    '#e6dec8',
+  cream:   '#ffffff',
+  cream2:  '#f9fafb',
+  ink:     '#111827',
+  inkSoft: '#374151',
+  muted:   '#6b7280',
+  line:    '#e5e7eb',
   green:   '#1a6b3a',
   green2:  '#2d9e58',
-  orange2: '#f4a743',
+  orange2: '#e09a2b',
 };
 
 export default function MobileSaleComplete({ isOpen, onClose, receipt }) {
@@ -84,7 +84,7 @@ export default function MobileSaleComplete({ isOpen, onClose, receipt }) {
         background: `linear-gradient(180deg, ${T.cream}, #f4ead2)`,
         display: 'flex', flexDirection: 'column',
         padding: '24px 24px calc(28px + env(safe-area-inset-bottom, 0px))',
-        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+        fontFamily: "'Inter', system-ui, sans-serif",
         color: T.ink,
         WebkitFontSmoothing: 'antialiased',
         overflowY: 'auto',
