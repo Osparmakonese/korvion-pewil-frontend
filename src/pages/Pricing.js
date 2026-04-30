@@ -119,14 +119,14 @@ const PLANS = {
       name: 'Pewil Retail Enterprise',
       slug: 'retail-enterprise',
       per_branch: true,
-      price_monthly: 30,        // per branch, per month
-      price_yearly: 300,        // per branch, per year
+      price_monthly: 55,        // per branch, per month
+      price_yearly: 550,        // per branch, per year
       min_branches: 4,
       max_users: 'Unlimited',
       blurb: 'For supermarket chains. Scales with every branch you open.',
       features: [
-        '$30 per branch, per month',
-        '4-branch minimum ($120/mo floor)',
+        '$55 per branch, per month',
+        '4-branch minimum ($220/mo floor)',
         'Unlimited users across all branches',
         'Unlimited products, customers, sessions',
         'Chain rollup + per-branch P&L',
@@ -143,7 +143,7 @@ const PLANS = {
 const FAQ = [
   { q: 'Can I try Pewil for free?', a: 'Yes — Starter and Growth plans include a 14-day free trial with full access, no card required. Retail Enterprise is sales-assisted, so our team sets up a personalised onboarding instead of a self-serve trial.' },
   { q: 'What payment methods do you accept?', a: 'Visa and Mastercard via Pesepay for card payments, plus EcoCash and OneMoney via Paynow for mobile money. Pesepay also works for international cards.' },
-  { q: 'How does Retail Enterprise pricing work?', a: 'Enterprise is priced per branch: $30 per branch per month, with a 4-branch minimum ($120/mo floor). A 12-branch chain pays $360/mo. A 50-branch chain pays $1,500/mo. Unlimited users across all branches. Yearly billing (10 × monthly) gives you 2 months free.' },
+  { q: 'How does Retail Enterprise pricing work?', a: 'Enterprise is priced per branch: $55 per branch per month, with a 4-branch minimum ($220/mo floor). A 12-branch chain pays $660/mo. A 50-branch chain pays $2,750/mo. Unlimited users across all branches. Yearly billing (10 × monthly) gives you 2 months free.' },
   { q: 'Can I combine Pewil Farm + Pewil Retail?', a: 'Yes. Each module has its own subscription so you only pay for what you use. Combine any farm plan with any retail plan.' },
   { q: 'What is the yearly pricing?', a: 'Yearly is billed as 10 × monthly, giving you 2 months free versus paying monthly.' },
   { q: 'Can I change plans later?', a: 'Yes. Upgrade or downgrade anytime from your Billing page. Proration is handled automatically on your next invoice.' },

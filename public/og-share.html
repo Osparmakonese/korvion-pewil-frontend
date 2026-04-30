@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Pewil — OG share image (1200×630)</title>
+<style>
+  /*
+   * Open Graph + Twitter share image source for Pewil.
+   *
+   * Render this file in a browser at exact viewport 1200×630, then
+   * screenshot the .frame element to public/og-share.png. Replace
+   * the OG image reference in public/index.html with /og-share.png.
+   *
+   * Devtools recipe:
+   *   1) Open DevTools → Toggle device toolbar
+   *   2) Set responsive size to 1200 × 630
+   *   3) Right-click the .frame element → Capture node screenshot
+   */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: #f3f0ea;
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color: #111827;
+    -webkit-font-smoothing: antialiased;
+  }
+  body { padding: 40px; min-height: 100vh; }
+
+  .frame {
+    width: 1200px;
+    height: 630px;
+    position: relative;
+    background:
+      radial-gradient(80% 60% at 80% 0%, rgba(26,107,58,0.12) 0%, transparent 60%),
+      radial-gradient(60% 50% at 0% 100%, rgba(199,119,0,0.08) 0%, transparent 60%),
+      linear-gradient(180deg, #ffffff 0%, #faf5e8 100%);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+  }
+
+  /* Left — wordmark + value prop */
+  .left {
+    padding: 64px 56px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    background: #0D4A22;
+    color: #c77700;
+    padding: 10px 22px;
+    border-radius: 12px;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 800;
+    font-size: 30px;
+    letter-spacing: 2px;
+    width: fit-content;
+  }
+  .eyebrow {
+    margin-top: 28px;
+    color: #6b7280;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 70px;
+    line-height: 1.02;
+    margin-top: 14px;
+    letter-spacing: -1.5px;
+    color: #111827;
+  }
+  h1 em { color: #1a6b3a; font-style: normal; }
+  .sub {
+    margin-top: 22px;
+    font-size: 22px;
+    line-height: 1.45;
+    color: #374151;
+    max-width: 540px;
+  }
+  .pills {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 28px;
+  }
+  .pill {
+    background: rgba(26,107,58,0.10);
+    color: #1a6b3a;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .pill.amber {
+    background: rgba(199,119,0,0.10);
+    color: #c77700;
+  }
+
+  .footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #6b7280;
+  }
+
+  /* Right — POS lane illustration */
+  .right {
+    position: relative;
+    background: linear-gradient(135deg, #1a6b3a 0%, #2d9e58 100%);
+    overflow: hidden;
+  }
+  .right::before {
+    content: '';
+    position: absolute;
+    width: 380px; height: 380px; border-radius: 50%;
+    background: rgba(255,255,255,0.10);
+    top: -120px; right: -100px;
+  }
+  .right::after {
+    content: '';
+    position: absolute;
+    width: 280px; height: 280px; border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    bottom: -100px; left: -80px;
+  }
+
+  /* Phone frame */
+  .phone {
+    position: absolute;
+    width: 320px;
+    height: 540px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-4deg);
+    background: #111827;
+    border-radius: 36px;
+    padding: 14px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.35);
+  }
+  .screen {
+    width: 100%;
+    height: 100%;
+    background: #ffffff;
+    border-radius: 24px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .notch {
+    position: absolute;
+    top: 8px; left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 6px;
+    background: #111827;
+    border-radius: 999px;
+    z-index: 2;
+  }
+
+  .screen-head {
+    padding: 22px 18px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid #f1f1ef;
+  }
+  .screen-head .label {
+    font-size: 10px;
+    color: #6b7280;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .screen-head .total {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1;
+  }
+  .screen-head .pill {
+    margin-top: 4px;
+    padding: 3px 9px;
+    font-size: 9px;
+    background: rgba(26,107,58,0.12);
+    color: #1a6b3a;
+  }
+
+  .lines {
+    flex: 1;
+    padding: 12px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 9px;
+    border-bottom: 1px dashed #ececec;
+  }
+  .line .icon {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: #faf5e8;
+    display: grid; place-items: center;
+    font-size: 14px;
+  }
+  .line .name { flex: 1; font-size: 12px; font-weight: 700; color: #111827; }
+  .line .qty { font-size: 11px; color: #6b7280; font-weight: 600; }
+  .line .amt { font-size: 12px; font-weight: 800; color: #111827; min-width: 50px; text-align: right; }
+
+  .pay {
+    padding: 12px 16px 18px;
+    background: #faf5e8;
+  }
+  .pay-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; color: #374151; padding: 4px 0;
+  }
+  .pay-row strong { font-weight: 800; color: #111827; }
+  .pay-cta {
+    margin-top: 10px;
+    background: #1a6b3a;
+    color: white;
+    text-align: center;
+    padding: 11px;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 12px;
+  }
+
+  /* Floating receipts behind phone */
+  .receipt {
+    position: absolute;
+    width: 130px;
+    background: white;
+    border-radius: 12px;
+    padding: 10px 12px;
+    box-shadow: 0 18px 36px rgba(0,0,0,0.18);
+    font-size: 9px;
+    color: #374151;
+    line-height: 1.45;
+  }
+  .receipt .r-head { font-weight: 800; color: #111827; font-size: 10px; }
+  .receipt .r-amt { font-family: 'Playfair Display', Georgia, serif; font-size: 16px; font-weight: 800; color: #1a6b3a; margin-top: 4px; }
+  .receipt .r-sub { color: #6b7280; font-size: 8px; }
+
+  .r-1 { top: 80px; left: 30px; transform: rotate(-9deg); }
+  .r-2 { bottom: 70px; right: 28px; transform: rotate(7deg); }
+  .r-2 .r-amt { color: #c77700; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="frame">
+
+  <!-- LEFT: wordmark + value prop -->
+  <div class="left">
+    <div>
+      <div class="brand">PEWIL</div>
+      <div class="eyebrow">Made for African operators</div>
+      <h1>Run your shop<br/>from your <em>pocket</em>.</h1>
+      <p class="sub">
+        POS, stock, tax-compliant exports — works offline,
+        accepts mobile money + card.
+      </p>
+      <div class="pills">
+        <span class="pill">Mobile POS</span>
+        <span class="pill amber">EcoCash · M-Pesa · Card</span>
+        <span class="pill">Works offline</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>pewil.org</span>
+      <span class="dot"></span>
+      <span>14-day free trial · no card</span>
+    </div>
+  </div>
+
+  <!-- RIGHT: POS phone illustration -->
+  <div class="right">
+
+    <!-- Floating receipt 1 -->
+    <div class="receipt r-1">
+      <div class="r-head">Receipt #2047</div>
+      <div class="r-amt">$48.20</div>
+      <div class="r-sub">EcoCash · 08:51</div>
+    </div>
+
+    <!-- Phone -->
+    <div class="phone">
+      <div class="screen">
+        <div class="notch"></div>
+
+        <div class="screen-head">
+          <div>
+            <div class="label">Cart total</div>
+            <div class="total">$48.20</div>
+            <div class="pill">3 items</div>
+          </div>
+          <div style="text-align:right">
+            <div class="label">Lane 1</div>
+            <div style="font-size:11px;color:#1a6b3a;font-weight:800">● OPEN</div>
+          </div>
+        </div>
+
+        <div class="lines">
+          <div class="line">
+            <div class="icon">🛒</div>
+            <div>
+              <div class="name">Sugar 2kg</div>
+              <div class="qty">×1</div>
+            </div>
+            <div class="amt">$3.20</div>
+          </div>
+          <div class="line">
+            <div class="icon">🥖</div>
+            <div>
+              <div class="name">Bread loaf</div>
+              <div class="qty">×4</div>
+            </div>
+            <div class="amt">$5.00</div>
+          </div>
+          <div class="line">
+            <div class="icon">🍚</div>
+            <div>
+              <div class="name">Rice 5kg</div>
+              <div class="qty">×2</div>
+            </div>
+            <div class="amt">$40.00</div>
+          </div>
+        </div>
+
+        <div class="pay">
+          <div class="pay-row"><span>Subtotal</span><strong>$48.20</strong></div>
+          <div class="pay-row"><span>Cash</span><strong>$20.00</strong></div>
+          <div class="pay-row"><span>EcoCash · *4711</span><strong>$28.20</strong></div>
+          <div class="pay-cta">Charge · split-tender</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating receipt 2 -->
+    <div class="receipt r-2">
+      <div class="r-head">Z-Report · 18:00</div>
+      <div class="r-amt">$1,284</div>
+      <div class="r-sub">12 sales · cash drawer ✓</div>
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+</html>

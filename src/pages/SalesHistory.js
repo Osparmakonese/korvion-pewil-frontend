@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getSales } from '../api/retailApi';
 import { fmt } from '../utils/format';
+import MobileSalesHistory from '../components/MobileSalesHistory';
 
 /* --- Receipt Detail Modal --- */
 function ReceiptDetailModal({ isOpen, onClose, sale }) {
@@ -129,6 +130,20 @@ export default function SalesHistory() {
   const [dateFilter, setDateFilter] = useState('');
   const [selectedSale, setSelectedSale] = useState(null);
 
+  // Mobile breakpoint — keep all hooks ABOVE the early return.
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' && window.innerWidth <= 500
+  );
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 500);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, []);
+
   const { data: sales = [], isLoading } = useQuery({
     queryKey: ['retail-sales-history'],
     queryFn: getSales,
@@ -148,6 +163,10 @@ export default function SalesHistory() {
   const totalRevenue = filtered.reduce((sum, s) => sum + parseFloat(s.total || 0), 0);
   const totalDiscount = filtered.reduce((sum, s) => sum + parseFloat(s.discount || 0), 0);
   const totalTax = filtered.reduce((sum, s) => sum + parseFloat(s.tax || 0), 0);
+
+  // Mobile branch — every hook above runs unconditionally; this early-return
+  // is safe because no hooks live below it.
+  if (isMobile) return <MobileSalesHistory />;
 
   const paymentLabel = (method) => {
     if (method === 'cash') return 'Cash';

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { getEndOfDayReport } from '../api/retailApi';
 import AIInsightCard from '../components/AIInsightCard';
+import MobileEndOfDay from '../components/MobileEndOfDay';
 
 /* ─── Styles ─── */
 const S = {
@@ -230,12 +231,28 @@ export default function EndOfDayReport({ onTabChange }) {
   useAuth();
   const [reportDate, setReportDate] = useState(() => new Date().toISOString().split('T')[0]);
 
+  // Mobile breakpoint — keep all hooks ABOVE the early return below.
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' && window.innerWidth <= 500
+  );
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 500);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, []);
+
   // Fetch end of day report
   const { data: reportData, isLoading, refetch } = useQuery({
     queryKey: ['retail-end-of-day', reportDate],
     queryFn: () => getEndOfDayReport(reportDate),
     staleTime: 30000,
   });
+
+  if (isMobile) return <MobileEndOfDay />;
 
   // Default data structure if not loaded
   const data = reportData || {
