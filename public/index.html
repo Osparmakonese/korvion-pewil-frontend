@@ -20,19 +20,24 @@
       content="The operating system for African shops &amp; farms. POS, stock, tax-compliant exports, works offline. Mobile money + card. 14-day free trial, no card."
     />
     <!-- OpenGraph + Twitter cards — used when someone shares pewil.org
-         on WhatsApp, Twitter, Facebook. og:image should be a 1200x630
-         PNG of the POS lane with a Pewil wordmark; using logo512.png
-         as a placeholder until we ship the proper share image. -->
+         on WhatsApp, Twitter, Facebook. og-share.png is the proper
+         1200x630 share card showing a POS lane with the Pewil wordmark;
+         the source design lives at /og-share.html. -->
     <meta property="og:title" content="Pewil — Run your shop from your pocket" />
     <meta property="og:description" content="POS, stock, tax-compliant exports, works offline. Built for African shops &amp; farms. 14-day free trial, no card." />
-    <meta property="og:image" content="%PUBLIC_URL%/logo512.png" />
+    <meta property="og:image" content="%PUBLIC_URL%/og-share.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:alt" content="Pewil POS — phone-first retail and farm management for African operators" />
     <meta property="og:url" content="https://pewil.org/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Pewil" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Pewil — Run your shop from your pocket" />
     <meta name="twitter:description" content="POS, stock, tax-compliant exports, works offline. Built for African shops &amp; farms." />
-    <meta name="twitter:image" content="%PUBLIC_URL%/logo512.png" />
+    <meta name="twitter:image" content="%PUBLIC_URL%/og-share.png" />
+    <meta name="twitter:image:alt" content="Pewil POS — phone-first retail and farm management for African operators" />
     <!-- Apple touch icons: spec recommends multiple sizes so iOS picks
          the right one for home-screen, splash, and app switcher. We
          only have 192/512 PNGs in /public, but iOS will pick the
