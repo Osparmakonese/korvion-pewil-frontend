@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import MobileLandingPage from '../components/MobileLandingPage';
 
 // =========================================================================
 // Pewil public landing — ported from landing_designs/design_4_alt_three_operators.html
@@ -298,11 +299,26 @@ const LandingPage = () => {
   const { enterDemo, loadingModule, demoError } = useDemoEntry();
   const demoLoading = Boolean(loadingModule);
 
-  // Mobile and desktop now render the same landing — the existing PL_CSS
-  // @media rules collapse it to single-column at phone widths. No
-  // separate MobileLandingPage component (removed 2026-04-28). One
-  // marketing brand, one landing.
+  // Mobile breakpoint — phones get the proper-mobile MobileLandingPage
+  // (segmented tabs, persona scroll, accordion parity, sticky CTA).
+  // Desktop landing (PL_CSS below) renders unchanged at >500px. Same
+  // palette + Inter + Playfair across both so brand stays unified.
+  // Hooks declared before any conditional return.
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' && window.innerWidth <= 500
+  );
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 500);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, []);
+
   if (user) return <Navigate to="/app" replace />;
+  if (isMobile) return <MobileLandingPage />;
 
   return (
     <div className="pl-root">
@@ -483,7 +499,7 @@ const LandingPage = () => {
                   <li>POS that's faster than the till you already use</li>
                   <li>Stock that counts itself with every sale</li>
                   <li>Supplier books out of the WhatsApp thread</li>
-                  <li>ZIMRA fiscal native &mdash; not a plugin</li>
+                  <li>Tax authority native (ZIMRA today, more rails as we grow) &mdash; not a plugin</li>
                   <li>Built for the shop that opens at six</li>
                 </ul>
                 <div className="pl-op-price">
