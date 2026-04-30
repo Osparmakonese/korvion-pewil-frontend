@@ -124,7 +124,7 @@ export default function Contact() {
         </h1>
         <p style={{ marginTop: 16, color: C.muted, fontSize: 17, lineHeight: 1.55, maxWidth: '56ch' }}>
           {isEnterprise
-            ? 'Per-branch pricing starts at $30/branch/month (4-branch minimum). Tell us a little about your operation and we will set up a personalised onboarding — usually within two business days.'
+            ? 'Per-branch pricing starts at $55/branch/month (4-branch minimum). Tell us a little about your operation and we will set up a personalised onboarding — usually within two business days.'
             : 'Send us a note and someone from our team will reply within one business day.'}
         </p>
 
@@ -182,7 +182,7 @@ export default function Contact() {
                   onChange={e => set('branches', e.target.value)}
                   onFocus={fx} onBlur={fb} placeholder="e.g. 12" />
                 <p style={{ marginTop: 6, fontSize: 12.5, color: C.muted }}>
-                  4-branch minimum · $30 per branch per month · unlimited users
+                  4-branch minimum · $55 per branch per month · unlimited users
                 </p>
               </div>
             )}

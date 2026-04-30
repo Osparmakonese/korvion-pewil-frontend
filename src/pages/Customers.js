@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCustomers, getTopCustomers, createCustomer, deleteCustomer } from '../api/retailApi';
 import { useAuth } from '../context/AuthContext';
 import { fmt } from '../utils/format';
 import { confirm } from '../utils/confirm';
 import AIInsightCard from '../components/AIInsightCard';
+import MobileCustomers from '../components/MobileCustomers';
 
 export default function Customers({ onTabChange }) {
   const { user } = useAuth();
@@ -12,6 +13,20 @@ export default function Customers({ onTabChange }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({ name: '', phone: '', email: '' });
+
+  // Mobile breakpoint — keep all hooks ABOVE the early return.
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' && window.innerWidth <= 500
+  );
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 500);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, []);
 
   const isOwnerOrManager = user?.role === 'owner' || user?.role === 'manager';
 
@@ -48,6 +63,10 @@ export default function Customers({ onTabChange }) {
       queryClient.invalidateQueries({ queryKey: ['retail-top-customers'] });
     },
   });
+
+  // Mobile branch — hooks above are sufficient to satisfy the rules-of-hooks
+  // ordering contract; everything below is desktop-only render logic.
+  if (isMobile) return <MobileCustomers />;
 
   const handleAddCustomer = (e) => {
     e.preventDefault();

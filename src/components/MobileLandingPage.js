@@ -74,7 +74,8 @@ const OPERATORS = {
       'Field calendar with planting reminders',
       'Wages, expenses, trip settlement',
     ],
-    price: '$9',
+    price: '$10',
+    priceSub: 'up to $60/mo Enterprise',
     tier: 'Starter',
     accent: T.green,
     photoGradient: `linear-gradient(135deg, ${T.green}, ${T.green2})`,
@@ -91,8 +92,9 @@ const OPERATORS = {
       'Stock + reorder alerts + supplier WhatsApp',
       'Tax-compliant exports (ZIMRA today, more rails coming)',
     ],
-    price: '$19',
-    tier: 'Pro',
+    price: '$15',
+    priceSub: 'Growth $45/mo (3 branches)',
+    tier: 'Starter',
     accent: T.amber,
     photoGradient: `linear-gradient(135deg, ${T.amber}, ${T.amber2})`,
     cta: 'Try retail demo →',
@@ -108,7 +110,8 @@ const OPERATORS = {
       'Cashier perf, loss prevention, manager PIN',
       'Bulk WhatsApp purchase orders to suppliers',
     ],
-    price: '$49',
+    price: '$55',
+    priceSub: 'per branch · 4-branch min ($220/mo floor)',
     tier: 'Enterprise',
     accent: T.ink,
     photoGradient: 'linear-gradient(135deg, #111827, #374151)',
@@ -274,6 +277,9 @@ export default function MobileLandingPage() {
               <div>
                 <span style={opAmt(op.accent)}>{op.price}</span>
                 <span style={opPer}>/mo · USD</span>
+                {op.priceSub && (
+                  <div style={opPriceSub}>{op.priceSub}</div>
+                )}
               </div>
               <div style={opTier}>{op.tier}</div>
             </div>
@@ -648,6 +654,10 @@ const opAmt = (accent) => ({
   fontWeight: 700, fontSize: 30, color: accent,
 });
 const opPer = { fontSize: 12, color: T.muted, marginLeft: 2 };
+const opPriceSub = {
+  fontSize: 11, color: '#374151', fontWeight: 600,
+  marginTop: 4, lineHeight: 1.35,
+};
 const opTier = {
   fontSize: 10, fontWeight: 700,
   letterSpacing: '0.14em', textTransform: 'uppercase',

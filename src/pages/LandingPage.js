@@ -541,16 +541,16 @@ const LandingPage = () => {
                 </ul>
                 <div className="pl-op-price-ent">
                   <div className="pl-op-price-ent-head">
-                    <span className="amt">$30</span>
+                    <span className="amt">$55</span>
                     <span className="per">per branch, per month</span>
                   </div>
                   <div className="pl-op-price-ent-note">
                     4-branch minimum · unlimited users · scales with you &mdash; no tier cliff, no surprise invoice.
                   </div>
                   <div className="pl-op-price-ent-scale">
-                    <div><span className="br">4 branches</span><span className="pr">$120/mo</span></div>
-                    <div><span className="br">12 branches</span><span className="pr">$360/mo</span></div>
-                    <div><span className="br">50 branches</span><span className="pr">$1,500/mo</span></div>
+                    <div><span className="br">4 branches</span><span className="pr">$220/mo</span></div>
+                    <div><span className="br">12 branches</span><span className="pr">$660/mo</span></div>
+                    <div><span className="br">50 branches</span><span className="pr">$2,750/mo</span></div>
                   </div>
                 </div>
                 <Link to="/contact?type=enterprise" className="pl-op-btn">Talk to us about your chain &rarr;</Link>
@@ -683,7 +683,7 @@ const LandingPage = () => {
           <h2 className="pl-serif">Whichever operator you are &mdash; <em>14&nbsp;days</em>, no card, no charge.</h2>
           <p>
             Pewil Farm from $10/mo ($60 Enterprise). Pewil Retail from $15/mo (1 counter) to $45/mo (3 branches)
-            &mdash; and Pewil Retail Enterprise at $30 per branch per month, for the chain that runs your city.
+            &mdash; and Pewil Retail Enterprise at $55 per branch per month, for the chain that runs your city.
             Yearly billing gets 2 months free. Cancel anytime, export everything &mdash; the data was always yours.
           </p>
           <div className="pl-cta-actions">

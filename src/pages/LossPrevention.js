@@ -14,7 +14,7 @@
  *
  * All data is tenant-scoped server-side. Owners & managers only.
  */
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import {
   getLossPreventionSummary,
@@ -38,6 +38,7 @@ import {
 } from '../api/retailApi';
 import { fmt } from '../utils/format';
 import { useAuth } from '../context/AuthContext';
+import MobileLossPrevention from '../components/MobileLossPrevention';
 
 // ── Design tokens ──
 const GREEN = '#1a6b3a';
@@ -919,6 +920,24 @@ export default function LossPrevention() {
   const role = user?.role;
   const isOwner = role === 'owner';
   const [tab, setTab] = useState('overview');
+
+  // Mobile breakpoint — hooks declared above any early return.
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' && window.innerWidth <= 500
+  );
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 500);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, []);
+
+  if (isMobile && (role === 'owner' || role === 'manager')) {
+    return <MobileLossPrevention />;
+  }
 
   if (role !== 'owner' && role !== 'manager') {
     return (
