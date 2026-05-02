@@ -411,7 +411,9 @@ export default function RetailDashboard() {
   const getActivityItems = () => {
     const items = [];
 
-    // Add recent activity items from API
+    // Add recent activity items from API. Prefer ISO `created_at` over the
+    // legacy `time` (HH:MM) so timeAgo() can compute relative labels —
+    // see backend retail/views.py recent_activity payload.
     recentActivityData.slice(0, 6).forEach((activity) => {
       items.push({
         id: `activity-${activity.id}`,
@@ -419,7 +421,7 @@ export default function RetailDashboard() {
         dot: '#2d9e58',
         title: activity.description || `Transaction #${activity.receipt}`,
         desc: `${fmt(activity.total, 'zwd')}`,
-        time: activity.time,
+        time: activity.created_at || activity.time,
       });
     });
 
@@ -447,10 +449,22 @@ export default function RetailDashboard() {
 
   const activityItems = getActivityItems();
 
-  // Format time ago
+  // Format time ago — defensive against the backend currently sending
+  // recent_activity[].time as the bare 'HH:MM' string from
+  // s.created_at.strftime('%H:%M'). new Date('14:23') returns Invalid
+  // Date and (now - NaN)/1000 is NaN → 'NaNd ago' bug seen on prod
+  // 2026-04-30. Fall back to displaying the string verbatim when parse
+  // fails. When backend is updated to send ISO datetimes, this still
+  // works.
   const timeAgo = (dateStr) => {
     if (!dateStr) return 'Recently';
+    // 'HH:MM' or 'HH:MM:SS' — backend sometimes ships clock-only strings
+    // for today's events. Display them as 'at HH:MM'.
+    if (typeof dateStr === 'string' && /^\d{1,2}:\d{2}(:\d{2})?$/.test(dateStr)) {
+      return `at ${dateStr.slice(0, 5)}`;
+    }
     const date = new Date(dateStr);
+    if (Number.isNaN(date.getTime())) return String(dateStr);
     const now = new Date();
     const secondsAgo = Math.floor((now - date) / 1000);
     if (secondsAgo < 60) return 'Just now';
