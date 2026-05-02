@@ -702,16 +702,19 @@ export default function RetailDashboard() {
                 <td style={S.td}>
                   <strong>{activity.receipt || '-'}</strong>
                 </td>
-                <td style={S.td}>{activity.items_count || 0}</td>
+                <td style={S.td}>{activity.items_count || activity.line_count || '—'}</td>
                 <td style={S.td}>
                   <strong>{fmt(activity.total, 'zwd')}</strong>
                 </td>
                 <td style={S.td}>
                   <span style={S.badge('amber')}>
-                    {activity.method ? (activity.method.charAt(0).toUpperCase() + activity.method.slice(1)) : 'Unknown'}
+                    {activity.method === 'mobile_money' ? 'EcoCash'
+                      : activity.method === 'mixed' ? 'Split'
+                      : activity.method ? (activity.method.charAt(0).toUpperCase() + activity.method.slice(1))
+                      : 'Unknown'}
                   </span>
                 </td>
-                <td style={S.td}>{activity.time ? new Date(activity.time).toLocaleString() : ''}</td>
+                <td style={S.td}>{timeAgo(activity.created_at || activity.time)}</td>
               </tr>
             ))}
           </tbody>
