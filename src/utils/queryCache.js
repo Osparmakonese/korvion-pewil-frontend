@@ -32,40 +32,48 @@
  */
 
 /**
- * Match a query key's first element against a list of prefix strings.
+ * Match a query key's first element against a list of substrings.
  * Tolerates non-string first elements (returns false).
+ *
+ * Uses substring (`includes`) match instead of strict prefix because
+ * the codebase uses both conventions:
+ *   ['retail-products', 'retail-products-pos', 'retail-products-cats',
+ *    'retail-products-adj', 'retail-products-for-po', 'retail-products-cats',
+ *    'products', 'product-history', 'top-customers', ...]
+ *
+ * A strict prefix matcher misses `top-customers` when invalidating
+ * `customer`. Substring is broader but the consequence (an extra
+ * refetch on a few unrelated queries) is harmless — invalidation only
+ * triggers a network call for *mounted* queries, and unmounted ones
+ * just get a flag flip.
  */
-function matches(prefixes) {
+function matches(needles) {
   return (q) => {
     const k = q.queryKey?.[0];
     if (typeof k !== 'string') return false;
-    return prefixes.some((p) => k === p || k.startsWith(p + '-') || k.startsWith(p + '_'));
+    return needles.some((n) => k.includes(n));
   };
 }
 
 /**
- * Invalidate every product-related query.
+ * Invalidate every product-related query — and the dashboards that
+ * report on product counts.
  *
- * Covers: product list (every `retail-products*` variant), low-stock,
- * expiring, categories (because category counts can change), stock
- * adjustments, dashboard tiles, mobile mirrors, and the legacy bare
- * `['products']` key used by QuickCapture.
+ * Substring-based matching catches every variant in one pass: any key
+ * containing 'product', 'category', 'dashboard', 'low-stock', 'lowStock',
+ * 'stock-adjust', 'expiring', or 'pos'.
  */
 export function invalidateProductCaches(qc) {
   qc.invalidateQueries({
     predicate: matches([
-      'retail-products',
-      'retail-low-stock',
-      'lowStock',
-      'retail-expiring',
-      'retail-categories',
-      'retail-categories-page',
-      'retail-stock-adjustments',
-      'products',                  // QuickCapture bare key
-      'product',                   // any future variants
-      'retail-dashboard',
-      'dashboard',
-      'retail-pos',                // POS tile/listing fallbacks if ever introduced
+      'product',                   // retail-products*, products, product-history
+      'categor',                   // retail-categories*, retail-categories-page
+      'dashboard',                 // retail-dashboard, dashboard, etc.
+      'low-stock',                 // retail-low-stock
+      'lowStock',                  // farm dashboard low-stock alias
+      'stock-adjust',              // retail-stock-adjustments, retail-products-adj
+      'expiring',                  // retail-expiring
+      'pos',                       // retail-products-pos, retail-sessions-pos
     ]),
   });
 }
@@ -79,14 +87,10 @@ export function invalidateProductCaches(qc) {
 export function invalidateCustomerCaches(qc) {
   qc.invalidateQueries({
     predicate: matches([
-      'retail-customers',
-      'retail-top-customers',
-      'customers',
-      'customer',
-      'customer-history',
-      'retail-loyalty',
-      'retail-loyalty-stats',
-      'retail-loyalty-transactions',
+      'customer',                  // retail-customers*, customers, customer-history
+      'top-customers',             // retail-top-customers
+      'loyalty',                   // retail-loyalty*
+      'dashboard',                 // dashboard customer counts
     ]),
   });
 }
@@ -100,12 +104,9 @@ export function invalidateCustomerCaches(qc) {
 export function invalidateCategoryCaches(qc) {
   qc.invalidateQueries({
     predicate: matches([
-      'retail-categories',
-      'retail-categories-page',
-      'retail-products',
-      'products',
-      'retail-dashboard',
-      'dashboard',
+      'categor',                   // retail-categories*, retail-categories-page
+      'product',                   // product cards show category names
+      'dashboard',                 // dashboard category counts
     ]),
   });
 }
@@ -121,28 +122,19 @@ export function invalidateCategoryCaches(qc) {
 export function invalidateSaleCaches(qc) {
   qc.invalidateQueries({
     predicate: matches([
-      'retail-products',
-      'retail-products-pos',
-      'retail-low-stock',
+      'product',                   // stock count decrements
+      'low-stock',
       'lowStock',
-      'retail-stock-adjustments',
-      'retail-sales',
-      'retail-sales-history',
-      'sales-history-mobile',
-      'retail-end-of-day',
-      'end-of-day-report',
-      'retail-cashier-sessions',
-      'retail-cashier-sessions-page',
-      'retail-sessions-pos',
-      'retail-dashboard',
-      'dashboard',
-      'retail-customers',
-      'retail-top-customers',
-      'customers',
-      'customer-history',
-      'retail-loyalty',
-      'retail-loyalty-stats',
-      'retail-loyalty-transactions',
+      'stock-adjust',
+      'sale',                      // retail-sales*, sales-history*, livestockSales
+      'end-of-day',                // retail-end-of-day, end-of-day-report
+      'cashier-session',           // retail-cashier-sessions*
+      'session',                   // retail-sessions-pos
+      'pos',
+      'dashboard',                 // hero numbers
+      'customer',                  // LTV when customer attached
+      'loyalty',                   // points balance
+      'recent-activity',           // dashboard recent feed
     ]),
   });
 }
@@ -154,12 +146,10 @@ export function invalidateSaleCaches(qc) {
 export function invalidateSessionCaches(qc) {
   qc.invalidateQueries({
     predicate: matches([
-      'retail-cashier-sessions',
-      'retail-cashier-sessions-page',
-      'retail-sessions-pos',
-      'retail-end-of-day',
-      'end-of-day-report',
-      'retail-dashboard',
+      'cashier-session',
+      'session',
+      'end-of-day',
+      'pos',                       // retail-sessions-pos for live POS list
       'dashboard',
     ]),
   });
@@ -172,12 +162,25 @@ export function invalidateSessionCaches(qc) {
 export function invalidateSupplierCaches(qc) {
   qc.invalidateQueries({
     predicate: matches([
-      'retail-suppliers',
-      'retail-purchase-orders',
-      'retail-products',          // receiving PO bumps stock
-      'retail-products-for-po',
-      'retail-low-stock',
+      'supplier',                  // retail-suppliers
+      'purchase-order',            // retail-purchase-orders
+      'product',                   // receiving PO bumps stock
+      'low-stock',
       'lowStock',
+      'dashboard',
     ]),
   });
+}
+
+/**
+ * Nuke every cached query — last-resort fallback when a mutation could
+ * affect arbitrary parts of the system (tenant switch, reset_for_launch,
+ * bulk import). Mounted queries refetch immediately; unmounted ones are
+ * flagged stale for the next mount.
+ *
+ * Avoid for normal CRUD — use the targeted invalidators above so unrelated
+ * views don't refetch unnecessarily.
+ */
+export function invalidateAllCaches(qc) {
+  qc.invalidateQueries();
 }
