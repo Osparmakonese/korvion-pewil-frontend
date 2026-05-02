@@ -9,6 +9,7 @@ import {
 import { fmt } from '../utils/format';
 import AIInsightCard from '../components/AIInsightCard';
 import MobileCashierSessions from '../components/MobileCashierSessions';
+import { invalidateSessionCaches } from '../utils/queryCache';
 
 /* --- Open Session Modal --- */
 function OpenSessionModal({ isOpen, onClose, onSubmit, loading }) {
@@ -586,7 +587,9 @@ export default function CashierSessions() {
   const openMut = useMutation({
     mutationFn: createCashierSession,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['retail-cashier-sessions-page'] });
+      // Opening a session must reach POS so the cashier sees the new
+      // session immediately, plus end-of-day and dashboard rollups.
+      invalidateSessionCaches(qc);
       setShowOpenModal(false);
     },
   });
@@ -594,7 +597,7 @@ export default function CashierSessions() {
   const closeMut = useMutation({
     mutationFn: ({ id, data, token }) => closeCashierSessionAdvanced(id, data, token),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['retail-cashier-sessions-page'] });
+      invalidateSessionCaches(qc);
       setClosingSession(null);
     },
   });
@@ -797,7 +800,8 @@ export default function CashierSessions() {
         onClose={() => setDropSession(null)}
         session={dropSession}
         onDone={() => {
-          qc.invalidateQueries({ queryKey: ['retail-cashier-sessions-page'] });
+          // Cash drop changes drawer balance — fan-out to POS + EOD.
+          invalidateSessionCaches(qc);
           setDropSession(null);
         }}
       />

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getStockAdjustments, createStockAdjustment, getProducts } from '../api/retailApi';
+import { invalidateProductCaches } from '../utils/queryCache';
 
 /* --- Add Adjustment Modal --- */
 function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
@@ -121,8 +122,9 @@ export default function StockAdjustments() {
   const createMut = useMutation({
     mutationFn: createStockAdjustment,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['retail-stock-adjustments'] });
-      qc.invalidateQueries({ queryKey: ['retail-products-adj'] });
+      // A stock adjustment changes on-hand quantity for a product, so it
+      // must reach POS, low-stock, dashboard, and every product list.
+      invalidateProductCaches(qc);
       setShowModal(false);
     },
   });
