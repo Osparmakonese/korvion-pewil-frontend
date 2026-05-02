@@ -24,22 +24,29 @@ export default function DemoBanner() {
     <div
       role="status"
       style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 1100,
+        // 2026-04-30 — switched from `sticky` to `relative` so the banner
+        // takes its own line in document flow and never sits on top of
+        // page content. The previous sticky+z-index:1100 setup was
+        // overlapping the first row of every page (dashboard hero,
+        // products grid, POS tiles) on mobile because the layout's
+        // mobile-header is also sticky at top:0 with a lower z-index —
+        // the two stack into a 100px+ overlay that hides data.
+        position: 'relative',
         width: '100%',
         background: 'linear-gradient(135deg, #f4a743, #d9562c)',
         color: '#fff',
-        padding: '10px 16px',
+        padding: '8px 14px',
+        marginBottom: 12,
+        borderRadius: 10,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        gap: 14,
+        gap: 10,
         flexWrap: 'wrap',
-        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-        fontSize: 13.5,
+        fontFamily: "'Inter', system-ui, sans-serif",
+        fontSize: 13,
         fontWeight: 500,
-        boxShadow: '0 2px 8px rgba(0,0,0,.12)',
+        boxShadow: '0 2px 8px rgba(0,0,0,.10)',
       }}
     >
       <Link

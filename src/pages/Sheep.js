@@ -73,25 +73,45 @@ export default function Sheep() {
   const { data: healthRecords = [] } = useQuery({ queryKey: ['sheepHealth'], queryFn: () => getSheepHealth({ animal_type: 'sheep' }) });
   const { data: sales = [] } = useQuery({ queryKey: ['livestockSales'], queryFn: () => getLivestockSales({ animal_type: 'sheep' }) });
 
-  /* ── mutations ── */
+  /* ── mutations ──
+     Every farm mutation must also invalidate ['dashboard'] so the herd
+     count + revenue hero numbers refresh. Reported 2026-04-30 — products
+     and sales were not updating dashboard tiles after CRUD. */
   const addMut = useMutation({
     mutationFn: createSheep,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['sheep'] }); setSheepForm(emptySheep); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['sheep'] });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      setSheepForm(emptySheep);
+    },
   });
 
   const healthMut = useMutation({
     mutationFn: createSheepHealth,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['sheepHealth'] }); setHealthForm(emptyHealth); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['sheepHealth'] });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      setHealthForm(emptyHealth);
+    },
   });
 
   const saleMut = useMutation({
     mutationFn: createLivestockSale,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['livestockSales'] }); qc.invalidateQueries({ queryKey: ['sheep'] }); setSaleForm(emptySale); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['livestockSales'] });
+      qc.invalidateQueries({ queryKey: ['sheep'] });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      setSaleForm(emptySale);
+    },
   });
 
   const delMut = useMutation({
     mutationFn: (id) => deleteSheep(id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['sheep'] }); setDelConfirm(null); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['sheep'] });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      setDelConfirm(null);
+    },
   });
 
   /* ── helpers ── */

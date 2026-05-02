@@ -72,12 +72,20 @@ export default function Pigs() {
       date_of_death: data.date_of_death || null,
       status: data.status || 'active',
     }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['pigs'] }); setPigForm(emptyPig); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['pigs'] });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      setPigForm(emptyPig);
+    },
   });
 
   const addHealthMut = useMutation({
     mutationFn: createPigHealth,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['pigHealth'] }); setHealthForm(emptyHealth); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['pigHealth'] });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      setHealthForm(emptyHealth);
+    },
   });
 
   const addSaleMut = useMutation({
@@ -87,12 +95,21 @@ export default function Pigs() {
       else delete payload.pig;
       return createLivestockSale(payload);
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['livestockSales'] }); qc.invalidateQueries({ queryKey: ['pigs'] }); setSaleForm(emptySale); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['livestockSales'] });
+      qc.invalidateQueries({ queryKey: ['pigs'] });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      setSaleForm(emptySale);
+    },
   });
 
   const delMut = useMutation({
     mutationFn: (id) => deletePig(id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['pigs'] }); setDelConfirm(null); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['pigs'] });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      setDelConfirm(null);
+    },
   });
 
   const setP = (k, v) => setPigForm(p => ({ ...p, [k]: v }));

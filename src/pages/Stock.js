@@ -59,11 +59,23 @@ export default function Stock() {
 
   const addMut = useMutation({
     mutationFn: createStockItem,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['stock'] }); qc.invalidateQueries({ queryKey: ['lowStock'] }); setItemForm(emptyItem); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['stock'] });
+      qc.invalidateQueries({ queryKey: ['lowStock'] });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      setItemForm(emptyItem);
+    },
   });
   const usageMut = useMutation({
     mutationFn: logStockUsage,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['stock'] }); qc.invalidateQueries({ queryKey: ['stockUsage'] }); qc.invalidateQueries({ queryKey: ['expenses'] }); qc.invalidateQueries({ queryKey: ['lowStock'] }); setUsageForm(emptyUsage); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['stock'] });
+      qc.invalidateQueries({ queryKey: ['stockUsage'] });
+      qc.invalidateQueries({ queryKey: ['expenses'] });
+      qc.invalidateQueries({ queryKey: ['lowStock'] });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      setUsageForm(emptyUsage);
+    },
   });
   const delMut = useMutation({
     mutationFn: (id) => deleteStockItem(id),
