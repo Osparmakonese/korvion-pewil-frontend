@@ -6,6 +6,7 @@ import { fmt } from '../utils/format';
 import { confirm } from '../utils/confirm';
 import AIInsightCard from '../components/AIInsightCard';
 import MobileCustomers from '../components/MobileCustomers';
+import { invalidateCustomerCaches } from '../utils/queryCache';
 
 export default function Customers({ onTabChange }) {
   const { user } = useAuth();
@@ -44,24 +45,38 @@ export default function Customers({ onTabChange }) {
     staleTime: 30000,
   });
 
-  // Create customer mutation
+  // Pretty-print API errors so silent failures stop catching us.
+  const formatApiError = (err, fallback = 'Save failed') => {
+    const data = err?.response?.data;
+    if (typeof data === 'string') return data;
+    if (data?.detail) return data.detail;
+    if (data && typeof data === 'object') {
+      const lines = Object.entries(data).map(([k, v]) =>
+        `${k}: ${Array.isArray(v) ? v.join(', ') : v}`);
+      if (lines.length) return lines.join('\n');
+    }
+    return err?.message || fallback;
+  };
+
+  // Create customer mutation — predicate-based invalidation reaches the
+  // mobile mirror, top-customers, loyalty, and customer-history caches too.
   const createMutation = useMutation({
     mutationFn: createCustomer,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['retail-customers'] });
-      queryClient.invalidateQueries({ queryKey: ['retail-top-customers'] });
+      invalidateCustomerCaches(queryClient);
       setShowAddForm(false);
       setFormData({ name: '', phone: '', email: '' });
     },
+    onError: (err) => alert('Could not create customer:\n\n' + formatApiError(err)),
   });
 
   // Delete customer mutation
   const deleteMutation = useMutation({
     mutationFn: deleteCustomer,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['retail-customers'] });
-      queryClient.invalidateQueries({ queryKey: ['retail-top-customers'] });
+      invalidateCustomerCaches(queryClient);
     },
+    onError: (err) => alert('Could not delete customer:\n\n' + formatApiError(err)),
   });
 
   // Mobile branch — hooks above are sufficient to satisfy the rules-of-hooks

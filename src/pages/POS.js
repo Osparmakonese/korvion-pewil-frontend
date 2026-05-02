@@ -27,6 +27,7 @@ import MobileSaleComplete from '../components/MobileSaleComplete';
 import POSImmersiveControls from '../components/POSImmersiveControls';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import { invalidateSaleCaches, invalidateProductCaches } from '../utils/queryCache';
 
 /* ─── Receipt Modal ─── */
 function ReceiptModal({ isOpen, onClose, receipt }) {
@@ -820,7 +821,11 @@ export default function POS() {
         }
       }
       resetCart();
-      qc.invalidateQueries({ queryKey: ['retail-products-pos'] });
+      // Invalidate every cache a sale touches: stock (so POS tile counts
+      // refresh), low-stock alerts, sales history, end-of-day rollup,
+      // dashboard hero numbers, customer LTV (if a customer was attached),
+      // loyalty balance, and cashier session totals.
+      invalidateSaleCaches(qc);
       setPendingCount(getPendingCount());
     },
   });
@@ -832,8 +837,8 @@ export default function POS() {
       onDrain: ({ sent, failed, remaining }) => {
         setPendingCount(remaining);
         if (sent > 0) {
-          qc.invalidateQueries({ queryKey: ['retail-sessions-pos'] });
-          qc.invalidateQueries({ queryKey: ['retail-products-pos'] });
+          // Offline queue drained — same fan-out as a live sale.
+          invalidateSaleCaches(qc);
         }
       },
     });

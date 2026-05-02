@@ -11,6 +11,7 @@ import {
   receivePurchaseOrder,
   getProducts,
 } from '../api/retailApi';
+import { invalidateSupplierCaches, invalidateProductCaches } from '../utils/queryCache';
 
 /* ---------- Supplier form modal ---------- */
 function SupplierModal({ open, onClose, onSubmit, initialData, submitting }) {
@@ -253,8 +254,10 @@ export default function Suppliers({ onTabChange }) {
   const receivePOMutation = useMutation({
     mutationFn: receivePurchaseOrder,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['retail-purchase-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['retail-products'] });
+      // Receiving a PO bumps stock — fan-out to every product list cache
+      // (POS, low-stock, dashboard) plus the supplier/PO caches.
+      invalidateSupplierCaches(queryClient);
+      invalidateProductCaches(queryClient);
     },
     onError: (err) => alert('Failed to receive PO: ' + (err?.response?.data?.detail || err?.message || 'Unknown error')),
   });

@@ -4,6 +4,7 @@ import { getReturns, getReturnsSummary, createReturn, completeReturn } from '../
 import { useAuth } from '../context/AuthContext';
 import { fmt } from '../utils/format';
 import { confirm } from '../utils/confirm';
+import { invalidateProductCaches, invalidateSaleCaches } from '../utils/queryCache';
 
 export default function Returns({ onTabChange }) {
   const { user } = useAuth();
@@ -27,7 +28,9 @@ export default function Returns({ onTabChange }) {
     staleTime: 30000,
   });
 
-  // Create return mutation
+  // Create return — touches the returns list, then on completion the
+  // sale fan-out (stock comes back, sales totals shift, customer LTV
+  // adjusts, EOD numbers recompute, dashboard refreshes).
   const createMutation = useMutation({
     mutationFn: createReturn,
     onSuccess: () => {
@@ -38,12 +41,16 @@ export default function Returns({ onTabChange }) {
     },
   });
 
-  // Complete return mutation
+  // Completing a return restocks the items and adjusts totals — fan-out
+  // through invalidateSaleCaches so POS, low-stock, sales-history, EOD,
+  // dashboard, and customer LTV all refresh.
   const completeMutation = useMutation({
     mutationFn: completeReturn,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['retail-returns'] });
       queryClient.invalidateQueries({ queryKey: ['retail-returns-summary'] });
+      invalidateSaleCaches(queryClient);
+      invalidateProductCaches(queryClient);
     },
   });
 

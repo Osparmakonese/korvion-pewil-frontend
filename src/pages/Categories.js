@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCategories, createCategory, updateCategory, deleteCategory, getProducts } from '../api/retailApi';
 import { confirm } from '../utils/confirm';
+import { invalidateCategoryCaches } from '../utils/queryCache';
 
 /* --- Category Modal --- */
 function CategoryModal({ isOpen, onClose, onSubmit, loading, editCategory }) {
@@ -90,28 +91,45 @@ export default function Categories() {
     queryFn: getProducts,
   });
 
+  const formatApiError = (err, fallback = 'Save failed') => {
+    const data = err?.response?.data;
+    if (typeof data === 'string') return data;
+    if (data?.detail) return data.detail;
+    if (data && typeof data === 'object') {
+      const lines = Object.entries(data).map(([k, v]) =>
+        `${k}: ${Array.isArray(v) ? v.join(', ') : v}`);
+      if (lines.length) return lines.join('\n');
+    }
+    return err?.message || fallback;
+  };
+
   const createMut = useMutation({
     mutationFn: createCategory,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['retail-categories-page'] });
+      // Categories list AND every product list (because product cards
+      // show category names). Predicate-based — covers all variant keys.
+      invalidateCategoryCaches(qc);
       setShowModal(false);
     },
+    onError: (err) => alert('Could not create category:\n\n' + formatApiError(err)),
   });
 
   const updateMut = useMutation({
     mutationFn: ({ id, data }) => updateCategory(id, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['retail-categories-page'] });
+      invalidateCategoryCaches(qc);
       setShowModal(false);
       setEditCategory(null);
     },
+    onError: (err) => alert('Could not update category:\n\n' + formatApiError(err)),
   });
 
   const deleteMut = useMutation({
     mutationFn: deleteCategory,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['retail-categories-page'] });
+      invalidateCategoryCaches(qc);
     },
+    onError: (err) => alert('Could not delete category:\n\n' + formatApiError(err)),
   });
 
   const handleSubmit = (data) => {

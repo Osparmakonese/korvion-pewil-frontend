@@ -14,6 +14,7 @@ import MobileProducts from '../components/MobileProducts';
 import { useAuth } from '../context/AuthContext';
 import { fmt } from '../utils/format';
 import { confirm } from '../utils/confirm';
+import { invalidateProductCaches } from '../utils/queryCache';
 
 /* ─── Modal Component ─── */
 function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initialData }) {
@@ -592,30 +593,54 @@ export default function Products() {
     queryFn: getStockAdjustments,
   });
 
+  // Pretty-print backend validation errors so the user sees what went wrong
+  // instead of the modal silently staying open or alert("[object Object]").
+  const formatApiError = (err, fallback = 'Save failed') => {
+    const data = err?.response?.data;
+    if (typeof data === 'string') return data;
+    if (data?.detail) return data.detail;
+    if (data && typeof data === 'object') {
+      const lines = Object.entries(data).map(([k, v]) =>
+        `${k}: ${Array.isArray(v) ? v.join(', ') : v}`
+      );
+      if (lines.length) return lines.join('\n');
+    }
+    return err?.message || fallback;
+  };
+
   const createMut = useMutation({
     mutationFn: createProduct,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['retail-products'] });
-      qc.invalidateQueries({ queryKey: ['retail-low-stock'] });
+      // Predicate-based invalidation — touches every product-list variant key
+      // (retail-products, retail-products-pos, retail-products-cats, ...).
+      // Prevents the "added but not in POS" bug.
+      invalidateProductCaches(qc);
       setShowModal(false);
+    },
+    onError: (err) => {
+      alert('Could not create product:\n\n' + formatApiError(err));
     },
   });
 
   const updateMut = useMutation({
     mutationFn: ({ id, data }) => updateProduct(id, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['retail-products'] });
-      qc.invalidateQueries({ queryKey: ['retail-low-stock'] });
+      invalidateProductCaches(qc);
       setShowModal(false);
       setEditingProduct(null);
+    },
+    onError: (err) => {
+      alert('Could not update product:\n\n' + formatApiError(err));
     },
   });
 
   const deleteMut = useMutation({
     mutationFn: deleteProduct,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['retail-products'] });
-      qc.invalidateQueries({ queryKey: ['retail-low-stock'] });
+      invalidateProductCaches(qc);
+    },
+    onError: (err) => {
+      alert('Could not delete product:\n\n' + formatApiError(err));
     },
   });
 
