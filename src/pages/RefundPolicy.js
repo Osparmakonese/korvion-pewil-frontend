@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import BackLink from '../components/BackLink';
 
 const S = {
   wrapper: { minHeight: '100vh', background: '#f9fafb', fontFamily: "'Inter', sans-serif" },
@@ -16,7 +17,7 @@ export default function RefundPolicy() {
     <div style={S.wrapper}>
       <nav style={S.nav}>
         <Link to="/" style={S.logo}>PEWIL</Link>
-        <Link to="/" style={{ fontSize: 13, color: '#1a6b3a', textDecoration: 'none', fontWeight: 600 }}>Back to home</Link>
+        <BackLink to="/" label="Back to home" />
       </nav>
       <div style={S.body}>
         <h1 style={S.h1}>Refund Policy</h1>

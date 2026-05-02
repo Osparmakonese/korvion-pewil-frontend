@@ -22,6 +22,7 @@ import {
 } from '../api/retailApi';
 import { useAuth } from '../context/AuthContext';
 import { fmt } from '../utils/format';
+import { getProductIcon } from '../utils/productIcons';
 
 const T = {
   cream:   '#ffffff',
@@ -83,6 +84,14 @@ export default function MobileProducts({ onAddProduct, onEditProduct }) {
       return matchesQ && matchesCat;
     });
   }, [products, search, categoryFilter]);
+
+  // id → name lookup so getProductIcon can match on category names
+  // even when the API returns numeric category foreign keys only.
+  const categoryNameById = useMemo(() => {
+    const m = {};
+    (categories || []).forEach((c) => { m[String(c.id)] = c.name; });
+    return m;
+  }, [categories]);
 
   return (
     <div style={{
@@ -179,7 +188,9 @@ export default function MobileProducts({ onAddProduct, onEditProduct }) {
             ? 'No products match your filter.'
             : 'No products yet. Add one to start ringing up sales.'}
         </div>
-      ) : filtered.map((p) => (
+      ) : filtered.map((p) => {
+        const icon = getProductIcon(p, categoryNameById[String(p.category)]);
+        return (
         <button
           key={p.id}
           type="button"
@@ -199,12 +210,11 @@ export default function MobileProducts({ onAddProduct, onEditProduct }) {
         >
           <div style={{
             width: 44, height: 44, borderRadius: 12,
-            background: T.cream2, color: T.ink,
+            background: icon.bg, color: icon.fg,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: "'Playfair Display', Georgia, serif",
-            fontSize: 18, fontWeight: 700, flex: '0 0 44px',
+            fontSize: 22, flex: '0 0 44px',
           }}>
-            {(p.name || '?').slice(0, 1).toUpperCase()}
+            {icon.emoji}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{
@@ -237,7 +247,8 @@ export default function MobileProducts({ onAddProduct, onEditProduct }) {
             {fmt(parseFloat(p.selling_price) || 0, 'zwd')}
           </div>
         </button>
-      ))}
+        );
+      })}
 
       {/* Owner/manager FAB to add a new product */}
       {isOwnerOrManager && (

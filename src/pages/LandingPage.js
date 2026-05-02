@@ -52,6 +52,12 @@ const PL_CSS = `
   .pl-nav-links a:hover{color:#111827}
   .pl-nav-cta{background:#111827;color:#fff!important;padding:10px 20px;border-radius:999px;font-size:13px;font-weight:600}
   .pl-nav-cta:hover{background:#000}
+  /* Sign-in link — always visible (mobile + desktop). User reported the
+     login was hard to find behind the demo flow. Sits to the LEFT of
+     the primary CTA so the visual rhythm reads: Login → Start free. */
+  .pl-nav-actions{display:flex;align-items:center;gap:14px}
+  .pl-nav-login{color:#374151;text-decoration:none;font-size:13px;font-weight:600;padding:8px 0}
+  .pl-nav-login:hover{color:#111827}
 
   /* hero */
   .pl-hero{padding:96px 0 72px;background:radial-gradient(ellipse 60% 40% at 20% 20%,#e8f5ee,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 80%,#fff4e1,transparent 60%),#fff}
@@ -337,7 +343,10 @@ const LandingPage = () => {
             <Link to="/pricing">Pricing</Link>
             <a href="#thread">Resources</a>
           </div>
-          <Link to="/register" className="pl-nav-cta">Start free</Link>
+          <div className="pl-nav-actions">
+            <Link to="/login" className="pl-nav-login">Sign in</Link>
+            <Link to="/register" className="pl-nav-cta">Start free</Link>
+          </div>
         </div>
       </nav>
 
