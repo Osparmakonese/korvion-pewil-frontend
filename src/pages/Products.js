@@ -831,7 +831,7 @@ export default function Products() {
                         </button>
                         <button
                           onClick={async () => {
-                            if (await confirm({ title: 'Delete product', message: `Delete ${product.name}?`, confirmText: 'Delete' })) {
+                            if (await confirm({ title: 'Archive product', message: `Archive "${product.name}"? It will stop appearing in POS and reports, but every past sale that included it stays intact. An owner can restore it later from the archive.`, confirmText: 'Archive', danger: false })) {
                               deleteMut.mutate(product.id);
                             }
                           }}

@@ -217,6 +217,16 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
+    // Clear the once-per-session trial-notification flags so the toast
+    // surfaces again on the next login. sessionStorage normally clears
+    // when the tab closes, but explicit logout while the tab stays open
+    // also needs to reset state — without this, signing out and back in
+    // in the same tab would silently swallow the trial reminder.
+    try {
+      sessionStorage.removeItem('pewil-trial-notif-shown');
+      sessionStorage.removeItem('pewil-trial-notif-shown:data');
+      sessionStorage.removeItem('pewil-trial-notif-dismissed');
+    } catch (_) { /* best effort */ }
     setUser(null);
   }
 

@@ -91,7 +91,7 @@ export default function Customers({ onTabChange }) {
   };
 
   const handleDeleteCustomer = async (id) => {
-    if (await confirm({ title: 'Delete customer', message: 'Are you sure you want to delete this customer?', confirmText: 'Delete' })) {
+    if (await confirm({ title: 'Archive customer', message: 'Archive this customer? Their past purchases stay on the books, but they\'ll stop appearing in the customer picker. An owner can restore them later from the archive.', confirmText: 'Archive', danger: false })) {
       deleteMutation.mutate(id);
     }
   };

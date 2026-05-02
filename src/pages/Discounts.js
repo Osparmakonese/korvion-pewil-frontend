@@ -487,7 +487,7 @@ export default function Discounts({ onTabChange }) {
                         </button>
                         <button
                           onClick={async () => {
-                            if (await confirm({ title: 'Delete promotion', message: `Delete ${promo.name}?`, confirmText: 'Delete' })) {
+                            if (await confirm({ title: 'Archive promotion', message: `Archive "${promo.name}"? Past sales that used it stay intact. Restore later from the archive if you change your mind.`, confirmText: 'Archive', danger: false })) {
                               deleteDiscountMutation.mutate(promo.id);
                             }
                           }}
