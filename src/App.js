@@ -5,6 +5,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from './context/AuthContext';
 import { getDashboard, getLowStock } from './api/farmApi';
+import { getRetailDashboard, getLowStockProducts } from './api/retailApi';
 import Layout from './components/Layout';
 import CookieConsent from './components/CookieConsent';
 import OnboardingWalkthrough from './components/OnboardingWalkthrough';
@@ -325,15 +326,23 @@ function FarmApp() {
   const activeModule = (user?.modules && user.modules[0] === 'retail') ? 'retail' : 'farm';
   const [activeTab, setActiveTab] = useState(activeModule === 'retail' ? 'Retail' : 'Dashboard');
 
+  // 2026-04-30 — fix sidebar/topbar dashboard prop on retail tenants.
+  // Previously this always called getDashboard() (the FARM endpoint)
+  // regardless of activeModule. For a retail tenant that returned an
+  // empty/wrong payload (best case) or a 403 from HasFarmModule (worst
+  // case), so the sidebar badge counts never reflected retail reality.
+  // Now we route each tenant to its own dashboard endpoint AND use a
+  // module-keyed queryKey so cache invalidation is module-correct.
+  const isRetail = activeModule === 'retail';
   const { data: dashboardData } = useQuery({
-    queryKey: ['dashboard'],
-    queryFn: getDashboard,
+    queryKey: isRetail ? ['retail-dashboard'] : ['dashboard'],
+    queryFn: isRetail ? getRetailDashboard : getDashboard,
     staleTime: 30000,
   });
 
   const { data: lowStockData = [] } = useQuery({
-    queryKey: ['lowStock'],
-    queryFn: getLowStock,
+    queryKey: isRetail ? ['retail-low-stock'] : ['lowStock'],
+    queryFn: isRetail ? getLowStockProducts : getLowStock,
     staleTime: 60000,
   });
 

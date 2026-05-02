@@ -95,7 +95,25 @@ root.render(
 // JS/CSS are network-first so a fresh deploy is always served first;
 // stable static assets (icons, fonts, manifest) are cache-first.
 //
-// On the first load after this lands, returning users with the old
-// kill-shim SW will have it auto-unregister and reload, then the new SW
-// installs. From that point forward the PWA is offline-capable.
-serviceWorkerRegistration.register();
+// 2026-04-30 — added onUpdate auto-reload. When a NEW service worker
+// installs while the user is running the old bundle (e.g. CRA's prior
+// Workbox precache), this callback (a) tells the new SW to skip waiting
+// so it activates immediately, and (b) reloads the page once the new SW
+// is in control. Without this, returning users could be stuck on the
+// old bundle for HOURS or until they manually closed/reopened the PWA —
+// which broke the "added a product but dashboard didn't update" demo.
+serviceWorkerRegistration.register({
+  onUpdate: (registration) => {
+    const waiting = registration && registration.waiting;
+    if (!waiting) return;
+    // Listen for the new SW taking control, then reload.
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloaded) return;
+      reloaded = true;
+      window.location.reload();
+    });
+    // Tell the waiting SW to activate now instead of waiting for all tabs to close.
+    try { waiting.postMessage({ type: 'SKIP_WAITING' }); } catch (_) { /* swallow */ }
+  },
+});

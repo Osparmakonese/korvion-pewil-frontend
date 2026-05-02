@@ -34,7 +34,11 @@
 // pipeline is happy.
 const ignored = self.__WB_MANIFEST; // eslint-disable-line no-unused-vars
 
-const CACHE_VERSION = 'pewil-v3-2026-04-28';
+// 2026-04-30 — bumped to v4 to force every existing client to wipe any
+// pre-substring-matcher build still pinned in their cache. Combined with
+// the onUpdate callback in src/index.js, returning users will auto-reload
+// the moment the new SW activates.
+const CACHE_VERSION = 'pewil-v4-2026-04-30';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

@@ -629,9 +629,12 @@ export default function RetailDashboard() {
           </div>
         </div>
 
-        {/* Recent Activity Feed */}
+        {/* Recent sales feed — clarified label 2026-04-30 because users
+            were expecting product additions to appear here. This panel
+            only shows the last few completed sales (Sale records),
+            not catalogue mutations. */}
         <div style={S.card}>
-          <h3 style={S.sectionTitle}>Recent Activity</h3>
+          <h3 style={S.sectionTitle}>Recent sales</h3>
           <div style={S.activityFeed}>
             {activityItems.length > 0 ? (
               activityItems.map((item, idx) => (
