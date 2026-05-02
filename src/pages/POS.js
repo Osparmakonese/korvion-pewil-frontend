@@ -28,6 +28,7 @@ import POSImmersiveControls from '../components/POSImmersiveControls';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import { invalidateSaleCaches, invalidateProductCaches } from '../utils/queryCache';
+import { getProductIcon } from '../utils/productIcons';
 
 /* ─── Receipt Modal ─── */
 function ReceiptModal({ isOpen, onClose, receipt }) {
@@ -1748,9 +1749,21 @@ export default function POS() {
                     e.currentTarget.style.transform = '';
                   }}
                 >
-                  <div style={S.productEmoji}>
-                    {getCategoryEmoji(product.category)}
-                  </div>
+                  {(() => {
+                    const icon = getProductIcon(product, product.category_name);
+                    return (
+                      <div style={{
+                        ...S.productEmoji,
+                        background: icon.bg,
+                        color: icon.fg,
+                        borderRadius: 12,
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        width: 56, height: 56, margin: '0 auto 6px',
+                      }}>
+                        {icon.emoji}
+                      </div>
+                    );
+                  })()}
                   <div style={S.productName}>{product.name}</div>
                   <div style={S.productPrice}>{fmt(product.selling_price, 'zwd')}</div>
                   <div style={S.productStock}>

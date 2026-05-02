@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import BackLink from '../components/BackLink';
 
 // Exact palette from pewil-design-3-living-africa.html
 const C = {
@@ -281,7 +282,7 @@ export default function Login() {
       <main style={isMobile ? S.formWrapMobile : S.formWrap}>
         {step === 'creds' ? (
           <form style={S.form} onSubmit={handleCredsSubmit}>
-            <Link to="/" style={S.back}>{'\u2190'} Back to home</Link>
+            <BackLink to="/" label="Back to home" style={{ marginBottom: 36 }} />
             <h2 style={S.title}>
               Welcome back, <span style={S.titleEm}>friend</span>.
             </h2>

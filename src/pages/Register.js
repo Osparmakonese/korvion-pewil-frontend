@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import BackLink from '../components/BackLink';
 
 // Exact palette from pewil-design-3-living-africa.html
 const C = {
@@ -290,7 +291,7 @@ export default function Register() {
       {/* Right form side */}
       <main style={isMobile ? S.formWrapMobile : S.formWrap}>
         <form style={S.form} onSubmit={handleSubmit}>
-          <Link to="/" style={S.back}>← Back to home</Link>
+          <BackLink to="/" label="Back to home" style={{ marginBottom: 24 }} />
           <h2 style={S.title}>
             {persona === 'retail'
               ? <>Open your <span style={S.titleEm}>shop</span>.</>
