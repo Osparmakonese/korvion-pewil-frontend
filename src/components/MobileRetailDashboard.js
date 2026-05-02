@@ -161,10 +161,10 @@ export default function MobileRetailDashboard() {
           borderBottom: `1px dashed ${T.line}`,
           fontSize: 11, fontWeight: 700, color: T.inkSoft,
           textTransform: 'uppercase', letterSpacing: '0.06em',
-        }}>Recent activity</div>
+        }}>Recent sales</div>
         {recentActivity.length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: T.muted, fontSize: 13 }}>
-            No sales yet today. Open a cashier session to get started.
+            No sales yet today. Open a cashier session to ring up the first one.
           </div>
         ) : recentActivity.slice(0, 6).map((act, idx) => (
           <div key={act.id || idx} style={{
