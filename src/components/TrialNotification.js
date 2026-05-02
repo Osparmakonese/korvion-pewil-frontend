@@ -100,6 +100,27 @@ export default function TrialNotification() {
           // 404 = no active sub for this module = not on trial. Skip.
         }
       }
+      // Fallback: some tenants (older signups, hand-provisioned accounts)
+      // don't have a Subscription record but DO have Tenant.trial_ends_at
+      // set. The Tenant serializer returns is_trial + trial_days_remaining
+      // directly. If we found nothing via the billing endpoint, try the
+      // tenant record.
+      if (!best) {
+        try {
+          const res = await api.get('/core/tenants/my-tenant/');
+          const tn = res.data;
+          if (tn && tn.is_trial) {
+            const days = Number(tn.trial_days_remaining ?? 0);
+            best = {
+              module: (tn.modules && tn.modules[0]) || 'pewil',
+              days_remaining: days,
+              expired: days < 0,
+              plan_name: tn.plan || 'Trial',
+              trial_end: tn.trial_ends_at,
+            };
+          }
+        } catch (_) { /* swallow */ }
+      }
       if (cancelled) return;
       sessionStorage.setItem(SHOWN_KEY, '1');
       if (best) {
