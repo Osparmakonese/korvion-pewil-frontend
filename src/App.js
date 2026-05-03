@@ -74,6 +74,7 @@ const Suppliers = React.lazy(() => import('./pages/Suppliers'));
 const Discounts = React.lazy(() => import('./pages/Discounts'));
 const LowStockAlerts = React.lazy(() => import('./pages/LowStockAlerts'));
 const ZimraFiscal = React.lazy(() => import('./pages/ZimraFiscal'));
+const FiscalSettings = React.lazy(() => import('./pages/FiscalSettings'));
 const MultiCurrency = React.lazy(() => import('./pages/MultiCurrency'));
 const EndOfDayReport = React.lazy(() => import('./pages/EndOfDayReport'));
 const CashierPerformance = React.lazy(() => import('./pages/CashierPerformance'));
@@ -151,6 +152,7 @@ const PAGES = {
   'Discounts': Discounts,
   'Low Stock Alerts': LowStockAlerts,
   'ZIMRA Fiscal': ZimraFiscal,
+  'Tax Compliance': FiscalSettings,
   'Multi-Currency': MultiCurrency,
   'End of Day': EndOfDayReport,
   'Cashier Performance': CashierPerformance,

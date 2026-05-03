@@ -50,28 +50,82 @@ export function cropImage(crop) {
 }
 
 /**
+ * Currency table for the 14-country Pewil rollout (May 2026).
+ *
+ * Each entry has:
+ *   - symbol: short prefix shown on receipts and tiles (e.g. R, ₦, KSh)
+ *   - intl_code: ISO-4217 code Intl.NumberFormat understands; used for
+ *     locale-aware number formatting (decimal separator, grouping).
+ *   - decimals: how many fraction digits the currency conventionally uses
+ *     in retail. Most are 2; UGX, RWF, MWK, XOF, ETB are typically 0.
+ *
+ * The legacy 'zwd' shortcut (Pewil's USD-or-ZiG dual-currency code) is
+ * preserved so existing call sites (`fmt(n, 'zwd')`) keep working —
+ * see the dispatch in fmt() below.
+ */
+const CURRENCIES = {
+  USD: { symbol: '$',     intl_code: 'USD', decimals: 2 },
+  ZWG: { symbol: 'ZiG ',  intl_code: 'USD', decimals: 2 },   // ZiG → USD-formatted with prefix
+  ZAR: { symbol: 'R ',    intl_code: 'ZAR', decimals: 2 },
+  KES: { symbol: 'KSh ',  intl_code: 'KES', decimals: 2 },
+  NGN: { symbol: '₦ ', intl_code: 'NGN', decimals: 2 }, // ₦
+  ZMW: { symbol: 'K ',    intl_code: 'ZMW', decimals: 2 },
+  MZN: { symbol: 'MT ',   intl_code: 'MZN', decimals: 2 },
+  TZS: { symbol: 'TSh ',  intl_code: 'TZS', decimals: 0 },
+  UGX: { symbol: 'USh ',  intl_code: 'UGX', decimals: 0 },
+  MWK: { symbol: 'MK ',   intl_code: 'MWK', decimals: 0 },
+  BWP: { symbol: 'P ',    intl_code: 'BWP', decimals: 2 },
+  RWF: { symbol: 'FRw ',  intl_code: 'RWF', decimals: 0 },
+  ETB: { symbol: 'Br ',   intl_code: 'ETB', decimals: 2 },
+  GHS: { symbol: '₵ ', intl_code: 'GHS', decimals: 2 }, // ₵
+  XOF: { symbol: 'CFA ',  intl_code: 'XOF', decimals: 0 },
+  EUR: { symbol: '€',  intl_code: 'EUR', decimals: 2 },
+  GBP: { symbol: '£',  intl_code: 'GBP', decimals: 2 },
+};
+
+/**
  * Format number as currency.
- * Reads preferred currency from localStorage (default USD).
- * Always renders exactly 2 decimal places — standard currency formatting,
- * keeps dashboards readable (no long trailing-decimal strings).
+ *
+ * Reads preferred currency from explicit arg → localStorage → 'USD'.
+ * The legacy 'zwd' code maps to whatever's in localStorage (Pewil
+ * stores the tenant currency at login under 'currency').
+ *
+ * Renders with the right number of decimal places per currency
+ * convention (e.g. UGX has none, USD has two).
  */
 export function fmt(n, currency) {
   if (n == null || isNaN(n)) return '—';
   const num = typeof n === 'string' ? parseFloat(n) : n;
-  const cur = currency || localStorage.getItem('currency') || 'USD';
-  if (cur === 'ZWG') {
-    return 'ZiG' + new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(num);
+  let cur = currency || localStorage.getItem('currency') || 'USD';
+  if (cur === 'zwd') {
+    // Legacy Pewil-internal alias: "the tenant's display currency".
+    cur = localStorage.getItem('currency') || 'USD';
   }
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(num);
+  cur = String(cur).toUpperCase();
+  const meta = CURRENCIES[cur] || CURRENCIES.USD;
+  let formatted;
+  try {
+    formatted = new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: meta.decimals,
+      maximumFractionDigits: meta.decimals,
+    }).format(num);
+  } catch (_) {
+    formatted = num.toFixed(meta.decimals);
+  }
+  return meta.symbol + formatted;
 }
+
+/**
+ * Currency code → human label. Used by FiscalSettings + TaxConfig pages.
+ */
+export function currencyLabel(code) {
+  const c = String(code || '').toUpperCase();
+  const meta = CURRENCIES[c];
+  if (!meta) return c;
+  return `${c} (${meta.symbol.trim()})`;
+}
+
+export const SUPPORTED_CURRENCIES = Object.keys(CURRENCIES);
 
 /**
  * Format a quantity — strips trailing zeros.

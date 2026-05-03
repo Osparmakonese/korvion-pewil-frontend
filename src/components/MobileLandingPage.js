@@ -90,7 +90,7 @@ const OPERATORS = {
     feats: [
       'Mobile POS — cash, mobile money, card, split-tender',
       'Stock + reorder alerts + supplier WhatsApp',
-      'Tax-compliant exports (ZIMRA today, more rails coming)',
+      'Tax-compliant fiscalisation (ZIMRA, KRA, SARS, RRA & more)',
     ],
     price: '$15',
     priceSub: 'Growth $45/mo (3 branches)',
@@ -307,7 +307,7 @@ export default function MobileLandingPage() {
           <ThreadCard num="01" title="Works at the till even when the network drops"
             text="Sales queue locally and sync the moment you're back online — built for the realities of African connectivity." />
           <ThreadCard num="02" title="Speaks the local tax authority"
-            text="ZIMRA fiscal exports today. Other rails coming as we expand. Daily Z-Reports and device pairing baked in." />
+            text="14 country adapters: ZIMRA · KRA · SARS · RRA · TRA · URA · GRA · FIRS · ZRA · MRA · BURS · AT-Mz · FNE-CI · DGI-SN. Daily Z-reports + device pairing baked in." />
           <ThreadCard num="03" title="Lives where suppliers live — WhatsApp"
             text="Reorder POs go straight to suppliers via WhatsApp. Loyalty members get receipts on the same number they DM you on." />
           <ThreadCard num="04" title="Mobile money + card, not just card"
