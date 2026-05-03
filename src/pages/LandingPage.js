@@ -508,7 +508,7 @@ const LandingPage = () => {
                   <li>POS that's faster than the till you already use</li>
                   <li>Stock that counts itself with every sale</li>
                   <li>Supplier books out of the WhatsApp thread</li>
-                  <li>Tax authority native (ZIMRA today, more rails as we grow) &mdash; not a plugin</li>
+                  <li>Tax authority native &mdash; ZIMRA, KRA, SARS, RRA, TRA, URA, GRA, FIRS, ZRA, MRA, BURS, AT-Mz, FNE-CI &amp; more, not a plugin</li>
                   <li>Built for the shop that opens at six</li>
                 </ul>
                 <div className="pl-op-price">

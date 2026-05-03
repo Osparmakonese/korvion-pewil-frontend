@@ -230,3 +230,19 @@ export const getLossPreventionSummary = () =>
   api.get('/retail/loss-prevention/').then(r => r.data);
 export const runLossPreventionDetectors = () =>
   api.post('/retail/loss-prevention/run-detectors/').then(r => r.data);
+
+// ── Multi-country fiscal credentials (May 2026) ──
+// One row per (tenant, adapter). Operators paste the credentials they
+// got from their country's tax authority. The /adapters/ endpoint
+// returns every adapter Pewil supports so the UI can show a grid
+// even before the operator has configured any country.
+export const getFiscalAdapters = () =>
+  api.get('/retail/fiscal-credentials/adapters/').then(r => r.data);
+export const listFiscalCredentials = () =>
+  api.get('/retail/fiscal-credentials/').then(r => r.data);
+export const createFiscalCredentials = (data) =>
+  api.post('/retail/fiscal-credentials/', data).then(r => r.data);
+export const updateFiscalCredentials = (id, data) =>
+  api.patch(`/retail/fiscal-credentials/${id}/`, data).then(r => r.data);
+export const deleteFiscalCredentials = (id) =>
+  api.delete(`/retail/fiscal-credentials/${id}/`);
