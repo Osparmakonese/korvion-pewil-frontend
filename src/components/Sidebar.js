@@ -179,6 +179,11 @@ const NAV_ITEMS = [
   // sidebar focused on daily operations rather than configuration plumbing.
   { section: 'SYSTEM', module: 'retail', collapsible: false, items: [
     { key: 'Retail Settings', emoji: '\u2699\uFE0F', label: 'Settings' },
+    // Tax Compliance \u2014 country-aware fiscal credentials grid.
+    // Promoted to the sidebar (rather than a sub-tab inside Retail Settings)
+    // because investors / owners hit it from day one when onboarding their
+    // tax-authority credentials. Owners + managers only.
+    { key: 'Tax Compliance', emoji: '\u{1F4CB}', label: 'Tax Compliance' },
     { key: 'Retail Billing', emoji: '\u{1F4B3}', label: 'Billing' },
   ]},
   { section: 'OWNER ONLY', module: 'farm', ownerOnly: true, collapsible: false, items: [
