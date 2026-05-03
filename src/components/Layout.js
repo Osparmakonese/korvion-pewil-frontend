@@ -84,7 +84,7 @@ const RETAIL_DRAWER_SECTIONS = [
   ]},
   { label: 'System', items: [
     { key: 'Device Config', emoji: '\u{1F50C}', label: 'Devices', sub: 'Hardware setup' },
-    { key: 'ZIMRA Fiscal', emoji: '\u{1F4CB}', label: 'ZIMRA', sub: 'Fiscal compliance' },
+    { key: 'Tax Compliance', emoji: '\u{1F4CB}', label: 'Tax Compliance', sub: 'Country-specific fiscal config' },
     { key: 'Multi-Currency', emoji: '\u{1F4B1}', label: 'Currency', sub: 'Exchange rates' },
     { key: 'Receipt Setup', emoji: '\u{1F9FE}', label: 'Receipts', sub: 'Templates' },
     { key: 'POS Settings', emoji: '\u{1F5A5}\uFE0F', label: 'POS Style', sub: 'Cashier screen look', ownerOnly: true },
