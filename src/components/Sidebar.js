@@ -148,11 +148,20 @@ const NAV_ITEMS = [
     { key: 'Cashier Sessions', emoji: '\u{1F4B5}', label: 'Cashier Sessions' },
     { key: 'Discounts', emoji: '\u{1F3F7}\uFE0F', label: 'Discounts' },
   ]},
+  // ENTERPRISE — multi-branch retail (May 2026). Owner-only entry points
+  // sit between RETAIL (daily ops) and INVENTORY because chain-wide
+  // surfaces are an HQ-level concern that should be discoverable
+  // separately from per-branch operations.
+  { section: 'ENTERPRISE', module: 'retail', collapsible: false, items: [
+    { key: 'Chain Rollup', emoji: '\u{1F30D}', label: 'Chain Rollup', ownerOnly: true },
+  ]},
   { section: 'INVENTORY', module: 'retail', collapsible: true, items: [
     { key: 'Categories', emoji: '\u{1F5C2}', label: 'Categories' },
     { key: 'Suppliers', emoji: '\u{1F4E6}', label: 'Suppliers & POs' },
     { key: 'WhatsApp PO', emoji: '\u{1F4AC}', label: 'WhatsApp PO' },
     { key: 'Stock Adjustments', emoji: '\u{1F504}', label: 'Stock Adjustments' },
+    { key: 'Stock Transfers', emoji: '\u{1F4E6}', label: 'Stock Transfers' },
+    { key: 'Branches', emoji: '\u{1F3EA}', label: 'Branches', ownerOnly: true },
     { key: 'Low Stock Alerts', emoji: '\u{1F6A8}', label: 'Low Stock Alerts' },
     { key: 'Barcode Labels', emoji: '\u{1F4CF}', label: 'Barcode & Labels' },
   ]},

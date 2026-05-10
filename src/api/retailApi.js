@@ -246,3 +246,37 @@ export const updateFiscalCredentials = (id, data) =>
   api.patch(`/retail/fiscal-credentials/${id}/`, data).then(r => r.data);
 export const deleteFiscalCredentials = (id) =>
   api.delete(`/retail/fiscal-credentials/${id}/`);
+
+// ── Multi-branch retail (May 2026) ──
+// Every tenant has >=1 Branch (HQ auto-created at signup). Enterprise
+// chains add more; Growth gets up to 3; Starter is single-branch.
+export const listBranches = () =>
+  api.get('/retail/branches/').then(r => r.data);
+export const createBranch = (data) =>
+  api.post('/retail/branches/', data).then(r => r.data);
+export const updateBranch = (id, data) =>
+  api.patch(`/retail/branches/${id}/`, data).then(r => r.data);
+export const deleteBranch = (id) =>
+  api.delete(`/retail/branches/${id}/`);
+export const setBranchAsHQ = (id) =>
+  api.post(`/retail/branches/${id}/set-hq/`).then(r => r.data);
+
+// Branch transfer orders — cross-branch inventory movement
+export const listBranchTransfers = (params) =>
+  api.get('/retail/branch-transfers/', { params }).then(r => r.data);
+export const createBranchTransfer = (data) =>
+  api.post('/retail/branch-transfers/', data).then(r => r.data);
+export const shipBranchTransfer = (id, approvalToken) =>
+  api.post(`/retail/branch-transfers/${id}/ship/`, {}, {
+    headers: approvalToken ? { 'X-Manager-Approval': approvalToken } : {},
+  }).then(r => r.data);
+export const receiveBranchTransfer = (id, items_received) =>
+  api.post(`/retail/branch-transfers/${id}/receive/`, { items_received })
+    .then(r => r.data);
+export const cancelBranchTransfer = (id, reason) =>
+  api.post(`/retail/branch-transfers/${id}/cancel/`, { cancellation_reason: reason || '' })
+    .then(r => r.data);
+
+// HQ chain rollup — all branches side-by-side + chain totals
+export const getChainRollup = () =>
+  api.get('/retail/analytics/chain-rollup/').then(r => r.data);

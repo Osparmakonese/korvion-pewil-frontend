@@ -219,7 +219,7 @@ const RETAIL_FEATURES = [
   { key: 'cashiers', label: 'Cashier sessions & shift reports' },
   { key: 'eod', label: 'End-of-day reports' },
   { key: 'inventory', label: 'Advanced inventory & reorder' },
-  { key: 'multibranch', label: 'Multi-branch / chain support (Coming Q3 2026)', growth: true },
+  { key: 'multibranch', label: 'Multi-branch / chain support', growth: true },
   { key: 'theft', label: 'AI theft-pattern scan', requires: 'ai' },
   { key: 'pricedrift', label: 'AI price-drift monitor', requires: 'ai' },
   { key: 'whatsapp', label: 'WhatsApp supplier PO parser', requires: 'whatsapp' },

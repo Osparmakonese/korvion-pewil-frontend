@@ -95,6 +95,10 @@ const VoiceBriefing = React.lazy(() => import('./pages/VoiceBriefing'));
 const TheftScan = React.lazy(() => import('./pages/TheftScan'));
 const PriceDrift = React.lazy(() => import('./pages/PriceDrift'));
 const LossPrevention = React.lazy(() => import('./pages/LossPrevention'));
+// Multi-branch retail (May 2026)
+const Branches = React.lazy(() => import('./pages/Branches'));
+const BranchTransfers = React.lazy(() => import('./pages/BranchTransfers'));
+const ChainRollup = React.lazy(() => import('./pages/ChainRollup'));
 
 /* --- Loading fallback for lazy pages --- */
 const PageLoader = () => (
@@ -176,6 +180,10 @@ const PAGES = {
   'Theft Scan': TheftScan,
   'Price Drift': PriceDrift,
   'Loss Prevention': LossPrevention,
+  // Multi-branch retail
+  'Branches': Branches,
+  'Stock Transfers': BranchTransfers,
+  'Chain Rollup': ChainRollup,
 };
 
 /* --- */
@@ -248,6 +256,10 @@ const PAGE_META = {
   'Theft Scan': { title: 'Theft Scan', sub: 'AI-powered loss prevention — anomaly detection on today’s sales' },
   'Price Drift': { title: 'Price Drift', sub: 'Supplier cost creep detection — catch silent price increases' },
   'Loss Prevention': { title: 'Loss Prevention', sub: 'Signal-based anti-theft — events, flags, trust scores, shrinkage, alerts' },
+  // Multi-branch retail
+  'Branches': { title: 'Branches', sub: 'Locations and HQ assignment' },
+  'Stock Transfers': { title: 'Stock Transfers', sub: 'Move inventory between branches' },
+  'Chain Rollup': { title: 'Chain Rollup', sub: 'Every branch at a glance' },
 };
 
 /* --- */
@@ -313,6 +325,10 @@ const PRIMARY_ACTIONS = {
   'Theft Scan': null,
   'Price Drift': null,
   'Loss Prevention': null,
+  // Multi-branch retail
+  'Branches': '+ Add Branch',
+  'Stock Transfers': '+ New Transfer',
+  'Chain Rollup': null,
 };
 
 /* --- */
