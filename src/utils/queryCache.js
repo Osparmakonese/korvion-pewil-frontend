@@ -173,6 +173,27 @@ export function invalidateSupplierCaches(qc) {
 }
 
 /**
+ * Invalidate every branch / multi-branch related query.
+ *
+ * Multi-branch retail (May 2026) introduces a new family of query keys:
+ *   ['retail-branches']
+ *   ['retail-branch-transfers', ...]
+ *   ['chain-rollup']
+ *
+ * Plus any sibling page that derives "active branch" or "branch picker"
+ * data from `retail-branch*` keys. We use a strict regex on the *first*
+ * element of the queryKey because a substring match on 'branch' would
+ * collide with words like "branch_office" or future unrelated keys.
+ */
+export function invalidateBranchCaches(qc) {
+  qc.invalidateQueries({
+    predicate: (q) =>
+      /^retail-branch/.test(String(q.queryKey?.[0] || '')) ||
+      /^chain-rollup/.test(String(q.queryKey?.[0] || '')),
+  });
+}
+
+/**
  * Nuke every cached query — last-resort fallback when a mutation could
  * affect arbitrary parts of the system (tenant switch, reset_for_launch,
  * bulk import). Mounted queries refetch immediately; unmounted ones are

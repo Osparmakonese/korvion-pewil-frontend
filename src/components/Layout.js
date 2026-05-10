@@ -63,8 +63,13 @@ const RETAIL_DRAWER_SECTIONS = [
     { key: 'Suppliers', emoji: '\u{1F4E6}', label: 'Suppliers', sub: 'Vendors & POs' },
     { key: 'WhatsApp PO', emoji: '\u{1F4AC}', label: 'WhatsApp PO', sub: 'AI-parse supplier msgs' },
     { key: 'Stock Adjustments', emoji: '\u{1F504}', label: 'Adjustments', sub: 'Stock changes' },
+    { key: 'Stock Transfers', emoji: '\u{1F4E6}', label: 'Transfers', sub: 'Move stock between branches' },
+    { key: 'Branches', emoji: '\u{1F3EA}', label: 'Branches', sub: 'Locations & HQ', ownerOnly: true },
     { key: 'Low Stock Alerts', emoji: '\u{1F6A8}', label: 'Alerts', sub: 'Reorder' },
     { key: 'Barcode Labels', emoji: '\u{1F4CF}', label: 'Barcodes', sub: 'Labels' },
+  ]},
+  { label: 'Enterprise', items: [
+    { key: 'Chain Rollup', emoji: '\u{1F30D}', label: 'Chain Rollup', sub: 'All branches at a glance', ownerOnly: true },
   ]},
   { label: 'Accounting', items: [
     { key: 'Journal Entries', emoji: '\u{1F4D2}', label: 'Journal', sub: 'Double-entry' },
