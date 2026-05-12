@@ -5,25 +5,50 @@ import {
   getPOSSettings,
   getSessionXReport, closeCashierSessionAdvanced,
   createCashDrop, managerApprove,
+  listBranches,
 } from '../api/retailApi';
 import { fmt } from '../utils/format';
 import AIInsightCard from '../components/AIInsightCard';
 import MobileCashierSessions from '../components/MobileCashierSessions';
 import { invalidateSessionCaches } from '../utils/queryCache';
 
-/* --- Open Session Modal --- */
-function OpenSessionModal({ isOpen, onClose, onSubmit, loading }) {
+/* --- Open Session Modal ---
+ *
+ * Multi-branch (May 2026): if the tenant has more than one Branch, show
+ * a branch picker. Single-branch tenants don't see it \u2014 backend silently
+ * defaults to the tenant's HQ branch. We default-select the HQ branch
+ * (or the first branch if no HQ flag) so the cashier can just hit
+ * "Open Session" without thinking about it.
+ */
+function OpenSessionModal({ isOpen, onClose, onSubmit, loading, branches = [] }) {
   const [openingFloat, setOpeningFloat] = useState('');
   const [notes, setNotes] = useState('');
+  const [branchId, setBranchId] = useState('');
+
+  // Default-select HQ (or first) branch whenever the modal opens or the
+  // branches list arrives.
+  useEffect(() => {
+    if (!isOpen) return;
+    if (branchId) return;
+    if (!Array.isArray(branches) || branches.length === 0) return;
+    const hq = branches.find((b) => b && b.is_hq);
+    setBranchId(String((hq || branches[0]).id));
+  }, [isOpen, branches, branchId]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({ opening_float: parseFloat(openingFloat) || 0, notes });
+    const payload = { opening_float: parseFloat(openingFloat) || 0, notes };
+    if (branchId) payload.branch_id = parseInt(branchId, 10) || null;
+    onSubmit(payload);
     setOpeningFloat('');
     setNotes('');
+    // Keep branchId so re-opening the modal preserves the cashier's last
+    // branch choice \u2014 typical cashier opens at the same branch all day.
   };
 
   if (!isOpen) return null;
+
+  const showBranchPicker = Array.isArray(branches) && branches.length > 1;
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={onClose}>
@@ -35,6 +60,28 @@ function OpenSessionModal({ isOpen, onClose, onSubmit, loading }) {
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#9ca3af' }}>{'\u00D7'}</button>
         </div>
         <form onSubmit={handleSubmit}>
+          {showBranchPicker && (
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>Branch</label>
+              <select
+                value={branchId}
+                onChange={e => setBranchId(e.target.value)}
+                required
+                style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 14, outline: 'none', boxSizing: 'border-box', background: '#fff' }}
+              >
+                <option value="" disabled>Select a branch{'\u2026'}</option>
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.code ? `${b.code} \u2014 ${b.name}` : b.name}
+                    {b.is_hq ? ' (HQ)' : ''}
+                  </option>
+                ))}
+              </select>
+              <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 4 }}>
+                Sales rung up here will count toward this branch{'\u2019'}s till totals.
+              </div>
+            </div>
+          )}
           <div style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>Opening Float (Cash in Drawer)</label>
             <input type="number" step="0.01" value={openingFloat} onChange={e => setOpeningFloat(e.target.value)} required placeholder="0.00" style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
@@ -584,6 +631,15 @@ export default function CashierSessions() {
   });
   const blindClose = !!(posSettings && posSettings.blind_close);
 
+  // Multi-branch (May 2026): fetch branches once so the Open Session modal
+  // can show a picker for chains. Single-branch tenants get a 1-element
+  // list back and the picker auto-hides.
+  const { data: branches = [] } = useQuery({
+    queryKey: ['retail-branches-for-session-open'],
+    queryFn: listBranches,
+    staleTime: 60000,
+  });
+
   const openMut = useMutation({
     mutationFn: createCashierSession,
     onSuccess: () => {
@@ -648,6 +704,7 @@ export default function CashierSessions() {
           onClose={() => setShowOpenModal(false)}
           onSubmit={(data) => openMut.mutate(data)}
           loading={openMut.isPending}
+          branches={branches}
         />
         <CloseSessionModal
           isOpen={!!closingSession}
@@ -785,7 +842,7 @@ export default function CashierSessions() {
         <AIInsightCard feature="retail_cashier_monitor" title="AI Cashier Analysis" />
       </div>
 
-      <OpenSessionModal isOpen={showOpenModal} onClose={() => setShowOpenModal(false)} onSubmit={data => openMut.mutate(data)} loading={openMut.isPending} />
+      <OpenSessionModal isOpen={showOpenModal} onClose={() => setShowOpenModal(false)} onSubmit={data => openMut.mutate(data)} loading={openMut.isPending} branches={branches} />
       <CloseSessionModal
         isOpen={!!closingSession}
         onClose={() => setClosingSession(null)}
