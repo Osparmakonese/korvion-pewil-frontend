@@ -160,6 +160,7 @@ export default function Layout({
             primaryAction={primaryAction}
             onPrimaryAction={onPrimaryAction}
             dashboardData={dashboardData}
+            activeModule={activeModule}
           />
         </div>
         <main className="page-content-mobile" style={{ flex: 1, padding: '20px 24px', background: '#fffcf7' }}>
