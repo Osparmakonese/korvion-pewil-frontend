@@ -14,12 +14,37 @@ api.interceptors.request.use((config) => {
 });
 
 // Auto-refresh on 401, handle 403 gracefully (FIX 11)
+//
+// Offline-safe behavior (added 2026-05-16):
+//   The previous version would catch any failure of /api/token/refresh/
+//   (including network failures while offline) and immediately wipe
+//   localStorage + redirect to /login. That broke 4-hour offline
+//   cashier shifts: 30 minutes in, the access token expires, a
+//   background refetch hits 401, refresh fails because offline,
+//   user gets kicked out mid-shift with their queued sales stuck.
+//
+//   New rule: if `navigator.onLine === false` OR the refresh request
+//   itself fails with a network error, we DO NOT clear tokens and
+//   DO NOT redirect. We just propagate the 401 to the caller. React
+//   Query backs off. The cashier stays on the page. When connectivity
+//   returns the next request triggers a successful refresh and life
+//   resumes.
+//
+//   Only redirect to /login when refresh actually returns a 4xx
+//   (refresh token genuinely expired or revoked) — that's a real
+//   logged-out state, not a transient outage.
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config;
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true;
+      // Don't even attempt refresh while offline — the request would
+      // throw a network error, and we'd accidentally treat that as a
+      // logged-out state. Just propagate the original 401.
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        return Promise.reject(error);
+      }
       try {
         const refresh = localStorage.getItem('refresh_token');
         const res = await axios.post(
@@ -29,7 +54,20 @@ api.interceptors.response.use(
         localStorage.setItem('access_token', res.data.access);
         original.headers.Authorization = `Bearer ${res.data.access}`;
         return api(original);
-      } catch {
+      } catch (refreshErr) {
+        // Network error during refresh ≠ logged out. Could be the
+        // browser flipped to offline between our navigator.onLine
+        // check and the actual fetch, or the API host is reachable
+        // but returning 502/503/504. Leave the session intact.
+        const refreshStatus = refreshErr?.response?.status;
+        const isNetwork = !refreshErr?.response
+          || refreshErr.code === 'ERR_NETWORK'
+          || refreshErr.message === 'Network Error'
+          || (refreshStatus >= 500 && refreshStatus <= 599);
+        if (isNetwork) {
+          return Promise.reject(error);  // propagate the original 401
+        }
+        // Refresh genuinely rejected (4xx) → real logged-out state.
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
