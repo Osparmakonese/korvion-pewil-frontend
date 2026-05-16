@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   isOffline,
   getPendingCount,
@@ -29,10 +30,15 @@ import api from '../api/axios';
  * component is purely visual.
  */
 export default function OfflineIndicator() {
+  const navigate = useNavigate();
   const [online, setOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
   const [pending, setPending] = useState(() => getPendingCount());
   const [flashSuccess, setFlashSuccess] = useState(false);
   const [deadLetters, setDeadLetters] = useState(() => getDeadLetters().length);
+
+  // Click handler — any non-null pill navigates to the sync queue page
+  // so the cashier can see what's queued / failed / draining.
+  const goToQueue = () => navigate('/sync-queue');
 
   // Subscribe to pending-count changes (fired by offlinePOS write()).
   useEffect(() => {
@@ -83,7 +89,8 @@ export default function OfflineIndicator() {
     return (
       <Pill
         bg="#fee2e2" border="#fecaca" color="#991b1b" icon="⚠"
-        title={`${deadLetters} sale${deadLetters === 1 ? '' : 's'} failed to sync after multiple retries — check Sales History`}
+        title={`${deadLetters} sale${deadLetters === 1 ? '' : 's'} failed to sync after multiple retries — click to resolve`}
+        onClick={goToQueue}
       >
         <strong>{deadLetters}</strong> sale{deadLetters === 1 ? '' : 's'} failed to sync
       </Pill>
@@ -95,8 +102,9 @@ export default function OfflineIndicator() {
       <Pill
         bg="#fef2f2" border="#fecaca" color="#991b1b" icon="⚡"
         title={pending > 0
-          ? `Offline. ${pending} sale${pending === 1 ? '' : 's'} queued — will sync when you reconnect.`
+          ? `Offline. ${pending} sale${pending === 1 ? '' : 's'} queued — click to view`
           : 'Offline. New sales will queue and sync when you reconnect.'}
+        onClick={goToQueue}
       >
         Offline
         {pending > 0 && (
@@ -110,7 +118,8 @@ export default function OfflineIndicator() {
     return (
       <Pill
         bg="#fff4e1" border="rgba(199,119,0,0.3)" color="#7a4a00" icon="⟳"
-        title={`Syncing ${pending} pending sale${pending === 1 ? '' : 's'} to the server`}
+        title={`Syncing ${pending} pending sale${pending === 1 ? '' : 's'} — click to view queue`}
+        onClick={goToQueue}
       >
         Syncing <strong>{pending}</strong> sale{pending === 1 ? '' : 's'}…
       </Pill>
@@ -119,7 +128,7 @@ export default function OfflineIndicator() {
 
   if (flashSuccess) {
     return (
-      <Pill bg="#e8f5ee" border="#a3e7b8" color="#0d4a22" icon="✓">
+      <Pill bg="#e8f5ee" border="#a3e7b8" color="#0d4a22" icon="✓" onClick={goToQueue}>
         All sales synced
       </Pill>
     );
@@ -128,9 +137,11 @@ export default function OfflineIndicator() {
   return null;
 }
 
-function Pill({ bg, border, color, icon, title, children }) {
+function Pill({ bg, border, color, icon, title, children, onClick }) {
   return (
-    <span
+    <button
+      type="button"
+      onClick={onClick}
       title={title}
       style={{
         display: 'inline-flex',
@@ -146,10 +157,11 @@ function Pill({ bg, border, color, icon, title, children }) {
         fontFamily: "'Inter', sans-serif",
         letterSpacing: '0.01em',
         whiteSpace: 'nowrap',
+        cursor: onClick ? 'pointer' : 'default',
       }}
     >
       <span aria-hidden="true" style={{ fontSize: 12 }}>{icon}</span>
       <span>{children}</span>
-    </span>
+    </button>
   );
 }

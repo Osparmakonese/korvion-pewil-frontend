@@ -28,6 +28,10 @@ import FarmLandingPage from './pages/FarmLandingPage';
  * a CTA destination from landing pages and we want zero-flicker. */
 import DownloadPage from './pages/DownloadPage';
 
+/* Offline sync queue — eager because cashier hits this in the middle
+ * of an outage, when bundle-loading would be unreliable. */
+import SyncQueue from './pages/SyncQueue';
+
 /* --- Lazy loaded pages (code splitting) --- */
 const CustomerDisplay = React.lazy(() => import('./pages/CustomerDisplay'));
 const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword'));
@@ -418,6 +422,8 @@ export default function App() {
         <Route path="/farm" element={<FarmLandingPage />} />
         {/* Download / install instructions — destination for "Install for Desktop" CTAs. */}
         <Route path="/download" element={<DownloadPage />} />
+        {/* Offline sync queue — destination from the OfflineIndicator pill. */}
+        <Route path="/sync-queue" element={<SyncQueue />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<Suspense fallback={<PageLoader />}><ForgotPassword /></Suspense>} />

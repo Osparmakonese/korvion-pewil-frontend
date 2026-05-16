@@ -60,6 +60,72 @@ function fireChange() {
 }
 export function getPendingCount() { return read().length; }
 
+/**
+ * Full pending-sales list — for the /sync-queue UI page.
+ * Each item: { payload, client_receipt_number, queued_at, attempts, last_error }
+ */
+export function getPendingSales() { return read(); }
+
+/**
+ * Remove a single pending sale by its client_receipt_number. Use when a
+ * cashier manually voids a queued sale that should never sync (e.g. they
+ * realised mid-shift they entered the wrong items).
+ */
+export function removePendingSale(clientReceiptNumber) {
+  const q = read();
+  const next = q.filter((item) => item.client_receipt_number !== clientReceiptNumber);
+  if (next.length !== q.length) {
+    write(next);
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Retry a single dead-lettered sale: move it back into the live queue
+ * with attempts reset to 0. Caller should then call drainPendingSales()
+ * to push it. Returns true if the dead-letter was found + re-queued.
+ */
+export function retryDeadLetter(clientReceiptNumber) {
+  try {
+    const failed = getDeadLetters();
+    const idx = failed.findIndex((it) => it.client_receipt_number === clientReceiptNumber);
+    if (idx === -1) return false;
+    const item = failed[idx];
+    // Re-queue with reset attempts so it gets full retry budget.
+    const q = read();
+    q.push({
+      payload: item.payload,
+      client_receipt_number: item.client_receipt_number,
+      queued_at: Date.now(),
+      attempts: 0,
+      last_error: null,
+    });
+    write(q);
+    // Drop from dead-letter list.
+    failed.splice(idx, 1);
+    localStorage.setItem('pewil_offline_sales_failed', JSON.stringify(failed));
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+/**
+ * Permanently drop a single dead-letter (cashier has handled it manually).
+ */
+export function dismissDeadLetter(clientReceiptNumber) {
+  try {
+    const failed = getDeadLetters();
+    const next = failed.filter((it) => it.client_receipt_number !== clientReceiptNumber);
+    if (next.length !== failed.length) {
+      localStorage.setItem('pewil_offline_sales_failed', JSON.stringify(next));
+      return true;
+    }
+    return false;
+  } catch (_) { return false; }
+}
+
 // ── offline detection ────────────────────────────────────
 export function isOffline() { return !navigator.onLine; }
 
