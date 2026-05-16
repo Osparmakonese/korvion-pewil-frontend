@@ -24,6 +24,10 @@ import Dashboard from './pages/Dashboard';
  * Eager so the marketing surface stays fast for SEO + ad clicks. */
 import FarmLandingPage from './pages/FarmLandingPage';
 
+/* Download page — explains PWA install for desktop. Eager because it's
+ * a CTA destination from landing pages and we want zero-flicker. */
+import DownloadPage from './pages/DownloadPage';
+
 /* --- Lazy loaded pages (code splitting) --- */
 const CustomerDisplay = React.lazy(() => import('./pages/CustomerDisplay'));
 const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword'));
@@ -412,6 +416,8 @@ export default function App() {
         <Route path="/" element={<LandingPage />} />
         {/* Pewil Farm marketing landing — separate funnel from the retail-led homepage. */}
         <Route path="/farm" element={<FarmLandingPage />} />
+        {/* Download / install instructions — destination for "Install for Desktop" CTAs. */}
+        <Route path="/download" element={<DownloadPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<Suspense fallback={<PageLoader />}><ForgotPassword /></Suspense>} />
