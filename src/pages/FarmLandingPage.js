@@ -259,6 +259,7 @@ const FarmLandingPage = () => {
             <a href="#features">Features</a>
             <a href="#tiers">Pricing</a>
             <a href="#proof">Results</a>
+            <Link to="/download">Desktop app</Link>
             <Link to="/">Pewil Retail</Link>
           </div>
           <div className="pl-nav-actions">
@@ -474,6 +475,7 @@ const FarmLandingPage = () => {
               <Link to="/farm">Pewil Farm</Link>
               <Link to="/">Pewil Retail</Link>
               <Link to="/">Pewil Retail Enterprise</Link>
+              <Link to="/download">Desktop app</Link>
               <Link to="/pricing">Pricing</Link>
             </div>
             <div className="pl-foot-col">
