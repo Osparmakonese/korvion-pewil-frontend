@@ -684,7 +684,10 @@ const LandingPage = () => {
             </div>
           </div>
           <div className="pl-foot-bar">
-            <div>&copy; 2026 Pewil Technologies Pvt Ltd · Harare, Zimbabwe</div>
+            <div>
+              &copy; 2026 Korvion Solution (Pvt) Ltd &middot; Harare, Zimbabwe
+              <span style={{ opacity: 0.65, marginLeft: 12 }}>Pewil is a Korvion Solution product.</span>
+            </div>
             <div>Made with care in Africa</div>
           </div>
         </div>

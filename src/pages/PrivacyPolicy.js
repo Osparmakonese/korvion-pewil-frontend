@@ -24,7 +24,7 @@ export default function PrivacyPolicy() {
         <p style={S.updated}>Last updated: 15 April 2026</p>
 
         <h2 style={S.h2}>1. Introduction</h2>
-        <p style={S.p}>At Pewil, we take your privacy seriously. This Privacy Policy explains how we collect, use, store, and protect your personal information when you use our farm management and retail POS platform. By using Pewil, you consent to the practices described in this policy.</p>
+        <p style={S.p}>Pewil is a product of Korvion Solution (Pvt) Ltd ("Korvion Solution", "we", "us"), a company registered in Zimbabwe with its principal office in Harare. We take your privacy seriously. This Privacy Policy explains how we collect, use, store, and protect your personal information when you use Pewil's farm management and retail POS platform. By using Pewil, you consent to the practices described in this policy.</p>
 
         <h2 style={S.h2}>2. Information We Collect</h2>
         <p style={S.p}>We collect information you provide directly: your name, email address, phone number, and business details during registration. We also collect operational data you enter into the platform, including farm records, livestock data, sales transactions, inventory records, financial entries, and employee information. We automatically collect technical data such as IP address, browser type, device information, and usage patterns to improve our Service.</p>
