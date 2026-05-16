@@ -1,178 +1,127 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import BackLink from '../components/BackLink';
 
-// Exact palette from pewil-design-3-living-africa.html
-const C = {
-  amber: '#f4a743',
-  terra: '#d9562c',
-  clay: '#b13b17',
-  forest: '#1f3d26',
-  forest2: '#2d5a37',
-  sand: '#fff7ec',
-  sand2: '#fdeedd',
-  cream: '#fffcf7',
-  ink: '#1b1b1b',
-  muted: '#6b5d50',
-  line: 'rgba(27,27,27,.12)',
+/**
+ * Login.js — Pewil sign-in, two-step (creds → 2FA when enabled).
+ *
+ * Redesigned 2026-05-16 to match the new retail-led / farm-led landing
+ * pages (Playfair Display headings + Inter body, ink hero with a subtle
+ * green→amber accent so login stays persona-AGNOSTIC — returning users
+ * already have a module tied to their tenant).
+ *
+ * Two-step state machine (preserved from the previous design):
+ *   step='creds' → username + password → useAuth().login()
+ *     - on ok → /app
+ *     - on requires2fa → step='2fa' with pendingToken
+ *   step='2fa'   → 6-digit authenticator OR 8-char recovery code →
+ *                  useAuth().loginWith2fa(pendingToken, code)
+ *     - on ok → /app
+ *     - on expired → back to step='creds' (and the password is cleared
+ *                     defensively so the user re-enters it)
+ *
+ * Cross-links: footer offers /register for new accounts, /forgot-password
+ * for password reset, and a "Lost authenticator + recovery codes?" path
+ * that also drops to /forgot-password.
+ */
+
+const COLORS = {
+  ink: '#111827', muted: '#6b7280', line: '#e5e7eb',
+  farm: '#1a6b3a', retail: '#c77700',
 };
 
-const SERIF = "'Fraunces', Georgia, serif";
-const SANS = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
+const SERIF = "'Playfair Display', Georgia, serif";
+const SANS = "'Inter', system-ui, -apple-system, sans-serif";
 
-const S = {
-  wrapper: {
-    minHeight: '100vh', background: C.cream, fontFamily: SANS,
-    display: 'grid', gridTemplateColumns: '1.1fr 1fr',
-  },
-  wrapperMobile: {
-    minHeight: '100vh', background: C.cream, fontFamily: SANS,
-    display: 'flex', flexDirection: 'column',
-  },
-  side: {
-    position: 'relative', overflow: 'hidden', padding: 44,
-    backgroundImage: 'linear-gradient(180deg,rgba(31,61,38,.15),rgba(177,59,23,.55) 75%), url(https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=1400&q=75&auto=format&fit=crop)',
-    backgroundSize: 'cover', backgroundPosition: 'center',
-    color: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-  },
-  sideMobile: {
-    position: 'relative', overflow: 'hidden', padding: '32px 24px', minHeight: 260,
-    backgroundImage: 'linear-gradient(180deg,rgba(31,61,38,.25),rgba(177,59,23,.7) 85%), url(https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=1200&q=75&auto=format&fit=crop)',
-    backgroundSize: 'cover', backgroundPosition: 'center',
-    color: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-  },
-  logo: {
-    display: 'flex', alignItems: 'center', gap: 10,
-    fontWeight: 700, fontSize: 22, color: '#fff', letterSpacing: '-0.01em',
-  },
-  quoteCard: {
-    background: 'rgba(255,255,255,.14)', backdropFilter: 'blur(14px)',
-    WebkitBackdropFilter: 'blur(14px)',
-    border: '1px solid rgba(255,255,255,.25)',
-    borderRadius: 24, padding: '28px 30px', maxWidth: 440,
-  },
-  quoteText: {
-    fontFamily: SERIF, fontWeight: 600, fontStyle: 'italic',
-    fontSize: 26, lineHeight: 1.25, letterSpacing: '-0.01em',
-  },
-  formWrap: {
-    padding: '56px 48px', display: 'flex',
-    alignItems: 'center', justifyContent: 'center',
-    background: C.cream,
-  },
-  formWrapMobile: {
-    padding: '36px 22px', display: 'flex',
-    alignItems: 'center', justifyContent: 'center',
-    background: C.cream, flex: 1,
-  },
-  form: { width: '100%', maxWidth: 440 },
-  back: {
-    display: 'inline-flex', alignItems: 'center', gap: 6,
-    color: C.muted, fontSize: 14, marginBottom: 36, fontWeight: 500,
-    textDecoration: 'none', background: 'transparent', border: 0, cursor: 'pointer', padding: 0,
-  },
-  title: {
-    fontFamily: SERIF, fontWeight: 700, fontSize: 44,
-    letterSpacing: '-0.025em', lineHeight: 1.05, marginBottom: 10,
-    color: C.ink,
-  },
-  titleEm: { color: C.clay, fontStyle: 'italic', fontWeight: 600 },
-  sub: {
-    color: C.muted, fontSize: 15.5, marginBottom: 32, lineHeight: 1.55,
-  },
-  error: {
-    background: '#fce0d6', color: '#a53815', fontSize: 13,
-    padding: '12px 14px', borderRadius: 14, marginBottom: 18,
-    borderLeft: '3px solid ' + C.terra,
-  },
-  info: {
-    background: '#e7f2ea', color: C.forest, fontSize: 13,
-    padding: '12px 14px', borderRadius: 14, marginBottom: 18,
-    borderLeft: '3px solid ' + C.forest,
-  },
-  oauth: { display: 'grid', gap: 10, margin: '4px 0 20px' },
-  oauthBtn: {
-    width: '100%', padding: '13px', border: '1.5px solid ' + C.line,
-    borderRadius: 999,
-    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-    fontSize: 14.5, fontWeight: 600,
-    background: '#fff', color: C.ink, cursor: 'not-allowed',
-    fontFamily: SANS, transition: 'border-color 0.15s, background 0.15s',
-    opacity: 0.7,
-  },
-  oauthNote: {
-    fontSize: 11.5, color: C.muted, textAlign: 'center', marginTop: -4,
-  },
-  dividerLine: {
-    display: 'flex', alignItems: 'center', gap: 12,
-    color: C.muted, fontSize: 12.5, textTransform: 'uppercase',
-    letterSpacing: 1.2,
-  },
-  dividerRule: { flex: 1, height: 1, background: C.line },
-  field: { marginBottom: 16 },
-  label: {
-    display: 'block', fontSize: 13.5, fontWeight: 600,
-    marginBottom: 7, color: C.ink,
-  },
-  labelRow: {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-  },
-  forgotLink: {
-    color: C.muted, fontWeight: 500, fontSize: 12.5, textDecoration: 'none',
-  },
-  input: {
-    width: '100%', padding: '14px 16px', border: '1.5px solid ' + C.line,
-    borderRadius: 14, background: '#fff', fontSize: 15.5,
-    fontFamily: SANS, color: C.ink, outline: 'none',
-    boxSizing: 'border-box', transition: 'border .15s, box-shadow .15s',
-  },
-  otpInput: {
-    width: '100%', padding: '16px 16px', border: '1.5px solid ' + C.line,
-    borderRadius: 14, background: '#fff', fontSize: 22,
-    fontFamily: 'ui-monospace, "SF Mono", Menlo, Consolas, monospace',
-    color: C.ink, outline: 'none', letterSpacing: 8, textAlign: 'center',
-    boxSizing: 'border-box', transition: 'border .15s, box-shadow .15s',
-  },
-  submit: {
-    width: '100%', padding: 15,
-    background: 'linear-gradient(135deg, ' + C.amber + ', ' + C.terra + ')',
-    color: '#fff', borderRadius: 999, fontWeight: 700, fontSize: 15,
-    border: 'none', cursor: 'pointer', fontFamily: SANS,
-    boxShadow: '0 10px 24px -8px rgba(217,86,44,.6)',
-    transition: 'transform .12s, box-shadow .15s',
-  },
-  secondaryLink: {
-    display: 'inline-block', marginTop: 12, fontSize: 13,
-    color: C.clay, fontWeight: 600, cursor: 'pointer',
-    background: 'transparent', border: 0, padding: 0, fontFamily: SANS,
-    textDecoration: 'underline', textUnderlineOffset: 3,
-  },
-  switch: {
-    textAlign: 'center', fontSize: 14, color: C.muted, marginTop: 24,
-  },
-  switchLink: { color: C.clay, fontWeight: 700, textDecoration: 'none' },
-  /* ── Design 5: 2FA callout card (shows on the creds step) ── */
-  twofaNote: {
-    marginTop: 18,
-    padding: '12px 14px',
-    background: C.sand2,
-    borderLeft: `3px solid ${C.amber}`,
-    borderRadius: 8,
-    display: 'flex', gap: 10, alignItems: 'flex-start',
-  },
-  twofaNoteIcon: {
-    fontSize: 16, color: C.clay, flexShrink: 0, lineHeight: 1,
-  },
-  twofaNoteText: {
-    fontSize: 11.5, color: C.ink, lineHeight: 1.5, fontFamily: SANS,
-  },
-  twofaNoteStrong: {
-    color: C.clay, fontWeight: 700,
-  },
-};
+const CSS = `
+  .lg-root{font-family:${SANS};color:${COLORS.ink};background:#fff;line-height:1.55;-webkit-font-smoothing:antialiased;min-height:100vh}
+  .lg-root *{box-sizing:border-box}
+  .lg-root a{color:inherit;text-decoration:none}
+  .lg-serif{font-family:${SERIF};letter-spacing:-0.02em}
+  .lg-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);min-height:100vh}
+
+  /* HERO column — ink with both accents (login is persona-agnostic) */
+  .lg-hero{position:relative;overflow:hidden;padding:56px 56px 48px;color:#fff;display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(135deg,${COLORS.ink} 0%,#1a1d2e 100%)}
+  .lg-hero::before{content:'';position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(26,107,58,0.32),transparent 60%);top:-160px;left:-160px;pointer-events:none}
+  .lg-hero::after{content:'';position:absolute;width:480px;height:480px;border-radius:50%;background:radial-gradient(circle,rgba(199,119,0,0.30),transparent 60%);bottom:-200px;right:-180px;pointer-events:none}
+  .lg-brand{display:inline-flex;align-items:center;gap:10px;font-family:${SERIF};font-weight:800;font-size:22px;color:#fff;position:relative;z-index:1}
+  .lg-brand-dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,${COLORS.farm} 40%,${COLORS.retail} 60%);box-shadow:0 0 0 3px rgba(255,255,255,0.12)}
+  .lg-brand-sub{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;margin-left:8px;font-weight:600;opacity:0.62}
+
+  .lg-hero-body{position:relative;z-index:1;margin:48px 0 0}
+  .lg-eye{font-size:11px;letter-spacing:0.22em;text-transform:uppercase;font-weight:700;opacity:0.7;margin-bottom:16px;color:rgba(255,255,255,0.7)}
+  .lg-hero h1{font-family:${SERIF};font-size:48px;line-height:1.08;font-weight:700;margin:0 0 22px;color:#fff;letter-spacing:-0.02em}
+  .lg-hero h1 em{font-style:normal;color:#ffd47a}
+  .lg-hero p{font-size:16px;color:rgba(255,255,255,0.82);line-height:1.65;max-width:480px;margin:0}
+
+  /* Quiet rotating quote / trust card */
+  .lg-trust{position:relative;z-index:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:18px;padding:22px 24px;margin-top:auto;max-width:480px}
+  .lg-trust-eye{font-size:11px;letter-spacing:0.18em;text-transform:uppercase;font-weight:700;color:#a3e7b8;margin-bottom:10px}
+  .lg-trust-quote{font-family:${SERIF};font-size:18px;line-height:1.4;color:#fff;font-weight:500;letter-spacing:-0.01em}
+  .lg-trust-attrib{font-size:12px;color:rgba(255,255,255,0.6);margin-top:10px}
+
+  /* FORM column */
+  .lg-form-wrap{background:#fff;padding:56px 56px 48px;display:flex;flex-direction:column;justify-content:center}
+  .lg-form{max-width:420px;width:100%;margin:0 auto}
+  .lg-form-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:40px}
+  .lg-back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:${COLORS.muted};font-weight:500;background:transparent;border:0;cursor:pointer;padding:0;font-family:${SANS}}
+  .lg-back:hover{color:${COLORS.ink}}
+  .lg-newacct{font-size:13px;color:${COLORS.muted}}
+  .lg-newacct a{color:${COLORS.ink};font-weight:600;border-bottom:1px solid ${COLORS.line};padding-bottom:1px}
+  .lg-newacct a:hover{border-color:${COLORS.ink}}
+
+  .lg-form h2{font-family:${SERIF};font-size:36px;line-height:1.1;font-weight:700;margin:0 0 10px;color:${COLORS.ink};letter-spacing:-0.02em}
+  .lg-form h2 em{font-style:normal;color:${COLORS.farm}}
+  .lg-sub{font-size:14px;color:${COLORS.muted};margin:0 0 28px;line-height:1.55}
+
+  .lg-field{margin-bottom:16px}
+  .lg-label{display:block;font-size:11.5px;font-weight:600;color:${COLORS.ink};margin-bottom:6px}
+  .lg-label-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  .lg-label-row .lg-label{margin-bottom:0}
+  .lg-forgot{font-size:11.5px;color:${COLORS.muted};text-decoration:underline;text-underline-offset:3px}
+  .lg-forgot:hover{color:${COLORS.ink}}
+  .lg-input{width:100%;padding:11px 14px;border:1px solid ${COLORS.line};border-radius:10px;font-size:14px;font-family:${SANS};background:#fff;outline:none;transition:border-color .15s,box-shadow .15s;color:${COLORS.ink}}
+  .lg-input:focus{border-color:${COLORS.ink};box-shadow:0 0 0 4px rgba(17,24,39,0.08)}
+  .lg-input::placeholder{color:#9ca3af}
+  .lg-otp{letter-spacing:0.36em;text-align:center;font-size:20px;font-weight:600;font-family:${SANS}}
+  .lg-otp.recovery{letter-spacing:0.18em;font-size:16px;text-transform:uppercase}
+
+  .lg-submit{width:100%;padding:14px 20px;border-radius:999px;border:none;font-family:${SANS};font-size:14px;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .15s,opacity .15s;color:#fff;background:${COLORS.ink};box-shadow:0 10px 24px -8px rgba(17,24,39,0.4);margin-top:8px}
+  .lg-submit:not(:disabled):hover{transform:translateY(-1px)}
+  .lg-submit:disabled{opacity:0.55;cursor:not-allowed;box-shadow:none}
+
+  .lg-secondary{display:block;margin-top:14px;text-align:center;font-size:12.5px;color:${COLORS.muted};background:transparent;border:0;cursor:pointer;font-family:${SANS};width:100%;padding:6px;text-decoration:underline;text-underline-offset:3px}
+  .lg-secondary:hover{color:${COLORS.ink}}
+
+  .lg-note{margin-top:22px;display:flex;gap:10px;background:#fff4e1;border:1px solid rgba(199,119,0,0.18);border-radius:12px;padding:12px 14px;font-size:12px;color:#7a4a00;line-height:1.5}
+  .lg-note-icon{font-size:16px;flex:none}
+
+  .lg-error{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:16px;line-height:1.5}
+
+  .lg-foot{margin-top:24px;text-align:center;font-size:12.5px;color:${COLORS.muted}}
+  .lg-foot a{color:${COLORS.ink};font-weight:600;text-decoration:underline;text-underline-offset:3px}
+
+  @media (max-width:1024px){
+    .lg-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}
+    .lg-hero{padding:40px 36px 36px}
+    .lg-form-wrap{padding:40px 36px}
+    .lg-hero h1{font-size:38px}
+  }
+  @media (max-width:760px){
+    .lg-grid{grid-template-columns:1fr}
+    .lg-hero{padding:28px 24px;min-height:auto}
+    .lg-hero h1{font-size:28px}
+    .lg-hero p{font-size:14px}
+    .lg-trust{display:none}
+    .lg-form-wrap{padding:32px 24px 40px}
+    .lg-form h2{font-size:26px}
+  }
+`;
 
 export default function Login() {
+  const navigate = useNavigate();
+  const { login, loginWith2fa, loading, error } = useAuth();
+
   // Two-step state machine
   const [step, setStep] = useState('creds'); // 'creds' | '2fa'
   const [username, setUsername] = useState('');
@@ -184,28 +133,23 @@ export default function Login() {
   const [code, setCode] = useState('');
   const [useRecovery, setUseRecovery] = useState(false);
 
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 1000);
-  const { login, loginWith2fa, loading, error } = useAuth();
-  const navigate = useNavigate();
-
+  // Inject Playfair + Inter once (shared with landing + signup pages).
   useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth <= 1000);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
-
-  useEffect(() => {
-    const id = 'pewil-livingafrica-fonts';
+    const id = 'pewil-landing-fonts';
     if (document.getElementById(id)) return;
     const link = document.createElement('link');
     link.id = id;
     link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap';
+    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700;800&display=swap';
     document.head.appendChild(link);
   }, []);
 
-  const fx = e => { e.target.style.borderColor = C.clay; e.target.style.boxShadow = '0 0 0 4px rgba(217,86,44,.1)'; };
-  const fb = e => { e.target.style.borderColor = C.line; e.target.style.boxShadow = 'none'; };
+  // SEO/title per step — restored on unmount.
+  useEffect(() => {
+    const prev = document.title;
+    document.title = step === '2fa' ? 'Verify — Pewil' : 'Sign in — Pewil';
+    return () => { document.title = prev; };
+  }, [step]);
 
   async function handleCredsSubmit(e) {
     e.preventDefault();
@@ -232,7 +176,6 @@ export default function Login() {
       return;
     }
     if (res.expired) {
-      // Send them back to step 1 with a helpful error already set by context
       setStep('creds');
       setPendingToken('');
       setCode('');
@@ -243,204 +186,167 @@ export default function Login() {
     setStep('creds');
     setPendingToken('');
     setCode('');
-    setPassword(''); // force re-entry of password \u2014 safer
+    setPassword('');  // force re-entry — safer
   }
 
-  const LogoLink = (
-    <Link to="/" style={{ ...S.logo, textDecoration: 'none', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
-      <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <svg width="31" height="34" viewBox="0 0 110 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pewil">
-          <path d="M 55 4 C 89 4, 105 28, 105 56 C 105 88, 83 108, 55 108 C 27 108, 5 88, 5 56 C 5 28, 21 4, 55 4 Z" fill="#fff7ec" />
-          <path d="M 55 34 L 55 86" stroke="#1f3d26" strokeWidth="5" strokeLinecap="round" />
-          <path d="M 55 48 C 45 48, 39 40, 39 32" stroke="#1f3d26" strokeWidth="5" strokeLinecap="round" fill="none" />
-          <path d="M 55 60 C 67 60, 75 52, 75 44" stroke="#1f3d26" strokeWidth="5" strokeLinecap="round" fill="none" />
-        </svg>
-        Pewil
-      </span>
-      <span style={{ fontFamily: SERIF, fontStyle: 'italic', fontWeight: 500, fontSize: 14, opacity: 0.88, letterSpacing: '0.01em' }}>
-        Rooted in the work.
-      </span>
-    </Link>
-  );
-
   return (
-    <div style={isMobile ? S.wrapperMobile : S.wrapper}>
-      {/* Left photo side */}
-      <aside style={isMobile ? S.sideMobile : S.side}>
-        {LogoLink}
-        <div style={S.quoteCard}>
-          <div style={S.quoteText}>
-            Welcome back. Your fields, your shop, your team {'\u2014'} all waiting exactly where you left them.
-          </div>
-          <div style={{ marginTop: 18, fontSize: 14, opacity: 0.88, lineHeight: 1.55 }}>
-            Pewil keeps the numbers quiet so you can hear the work.
-          </div>
-        </div>
-      </aside>
+    <div className="lg-root">
+      <style>{CSS}</style>
+      <div className="lg-grid">
 
-      {/* Right form side */}
-      <main style={isMobile ? S.formWrapMobile : S.formWrap}>
-        {step === 'creds' ? (
-          <form style={S.form} onSubmit={handleCredsSubmit}>
-            <BackLink to="/" label="Back to home" style={{ marginBottom: 36 }} />
-            <h2 style={S.title}>
-              Welcome back, <span style={S.titleEm}>friend</span>.
-            </h2>
-            <p style={S.sub}>Sign in and pick up where the team left off.</p>
+        {/* HERO column — ink with both accents (login is persona-agnostic) */}
+        <aside className="lg-hero">
+          <Link to="/" className="lg-brand">
+            <span className="lg-brand-dot" />
+            Pewil <span className="lg-brand-sub">Rooted in the work</span>
+          </Link>
 
-            {error && <div style={S.error}>{error}</div>}
-
-            {/* Google SSO is on the roadmap but not wired — the prior
-                disabled button plus "arrives in the next update" copy was
-                setting expectations we weren't meeting in v1. Hide until
-                we have a working OAuth handshake. */}
-
-
-            <div style={S.field}>
-              <label style={S.label} htmlFor="username">Username or email</label>
-              <input
-                id="username"
-                type="text"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                onFocus={fx}
-                onBlur={fb}
-                autoComplete="username"
-                required
-                style={S.input}
-                placeholder="you@farm.co.zw"
-              />
-            </div>
-
-            <div style={S.field}>
-              <div style={S.labelRow}>
-                <label style={S.label} htmlFor="password">Password</label>
-                <Link to="/forgot-password" style={S.forgotLink}>Forgot?</Link>
-              </div>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                onFocus={fx}
-                onBlur={fb}
-                autoComplete="current-password"
-                required
-                style={S.input}
-                placeholder={'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                ...S.submit,
-                opacity: loading ? 0.7 : 1,
-                cursor: loading ? 'not-allowed' : 'pointer',
-              }}
-              onMouseEnter={e => {
-                if (loading) return;
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 14px 30px -8px rgba(217,86,44,.7)';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.transform = 'none';
-                e.currentTarget.style.boxShadow = '0 10px 24px -8px rgba(217,86,44,.6)';
-              }}
-            >
-              {loading ? 'Signing in\u2026' : 'Sign in to Pewil \u2192'}
-            </button>
-
-            {/* Design 5: amber 2FA callout */}
-            <div style={S.twofaNote}>
-              <div style={S.twofaNoteIcon}>{'\u{1F510}'}</div>
-              <div style={S.twofaNoteText}>
-                <span style={S.twofaNoteStrong}>2FA enabled.</span>{' '}
-                If you{'\u2019'}ve turned it on, you{'\u2019'}ll be asked for your authenticator code after this step.
-              </div>
-            </div>
-
-            <div style={S.switch}>
-              New to Pewil?{' '}
-              <Link to="/register" style={S.switchLink}>Create an account {'\u2192'}</Link>
-            </div>
-          </form>
-        ) : (
-          /* ─── 2FA step ─── */
-          <form style={S.form} onSubmit={handle2faSubmit}>
-            <button type="button" style={S.back} onClick={cancelTwoFa}>
-              {'\u2190'} Use a different account
-            </button>
-            <h2 style={S.title}>
-              One more step, <span style={S.titleEm}>{twofaUsername || 'there'}</span>.
-            </h2>
-            <p style={S.sub}>
-              {useRecovery
-                ? 'Enter one of the 8-character recovery codes you saved when you enabled 2FA.'
-                : 'Open your authenticator app and enter the 6-digit code for Pewil.'}
+          <div className="lg-hero-body">
+            <div className="lg-eye">Welcome back</div>
+            <h1 className="lg-serif">
+              Your fields, your shop, your team &mdash;{' '}
+              <em>waiting where you left them</em>.
+            </h1>
+            <p>
+              Pewil keeps the numbers quiet so you can hear the work. Sign in and pick up where the team left off.
             </p>
+          </div>
 
-            {error && <div style={S.error}>{error}</div>}
-
-            <div style={S.field}>
-              <label style={S.label} htmlFor="code">
-                {useRecovery ? 'Recovery code' : 'Authentication code'}
-              </label>
-              <input
-                id="code"
-                type="text"
-                inputMode={useRecovery ? 'text' : 'numeric'}
-                pattern={useRecovery ? undefined : '[0-9]*'}
-                value={code}
-                onChange={e => setCode(e.target.value)}
-                onFocus={fx}
-                onBlur={fb}
-                autoComplete="one-time-code"
-                autoFocus
-                required
-                maxLength={useRecovery ? 10 : 6}
-                style={S.otpInput}
-                placeholder={useRecovery ? 'A1B2C3D4' : '123456'}
-              />
+          <div className="lg-trust">
+            <div className="lg-trust-eye">From a Pewil operator</div>
+            <div className="lg-trust-quote">
+              &ldquo;I stopped worrying about the till. My cashier closes, the variance is zero, and I go home. That sentence is a whole story.&rdquo;
             </div>
+            <div className="lg-trust-attrib">— Pewil Retail, single-counter shop · Avenues, Harare</div>
+          </div>
+        </aside>
 
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                ...S.submit,
-                opacity: loading ? 0.7 : 1,
-                cursor: loading ? 'not-allowed' : 'pointer',
-              }}
-              onMouseEnter={e => {
-                if (loading) return;
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 14px 30px -8px rgba(217,86,44,.7)';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.transform = 'none';
-                e.currentTarget.style.boxShadow = '0 10px 24px -8px rgba(217,86,44,.6)';
-              }}
-            >
-              {loading ? 'Verifying\u2026' : 'Verify and sign in \u2192'}
-            </button>
+        {/* FORM column */}
+        <main className="lg-form-wrap">
+          {step === 'creds' ? (
+            <form className="lg-form" onSubmit={handleCredsSubmit} noValidate>
+              <div className="lg-form-top">
+                <Link to="/" className="lg-back">&larr; Back</Link>
+                <div className="lg-newacct">
+                  New to Pewil? <Link to="/register">Create account</Link>
+                </div>
+              </div>
 
-            <button
-              type="button"
-              style={S.secondaryLink}
-              onClick={() => { setUseRecovery(!useRecovery); setCode(''); }}
-            >
-              {useRecovery ? 'Use authenticator app instead' : 'Use a recovery code instead'}
-            </button>
+              <h2 className="lg-serif">
+                Welcome back, <em>friend</em>.
+              </h2>
+              <p className="lg-sub">Sign in and pick up where the team left off.</p>
 
-            <div style={S.switch}>
-              Lost your authenticator and recovery codes?{' '}
-              <Link to="/forgot-password" style={S.switchLink}>Reset via email {'\u2192'}</Link>
-            </div>
-          </form>
-        )}
-      </main>
+              {error && <div className="lg-error">{error}</div>}
+
+              <div className="lg-field">
+                <label className="lg-label" htmlFor="username">Username or email</label>
+                <input
+                  id="username"
+                  className="lg-input"
+                  type="text"
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  autoComplete="username"
+                  placeholder="you@shop.co.zw"
+                  required
+                />
+              </div>
+
+              <div className="lg-field">
+                <div className="lg-label-row">
+                  <label className="lg-label" htmlFor="password">Password</label>
+                  <Link to="/forgot-password" className="lg-forgot">Forgot?</Link>
+                </div>
+                <input
+                  id="password"
+                  className="lg-input"
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+
+              <button type="submit" disabled={loading} className="lg-submit">
+                {loading ? 'Signing in…' : 'Sign in to Pewil →'}
+              </button>
+
+              <div className="lg-note">
+                <span className="lg-note-icon">🔐</span>
+                <span>
+                  <strong>2FA enabled?</strong> You{'’'}ll be asked for your authenticator code after this step.
+                </span>
+              </div>
+
+              <div className="lg-foot">
+                Don{'’'}t have an account yet?{' '}
+                <Link to="/register">Start a free trial &rarr;</Link>
+              </div>
+            </form>
+          ) : (
+            /* ─── 2FA step ─── */
+            <form className="lg-form" onSubmit={handle2faSubmit} noValidate>
+              <div className="lg-form-top">
+                <button type="button" className="lg-back" onClick={cancelTwoFa}>
+                  &larr; Use a different account
+                </button>
+              </div>
+
+              <h2 className="lg-serif">
+                One more step, <em>{twofaUsername || 'there'}</em>.
+              </h2>
+              <p className="lg-sub">
+                {useRecovery
+                  ? 'Enter one of the 8-character recovery codes you saved when you enabled 2FA.'
+                  : 'Open your authenticator app and enter the 6-digit code for Pewil.'}
+              </p>
+
+              {error && <div className="lg-error">{error}</div>}
+
+              <div className="lg-field">
+                <label className="lg-label" htmlFor="code">
+                  {useRecovery ? 'Recovery code' : 'Authentication code'}
+                </label>
+                <input
+                  id="code"
+                  className={`lg-input lg-otp ${useRecovery ? 'recovery' : ''}`}
+                  type="text"
+                  inputMode={useRecovery ? 'text' : 'numeric'}
+                  pattern={useRecovery ? undefined : '[0-9]*'}
+                  value={code}
+                  onChange={e => setCode(e.target.value)}
+                  autoComplete="one-time-code"
+                  autoFocus
+                  required
+                  maxLength={useRecovery ? 10 : 6}
+                  placeholder={useRecovery ? 'A1B2C3D4' : '123456'}
+                />
+              </div>
+
+              <button type="submit" disabled={loading} className="lg-submit">
+                {loading ? 'Verifying…' : 'Verify and sign in →'}
+              </button>
+
+              <button
+                type="button"
+                className="lg-secondary"
+                onClick={() => { setUseRecovery(!useRecovery); setCode(''); }}
+              >
+                {useRecovery ? 'Use authenticator app instead' : 'Use a recovery code instead'}
+              </button>
+
+              <div className="lg-foot">
+                Lost your authenticator and recovery codes?{' '}
+                <Link to="/forgot-password">Reset via email &rarr;</Link>
+              </div>
+            </form>
+          )}
+        </main>
+
+      </div>
     </div>
   );
 }
