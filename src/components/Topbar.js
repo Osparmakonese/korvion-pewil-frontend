@@ -4,6 +4,7 @@ import { fmt, qty } from '../utils/format';
 import { getDailySummary } from '../api/farmApi';
 import { listBranches, getCashierSessions } from '../api/retailApi';
 import NotificationBell from './NotificationBell';
+import OfflineIndicator from './OfflineIndicator';
 
 /* ─── Design 3 — Living Africa tokens ─── */
 const TOKENS = {
@@ -243,6 +244,7 @@ export default function Topbar({ pageTitle, pageSub, primaryAction, onPrimaryAct
         <div style={S.sub}>{pageSub}</div>
       </div>
       <div style={S.right}>
+        <OfflineIndicator />
         <BranchChip activeModule={activeModule} />
         <span style={S.dateChip}>{formatDate()}</span>
         <NotificationBell />

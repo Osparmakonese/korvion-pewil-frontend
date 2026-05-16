@@ -238,10 +238,15 @@ export default function DownloadPage() {
         <h2 className="dl-serif">Common questions</h2>
         <div className="dl-faq">
           <div className="dl-faq-item">
-            <p className="dl-faq-q">Do I need an internet connection?</p>
+            <p className="dl-faq-q">Can the cashier keep working if the internet drops?</p>
             <p className="dl-faq-a">
-              Yes &mdash; the desktop version of Pewil today is the same web app in a dedicated window, so it needs internet
-              to talk to the Pewil servers. A fully offline-capable cashier mode is on the Korvion Solution roadmap.
+              <strong>Yes.</strong> When the connection drops, Pewil POS automatically queues every sale locally
+              and shows an &quot;Offline&quot; pill in the top bar with the count of queued sales. The cashier keeps
+              ringing up customers normally &mdash; receipts print, change is calculated, customers leave with
+              their goods. When the internet returns, the queued sales sync to the server automatically (with
+              built-in duplicate-protection so re-tries can&apos;t double-charge). Tested up to 48 hours offline.
+              Other workflows (creating new products, configuring tax, multi-branch transfers) still require
+              an online connection.
             </p>
           </div>
           <div className="dl-faq-item">
