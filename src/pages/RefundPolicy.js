@@ -24,7 +24,7 @@ export default function RefundPolicy() {
         <p style={S.updated}>Last updated: 17 April 2026</p>
 
         <h2 style={S.h2}>1. Overview</h2>
-        <p style={S.p}>This Refund Policy explains when and how refunds are issued for Pewil subscription payments. It supplements Section 4 (Subscription and Payment) of our Terms of Service. By subscribing to Pewil, you agree to the refund terms described here.</p>
+        <p style={S.p}>This Refund Policy explains when and how refunds are issued for Pewil subscription payments. Pewil is operated by Korvion Solution (Pvt) Ltd, registered in Zimbabwe. It supplements Section 4 (Subscription and Payment) of our Terms of Service. By subscribing to Pewil, you agree to the refund terms described here.</p>
 
         <h2 style={S.h2}>2. Free Trial</h2>
         <p style={S.p}>All new accounts receive a 30-day free trial. No payment is taken during the trial. If you cancel before the trial ends, you will never be charged and no refund is required. If you do not subscribe at the end of the trial, your account enters a read-only state and you can still export your data.</p>

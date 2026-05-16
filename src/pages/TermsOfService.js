@@ -23,10 +23,10 @@ export default function TermsOfService() {
         <p style={S.updated}>Last updated: 15 April 2026</p>
 
         <h2 style={S.h2}>1. Agreement to Terms</h2>
-        <p style={S.p}>By accessing or using Pewil ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the Service. These terms apply to all users, including farm owners, managers, workers, and retail operators.</p>
+        <p style={S.p}>By accessing or using Pewil ("the Service"), a product of Korvion Solution (Pvt) Ltd ("Korvion Solution", "we", "us"), you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the Service. These terms apply to all users, including farm owners, managers, workers, and retail operators.</p>
 
         <h2 style={S.h2}>2. Description of Service</h2>
-        <p style={S.p}>Pewil is a multi-tenant software-as-a-service platform providing farm management and retail point-of-sale tools. The Service includes, but is not limited to, field and livestock tracking, inventory management, financial reporting, AI-powered insights, billing and subscription management, and team collaboration features.</p>
+        <p style={S.p}>Pewil is a multi-tenant software-as-a-service platform operated by Korvion Solution (Pvt) Ltd, providing farm management and retail point-of-sale tools. The Service includes, but is not limited to, field and livestock tracking, inventory management, financial reporting, AI-powered insights, billing and subscription management, and team collaboration features.</p>
 
         <h2 style={S.h2}>3. Account Registration</h2>
         <p style={S.p}>You must provide accurate information when creating an account. You are responsible for maintaining the confidentiality of your login credentials and for all activities that occur under your account. You must notify us immediately of any unauthorized use of your account.</p>
@@ -59,7 +59,7 @@ export default function TermsOfService() {
         <p style={S.p}>These terms are governed by the laws of Zimbabwe. Any disputes arising from these terms shall be resolved in the courts of Harare, Zimbabwe.</p>
 
         <h2 style={S.h2}>13. Contact</h2>
-        <p style={S.p}>If you have questions about these Terms of Service, please contact us at support@pewil.org.</p>
+        <p style={S.p}>If you have questions about these Terms of Service, please contact us at support@pewil.org. The Service is operated by Korvion Solution (Pvt) Ltd, registered in Zimbabwe, with its principal office in Harare.</p>
       </div>
     </div>
   );
