@@ -20,6 +20,10 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 
+/* Farm landing page — separate funnel at /farm (May 2026 split).
+ * Eager so the marketing surface stays fast for SEO + ad clicks. */
+import FarmLandingPage from './pages/FarmLandingPage';
+
 /* --- Lazy loaded pages (code splitting) --- */
 const CustomerDisplay = React.lazy(() => import('./pages/CustomerDisplay'));
 const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword'));
@@ -406,6 +410,8 @@ export default function App() {
       <StagingBanner />
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        {/* Pewil Farm marketing landing — separate funnel from the retail-led homepage. */}
+        <Route path="/farm" element={<FarmLandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<Suspense fallback={<PageLoader />}><ForgotPassword /></Suspense>} />

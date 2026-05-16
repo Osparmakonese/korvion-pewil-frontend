@@ -83,6 +83,8 @@ const PL_CSS = `
 
   /* persona ribbon */
   .pl-ribbon{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:1000px;margin:80px auto 0}
+  /* retail-only homepage variant — 2 tiles read better than 3 */
+  .pl-ribbon-2{grid-template-columns:repeat(2,1fr);max-width:820px}
   .pl-ribbon-tile{aspect-ratio:4/5;border-radius:18px;overflow:hidden;position:relative;background:#111827;cursor:pointer;transition:transform .3s;display:block}
   .pl-ribbon-tile:hover{transform:translateY(-4px)}
   .pl-ribbon-tile img{width:100%;height:100%;object-fit:cover}
@@ -102,6 +104,8 @@ const PL_CSS = `
   .pl-three-head h2{font-size:44px;line-height:1.12;margin:0 0 18px}
   .pl-three-head p{font-size:17px;color:#374151;line-height:1.65;margin:0}
   .pl-three-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  /* retail-only homepage variant — 2 cards centered, slightly larger gap */
+  .pl-three-grid-2{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;max-width:1040px;margin:0 auto}
   .pl-op-card{background:#fff;border-radius:20px;overflow:hidden;border:1px solid #e5e7eb;display:flex;flex-direction:column;transition:transform .3s,box-shadow .3s,border-color .3s}
   .pl-op-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,0.08)}
   .pl-op-card.farmer:hover{border-color:#2d9e58}
@@ -173,6 +177,8 @@ const PL_CSS = `
   .pl-parity-head h2{font-size:42px;line-height:1.12;max-width:720px;margin:0 auto}
   .pl-parity-table{background:#fff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;max-width:1140px;margin:0 auto}
   .pl-parity-row{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;border-bottom:1px solid #e5e7eb}
+  /* retail-only homepage parity — 3 columns instead of 4 */
+  .pl-parity-2 .pl-parity-row{grid-template-columns:1.4fr 1fr 1fr}
   .pl-parity-row:last-child{border-bottom:none}
   .pl-parity-row > div{padding:20px 22px;font-size:14px;line-height:1.5}
   .pl-parity-row.head > div{background:#111827;color:#fff;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase}
@@ -341,7 +347,7 @@ const LandingPage = () => {
             <a href="#operators">Features</a>
             <a href="#proof">Customers</a>
             <Link to="/pricing">Pricing</Link>
-            <a href="#thread">Resources</a>
+            <Link to="/farm">Pewil Farm</Link>
           </div>
           <div className="pl-nav-actions">
             <Link to="/login" className="pl-nav-login">Sign in</Link>
@@ -355,60 +361,40 @@ const LandingPage = () => {
         <div className="pl-wrap pl-hero-in">
           <div className="pl-hero-kick">
             <span className="pl-hero-kick-dot" />
-            The operating system for how Africa does business
+            POS &amp; back-office for African shops
           </div>
           <h1 className="pl-serif">
-            Three&nbsp;operators.<br />
-            <span className="g">One&nbsp;farm.</span>{' '}
-            <span className="a">One&nbsp;tuckshop.</span>{' '}
-            <span className="i">One&nbsp;chain.</span><br />
-            One system built for all of them.
+            The till that <span className="g">closes&nbsp;clean</span>,<br />
+            the stock that <span className="a">counts&nbsp;itself</span>,<br />
+            the chain that <span className="i">runs&nbsp;your&nbsp;city</span>.
           </h1>
           <p className="pl-hero-sub">
-            Pewil doesn't believe a smallholder farmer, the shopkeeper on the corner,
-            and the ops director of a national supermarket group need three different softwares.
-            They all need the same thing &mdash; something that respects the work, fits their scale,
-            and closes the day quietly. That's Pewil.
+            Pewil is the operating system for retail in Africa &mdash; from the tuckshop opening at six
+            sharp to the supermarket group signing off the seventeenth branch. ZIMRA-ready, EcoCash-native,
+            and ninety percent of what enterprise POS does at a tenth of the cost.
           </p>
           <div className="pl-hero-actions">
-            <Link to="/register" className="pl-btn pl-btn-dark">Start free for 14 days &rarr;</Link>
-            <a href="#operators" className="pl-btn pl-btn-ghost">See who it's for</a>
+            <Link to="/register?persona=retail" className="pl-btn pl-btn-dark">Start free for 14 days &rarr;</Link>
+            <a href="#operators" className="pl-btn pl-btn-ghost">See how it works</a>
           </div>
           <div className="pl-hero-demo">
-            Or try a live demo &mdash;{' '}
-            <button
-              type="button"
-              onClick={() => enterDemo('farm')}
-              disabled={demoLoading}
-            >
-              {loadingModule === 'farm' ? 'opening farm demo…' : 'Pewil Farm'}
-            </button>
-            {' '}or{' '}
+            Or try the live retail demo &mdash;{' '}
             <button
               type="button"
               onClick={() => enterDemo('retail')}
               disabled={demoLoading}
             >
-              {loadingModule === 'retail' ? 'opening retail demo…' : 'Pewil Retail'}
+              {loadingModule === 'retail' ? 'opening retail demo…' : 'open Pewil Retail'}
             </button>
-            {' '}&mdash; real data, no signup.
+            {' '}&mdash; real data, no signup. Running a farm instead?{' '}
+            <Link to="/farm" style={{ color: '#1a6b3a', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 3 }}>
+              Visit Pewil Farm &rarr;
+            </Link>
             {demoError && <div style={{ color: '#c0392b', marginTop: 8, fontSize: 12 }}>{demoError}</div>}
           </div>
 
-          {/* persona ribbon */}
-          <div className="pl-ribbon">
-            <a className="pl-ribbon-tile farmer" href="#op-farmer">
-              <img
-                src={UNSPLASH.farmer}
-                onError={handleImgErr('linear-gradient(135deg,#2d9e58,#1a6b3a)')}
-                alt="Farmer"
-              />
-              <div className="pl-ribbon-label">
-                <span className="pl-ribbon-chip">Pewil Farm</span>
-                <div className="pl-ribbon-name">The farmer who walks the field at dawn</div>
-                <div className="pl-ribbon-meta">2 hectares. 200 hectares. Same tools.</div>
-              </div>
-            </a>
+          {/* persona ribbon — retail-only (two operators of retail) */}
+          <div className="pl-ribbon pl-ribbon-2">
             <a className="pl-ribbon-tile small" href="#op-small">
               <img
                 src={UNSPLASH.shop}
@@ -418,7 +404,7 @@ const LandingPage = () => {
               <div className="pl-ribbon-label">
                 <span className="pl-ribbon-chip">Pewil Retail</span>
                 <div className="pl-ribbon-name">The shopkeeper opening at six sharp</div>
-                <div className="pl-ribbon-meta">One counter. One cashier. Full control.</div>
+                <div className="pl-ribbon-meta">One counter. One to three branches. Full control.</div>
               </div>
             </a>
             <a className="pl-ribbon-tile chain" href="#op-chain">
@@ -437,56 +423,19 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* ─── three operators ───────────────────────────── */}
-      <section className="pl-three" id="operators">
+      {/* ─── two operators ─────────────────────────────── */}
+      <section className="pl-three pl-three-2" id="operators">
         <div className="pl-wrap">
           <div className="pl-three-head">
-            <div className="pl-eye">Three operators · One software</div>
-            <h2 className="pl-serif">Which one are you?</h2>
+            <div className="pl-eye">Two retail operators · One software</div>
+            <h2 className="pl-serif">Built for shops of every size.</h2>
             <p>
-              Pick the card that sounds like your work. Each one opens into its own Pewil.
-              They share a login, an invoice, and a philosophy &mdash; but the screens you see are the ones you need.
+              Pewil Retail scales with you &mdash; from one counter and one cashier to a chain with branches in three cities.
+              Same login, same data model, same philosophy. The screens you see are the ones you need.
             </p>
           </div>
 
-          <div className="pl-three-grid">
-
-            {/* FARMER */}
-            <div className="pl-op-card farmer" id="op-farmer">
-              <div className="pl-op-photo">
-                <span className="pl-op-photo-chip">Pewil Farm</span>
-                <img
-                  src={UNSPLASH.farmer2}
-                  onError={handleImgErr('linear-gradient(135deg,#2d9e58,#0d4a22)')}
-                  alt=""
-                />
-              </div>
-              <div className="pl-op-body">
-                <h3 className="pl-op-title">The farmer</h3>
-                <div className="pl-op-sub">Smallholder · mid-sized · commercial estate</div>
-                <div className="pl-op-quote">
-                  "Every input costed to the field it went on. Every hour tied to a worker. Every season decided by numbers, not by luck."
-                </div>
-                <ul className="pl-op-feats">
-                  <li>Fields, crops, and livestock on one screen</li>
-                  <li>Attendance + wages day in 15 minutes</li>
-                  <li>Real P&amp;L per field, per season</li>
-                  <li>AI briefing at 6am every morning</li>
-                  <li>Works whether you have 2ha or 2,000</li>
-                </ul>
-                <div className="pl-op-price">
-                  <div>
-                    <span className="tier">From</span>
-                    <div><span className="amt">$10</span><span className="per">/mo</span></div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <span className="tier">Enterprise</span>
-                    <div className="pl-op-price-sub">up to $60/mo</div>
-                  </div>
-                </div>
-                <Link to="/register?persona=farm" className="pl-op-btn">Start Pewil Farm &rarr;</Link>
-              </div>
-            </div>
+          <div className="pl-three-grid pl-three-grid-2">
 
             {/* SMALL SHOP */}
             <div className="pl-op-card small" id="op-small">
@@ -575,78 +524,72 @@ const LandingPage = () => {
         <div className="pl-thread-in">
           <div className="pl-thread-head">
             <div className="pl-thread-eye">The thread between them</div>
-            <h2 className="pl-serif">Why <em>one</em> system works for all three.</h2>
+            <h2 className="pl-serif">Why <em>one</em> system works at every scale.</h2>
             <p>
-              A smallholder, a shopkeeper and a chain ops director don't look alike.
-              But their daily questions are the same four. Pewil answers them the same way &mdash; just at different scales.
+              A tuckshop owner and a chain ops director don't look alike. But their daily questions are the same four.
+              Pewil Retail answers them the same way &mdash; just at different scales.
             </p>
           </div>
           <div className="pl-thread-grid">
             <div className="pl-thread-card">
               <div className="pl-thread-num">01</div>
               <h4>What came in today?</h4>
-              <p>Stock deliveries, goods received, harvest logs &mdash; each one a receipt with a name on it.</p>
+              <p>Goods received, supplier POs, branch transfers &mdash; each one a receipt with a name on it.</p>
             </div>
             <div className="pl-thread-card">
               <div className="pl-thread-num">02</div>
               <h4>What went out today?</h4>
-              <p>Every sale, every market trip, every field usage &mdash; attributed, dated, tied to the thing it affected.</p>
+              <p>Every sale, every return, every cashier session &mdash; attributed, dated, tied to the till it ran on.</p>
             </div>
             <div className="pl-thread-card">
               <div className="pl-thread-num">03</div>
               <h4>Who worked, who gets paid?</h4>
-              <p>Attendance, cashier sessions, advances and wages &mdash; with the same audit trail whether it's 3 workers or 300.</p>
+              <p>Cashier sessions, manager overrides, advances and wages &mdash; with the same audit trail whether it's 1 cashier or 100.</p>
             </div>
             <div className="pl-thread-card">
               <div className="pl-thread-num">04</div>
               <h4>Did we make money?</h4>
-              <p>Live P&amp;L, per field or per branch, per day or per season. Always. Not "at year-end."</p>
+              <p>Live P&amp;L, per branch or per product, per day or per quarter. Always. Not "at year-end."</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* ─── parity table ──────────────────────────────── */}
-      <section className="pl-parity" id="parity">
+      <section className="pl-parity pl-parity-2" id="parity">
         <div className="pl-wrap">
           <div className="pl-parity-head">
-            <div className="pl-eye">The same question, three answers</div>
-            <h2 className="pl-serif">How Pewil answers each operator.</h2>
+            <div className="pl-eye">The same question, two answers</div>
+            <h2 className="pl-serif">How Pewil scales with you.</h2>
           </div>
           <div className="pl-parity-table">
             <div className="pl-parity-row head">
-              <div>The operator asks</div>
-              <div>Pewil Farm</div>
+              <div>The shopkeeper asks</div>
               <div>Pewil Retail</div>
               <div>Pewil Retail Enterprise</div>
             </div>
             <div className="pl-parity-row">
               <div className="pl-parity-q">What came in today?</div>
-              <div className="pl-parity-farm">Stock delivery log + inputs</div>
               <div className="pl-parity-small">Goods received note</div>
               <div className="pl-parity-chain">GRN across branches + transfers</div>
             </div>
             <div className="pl-parity-row">
               <div className="pl-parity-q">What went out today?</div>
-              <div className="pl-parity-farm">Field usage + market sales</div>
               <div className="pl-parity-small">POS sales + returns</div>
               <div className="pl-parity-chain">Chain-wide sales rollup</div>
             </div>
             <div className="pl-parity-row">
               <div className="pl-parity-q">Who worked, who gets paid?</div>
-              <div className="pl-parity-farm">Attendance + wages owed</div>
               <div className="pl-parity-small">Cashier sessions + staff hours</div>
               <div className="pl-parity-chain">HR + payroll across branches</div>
             </div>
             <div className="pl-parity-row">
               <div className="pl-parity-q">Did we make money?</div>
-              <div className="pl-parity-farm">P&amp;L per field, per season</div>
               <div className="pl-parity-small">P&amp;L per day, per product</div>
               <div className="pl-parity-chain">P&amp;L per branch, per region</div>
             </div>
             <div className="pl-parity-row">
               <div className="pl-parity-q">What should I watch tomorrow?</div>
-              <div className="pl-parity-farm">AI morning briefing</div>
               <div className="pl-parity-small">AI morning briefing</div>
               <div className="pl-parity-chain">AI briefing + ops dashboard</div>
             </div>
@@ -659,18 +602,18 @@ const LandingPage = () => {
         <div className="pl-wrap">
           <div className="pl-proof-head">
             <h2 className="pl-serif">What the operators are saying with their numbers</h2>
-            <p>Measured across real Pewil operators &mdash; from a two-hectare smallholder to a twelve-branch supermarket group.</p>
+            <p>Measured across real Pewil Retail operators &mdash; from a one-counter tuckshop in Avenues to a twelve-branch supermarket group.</p>
           </div>
           <div className="pl-proof-grid">
-            <div className="pl-stat green">
-              <div className="pl-stat-val">&minus;31%</div>
-              <div className="pl-stat-label">Time on wages day</div>
-              <div className="pl-stat-meta">Pewil Farm · all tiers</div>
-            </div>
             <div className="pl-stat amber">
               <div className="pl-stat-val">+14%</div>
               <div className="pl-stat-label">Monthly gross margin</div>
               <div className="pl-stat-meta">Pewil Retail · single-counter shops</div>
+            </div>
+            <div className="pl-stat green">
+              <div className="pl-stat-val">$0.00</div>
+              <div className="pl-stat-label">Till variance at close</div>
+              <div className="pl-stat-meta">Avg across Pewil Retail cashiers</div>
             </div>
             <div className="pl-stat ink">
               <div className="pl-stat-val">12&nbsp;&rarr;&nbsp;1</div>
@@ -689,18 +632,21 @@ const LandingPage = () => {
       {/* ─── cta ───────────────────────────────────────── */}
       <section className="pl-cta" id="cta">
         <div className="pl-cta-in">
-          <h2 className="pl-serif">Whichever operator you are &mdash; <em>14&nbsp;days</em>, no card, no charge.</h2>
+          <h2 className="pl-serif">Open the till tomorrow &mdash; <em>14&nbsp;days</em>, no card, no charge.</h2>
           <p>
-            Pewil Farm from $10/mo ($60 Enterprise). Pewil Retail from $15/mo (1 counter) to $45/mo (3 branches)
-            &mdash; and Pewil Retail Enterprise at $55 per branch per month, for the chain that runs your city.
+            Pewil Retail from $15/mo (1 counter) to $45/mo (3 branches) &mdash; and Pewil Retail Enterprise
+            at $55 per branch per month, for the chain that runs your city.
             Yearly billing gets 2 months free. Cancel anytime, export everything &mdash; the data was always yours.
           </p>
           <div className="pl-cta-actions">
-            <Link to="/register?persona=farm" className="pl-btn pl-btn-white">Start as a farmer &rarr;</Link>
             <Link to="/register?persona=retail" className="pl-btn pl-btn-white">Start as a shopkeeper &rarr;</Link>
             <Link to="/contact?type=enterprise" className="pl-btn pl-btn-outline-w">Talk to us about a chain</Link>
           </div>
-          <div className="pl-cta-micro">No credit card required. Runs on Android, iOS, and any modern browser.</div>
+          <div className="pl-cta-micro">
+            No credit card required. Runs on Android, iOS, and any modern browser.
+            {' '}&middot;{' '}
+            Running a farm? <Link to="/farm" style={{ color: 'inherit', textDecoration: 'underline', textUnderlineOffset: 3 }}>See Pewil Farm &rarr;</Link>
+          </div>
         </div>
       </section>
 
@@ -712,15 +658,15 @@ const LandingPage = () => {
               <div className="pl-foot-brand">Pewil</div>
               <div className="pl-foot-brand-sub">Rooted in the work.</div>
               <p className="pl-foot-tag">
-                The operating system for African agribusiness. Built in Harare. Shipped with love across borders.
+                The operating system for African retail and agribusiness. Built in Harare. Shipped with love across borders.
               </p>
             </div>
             <div className="pl-foot-col">
               <h4>Product</h4>
-              <a href="#op-farmer">Pewil Farm</a>
               <a href="#op-small">Pewil Retail</a>
-              <Link to="/pricing">Finance</Link>
-              <a href="#thread">AI Copilot</a>
+              <a href="#op-chain">Pewil Retail Enterprise</a>
+              <Link to="/farm">Pewil Farm</Link>
+              <Link to="/pricing">Pricing</Link>
             </div>
             <div className="pl-foot-col">
               <h4>Company</h4>
