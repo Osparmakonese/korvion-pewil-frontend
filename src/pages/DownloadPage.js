@@ -140,9 +140,27 @@ export default function DownloadPage() {
             no distractions. One click on Chrome, Edge, Brave, or Arc.
           </p>
           <div className="dl-cta-row">
-            <InstallDesktopButton className="dl-cta" label="Install Pewil for Desktop" />
+            <InstallDesktopButton className="dl-cta" label="Install via Chrome / Edge (recommended)" />
             <span className="dl-os-hint">Detected: <strong>{os}</strong></span>
           </div>
+          {os === 'Windows' && (
+            <div style={{ marginTop: 22, padding: '14px 18px', background: '#fff4e1', border: '1px solid rgba(199,119,0,0.2)', borderRadius: 14, maxWidth: 560, marginLeft: 'auto', marginRight: 'auto', textAlign: 'left', fontSize: 13, color: '#374151' }}>
+              <div style={{ fontWeight: 700, color: COLORS.ink, marginBottom: 4 }}>
+                Native Windows installer (beta)
+              </div>
+              <div style={{ marginBottom: 8 }}>
+                Prefer a real <code>.exe</code> installer? Grab the latest from{' '}
+                <a href="https://github.com/Osparmakonese/pewil-desktop-releases/releases/latest" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'underline', fontWeight: 600 }}>
+                  GitHub Releases &rarr;
+                </a>
+              </div>
+              <div style={{ fontSize: 12, color: COLORS.muted, lineHeight: 1.5 }}>
+                The installer is unsigned (beta) &mdash; Windows SmartScreen may warn &quot;Unknown publisher.&quot;
+                Click <strong>More info &rarr; Run anyway</strong> to install. Mac &amp; Linux installers
+                arrive in a follow-up release.
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
