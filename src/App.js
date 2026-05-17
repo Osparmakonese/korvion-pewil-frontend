@@ -13,6 +13,7 @@ import PWAInstallPrompt from './components/PWAInstallPrompt';
 import DemoBanner from './components/DemoBanner';
 import StagingBanner from './components/StagingBanner';
 import TrialNotification from './components/TrialNotification';
+import BillingLockoutGate from './components/BillingLockoutGate';
 
 /* --- Eagerly loaded (critical path) --- */
 import LandingPage from './pages/LandingPage';
@@ -439,7 +440,13 @@ export default function App() {
           path="/app"
           element={
             <ProtectedRoute>
-              <FarmApp />
+              {/* BillingLockoutGate sits between ProtectedRoute and the
+                  actual app. If the active subscription isn't in good
+                  standing it renders a full-screen lockout instead of
+                  FarmApp, so unpaid tenants can't navigate around it. */}
+              <BillingLockoutGate>
+                <FarmApp />
+              </BillingLockoutGate>
             </ProtectedRoute>
           }
         />

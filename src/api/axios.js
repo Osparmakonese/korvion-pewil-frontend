@@ -79,6 +79,33 @@ api.interceptors.response.use(
       // Do not clear storage for 403 — just return the error
       // The UI should show the permission error to the user
     }
+    // 402 Payment Required — backend's PlanEnforcementMiddleware blocked
+    // a write because the tenant's subscription isn't in good standing.
+    // Fire a window event so <BillingLockoutGate /> can flip into the
+    // lockout takeover without the calling component having to know
+    // anything about billing.
+    //
+    // The event carries the structured body the middleware emits:
+    //   { code: 'subscription_expired', reason, module, status, plan_slug }
+    // so the lockout page can render with the right copy.
+    if (error.response?.status === 402) {
+      try {
+        const body = error.response.data || {};
+        if (body.code === 'subscription_expired'
+            && typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('pewil:payment-required', {
+            detail: {
+              reason: body.reason || null,
+              module: body.module || null,
+              status: body.status || null,
+              plan_slug: body.plan_slug || null,
+            },
+          }));
+        }
+      } catch (_) {
+        // Swallow — don't let interceptor bugs break the underlying error.
+      }
+    }
     return Promise.reject(error);
   }
 );
