@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { fmt } from '../utils/format';
 import { confirm } from '../utils/confirm';
 import { invalidateProductCaches, invalidateSaleCaches } from '../utils/queryCache';
+import { isOffline } from '../utils/offlinePOS';
 
 export default function Returns({ onTabChange }) {
   const { user } = useAuth();
@@ -54,14 +55,35 @@ export default function Returns({ onTabChange }) {
     },
   });
 
-  const handleAddReturn = (e) => {
+  // Offline guard. Returns + StockAdjustments don't have client-side
+  // idempotency keys on the backend yet, so we can't safely queue them
+  // like Sales (where the queue replays on reconnect via
+  // Sale.client_receipt_number). Telling the cashier upfront beats a
+  // silent ERR_NETWORK toast that leaves them wondering whether the
+  // refund landed.
+  const offlineBlock = async (action) => {
+    if (!isOffline()) return false;
+    await confirm({
+      title: `${action} unavailable offline`,
+      message:
+        `Returns need a live connection — they aren't queued like sales yet. ` +
+        `Wait for the network to come back, then try again.`,
+      confirmText: 'OK',
+      cancelText: null,
+      danger: false,
+    });
+    return true;
+  };
+
+  const handleAddReturn = async (e) => {
     e.preventDefault();
-    if (formData.original_sale && formData.refund_amount) {
-      createMutation.mutate(formData);
-    }
+    if (!formData.original_sale || !formData.refund_amount) return;
+    if (await offlineBlock('Issuing a return')) return;
+    createMutation.mutate(formData);
   };
 
   const handleCompleteReturn = async (id) => {
+    if (await offlineBlock('Completing a return')) return;
     if (await confirm({ title: 'Complete return', message: 'Mark this return as completed?', confirmText: 'Complete', danger: false })) {
       completeMutation.mutate(id);
     }

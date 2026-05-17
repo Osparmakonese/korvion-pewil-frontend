@@ -71,22 +71,27 @@ export function confirm(optsOrMessage) {
             {message}
           </p>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-            <button
-              type="button"
-              onClick={() => cleanup(false)}
-              style={{
-                padding: '8px 16px',
-                border: '1px solid #e2e8f0',
-                background: '#fff',
-                borderRadius: 8,
-                cursor: 'pointer',
-                fontSize: 14,
-                fontWeight: 500,
-                color: '#334155',
-              }}
-            >
-              {cancelText}
-            </button>
+            {cancelText !== null && (
+              // Passing cancelText: null turns the dialog into a one-button
+              // notice (use for "this isn't allowed offline" style messages
+              // where there's no decision to make).
+              <button
+                type="button"
+                onClick={() => cleanup(false)}
+                style={{
+                  padding: '8px 16px',
+                  border: '1px solid #e2e8f0',
+                  background: '#fff',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: '#334155',
+                }}
+              >
+                {cancelText}
+              </button>
+            )}
             <button
               type="button"
               autoFocus

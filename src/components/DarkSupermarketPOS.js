@@ -252,16 +252,26 @@ export default function DarkSupermarketPOS({
         </div>
 
         <div style={styles.pay}>
-          {['cash', 'card', 'ecocash'].map((m) => (
+          {/* Payment-method keys must match the backend's allowlist:
+              cash | card | mobile_money | bank_transfer. Display labels
+              are tuned for the Zim cashier ("ECOCASH" reads better than
+              "MOBILE MONEY" at the till), but the value sent to the API
+              is the canonical key. We previously sent the literal
+              "ecocash" and the backend rejected it. */}
+          {[
+            { value: 'cash', label: 'CASH' },
+            { value: 'card', label: 'CARD' },
+            { value: 'mobile_money', label: 'ECOCASH' },
+          ].map((m) => (
             <div
-              key={m}
-              onClick={() => setPaymentMethod(m)}
+              key={m.value}
+              onClick={() => setPaymentMethod(m.value)}
               style={{
                 ...styles.pb,
-                ...(paymentMethod === m ? styles.pbActive : {}),
+                ...(paymentMethod === m.value ? styles.pbActive : {}),
               }}
             >
-              {m.toUpperCase()}
+              {m.label}
             </div>
           ))}
         </div>

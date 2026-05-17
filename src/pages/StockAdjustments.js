@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getStockAdjustments, createStockAdjustment, getProducts } from '../api/retailApi';
 import { invalidateProductCaches } from '../utils/queryCache';
+import { isOffline } from '../utils/offlinePOS';
+import { confirm } from '../utils/confirm';
 
 /* --- Add Adjustment Modal --- */
 function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
@@ -231,7 +233,25 @@ export default function StockAdjustments() {
         )}
       </div>
 
-      <AddAdjustmentModal isOpen={showModal} onClose={() => setShowModal(false)} onSubmit={data => createMut.mutate(data)} products={products} loading={createMut.isPending} />
+      <AddAdjustmentModal isOpen={showModal} onClose={() => setShowModal(false)} onSubmit={async data => {
+        // Same reasoning as Returns: StockAdjustment doesn't have a
+        // client-side idempotency key yet, so a queued offline replay
+        // would risk duplicates. Block + tell the cashier instead of
+        // silently 500ing on a network error.
+        if (isOffline()) {
+          await confirm({
+            title: 'Stock adjustment unavailable offline',
+            message:
+              `Stock adjustments need a live connection — they aren't queued ` +
+              `like sales yet. Wait for the network to come back, then try again.`,
+            confirmText: 'OK',
+            cancelText: null,
+            danger: false,
+          });
+          return;
+        }
+        createMut.mutate(data);
+      }} products={products} loading={createMut.isPending} />
     </div>
   );
 }
