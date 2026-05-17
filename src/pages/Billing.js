@@ -528,8 +528,8 @@ function UsageCard() {
             </div>
           )}
         </div>
-        {Number(capped_bill) >= 99 && (
-          <span style={pill('#e8f5ee', '#0D4A22')}>$99 CAP</span>
+        {Number(capped_bill) >= 999 && (
+          <span style={pill('#e8f5ee', '#0D4A22')}>$999 CAP</span>
         )}
       </div>
 

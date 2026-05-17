@@ -39,7 +39,7 @@ const T = {
 };
 
 // Per-receipt retail (2026-05-17): every retail tenant gets unlimited
-// branches. The cap is the $99/mo billing cap, not a branch ceiling.
+// branches. The cap is the $999/mo billing cap, not a branch ceiling.
 // Legacy 'starter' / 'growth' / 'enterprise' tier names still appear on
 // Subscription.plan rows from before the pricing revolution — those map
 // to Infinity now because they're billed via pricing_mode='usage'.

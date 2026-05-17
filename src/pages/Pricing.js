@@ -6,11 +6,12 @@ import { useAuth } from '../context/AuthContext';
  * Public pricing page — pewil.org/pricing
  *
  * Retail (2026-05-17 pricing revolution):
- *   Per-receipt model. Free up to 1,000 receipts/month, then half a cent
- *   per receipt above that, hard cap at $99/month. Optional opt-in to
- *   the data-share rebate cuts the bill 50%. No seats, no branches, no
- *   tier upgrades to navigate. The shop pays only when they actually use
- *   the system. See backend/billing/usage_pricing.py for the math.
+ *   Tiered per-receipt model. Free up to 1,000 receipts/month, then
+ *   $0.005 each up to 20k, $0.003 to 100k, $0.001 above that. Hard cap
+ *   at $999/month. Optional opt-in to the data-share rebate cuts the
+ *   bill 50%. No seats, no branches, no tier upgrades to navigate. The
+ *   shop pays less per receipt the bigger they grow — AWS pattern.
+ *   See backend/billing/usage_pricing.py for the canonical math.
  *
  * Farm:
  *   Still flat-fee tiers (Starter / Growth / Enterprise) — farms only
@@ -25,15 +26,36 @@ import { useAuth } from '../context/AuthContext';
  */
 
 // ── Per-receipt pricing constants (mirror billing/usage_pricing.py) ──
+// Don't change tier boundaries here without updating the Python module too —
+// the calculator on this page is a UX cache of the server's math.
 const FREE_TIER_RECEIPTS = 1000;
-const PER_RECEIPT_CHARGE = 0.005;   // half a cent
-const MONTHLY_CAP = 99;             // dollars
-const DATA_SHARE_REBATE_PCT = 50;   // when opted in
+const PRICING_TIERS = [
+  { upTo: 1_000,    rate: 0       },   // 0 – 1,000        free
+  { upTo: 20_000,   rate: 0.005   },   // 1,001 – 20,000   half a cent
+  { upTo: 100_000,  rate: 0.003   },   // 20,001 – 100,000 0.3 of a cent
+  { upTo: Infinity, rate: 0.001   },   // 100,001 +        0.1 of a cent
+];
+const MONTHLY_CAP = 999;             // dollars — hard ceiling for chains
+const DATA_SHARE_REBATE_PCT = 50;    // when opted in
+
+function tieredCharge(receipts) {
+  if (receipts <= 0) return 0;
+  let total = 0;
+  let floor = 0;
+  for (const { upTo, rate } of PRICING_TIERS) {
+    const cap = Math.min(receipts, upTo);
+    const inTier = Math.max(0, cap - floor);
+    if (inTier > 0 && rate > 0) total += inTier * rate;
+    floor = upTo;
+    if (receipts <= upTo) break;
+  }
+  return total;
+}
 
 function estimateMonthlyBill(dailySales, daysOpenPerMonth = 26, dataShareOn = false) {
   const monthlyReceipts = Math.max(0, Math.round(dailySales * daysOpenPerMonth));
   const chargeable = Math.max(monthlyReceipts - FREE_TIER_RECEIPTS, 0);
-  const gross = chargeable * PER_RECEIPT_CHARGE;
+  const gross = tieredCharge(monthlyReceipts);
   const capped = Math.min(gross, MONTHLY_CAP);
   const final = dataShareOn ? capped * (1 - DATA_SHARE_REBATE_PCT / 100) : capped;
   return { monthlyReceipts, chargeable, gross, capped, final };
@@ -111,7 +133,7 @@ const PLANS = {
 };
 
 const FAQ = [
-  { q: 'How does per-receipt pricing actually work for retail?', a: 'Your first 1,000 receipts every calendar month are free. After that, you pay half a US cent ($0.005) per receipt, with a hard cap of $99/month no matter how big you grow. The calculator above shows your exact monthly bill — there are no tiers to upgrade between, no per-seat fees, no per-branch fees.' },
+  { q: 'How does per-receipt pricing actually work for retail?', a: 'Your first 1,000 receipts every calendar month are free. After that you pay a tiered marginal rate: half a cent (US $0.005) per receipt up to 20,000/month, three-tenths of a cent ($0.003) between 20,001 and 100,000, then one-tenth of a cent ($0.001) above that. Hard cap of $999/month no matter how big you grow. The calculator above shows your exact monthly bill — there are no plans to upgrade between, no per-seat fees, no per-branch fees.' },
   { q: 'What counts as a "receipt"?', a: 'A completed customer sale — one transaction at the till. Returns, voids, stock adjustments, cash drops, end-of-day reports and dashboard views are all free. Only customer-facing receipts count toward your bill.' },
   { q: 'What\'s the data-share rebate?', a: 'Opt in (anytime, from your Billing page) to share anonymized aggregate sales — category, hour, geography only. No customer data, no SKU prices, no individual receipts. In exchange we knock 50% off your monthly bill. We fund the discount by selling the aggregate dataset to FMCG brands and market-research firms, the same way Nielsen does — except we share the revenue with you.' },
   { q: 'Why is farm priced differently?', a: 'Farms only ring a handful of sales per season — tobacco, maize, livestock cycles — so per-receipt would charge them essentially nothing. Farm stays on flat-fee plans (Starter $10, Growth $25, Enterprise $60) that match actual value delivered.' },
@@ -350,21 +372,25 @@ function RetailReceiptPricing() {
   return (
     <div style={RC.wrap}>
       <div style={RC.headlineRow}>
-        <span style={RC.headlineKicker}>RETAIL — PAY ONLY WHEN YOU RING SALES</span>
-        <h2 style={RC.headline}>Free until you sell. Then half a cent each.</h2>
+        <span style={RC.headlineKicker}>RETAIL — PAY WHAT YOU COST, NEVER MORE</span>
+        <h2 style={RC.headline}>Free for the long tail. Fair at every scale.</h2>
         <p style={RC.headlineSub}>
-          No monthly subscription. No seats. No per-branch fee. Your first 1,000 receipts every
-          month are free — that covers most dukas entirely. After that, you pay half a US cent
-          per receipt, capped at $99/month no matter how big you grow.
+          Your first 1,000 receipts every month are free &mdash; that covers most dukas entirely.
+          After that, the rate per receipt drops as you grow: half a cent at the busy-shop tier,
+          three-tenths of a cent at chain volume, a tenth of a cent at supermarket-group scale.
+          Hard ceiling of $999 a month, no matter how big you get.
         </p>
       </div>
 
       <div style={RC.calc}>
         <div style={RC.calcRow}>
           <div style={RC.calcLabel}>Sales you ring per day</div>
-          <div style={RC.calcValue}>{dailySales} sales</div>
+          <div style={RC.calcValue}>
+            {dailySales.toLocaleString()} sales
+            {dailySales >= 3000 && <span style={{ fontSize: 14, color: '#6b7280', fontWeight: 500, marginLeft: 8 }}>(chain scale)</span>}
+          </div>
           <input
-            type="range" min={0} max={500} step={5}
+            type="range" min={0} max={5000} step={10}
             value={dailySales}
             onChange={(e) => setDailySales(Number(e.target.value))}
             style={RC.slider}
@@ -372,9 +398,9 @@ function RetailReceiptPricing() {
           <div style={RC.tick}>
             <span>0</span>
             <span>50</span>
-            <span>150</span>
-            <span>300</span>
-            <span>500+</span>
+            <span>500</span>
+            <span>2,000</span>
+            <span>5,000+</span>
           </div>
         </div>
 
@@ -390,10 +416,13 @@ function RetailReceiptPricing() {
               <>You're inside the <span style={RC.breakdownStrong}>1,000-receipt free tier</span> — no bill at all.</>
             )}
             {result.monthlyReceipts > FREE_TIER_RECEIPTS && result.capped < MONTHLY_CAP && (
-              <>{result.chargeable.toLocaleString()} receipts above the free tier × $0.005 each.</>
+              <>
+                Tiered rate kicks in above the free 1,000: half a cent each up to 20k receipts,
+                three-tenths of a cent up to 100k, a tenth of a cent after that.
+              </>
             )}
             {result.capped >= MONTHLY_CAP && (
-              <>You'd hit the <span style={RC.breakdownStrong}>$99 monthly cap</span> — that's the most you'll ever pay, even at 50,000 sales/month.</>
+              <>You'd hit the <span style={RC.breakdownStrong}>$999 monthly cap</span> — that's the most you'll ever pay, even at millions of sales/month.</>
             )}
             {dataShareOn && result.capped > 0 && (
               <> Data-share rebate cuts your bill by 50%.</>
@@ -423,24 +452,26 @@ function RetailReceiptPricing() {
           <div style={RC.ruleNum}>1,000</div>
           <div style={RC.ruleTitle}>Free receipts every month</div>
           <div style={RC.ruleBody}>
-            That's around 33 sales a day. A typical neighborhood duka pays $0, forever. The free tier
-            resets on the 1st of every month.
+            Around 33 sales a day. Most neighborhood dukas pay $0, forever. The free tier resets
+            on the 1st of every month.
           </div>
         </div>
         <div style={RC.rule}>
-          <div style={RC.ruleNum}>$0.005</div>
-          <div style={RC.ruleTitle}>Per receipt above the free tier</div>
+          <div style={RC.ruleNum}>$0.005 &rarr; $0.001</div>
+          <div style={RC.ruleTitle}>Tiered marginal rate</div>
           <div style={RC.ruleBody}>
-            Half a US cent per chargeable sale — less than the cost of the till roll the receipt prints on.
-            Returns, voids, stock adjustments, cash drops never count.
+            Half a cent each on the first 19k receipts above the free tier. Drops to
+            $0.003 between 20k and 100k. Drops again to $0.001 above 100k. You pay less per receipt
+            the bigger you grow &mdash; the AWS pattern, applied to retail.
           </div>
         </div>
         <div style={RC.rule}>
-          <div style={RC.ruleNum}>$99</div>
+          <div style={RC.ruleNum}>$999</div>
           <div style={RC.ruleTitle}>Maximum monthly bill</div>
           <div style={RC.ruleBody}>
-            Hard ceiling. A 10-branch supermarket chain doing 50,000 sales/month pays the same as
-            Pick n Pay scale would — $99. No per-branch fee, no enterprise tier to negotiate.
+            Hard ceiling. A 40-branch chain doing 1.2 M sales a month pays the same as the busiest
+            day-only supermarket &mdash; $999. No per-branch fee, no enterprise tier to negotiate,
+            no surprise invoice.
           </div>
         </div>
         <div style={RC.rule}>
@@ -495,9 +526,9 @@ export default function Pricing() {
         <div style={S.pill}>Retail: free up to 1,000 receipts/mo · Farm: 14-day trial</div>
         <h1 style={S.heroTitle}>Simple pricing. Pay for what you use.</h1>
         <p style={S.heroSub}>
-          Retail bills per receipt — your first 1,000 sales every month are free, $0.005 each after,
-          capped at $99/month regardless of branches or volume. Farm has flat-tier plans with a 14-day trial.
-          Each module is priced independently.
+          Retail bills per receipt with a tiered marginal rate — your first 1,000 sales every month are free,
+          $0.005 each up to 20k, dropping to $0.001 at chain volume. Hard cap of $999/month no matter how big you grow.
+          Farm has flat-tier plans with a 14-day trial. Each module is priced independently.
         </p>
 
         {module === 'farm' && (
