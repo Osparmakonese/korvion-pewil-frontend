@@ -474,7 +474,6 @@ const FarmLandingPage = () => {
               <h4>Product</h4>
               <Link to="/farm">Pewil Farm</Link>
               <Link to="/">Pewil Retail</Link>
-              <Link to="/">Pewil Retail Enterprise</Link>
               <Link to="/download">Desktop app</Link>
               <Link to="/pricing">Pricing</Link>
             </div>

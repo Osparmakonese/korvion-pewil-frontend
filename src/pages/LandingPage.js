@@ -415,7 +415,7 @@ const LandingPage = () => {
                 alt="Chain retail"
               />
               <div className="pl-ribbon-label">
-                <span className="pl-ribbon-chip">Pewil Retail Enterprise</span>
+                <span className="pl-ribbon-chip">Pewil Retail · Chain</span>
                 <div className="pl-ribbon-name">The ops director signing off the 17th branch</div>
                 <div className="pl-ribbon-meta">Unlimited users. Chain-grade. Multi-branch rollup live.</div>
               </div>
@@ -463,12 +463,12 @@ const LandingPage = () => {
                 </ul>
                 <div className="pl-op-price">
                   <div>
-                    <span className="tier">Starter · 1 location</span>
-                    <div><span className="amt">$15</span><span className="per">/mo</span></div>
+                    <span className="tier">Up to 1,000 receipts a month</span>
+                    <div><span className="amt">$0</span><span className="per">/mo</span></div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <span className="tier">Growth · up to 3 branches</span>
-                    <div className="pl-op-price-sub">$45<span className="per">/mo</span></div>
+                    <span className="tier">Above that &mdash; half a cent each</span>
+                    <div className="pl-op-price-sub">$0.005<span className="per">/receipt</span></div>
                   </div>
                 </div>
                 <Link to="/register?persona=retail" className="pl-op-btn">Start Pewil Retail &rarr;</Link>
@@ -478,7 +478,7 @@ const LandingPage = () => {
             {/* CHAIN */}
             <div className="pl-op-card chain" id="op-chain">
               <div className="pl-op-photo">
-                <span className="pl-op-photo-chip">Pewil Retail Enterprise</span>
+                <span className="pl-op-photo-chip">Pewil Retail &middot; Chain</span>
                 <img
                   src={UNSPLASH.chain2}
                   onError={handleImgErr('linear-gradient(135deg,#374151,#111827)')}
@@ -500,16 +500,16 @@ const LandingPage = () => {
                 </ul>
                 <div className="pl-op-price-ent">
                   <div className="pl-op-price-ent-head">
-                    <span className="amt">$55</span>
-                    <span className="per">per branch, per month</span>
+                    <span className="amt">$99</span>
+                    <span className="per">max per month, ever</span>
                   </div>
                   <div className="pl-op-price-ent-note">
-                    4-branch minimum · unlimited users · scales with you &mdash; no tier cliff, no surprise invoice.
+                    No per-branch fee. No per-seat fee. Same per-receipt pricing as the smallest shop &mdash; hard ceiling at $99/month no matter how many tills, branches, or millions of sales you ring.
                   </div>
                   <div className="pl-op-price-ent-scale">
-                    <div><span className="br">4 branches</span><span className="pr">$220/mo</span></div>
-                    <div><span className="br">12 branches</span><span className="pr">$660/mo</span></div>
-                    <div><span className="br">50 branches</span><span className="pr">$2,750/mo</span></div>
+                    <div><span className="br">1 branch · 3,000 sales/mo</span><span className="pr">$10/mo</span></div>
+                    <div><span className="br">12 branches · 60,000 sales/mo</span><span className="pr">$99/mo (capped)</span></div>
+                    <div><span className="br">50 branches · 5M sales/mo</span><span className="pr">$99/mo (capped)</span></div>
                   </div>
                 </div>
                 <Link to="/contact?type=enterprise" className="pl-op-btn">Talk to us about your chain &rarr;</Link>
@@ -566,8 +566,8 @@ const LandingPage = () => {
           <div className="pl-parity-table">
             <div className="pl-parity-row head">
               <div>The shopkeeper asks</div>
-              <div>Pewil Retail</div>
-              <div>Pewil Retail Enterprise</div>
+              <div>Single shop</div>
+              <div>Chain operator</div>
             </div>
             <div className="pl-parity-row">
               <div className="pl-parity-q">What came in today?</div>
@@ -619,7 +619,7 @@ const LandingPage = () => {
             <div className="pl-stat ink">
               <div className="pl-stat-val">12&nbsp;&rarr;&nbsp;1</div>
               <div className="pl-stat-label">Hours to close a chain</div>
-              <div className="pl-stat-meta">Pewil Retail Enterprise</div>
+              <div className="pl-stat-meta">Pewil Retail · chain operator</div>
             </div>
             <div className="pl-stat green">
               <div className="pl-stat-val">1/10</div>
@@ -633,11 +633,11 @@ const LandingPage = () => {
       {/* ─── cta ───────────────────────────────────────── */}
       <section className="pl-cta" id="cta">
         <div className="pl-cta-in">
-          <h2 className="pl-serif">Open the till tomorrow &mdash; <em>14&nbsp;days</em>, no card, no charge.</h2>
+          <h2 className="pl-serif">Open the till tomorrow &mdash; <em>free</em> until you cross 1,000 sales a month.</h2>
           <p>
-            Pewil Retail from $15/mo (1 counter) to $45/mo (3 branches) &mdash; and Pewil Retail Enterprise
-            at $55 per branch per month, for the chain that runs your city.
-            Yearly billing gets 2 months free. Cancel anytime, export everything &mdash; the data was always yours.
+            Pewil Retail is free for the first 1,000 receipts every month &mdash; covers most dukas entirely.
+            After that, half a US cent per receipt, capped at $99/month no matter how big you grow.
+            No per-branch fee. No per-seat fee. No tier upgrades. Cancel anytime, export everything &mdash; the data was always yours.
           </p>
           <div className="pl-cta-actions">
             <Link to="/register?persona=retail" className="pl-btn pl-btn-white">Start as a shopkeeper &rarr;</Link>
@@ -665,7 +665,7 @@ const LandingPage = () => {
             <div className="pl-foot-col">
               <h4>Product</h4>
               <a href="#op-small">Pewil Retail</a>
-              <a href="#op-chain">Pewil Retail Enterprise</a>
+              <a href="#op-chain">Pewil Retail for chains</a>
               <Link to="/farm">Pewil Farm</Link>
               <Link to="/download">Desktop app</Link>
               <Link to="/pricing">Pricing</Link>

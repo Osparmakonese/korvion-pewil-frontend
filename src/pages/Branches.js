@@ -38,9 +38,14 @@ const T = {
   surface: '#f9fafb',
 };
 
+// Per-receipt retail (2026-05-17): every retail tenant gets unlimited
+// branches. The cap is the $99/mo billing cap, not a branch ceiling.
+// Legacy 'starter' / 'growth' / 'enterprise' tier names still appear on
+// Subscription.plan rows from before the pricing revolution — those map
+// to Infinity now because they're billed via pricing_mode='usage'.
 const PLAN_CAPS = {
-  starter:    1,
-  growth:     3,
+  starter:    Infinity,
+  growth:     Infinity,
   enterprise: Infinity,
 };
 
@@ -74,7 +79,7 @@ export default function Branches() {
   const cap = PLAN_CAPS[plan] ?? 1;
   const atCap = branches.length >= cap;
   const capTooltip = atCap
-    ? 'Multi-branch is a Pewil Retail Enterprise feature'
+    ? 'Branch cap reached — contact support.'
     : '';
 
   const createMut = useMutation({
