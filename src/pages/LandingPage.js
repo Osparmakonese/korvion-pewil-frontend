@@ -371,8 +371,9 @@ const LandingPage = () => {
           </h1>
           <p className="pl-hero-sub">
             Pewil is the operating system for retail in Africa &mdash; from the tuckshop opening at six
-            sharp to the supermarket group signing off the seventeenth branch. ZIMRA-ready, EcoCash-native,
-            and ninety percent of what enterprise POS does at a tenth of the cost.
+            sharp to the supermarket group signing off the seventeenth branch, and the service station
+            ringing the first jerry can at sunrise. ZIMRA-ready, EcoCash-native, and ninety percent of
+            what enterprise POS does at a tenth of the cost.
           </p>
           <div className="pl-hero-actions">
             <Link to="/register?persona=retail" className="pl-btn pl-btn-dark">Start free for 14 days &rarr;</Link>
@@ -433,6 +434,7 @@ const LandingPage = () => {
             <p>
               Pewil Retail scales with you &mdash; from one counter and one cashier to a chain with branches in three cities.
               Same login, same data model, same philosophy. The screens you see are the ones you need.
+              Running a service station? The forecourt module &mdash; tanks, wet-stock, fleet cards, ZERA / EPRA / NMDPRA returns &mdash; is included.
             </p>
           </div>
 

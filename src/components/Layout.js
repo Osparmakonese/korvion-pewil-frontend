@@ -71,6 +71,18 @@ const RETAIL_DRAWER_SECTIONS = [
   { label: 'Enterprise', items: [
     { key: 'Chain Rollup', emoji: '\u{1F30D}', label: 'Chain Rollup', sub: 'All branches at a glance', ownerOnly: true },
   ]},
+  // Forecourt module (May 2026) — service-station / fuel ops.
+  // Surfaced for every retail tenant; an empty state on the Forecourt
+  // dashboard walks shop owners with no tanks through onboarding.
+  { label: 'Forecourt', items: [
+    { key: 'Forecourt', emoji: '⛽', label: 'Forecourt', sub: 'Live tanks + dashboard' },
+    { key: 'Fuel Tanks', emoji: '\u{1F6E2}️', label: 'Tanks', sub: 'Storage + capacity' },
+    { key: 'Fuel Grades', emoji: '\u{1F539}', label: 'Grades', sub: 'Diesel, ULP93, etc' },
+    { key: 'Fuel Deliveries', emoji: '\u{1F69B}', label: 'Deliveries', sub: 'Bulk fills' },
+    { key: 'Dip Readings', emoji: '\u{1F4CF}', label: 'Dip log', sub: 'Wet-stock reconciliation' },
+    { key: 'Fleet Cards', emoji: '\u{1F4B3}', label: 'Fleet cards', sub: 'Engen, Total, Puma...' },
+    { key: 'Regulator Returns', emoji: '\u{1F4DC}', label: 'Regulator', sub: 'ZERA / EPRA / NMDPRA' },
+  ]},
   { label: 'Accounting', items: [
     { key: 'Journal Entries', emoji: '\u{1F4D2}', label: 'Journal', sub: 'Double-entry' },
     { key: 'Retail Report', emoji: '\u{1F4CA}', label: 'Reports', sub: 'P&L + analytics', ownerOnly: true },

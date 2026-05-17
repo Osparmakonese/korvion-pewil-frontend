@@ -112,6 +112,15 @@ const LossPrevention = React.lazy(() => import('./pages/LossPrevention'));
 const Branches = React.lazy(() => import('./pages/Branches'));
 const BranchTransfers = React.lazy(() => import('./pages/BranchTransfers'));
 const ChainRollup = React.lazy(() => import('./pages/ChainRollup'));
+// Forecourt / fuel module (May 2026)
+const Forecourt = React.lazy(() => import('./pages/Forecourt'));
+const FuelGrades = React.lazy(() => import('./pages/FuelGrades'));
+const FuelTanks = React.lazy(() => import('./pages/FuelTanks'));
+const FuelDeliveries = React.lazy(() => import('./pages/FuelDeliveries'));
+const FuelDipReadings = React.lazy(() => import('./pages/FuelDipReadings'));
+const FleetCards = React.lazy(() => import('./pages/FleetCards'));
+const RegulatorReturns = React.lazy(() => import('./pages/RegulatorReturns'));
+const PriceBoard = React.lazy(() => import('./pages/PriceBoard'));
 
 /* --- Loading fallback for lazy pages --- */
 const PageLoader = () => (
@@ -197,6 +206,14 @@ const PAGES = {
   'Branches': Branches,
   'Stock Transfers': BranchTransfers,
   'Chain Rollup': ChainRollup,
+  // Forecourt / fuel module
+  'Forecourt': Forecourt,
+  'Fuel Grades': FuelGrades,
+  'Fuel Tanks': FuelTanks,
+  'Fuel Deliveries': FuelDeliveries,
+  'Dip Readings': FuelDipReadings,
+  'Fleet Cards': FleetCards,
+  'Regulator Returns': RegulatorReturns,
 };
 
 /* --- */
@@ -273,6 +290,14 @@ const PAGE_META = {
   'Branches': { title: 'Branches', sub: 'Locations and HQ assignment' },
   'Stock Transfers': { title: 'Stock Transfers', sub: 'Move inventory between branches' },
   'Chain Rollup': { title: 'Chain Rollup', sub: 'Every branch at a glance' },
+  // Forecourt / fuel module
+  'Forecourt': { title: 'Forecourt', sub: 'Tanks, deliveries, dip readings and regulator returns' },
+  'Fuel Grades': { title: 'Fuel Grades', sub: 'Diesel, petrol, paraffin — what you sell at the pump' },
+  'Fuel Tanks': { title: 'Fuel Tanks', sub: 'Physical storage tanks at each branch' },
+  'Fuel Deliveries': { title: 'Fuel Deliveries', sub: 'Record bulk fuel deliveries from suppliers' },
+  'Dip Readings': { title: 'Dip Readings', sub: 'Manual wet-stock reconciliation' },
+  'Fleet Cards': { title: 'Fleet Cards', sub: 'Engen, Total, Puma and custom card accounts' },
+  'Regulator Returns': { title: 'Regulator Returns', sub: 'ZERA / EPRA / NMDPRA monthly returns' },
 };
 
 /* --- */
@@ -342,6 +367,14 @@ const PRIMARY_ACTIONS = {
   'Branches': '+ Add Branch',
   'Stock Transfers': '+ New Transfer',
   'Chain Rollup': null,
+  // Forecourt / fuel
+  'Forecourt': null,
+  'Fuel Grades': null,
+  'Fuel Tanks': null,
+  'Fuel Deliveries': null,
+  'Dip Readings': null,
+  'Fleet Cards': null,
+  'Regulator Returns': null,
 };
 
 /* --- */
@@ -451,6 +484,11 @@ export default function App() {
           }
         />
         <Route path="/customer-display" element={<Suspense fallback={<PageLoader />}><CustomerDisplay /></Suspense>} />
+        <Route path="/price-board" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoader />}><PriceBoard /></Suspense>
+          </ProtectedRoute>
+        } />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>

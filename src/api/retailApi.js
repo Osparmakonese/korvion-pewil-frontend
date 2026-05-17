@@ -280,3 +280,77 @@ export const cancelBranchTransfer = (id, reason) =>
 // HQ chain rollup — all branches side-by-side + chain totals
 export const getChainRollup = () =>
   api.get('/retail/analytics/chain-rollup/').then(r => r.data);
+
+// ─── FORECOURT (May 2026) ─────────────────────────────────────
+// Fuel + service-station endpoints. Activated by creating at least one
+// FuelTank on the tenant — sidebar reveals the Forecourt section then.
+
+export const listFuelGrades = () =>
+  api.get('/retail/fuel-grades/').then(r => r.data);
+export const createFuelGrade = (data) =>
+  api.post('/retail/fuel-grades/', data).then(r => r.data);
+export const updateFuelGrade = (id, data) =>
+  api.patch(`/retail/fuel-grades/${id}/`, data).then(r => r.data);
+export const deleteFuelGrade = (id) =>
+  api.delete(`/retail/fuel-grades/${id}/`);
+
+export const listFuelTanks = (params) =>
+  api.get('/retail/fuel-tanks/', { params }).then(r => r.data);
+export const createFuelTank = (data) =>
+  api.post('/retail/fuel-tanks/', data).then(r => r.data);
+export const updateFuelTank = (id, data) =>
+  api.patch(`/retail/fuel-tanks/${id}/`, data).then(r => r.data);
+export const deleteFuelTank = (id) =>
+  api.delete(`/retail/fuel-tanks/${id}/`);
+export const getFuelDashboard = () =>
+  api.get('/retail/fuel-tanks/dashboard/').then(r => r.data);
+
+export const listFuelDeliveries = (params) =>
+  api.get('/retail/fuel-deliveries/', { params }).then(r => r.data);
+export const createFuelDelivery = (data) =>
+  api.post('/retail/fuel-deliveries/', data).then(r => r.data);
+export const updateFuelDelivery = (id, data) =>
+  api.patch(`/retail/fuel-deliveries/${id}/`, data).then(r => r.data);
+export const deleteFuelDelivery = (id) =>
+  api.delete(`/retail/fuel-deliveries/${id}/`);
+
+export const listFuelDipReadings = (params) =>
+  api.get('/retail/fuel-dip-readings/', { params }).then(r => r.data);
+export const createFuelDipReading = (data) =>
+  api.post('/retail/fuel-dip-readings/', data).then(r => r.data);
+export const getDipVarianceReport = () =>
+  api.get('/retail/fuel-dip-readings/variance-report/').then(r => r.data);
+
+export const listFleetCardProviders = () =>
+  api.get('/retail/fleet-card-providers/').then(r => r.data);
+export const createFleetCardProvider = (data) =>
+  api.post('/retail/fleet-card-providers/', data).then(r => r.data);
+export const updateFleetCardProvider = (id, data) =>
+  api.patch(`/retail/fleet-card-providers/${id}/`, data).then(r => r.data);
+export const deleteFleetCardProvider = (id) =>
+  api.delete(`/retail/fleet-card-providers/${id}/`);
+
+export const listFleetCardAccounts = (params) =>
+  api.get('/retail/fleet-card-accounts/', { params }).then(r => r.data);
+export const createFleetCardAccount = (data) =>
+  api.post('/retail/fleet-card-accounts/', data).then(r => r.data);
+export const updateFleetCardAccount = (id, data) =>
+  api.patch(`/retail/fleet-card-accounts/${id}/`, data).then(r => r.data);
+export const deleteFleetCardAccount = (id) =>
+  api.delete(`/retail/fleet-card-accounts/${id}/`);
+
+export const listFleetCardTransactions = (params) =>
+  api.get('/retail/fleet-card-transactions/', { params }).then(r => r.data);
+export const createFleetCardTransaction = (data) =>
+  api.post('/retail/fleet-card-transactions/', data).then(r => r.data);
+export const settleFleetCardTransaction = (id, reference) =>
+  api.post(`/retail/fleet-card-transactions/${id}/settle/`, { reference })
+    .then(r => r.data);
+
+export const listRegulatorReturns = (params) =>
+  api.get('/retail/regulator-returns/', { params }).then(r => r.data);
+export const generateRegulatorReturn = (data) =>
+  api.post('/retail/regulator-returns/generate/', data).then(r => r.data);
+export const markRegulatorReturnSubmitted = (id, reference) =>
+  api.post(`/retail/regulator-returns/${id}/mark-submitted/`, { reference })
+    .then(r => r.data);
