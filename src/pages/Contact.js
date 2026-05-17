@@ -124,7 +124,7 @@ export default function Contact() {
         </h1>
         <p style={{ marginTop: 16, color: C.muted, fontSize: 17, lineHeight: 1.55, maxWidth: '56ch' }}>
           {isEnterprise
-            ? 'Chains pay the same per-receipt rate as the smallest shop — first 1,000 receipts/month free, $0.005 each above that, capped at $99/month regardless of branches or sales volume. Tell us about your operation and we\'ll set up a personalised onboarding — usually within two business days.'
+            ? 'Chains pay a tiered per-receipt rate — first 1,000 receipts/month free, half a cent each up to 20k, dropping to a tenth of a cent at chain volume. Hard cap of $999/month no matter how many branches or millions of sales you ring. Tell us about your operation and we\'ll set up a personalised onboarding — usually within two business days.'
             : 'Send us a note and someone from our team will reply within one business day.'}
         </p>
 
@@ -182,7 +182,7 @@ export default function Contact() {
                   onChange={e => set('branches', e.target.value)}
                   onFocus={fx} onBlur={fb} placeholder="e.g. 12" />
                 <p style={{ marginTop: 6, fontSize: 12.5, color: C.muted }}>
-                  Per-receipt pricing · capped at $99/mo · unlimited users + branches
+                  Tiered per-receipt · capped at $999/mo · unlimited users + branches
                 </p>
               </div>
             )}

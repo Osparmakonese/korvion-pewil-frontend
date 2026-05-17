@@ -467,8 +467,8 @@ const LandingPage = () => {
                     <div><span className="amt">$0</span><span className="per">/mo</span></div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <span className="tier">Above that &mdash; half a cent each</span>
-                    <div className="pl-op-price-sub">$0.005<span className="per">/receipt</span></div>
+                    <span className="tier">Above that &mdash; tiered, drops with volume</span>
+                    <div className="pl-op-price-sub">from $0.005<span className="per">/receipt</span></div>
                   </div>
                 </div>
                 <Link to="/register?persona=retail" className="pl-op-btn">Start Pewil Retail &rarr;</Link>
@@ -500,16 +500,18 @@ const LandingPage = () => {
                 </ul>
                 <div className="pl-op-price-ent">
                   <div className="pl-op-price-ent-head">
-                    <span className="amt">$99</span>
+                    <span className="amt">$999</span>
                     <span className="per">max per month, ever</span>
                   </div>
                   <div className="pl-op-price-ent-note">
-                    No per-branch fee. No per-seat fee. Same per-receipt pricing as the smallest shop &mdash; hard ceiling at $99/month no matter how many tills, branches, or millions of sales you ring.
+                    Same tiered per-receipt rate as the smallest shop &mdash; you pay less per receipt as you grow.
+                    Half a cent each on early receipts, dropping to a tenth of a cent at chain volume.
+                    Hard ceiling at $999/month no matter how many branches or millions of sales you ring.
                   </div>
                   <div className="pl-op-price-ent-scale">
-                    <div><span className="br">1 branch · 3,000 sales/mo</span><span className="pr">$10/mo</span></div>
-                    <div><span className="br">12 branches · 60,000 sales/mo</span><span className="pr">$99/mo (capped)</span></div>
-                    <div><span className="br">50 branches · 5M sales/mo</span><span className="pr">$99/mo (capped)</span></div>
+                    <div><span className="br">3 branches · 9,000 sales/mo</span><span className="pr">$40/mo</span></div>
+                    <div><span className="br">12 branches · 180,000 sales/mo</span><span className="pr">$415/mo</span></div>
+                    <div><span className="br">40 branches · 1.2M sales/mo</span><span className="pr">$999/mo (capped)</span></div>
                   </div>
                 </div>
                 <Link to="/contact?type=enterprise" className="pl-op-btn">Talk to us about your chain &rarr;</Link>
@@ -636,8 +638,10 @@ const LandingPage = () => {
           <h2 className="pl-serif">Open the till tomorrow &mdash; <em>free</em> until you cross 1,000 sales a month.</h2>
           <p>
             Pewil Retail is free for the first 1,000 receipts every month &mdash; covers most dukas entirely.
-            After that, half a US cent per receipt, capped at $99/month no matter how big you grow.
-            No per-branch fee. No per-seat fee. No tier upgrades. Cancel anytime, export everything &mdash; the data was always yours.
+            After that, a tiered marginal rate that drops as you grow &mdash; from half a cent each at the
+            busy-shop tier down to a tenth of a cent at chain volume. Hard ceiling of $999/month, no matter
+            how big you get. No per-branch fee, no per-seat fee, no tier upgrades. Cancel anytime,
+            export everything &mdash; the data was always yours.
           </p>
           <div className="pl-cta-actions">
             <Link to="/register?persona=retail" className="pl-btn pl-btn-white">Start as a shopkeeper &rarr;</Link>
