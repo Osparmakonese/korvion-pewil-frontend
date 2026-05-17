@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { updateMyTenant } from '../api/coreApi';
 import { getVapidKey, subscribePush, unsubscribePush, sendTestPush } from '../api/farmApi';
 import SecuritySettings from '../components/SecuritySettings';
+import api from '../api/axios';
 
 /* ─── Design 3 — Living Africa tokens (shared with Landing/Login/Register/Settings) ─── */
 const C = {
@@ -213,6 +214,52 @@ export default function RetailSettings({ onTabChange }) {
   const [pushBusy, setPushBusy] = useState(false);
   const [pushMsg, setPushMsg] = useState('');
 
+  /* ── Hydrate from server on first mount ──
+     Mega-build 2026-05-17: the canonical store for these settings is now
+     `RetailTenantSettings` on the server, not localStorage. We still
+     read localStorage at useState() init so the form renders instantly
+     with whatever the user saw last time, then this effect overrides
+     with the server value once the GET resolves. Means a cashier
+     switching browsers gets their settings back. */
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.get('/retail/tenant-settings/');
+        if (cancelled) return;
+        const s = res.data || {};
+        const safe = (v, def) => (v === null || v === undefined) ? def : v;
+        // setX(...) on every field — useState's init already gave us
+        // localStorage values, so the diff is "server overrides local
+        // when the server has something". We don't try to be clever
+        // about merge order; the server is the source of truth.
+        if (s.trading_name !== undefined) { setTradingName(safe(s.trading_name, '')); localStorage.setItem('trading_name', safe(s.trading_name, '')); }
+        if (s.primary_email !== undefined) { setPrimaryEmail(safe(s.primary_email, '')); localStorage.setItem('primary_email', safe(s.primary_email, '')); }
+        if (s.primary_phone !== undefined) { setPrimaryPhone(safe(s.primary_phone, '')); localStorage.setItem('primary_phone', safe(s.primary_phone, '')); }
+        if (s.offline_first !== undefined) { setOfflineFirst(!!s.offline_first); localStorage.setItem('offline_first', String(!!s.offline_first)); }
+        if (s.low_stock_wa_alerts !== undefined) { setLowStockWA(!!s.low_stock_wa_alerts); localStorage.setItem('low_stock_wa', String(!!s.low_stock_wa_alerts)); }
+        if (s.auto_fiscal !== undefined) { setAutoFiscal(!!s.auto_fiscal); localStorage.setItem('auto_fiscal', String(!!s.auto_fiscal)); }
+        if (s.low_stock_threshold !== undefined) { setLowStockThreshold(String(s.low_stock_threshold)); localStorage.setItem('low_stock_threshold', String(s.low_stock_threshold)); }
+        if (s.cash_round !== undefined) { setCashRound(safe(s.cash_round, 'none')); localStorage.setItem('cash_round', safe(s.cash_round, 'none')); }
+        if (s.pos_show_change !== undefined) { setShowChange(!!s.pos_show_change); localStorage.setItem('pos_show_change', String(!!s.pos_show_change)); }
+        if (s.receipt_copies !== undefined) { setReceiptCopies(String(s.receipt_copies)); localStorage.setItem('receipt_copies', String(s.receipt_copies)); }
+        if (s.eod_digest !== undefined) { setEodDigest(!!s.eod_digest); localStorage.setItem('eod_digest', String(!!s.eod_digest)); }
+        if (s.vat_rate !== undefined) { setVatRate(String(s.vat_rate)); localStorage.setItem('vat_rate', String(s.vat_rate)); }
+        if (s.barcode_enabled !== undefined) { setBarcodeEnabled(!!s.barcode_enabled); localStorage.setItem('barcode_enabled', String(!!s.barcode_enabled)); }
+        if (s.scanner_mode !== undefined) { setScannerMode(safe(s.scanner_mode, 'usb_hid')); localStorage.setItem('scanner_mode', safe(s.scanner_mode, 'usb_hid')); }
+        if (s.barcode_format !== undefined) { setBarcodeFormat(safe(s.barcode_format, 'auto')); localStorage.setItem('barcode_format', safe(s.barcode_format, 'auto')); }
+        if (s.receipt_printer_enabled !== undefined) { setReceiptPrinterEnabled(!!s.receipt_printer_enabled); localStorage.setItem('receipt_printer', String(!!s.receipt_printer_enabled)); }
+        if (s.whatsapp_phone_1 !== undefined) { setPhone1(safe(s.whatsapp_phone_1, '')); localStorage.setItem('wa_phone_1', safe(s.whatsapp_phone_1, '')); }
+        if (s.whatsapp_phone_2 !== undefined) { setPhone2(safe(s.whatsapp_phone_2, '')); localStorage.setItem('wa_phone_2', safe(s.whatsapp_phone_2, '')); }
+      } catch (_) {
+        // 404 / network failure — keep localStorage values. The first
+        // PATCH from this page will create the row server-side.
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   /* ── Push registration probe ── */
   useEffect(() => {
     if ('serviceWorker' in navigator && 'PushManager' in window) {
@@ -239,10 +286,47 @@ export default function RetailSettings({ onTabChange }) {
   useEffect(() => { localStorage.setItem('barcode_format', barcodeFormat); }, [barcodeFormat]);
   useEffect(() => { localStorage.setItem('receipt_printer', String(receiptPrinterEnabled)); }, [receiptPrinterEnabled]);
 
-  /* ── Handlers ── */
+  /* ── Handlers ──
+     Mega-build 2026-05-17: every save now PATCHes the server first
+     (via the new /retail/tenant-settings/ endpoint), then mirrors to
+     localStorage as a warm cache. Pre-2026-05 saves wrote to
+     localStorage only and reads happened from localStorage only — which
+     meant changing browsers wiped every preference. */
+  const _patchTenantSettings = async (payload) => {
+    try {
+      await api.patch('/retail/tenant-settings/', payload);
+    } catch (e) {
+      // Surface but don't drop the save — localStorage still updates
+      // below so the cashier on this device sees their change.
+      console.warn('RetailSettings: server PATCH failed', e?.response?.data || e?.message);
+      throw e;
+    }
+  };
+
   const saveTenant = async () => {
     try {
+      // Tenant-level identity stays on the Tenant model.
       await updateMyTenant({ name: bizName, country, currency, timezone });
+      // Everything else moves through RetailTenantSettings now.
+      await _patchTenantSettings({
+        trading_name: tradingName,
+        primary_email: primaryEmail,
+        primary_phone: primaryPhone,
+        offline_first: offlineFirst,
+        auto_fiscal: autoFiscal,
+        low_stock_threshold: parseInt(lowStockThreshold, 10) || 5,
+        low_stock_wa_alerts: lowStockWA,
+        cash_round: cashRound,
+        pos_show_change: showChange,
+        receipt_copies: parseInt(receiptCopies, 10) || 1,
+        receipt_printer_enabled: receiptPrinterEnabled,
+        eod_digest: eodDigest,
+        vat_rate: vatRate,
+        barcode_enabled: barcodeEnabled,
+        scanner_mode: scannerMode,
+        barcode_format: barcodeFormat,
+      });
+      // Warm cache.
       localStorage.setItem('currency', currency);
       localStorage.setItem('trading_name', tradingName);
       localStorage.setItem('zimra_tin', tin);
@@ -255,11 +339,19 @@ export default function RetailSettings({ onTabChange }) {
     }
     setTimeout(() => setSaved(''), 3000);
   };
+
   const savePhones = async () => {
     localStorage.setItem('wa_phone_1', phone1);
     localStorage.setItem('wa_phone_2', phone2);
     try {
-      await updateMyTenant({ whatsapp_phone_1: phone1, whatsapp_phone_2: phone2 });
+      // WhatsApp numbers live on RetailTenantSettings now (with the rest
+      // of the retail prefs). `updateMyTenant` is still called for
+      // backward compat — older flows that rely on Tenant.whatsapp_phone_1
+      // keep working until they migrate.
+      await Promise.all([
+        updateMyTenant({ whatsapp_phone_1: phone1, whatsapp_phone_2: phone2 }).catch(() => {}),
+        _patchTenantSettings({ whatsapp_phone_1: phone1, whatsapp_phone_2: phone2 }),
+      ]);
       setSaved('Numbers saved!');
     } catch {
       setSaved('Numbers saved locally!');

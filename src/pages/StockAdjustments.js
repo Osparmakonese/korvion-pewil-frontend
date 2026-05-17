@@ -2,8 +2,9 @@ import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getStockAdjustments, createStockAdjustment, getProducts } from '../api/retailApi';
 import { invalidateProductCaches } from '../utils/queryCache';
-import { isOffline } from '../utils/offlinePOS';
+import { submitWithQueue } from '../utils/offlinePOS';
 import { confirm } from '../utils/confirm';
+import api from '../api/axios';
 
 /* --- Add Adjustment Modal --- */
 function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
@@ -121,13 +122,26 @@ export default function StockAdjustments() {
     queryFn: getProducts,
   });
 
+  // Phase 2B.2 — routed through submitWithQueue so offline writes
+  // queue with a client_key and replay safely on reconnect.
   const createMut = useMutation({
-    mutationFn: createStockAdjustment,
-    onSuccess: () => {
+    mutationFn: (data) => submitWithQueue(api, 'stock_adjustments', data),
+    onSuccess: (data) => {
       // A stock adjustment changes on-hand quantity for a product, so it
       // must reach POS, low-stock, dashboard, and every product list.
       invalidateProductCaches(qc);
       setShowModal(false);
+      if (data && data._offline_pending) {
+        confirm({
+          title: 'Adjustment queued for sync',
+          message:
+            "You're offline — we saved this stock adjustment locally. " +
+            "It'll sync automatically when the network comes back.",
+          confirmText: 'OK',
+          cancelText: null,
+          danger: false,
+        });
+      }
     },
   });
 
@@ -233,25 +247,13 @@ export default function StockAdjustments() {
         )}
       </div>
 
-      <AddAdjustmentModal isOpen={showModal} onClose={() => setShowModal(false)} onSubmit={async data => {
-        // Same reasoning as Returns: StockAdjustment doesn't have a
-        // client-side idempotency key yet, so a queued offline replay
-        // would risk duplicates. Block + tell the cashier instead of
-        // silently 500ing on a network error.
-        if (isOffline()) {
-          await confirm({
-            title: 'Stock adjustment unavailable offline',
-            message:
-              `Stock adjustments need a live connection — they aren't queued ` +
-              `like sales yet. Wait for the network to come back, then try again.`,
-            confirmText: 'OK',
-            cancelText: null,
-            danger: false,
-          });
-          return;
-        }
-        createMut.mutate(data);
-      }} products={products} loading={createMut.isPending} />
+      <AddAdjustmentModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onSubmit={data => createMut.mutate(data)}
+        products={products}
+        loading={createMut.isPending}
+      />
     </div>
   );
 }
