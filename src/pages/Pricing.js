@@ -103,70 +103,11 @@ const PLANS = {
       ],
     },
   ],
-  retail: [
-    {
-      tier: 'starter',
-      name: 'Pewil Retail Starter',
-      slug: 'retail-starter',
-      price_monthly: 15,
-      price_yearly: 150,
-      max_users: 2,
-      blurb: 'For single-till shops.',
-      features: [
-        'Up to 2 users',
-        '100 products',
-        '200 customers',
-        '1 cashier session',
-        'POS, categories, discounts',
-        'Email support',
-      ],
-    },
-    {
-      tier: 'growth',
-      name: 'Pewil Retail Growth',
-      slug: 'retail-growth',
-      price_monthly: 45,
-      price_yearly: 450,
-      max_users: 5,
-      popular: true,
-      blurb: 'Most popular — multi-cashier shops and small chains.',
-      features: [
-        'Up to 5 users',
-        'Up to 3 branches',
-        '500 products',
-        '2,000 customers',
-        '3 cashier sessions',
-        'Everything in Starter',
-        'Multi-currency + ZIMRA fiscal',
-        'Loyalty program',
-        'Basic AI insights',
-        'WhatsApp alerts',
-      ],
-    },
-    {
-      tier: 'enterprise',
-      name: 'Pewil Retail Enterprise',
-      slug: 'retail-enterprise',
-      per_branch: true,
-      price_monthly: 55,        // per branch, per month
-      price_yearly: 550,        // per branch, per year
-      min_branches: 4,
-      max_users: 'Unlimited',
-      blurb: 'For supermarket chains. Scales with every branch you open.',
-      features: [
-        '$55 per branch, per month',
-        '4-branch minimum ($220/mo floor)',
-        'Unlimited users across all branches',
-        'Unlimited products, customers, sessions',
-        'Chain rollup + per-branch P&L',
-        'Everything in Growth',
-        'Advanced AI insights',
-        'White-label branding',
-        'Dedicated account manager',
-        'Phone support',
-      ],
-    },
-  ],
+  // Retail moved to per-receipt pricing 2026-05-17 — see <RetailReceiptPricing />.
+  // The flat-tier entries previously here are deliberately gone; the Retail tab
+  // renders a calculator instead of plan cards. PLANS.retail = [] is kept so
+  // `plans.map(...)` in the farm code path stays defensive without checks.
+  retail: [],
 };
 
 const FAQ = [
@@ -551,21 +492,24 @@ export default function Pricing() {
 
       {/* Hero */}
       <section style={S.hero}>
-        <div style={S.pill}>Starter &amp; Growth: 14-day free trial · No card required</div>
+        <div style={S.pill}>Retail: free up to 1,000 receipts/mo · Farm: 14-day trial</div>
         <h1 style={S.heroTitle}>Simple pricing. Pay for what you use.</h1>
         <p style={S.heroSub}>
-          Farm and Retail are priced independently so you only pay for the modules you actually use.
-          Starter and Growth plans include a 14-day free trial. Retail Enterprise is sales-assisted — talk to our team.
+          Retail bills per receipt — your first 1,000 sales every month are free, $0.005 each after,
+          capped at $99/month regardless of branches or volume. Farm has flat-tier plans with a 14-day trial.
+          Each module is priced independently.
         </p>
 
-        <div style={S.toggleRow}>
-          <button style={S.toggleBtn(cycle === 'monthly')} onClick={() => setCycle('monthly')}>
-            Monthly
-          </button>
-          <button style={S.toggleBtn(cycle === 'yearly')} onClick={() => setCycle('yearly')}>
-            Yearly<span style={S.save}>Save 17%</span>
-          </button>
-        </div>
+        {module === 'farm' && (
+          <div style={S.toggleRow}>
+            <button style={S.toggleBtn(cycle === 'monthly')} onClick={() => setCycle('monthly')}>
+              Monthly
+            </button>
+            <button style={S.toggleBtn(cycle === 'yearly')} onClick={() => setCycle('yearly')}>
+              Yearly<span style={S.save}>Save 17%</span>
+            </button>
+          </div>
+        )}
       </section>
 
       {/* Module tabs */}
