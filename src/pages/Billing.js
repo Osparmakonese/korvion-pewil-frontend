@@ -422,14 +422,62 @@ function UsageCard() {
   const {
     receipts_this_month, free_tier_receipts, chargeable_receipts,
     final_bill, capped_bill, data_share_rebate_pct, free_tier_used_pct,
-    pricing_mode,
+    pricing_mode, outstanding_invoices, outstanding_total,
   } = data;
 
   const pct = Math.max(0, Math.min(100, free_tier_used_pct || 0));
   const isFlat = pricing_mode === 'flat';
+  const hasOutstanding = Array.isArray(outstanding_invoices) && outstanding_invoices.length > 0;
+  const outstandingTotalNum = Number(outstanding_total || 0);
+
+  const handlePayOutstanding = async () => {
+    // Start a Pesepay checkout for the oldest outstanding invoice. The
+    // existing initialize_payment flow takes a plan_slug; for usage
+    // invoices we wire it via a special invoice_id parameter. The
+    // backend's webhook flips the Invoice to paid on success, which
+    // automatically restores the tenant's standing.
+    try {
+      const apiClient = (await import('../api/axios')).default;
+      const oldest = outstanding_invoices[0];
+      const res = await apiClient.post('/billing/billing/initialize_payment/', {
+        // Backwards-compat: when no plan_slug is provided but invoice_id
+        // is, the endpoint should bill the specific invoice amount.
+        invoice_id: oldest.id,
+        payment_method: 'card',
+      });
+      const url = res.data?.redirect_url || res.data?.checkout_url;
+      if (url) window.location.href = url;
+    } catch (e) {
+      alert('Payment could not be started: ' + (e?.response?.data?.detail || e.message));
+    }
+  };
 
   return (
     <div style={{ ...card, marginTop: 12 }}>
+      {/* Outstanding-invoice banner — only when there's a real bill due.
+          Sits at the top so a cashier glancing at the page can't miss it. */}
+      {hasOutstanding && (
+        <div style={{
+          marginBottom: 14, padding: '12px 14px',
+          background: '#fff4e1', border: '1px solid rgba(199,119,0,0.3)', borderRadius: 10,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+        }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#7a4a00', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              You owe ${outstandingTotalNum.toFixed(2)}
+            </div>
+            <div style={{ fontSize: 12, color: '#7a4a00', marginTop: 2 }}>
+              {outstanding_invoices.length === 1
+                ? outstanding_invoices[0].description
+                : `${outstanding_invoices.length} unpaid usage invoices`}
+            </div>
+          </div>
+          <button onClick={handlePayOutstanding} style={btnS(true)}>
+            Pay now
+          </button>
+        </div>
+      )}
+
       <div style={sLabel}>
         This month's usage
         {isFlat && (
