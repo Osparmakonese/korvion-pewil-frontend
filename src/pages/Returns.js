@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { fmt } from '../utils/format';
 import { confirm } from '../utils/confirm';
 import { invalidateProductCaches, invalidateSaleCaches } from '../utils/queryCache';
+import { isOffline, submitWithQueue } from '../utils/offlinePOS';
+import api from '../api/axios';
 
 export default function Returns({ onTabChange }) {
   const { user } = useAuth();
@@ -31,13 +33,30 @@ export default function Returns({ onTabChange }) {
   // Create return — touches the returns list, then on completion the
   // sale fan-out (stock comes back, sales totals shift, customer LTV
   // adjusts, EOD numbers recompute, dashboard refreshes).
+  //
+  // Phase 2B.2: routed through `submitWithQueue` so offline POSTs
+  // queue locally with a client_key and replay on reconnect. The
+  // backend ReturnViewSet dedupes by client_key, so a partial-success
+  // retry won't create two refunds.
   const createMutation = useMutation({
-    mutationFn: createReturn,
-    onSuccess: () => {
+    mutationFn: (data) => submitWithQueue(api, 'returns', data),
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['retail-returns'] });
       queryClient.invalidateQueries({ queryKey: ['retail-returns-summary'] });
       setShowAddForm(false);
       setFormData({ original_sale: '', customer_name: '', reason: '', refund_amount: '' });
+      if (data && data._offline_pending) {
+        // Let the cashier know it queued (vs synced).
+        confirm({
+          title: 'Return queued for sync',
+          message:
+            "You're offline — we saved this refund locally. It'll sync " +
+            "automatically when the network comes back. You can carry on.",
+          confirmText: 'OK',
+          cancelText: null,
+          danger: false,
+        });
+      }
     },
   });
 
@@ -54,14 +73,30 @@ export default function Returns({ onTabChange }) {
     },
   });
 
-  const handleAddReturn = (e) => {
+  const handleAddReturn = async (e) => {
     e.preventDefault();
-    if (formData.original_sale && formData.refund_amount) {
-      createMutation.mutate(formData);
-    }
+    if (!formData.original_sale || !formData.refund_amount) return;
+    // submitWithQueue handles online + offline transparently.
+    createMutation.mutate(formData);
   };
 
   const handleCompleteReturn = async (id) => {
+    // `complete` is a side-effect on an existing return row — needs
+    // a live network because it dispatches a stock restock + sale
+    // fan-out the offline queue isn't built for. Block + tell the
+    // cashier, then let them complete it after reconnect.
+    if (isOffline()) {
+      await confirm({
+        title: 'Completing a return is online-only',
+        message:
+          "Completing a return triggers a stock restock and updates the original sale " +
+          "— it needs a live connection. Wait for the network to come back, then complete it.",
+        confirmText: 'OK',
+        cancelText: null,
+        danger: false,
+      });
+      return;
+    }
     if (await confirm({ title: 'Complete return', message: 'Mark this return as completed?', confirmText: 'Complete', danger: false })) {
       completeMutation.mutate(id);
     }

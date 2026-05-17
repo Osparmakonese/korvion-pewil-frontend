@@ -134,17 +134,23 @@ export default function TrialNotification() {
   if (skip || !trial || dismissed) return null;
 
   const { days_remaining, expired } = trial;
-  const isUrgent = expired || days_remaining <= 3;
 
-  const message = expired
-    ? `Your free trial ended ${Math.abs(days_remaining)} day${Math.abs(days_remaining) === 1 ? '' : 's'} ago.`
-    : days_remaining === 0
-      ? 'Your free trial ends today.'
-      : days_remaining === 1
-        ? 'Your free trial ends tomorrow.'
-        : `Your free trial ends in ${days_remaining} days.`;
+  // Once the trial has actually expired, <BillingLockoutGate /> takes over
+  // and renders a full-screen lockout. The "trial ended N days ago" toast
+  // used to live here too, but it duplicates the gate's job and risks
+  // confusing the cashier (toast says one thing, gate says another).
+  // Bail early — the gate will surface the right message and CTA.
+  if (expired) return null;
 
-  const cta = expired ? 'Upgrade to re-enable' : 'Upgrade now';
+  const isUrgent = days_remaining <= 3;
+
+  const message = days_remaining === 0
+    ? 'Your free trial ends today.'
+    : days_remaining === 1
+      ? 'Your free trial ends tomorrow.'
+      : `Your free trial ends in ${days_remaining} days.`;
+
+  const cta = 'Upgrade now';
 
   const palette = isUrgent
     ? { bg: '#fef2f2', border: '#fecaca', accent: '#b91c1c', accentBg: '#b91c1c' }

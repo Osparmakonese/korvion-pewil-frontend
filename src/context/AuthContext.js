@@ -227,6 +227,14 @@ export function AuthProvider({ children }) {
       sessionStorage.removeItem('pewil-trial-notif-shown:data');
       sessionStorage.removeItem('pewil-trial-notif-dismissed');
     } catch (_) { /* best effort */ }
+    // Wipe the offline product catalog so a different tenant signing
+    // in on the same browser doesn't see ghost products from the
+    // previous tenant. IndexedDB writes are async — fire-and-forget.
+    try {
+      import('../utils/productCatalogCache')
+        .then(({ clearCatalog }) => clearCatalog())
+        .catch(() => {});
+    } catch (_) { /* best effort */ }
     setUser(null);
   }
 

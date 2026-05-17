@@ -271,8 +271,14 @@ export function clearDeadLetters() {
 export function installOfflineSync(api, { onDrain } = {}) {
   const run = async () => {
     const result = await drainPendingSales(api);
-    if ((result.sent || result.failed) && onDrain) onDrain(result);
-    return result;
+    const aux = await drainAllAuxQueues(api);
+    const combined = {
+      sent: result.sent + aux.sent,
+      failed: result.failed + aux.failed,
+      remaining: result.remaining + aux.remaining,
+    };
+    if ((combined.sent || combined.failed) && onDrain) onDrain(combined);
+    return combined;
   };
   const onOnline = () => { run(); };
   window.addEventListener('online', onOnline);
@@ -283,4 +289,198 @@ export function installOfflineSync(api, { onDrain } = {}) {
     window.removeEventListener('online', onOnline);
     clearInterval(timer);
   };
+}
+
+
+// ─── PHASE 2B.2 — extra queues ─────────────────────────────
+// Returns, StockAdjustments and CashDrops are write paths the cashier
+// also uses mid-shift. Pre-Phase-2B.2 they failed silently with
+// ERR_NETWORK; now they queue alongside Sales and drain on reconnect.
+//
+// Each queue is its own localStorage key with its own dead-letter and
+// its own POST endpoint. They share the same retry budget, listener
+// signature, and client_key UUID (the backend ViewSets check for
+// existing rows with the same client_key per tenant before inserting,
+// so a replay after a partial network success is safe — same pattern
+// as Sale.client_receipt_number).
+
+const AUX_QUEUES = {
+  returns: {
+    key: 'pewil_offline_returns',
+    failedKey: 'pewil_offline_returns_failed',
+    endpoint: '/retail/returns/',
+    keyField: 'client_key',
+  },
+  stock_adjustments: {
+    key: 'pewil_offline_stock_adjustments',
+    failedKey: 'pewil_offline_stock_adjustments_failed',
+    endpoint: '/retail/stock-adjustments/',
+    keyField: 'client_key',
+  },
+  cash_drops: {
+    key: 'pewil_offline_cash_drops',
+    failedKey: 'pewil_offline_cash_drops_failed',
+    endpoint: '/retail/cash-drops/',
+    keyField: 'client_key',
+  },
+};
+
+const auxListeners = new Set();
+export function onAuxQueueChange(cb) {
+  auxListeners.add(cb);
+  return () => auxListeners.delete(cb);
+}
+function fireAuxChange() {
+  const counts = {};
+  for (const name of Object.keys(AUX_QUEUES)) {
+    counts[name] = _readQueue(name).length;
+  }
+  auxListeners.forEach((cb) => { try { cb(counts); } catch (_) {} });
+}
+
+function newClientKey() {
+  try { return 'OFF-' + crypto.randomUUID(); }
+  catch (_) {
+    return 'OFF-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+  }
+}
+
+function _readQueue(name) {
+  const cfg = AUX_QUEUES[name];
+  if (!cfg) return [];
+  try { return JSON.parse(localStorage.getItem(cfg.key) || '[]'); }
+  catch (_) { return []; }
+}
+
+function _writeQueue(name, arr) {
+  const cfg = AUX_QUEUES[name];
+  if (!cfg) return;
+  try { localStorage.setItem(cfg.key, JSON.stringify(arr)); }
+  catch (_) {}
+  fireAuxChange();
+}
+
+function _readFailed(name) {
+  const cfg = AUX_QUEUES[name];
+  if (!cfg) return [];
+  try { return JSON.parse(localStorage.getItem(cfg.failedKey) || '[]'); }
+  catch (_) { return []; }
+}
+
+function _writeFailed(name, arr) {
+  const cfg = AUX_QUEUES[name];
+  if (!cfg) return;
+  try { localStorage.setItem(cfg.failedKey, JSON.stringify(arr.slice(-50))); }
+  catch (_) {}
+}
+
+/**
+ * Generic queue + immediate-send. The page calls this from its submit
+ * handler. Online → POST and return server data. Network failure →
+ * queue and return optimistic { _offline_pending: true, ...payload }.
+ *
+ *   const result = await submitWithQueue(api, 'returns', returnData);
+ *   if (result._offline_pending) showToast('Queued — will sync when online.');
+ */
+export async function submitWithQueue(api, queueName, payload) {
+  const cfg = AUX_QUEUES[queueName];
+  if (!cfg) throw new Error(`Unknown offline queue: ${queueName}`);
+
+  const key = payload[cfg.keyField] || newClientKey();
+  const body = { ...payload, [cfg.keyField]: key };
+
+  if (isOffline()) {
+    _enqueueAux(queueName, body);
+    return { ...body, _offline_pending: true, id: null };
+  }
+
+  try {
+    const res = await api.post(cfg.endpoint, body);
+    return res.data;
+  } catch (err) {
+    if (isRetryableNetworkError(err)) {
+      _enqueueAux(queueName, body);
+      return { ...body, _offline_pending: true, id: null };
+    }
+    throw err;
+  }
+}
+
+function _enqueueAux(queueName, payload) {
+  const cfg = AUX_QUEUES[queueName];
+  const q = _readQueue(queueName);
+  q.push({
+    payload,
+    client_key: payload[cfg.keyField],
+    queued_at: Date.now(),
+    attempts: 0,
+    last_error: null,
+  });
+  _writeQueue(queueName, q);
+}
+
+/**
+ * Drain one specific aux queue (returns / stock_adjustments / cash_drops).
+ * Returns { sent, failed, remaining } shaped like drainPendingSales.
+ */
+export async function drainAuxQueue(api, queueName) {
+  const cfg = AUX_QUEUES[queueName];
+  if (!cfg) return { sent: 0, failed: 0, remaining: 0 };
+  if (isOffline()) return { sent: 0, failed: 0, remaining: _readQueue(queueName).length };
+
+  const q = _readQueue(queueName);
+  if (q.length === 0) return { sent: 0, failed: 0, remaining: 0 };
+
+  const keep = [];
+  let sent = 0;
+  let failed = 0;
+
+  for (const item of q) {
+    try {
+      await api.post(cfg.endpoint, item.payload);
+      sent++;
+    } catch (err) {
+      const retryable = isRetryableNetworkError(err);
+      item.attempts = (item.attempts || 0) + 1;
+      item.last_error = err?.response?.data?.detail || err?.message || 'unknown';
+      if (retryable && item.attempts < MAX_ATTEMPTS) {
+        keep.push(item);
+      } else {
+        failed++;
+        const failedList = _readFailed(queueName);
+        failedList.push({ ...item, failed_at: Date.now() });
+        _writeFailed(queueName, failedList);
+      }
+    }
+  }
+  _writeQueue(queueName, keep);
+  return { sent, failed, remaining: keep.length };
+}
+
+/** Drain all aux queues at once. Used by the global online listener. */
+export async function drainAllAuxQueues(api) {
+  let sent = 0, failed = 0, remaining = 0;
+  for (const name of Object.keys(AUX_QUEUES)) {
+    const r = await drainAuxQueue(api, name);
+    sent += r.sent; failed += r.failed; remaining += r.remaining;
+  }
+  return { sent, failed, remaining };
+}
+
+export function getAuxPendingCount(queueName) {
+  return _readQueue(queueName).length;
+}
+
+export function getAuxPendingList(queueName) {
+  return _readQueue(queueName);
+}
+
+export function getAuxDeadLetters(queueName) {
+  return _readFailed(queueName);
+}
+
+export function getAuxTotalPending() {
+  let total = 0;
+  for (const name of Object.keys(AUX_QUEUES)) total += _readQueue(name).length;
+  return total;
 }

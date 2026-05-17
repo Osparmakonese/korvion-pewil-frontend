@@ -6,6 +6,7 @@ import {
   getCashierSessions,
   getPOSSettings,
 } from '../api/retailApi';
+import apiClient from '../api/axios';
 import { fmt } from '../utils/format';
 import { confirm } from '../utils/confirm';
 import { requireManagerApproval } from '../utils/managerApproval';
@@ -739,9 +740,32 @@ export default function POS() {
     }
   };
 
+  // Products. Tries the live endpoint first, falls back to the
+  // IndexedDB catalog cache when the network is dead so the till
+  // can still ring items mid-outage. On a successful live fetch
+  // we re-sync the cache so a refresh after the network drops still
+  // sees a fresh catalog. See `utils/productCatalogCache.js`.
   const { data: products = [] } = useQuery({
     queryKey: ['retail-products-pos'],
-    queryFn: getProducts,
+    queryFn: async () => {
+      try {
+        const live = await getProducts();
+        // Fire-and-forget — don't block render on the IndexedDB write.
+        try {
+          const { syncCatalog } = await import('../utils/productCatalogCache');
+          syncCatalog(apiClient).catch(() => {});
+        } catch (_) {}
+        return live;
+      } catch (err) {
+        // Network down? Fall back to whatever's in the offline catalog.
+        try {
+          const { searchOffline } = await import('../utils/productCatalogCache');
+          const cached = await searchOffline({ limit: 10000 });
+          if (cached && cached.length) return cached;
+        } catch (_) {}
+        throw err;
+      }
+    },
   });
 
   const { data: sessions = [] } = useQuery({
