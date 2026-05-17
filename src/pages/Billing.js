@@ -160,6 +160,10 @@ export default function Billing({ activeModule }) {
           <div>
             {/* Only the tenant's own module — single-module rule */}
             <ModuleSubCard title={moduleLabel} sub={currentSub} onManage={() => setTab('plans')} />
+            {/* Per-receipt usage card. Retail only — farm tenants never
+                see this because farms are flat-priced per the model
+                decision in billing/usage_pricing.py docstring. */}
+            {currentModule === 'retail' && <UsageCard />}
           </div>
           <div>
             <div style={card}>
@@ -388,6 +392,116 @@ export default function Billing({ activeModule }) {
     </div>
   );
 }
+
+// ─── Per-receipt usage card ──────────────────────────────
+// Shows the in-app preview of the per-receipt bill for this calendar
+// month. Same numbers the public /pricing calculator shows — both pull
+// from billing.usage_pricing.compute_usage_bill on the backend so we
+// can't disagree with ourselves.
+function UsageCard() {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['billing-current-usage'],
+    queryFn: async () => {
+      const api = (await import('../api/axios')).default;
+      const res = await api.get('/billing/billing/current_usage/');
+      return res.data;
+    },
+    staleTime: 60000,
+    retry: 1,
+  });
+
+  if (isLoading) return (
+    <div style={{ ...card, marginTop: 12 }}>
+      <div style={sLabel}>This month's usage</div>
+      <div style={{ fontSize: 12, color: '#9ca3af' }}>Loading…</div>
+    </div>
+  );
+
+  if (isError || !data) return null;
+
+  const {
+    receipts_this_month, free_tier_receipts, chargeable_receipts,
+    final_bill, capped_bill, data_share_rebate_pct, free_tier_used_pct,
+    pricing_mode,
+  } = data;
+
+  const pct = Math.max(0, Math.min(100, free_tier_used_pct || 0));
+  const isFlat = pricing_mode === 'flat';
+
+  return (
+    <div style={{ ...card, marginTop: 12 }}>
+      <div style={sLabel}>
+        This month's usage
+        {isFlat && (
+          <span style={{ ...pill('#FEF3C7', '#92400E'), marginLeft: 8 }}>FLAT PLAN</span>
+        )}
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
+        <span style={{ fontSize: 26, fontWeight: 800, color: '#111827', fontFamily: "'Playfair Display', serif" }}>
+          {Number(receipts_this_month).toLocaleString()}
+        </span>
+        <span style={{ fontSize: 12, color: '#6b7280' }}>receipts so far</span>
+      </div>
+
+      {/* Free-tier progress bar */}
+      <div style={{
+        height: 6, background: '#f3f4f6', borderRadius: 3, overflow: 'hidden',
+        marginBottom: 6,
+      }}>
+        <div style={{
+          width: `${pct}%`, height: '100%',
+          background: pct >= 100 ? '#c97d1a' : '#1a6b3a',
+          transition: 'width 0.3s',
+        }} />
+      </div>
+      <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 12 }}>
+        {receipts_this_month <= free_tier_receipts
+          ? `${free_tier_receipts - receipts_this_month} free receipts left this month`
+          : `${chargeable_receipts.toLocaleString()} chargeable receipts above the free tier`}
+      </div>
+
+      {/* Projected bill row */}
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        padding: '10px 12px', background: '#f4faf6', borderRadius: 8,
+        border: '1px solid #d1e8d8', marginBottom: 8,
+      }}>
+        <div>
+          <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            {isFlat ? 'Would pay on per-receipt' : 'Projected this month'}
+          </div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#0D4A22', fontFamily: "'Playfair Display', serif" }}>
+            ${Number(final_bill).toFixed(2)}
+          </div>
+          {Number(data_share_rebate_pct) > 0 && (
+            <div style={{ fontSize: 10, color: '#1a6b3a', fontWeight: 600 }}>
+              Includes {data_share_rebate_pct}% data-share rebate
+            </div>
+          )}
+        </div>
+        {Number(capped_bill) >= 99 && (
+          <span style={pill('#e8f5ee', '#0D4A22')}>$99 CAP</span>
+        )}
+      </div>
+
+      {isFlat && (
+        <div style={{ fontSize: 11.5, color: '#6b7280', lineHeight: 1.5 }}>
+          You're on the legacy flat plan. Switch to per-receipt anytime — most shops save money.
+          <a
+            href="/pricing"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: '#1a6b3a', fontWeight: 600, marginLeft: 4 }}
+          >
+            See full pricing →
+          </a>
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 // ─── Per-module subscription card ────────────────────────
 function ModuleSubCard({ title, sub, onManage }) {

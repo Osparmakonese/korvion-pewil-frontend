@@ -5,10 +5,39 @@ import { useAuth } from '../context/AuthContext';
 /**
  * Public pricing page — pewil.org/pricing
  *
- * Shows the actual per-module plans seeded by
- * billing/migrations/0005_seed_per_module_plans.py.
- * Keep prices here in sync with that migration.
+ * Retail (2026-05-17 pricing revolution):
+ *   Per-receipt model. Free up to 1,000 receipts/month, then half a cent
+ *   per receipt above that, hard cap at $99/month. Optional opt-in to
+ *   the data-share rebate cuts the bill 50%. No seats, no branches, no
+ *   tier upgrades to navigate. The shop pays only when they actually use
+ *   the system. See backend/billing/usage_pricing.py for the math.
+ *
+ * Farm:
+ *   Still flat-fee tiers (Starter / Growth / Enterprise) — farms only
+ *   produce a handful of sales per season so per-receipt would charge
+ *   them too little to sustain. Numbers come from
+ *   billing/migrations/0005_seed_per_module_plans.py.
+ *
+ * Keep both pricing surfaces honest with the server-side calc in
+ * billing.usage_pricing.estimate_bill_from_receipt_count — the
+ * calculator below mirrors that function exactly so prospects see
+ * the same number they'll be billed.
  */
+
+// ── Per-receipt pricing constants (mirror billing/usage_pricing.py) ──
+const FREE_TIER_RECEIPTS = 1000;
+const PER_RECEIPT_CHARGE = 0.005;   // half a cent
+const MONTHLY_CAP = 99;             // dollars
+const DATA_SHARE_REBATE_PCT = 50;   // when opted in
+
+function estimateMonthlyBill(dailySales, daysOpenPerMonth = 26, dataShareOn = false) {
+  const monthlyReceipts = Math.max(0, Math.round(dailySales * daysOpenPerMonth));
+  const chargeable = Math.max(monthlyReceipts - FREE_TIER_RECEIPTS, 0);
+  const gross = chargeable * PER_RECEIPT_CHARGE;
+  const capped = Math.min(gross, MONTHLY_CAP);
+  const final = dataShareOn ? capped * (1 - DATA_SHARE_REBATE_PCT / 100) : capped;
+  return { monthlyReceipts, chargeable, gross, capped, final };
+}
 
 const C = {
   green: '#1a6b3a', greenDark: '#0D4A22', green2: '#2d9e58', green3: '#e8f5ee',
@@ -141,15 +170,17 @@ const PLANS = {
 };
 
 const FAQ = [
-  { q: 'Can I try Pewil for free?', a: 'Yes — Starter and Growth plans include a 14-day free trial with full access, no card required. Retail Enterprise is sales-assisted, so our team sets up a personalised onboarding instead of a self-serve trial.' },
-  { q: 'What payment methods do you accept?', a: 'Visa and Mastercard via Pesepay for card payments, plus EcoCash and OneMoney via Paynow for mobile money. Pesepay also works for international cards.' },
-  { q: 'How does Retail Enterprise pricing work?', a: 'Enterprise is priced per branch: $55 per branch per month, with a 4-branch minimum ($220/mo floor). A 12-branch chain pays $660/mo. A 50-branch chain pays $2,750/mo. Unlimited users across all branches. Yearly billing (10 × monthly) gives you 2 months free.' },
-  { q: 'Can I combine Pewil Farm + Pewil Retail?', a: 'Yes. Each module has its own subscription so you only pay for what you use. Combine any farm plan with any retail plan.' },
-  { q: 'What is the yearly pricing?', a: 'Yearly is billed as 10 × monthly, giving you 2 months free versus paying monthly.' },
-  { q: 'Can I change plans later?', a: 'Yes. Upgrade or downgrade anytime from your Billing page. Proration is handled automatically on your next invoice.' },
-  { q: 'Do you offer refunds?', a: 'We offer refunds within 7 days of your first payment, no questions asked. Reach out from your Billing page.' },
-  { q: 'Is my data safe?', a: 'HTTPS everywhere, JWT authentication, optional 2FA, role-based access, full audit logs, and nightly automated backups. You can export all your data anytime.' },
-  { q: 'Can I cancel anytime?', a: 'Yes. Cancel from your Billing page. Your subscription stays active until the end of the current period — no immediate lockout.' },
+  { q: 'How does per-receipt pricing actually work for retail?', a: 'Your first 1,000 receipts every calendar month are free. After that, you pay half a US cent ($0.005) per receipt, with a hard cap of $99/month no matter how big you grow. The calculator above shows your exact monthly bill — there are no tiers to upgrade between, no per-seat fees, no per-branch fees.' },
+  { q: 'What counts as a "receipt"?', a: 'A completed customer sale — one transaction at the till. Returns, voids, stock adjustments, cash drops, end-of-day reports and dashboard views are all free. Only customer-facing receipts count toward your bill.' },
+  { q: 'What\'s the data-share rebate?', a: 'Opt in (anytime, from your Billing page) to share anonymized aggregate sales — category, hour, geography only. No customer data, no SKU prices, no individual receipts. In exchange we knock 50% off your monthly bill. We fund the discount by selling the aggregate dataset to FMCG brands and market-research firms, the same way Nielsen does — except we share the revenue with you.' },
+  { q: 'Why is farm priced differently?', a: 'Farms only ring a handful of sales per season — tobacco, maize, livestock cycles — so per-receipt would charge them essentially nothing. Farm stays on flat-fee plans (Starter $10, Growth $25, Enterprise $60) that match actual value delivered.' },
+  { q: 'Can I try Pewil for free?', a: 'Yes — sign up and start. Retail tenants pay $0 until they cross 1,000 receipts in a month; farm tenants get a 14-day free trial on any plan. No card required upfront.' },
+  { q: 'What payment methods do you accept?', a: 'Visa and Mastercard via Pesepay for card payments, plus EcoCash and OneMoney via Paynow for mobile money in Zimbabwe. M-Pesa (Daraja) for Kenya. Pesepay also handles international cards from anywhere.' },
+  { q: 'I already pay a flat subscription — what happens to me?', a: 'Existing tenants keep their current pricing until you choose to switch. From your Billing page you can see what you\'d pay under the per-receipt model and migrate yourself if it\'s cheaper. Most shops save money on the switch.' },
+  { q: 'Can I combine Pewil Farm + Pewil Retail?', a: 'Each tenant runs one module (farm OR retail) — that\'s deliberate, the systems are deeply specialized. If you genuinely need both, register two separate tenants with the same email; you\'ll see both modules in one login.' },
+  { q: 'Do you offer refunds?', a: 'You barely ever pay enough to need one — but yes, refunds within 7 days of your first payment, no questions asked. Email billing@pewil.org from your Billing page.' },
+  { q: 'Is my data safe?', a: 'HTTPS everywhere, JWT authentication, optional 2FA, role-based access, full audit logs, and nightly automated backups. You can export all your data anytime as CSV or JSON.' },
+  { q: 'Can I cancel anytime?', a: 'Yes. Cancel from your Billing page. Your subscription stays active until the end of the current period — no immediate lockout. Per-receipt tenants are effectively always-cancellable: stop ringing sales and your bill stops growing.' },
 ];
 
 const S = {
@@ -291,6 +322,209 @@ const S = {
   footerLink: { color: C.white, textDecoration: 'none', opacity: 0.8 },
 };
 
+/**
+ * RetailReceiptPricing — the calculator + explainer block we show on
+ * the Retail tab. Replaces the old fixed-price plan cards entirely.
+ *
+ * Why the calculator is the headline: every shopkeeper we talked to
+ * said the same thing — they don't want to compare three tiers, they
+ * want to know what they will pay. Show them.
+ */
+function RetailReceiptPricing() {
+  const [dailySales, setDailySales] = useState(50);
+  const [dataShareOn, setDataShareOn] = useState(false);
+  const result = estimateMonthlyBill(dailySales, 26, dataShareOn);
+
+  const RC = {
+    wrap: { maxWidth: 980, margin: '0 auto', padding: '0 24px 40px' },
+    headlineRow: { textAlign: 'center', marginBottom: 32 },
+    headlineKicker: {
+      display: 'inline-block', background: '#e8f5ee', color: '#1a6b3a',
+      padding: '6px 14px', borderRadius: 999, fontSize: 12, fontWeight: 700,
+      letterSpacing: '0.05em', marginBottom: 14,
+    },
+    headline: {
+      fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 700,
+      letterSpacing: '-0.5px', margin: '0 0 12px',
+    },
+    headlineSub: { color: '#374151', fontSize: 16, lineHeight: 1.6, maxWidth: 640, margin: '0 auto' },
+
+    calc: {
+      background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16,
+      boxShadow: '0 1px 3px rgba(0,0,0,0.04)', padding: '32px 28px', marginBottom: 24,
+    },
+    calcRow: { marginBottom: 24 },
+    calcLabel: { fontSize: 13, color: '#6b7280', fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' },
+    calcValue: { fontSize: 36, fontWeight: 800, color: '#111827', fontFamily: "'Playfair Display', serif" },
+    slider: { width: '100%', accentColor: '#1a6b3a' },
+    tick: { display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#9ca3af', marginTop: 4 },
+
+    resultBox: {
+      background: 'linear-gradient(180deg, #f4faf6 0%, #fffefb 100%)',
+      border: '1px solid #d1e8d8', borderRadius: 14, padding: '22px 24px',
+    },
+    monthlyBig: {
+      fontFamily: "'Playfair Display', serif", fontSize: 56, fontWeight: 800,
+      color: '#0D4A22', letterSpacing: '-1.5px', lineHeight: 1,
+    },
+    monthlyUnit: { color: '#6b7280', fontSize: 14, fontWeight: 600, marginLeft: 8 },
+    breakdown: { fontSize: 13, color: '#374151', marginTop: 10, lineHeight: 1.6 },
+    breakdownStrong: { color: '#0D4A22', fontWeight: 700 },
+
+    toggle: {
+      display: 'flex', alignItems: 'center', gap: 12, marginTop: 18, padding: '12px 14px',
+      background: '#fff', border: '1px solid #d1e8d8', borderRadius: 12,
+    },
+    toggleSwitch: (on) => ({
+      width: 40, height: 22, borderRadius: 999, background: on ? '#1a6b3a' : '#d1d5db',
+      position: 'relative', cursor: 'pointer', transition: 'background 0.15s',
+    }),
+    toggleKnob: (on) => ({
+      width: 16, height: 16, borderRadius: 999, background: '#fff', position: 'absolute',
+      top: 3, left: on ? 21 : 3, transition: 'left 0.15s',
+      boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
+    }),
+    toggleLabel: { flex: 1 },
+    toggleTitle: { fontSize: 14, fontWeight: 700, color: '#111827' },
+    toggleHelp: { fontSize: 12, color: '#6b7280', marginTop: 2 },
+
+    rulesGrid: {
+      display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 18,
+      marginTop: 32, marginBottom: 32,
+    },
+    rule: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '20px 22px' },
+    ruleNum: { color: '#1a6b3a', fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 800, marginBottom: 6 },
+    ruleTitle: { fontWeight: 700, fontSize: 15, color: '#111827', marginBottom: 4 },
+    ruleBody: { fontSize: 13.5, color: '#374151', lineHeight: 1.55 },
+
+    ctaRow: { textAlign: 'center', marginTop: 28 },
+    cta: {
+      display: 'inline-block', background: '#1a6b3a', color: '#fff',
+      padding: '14px 32px', borderRadius: 10, textDecoration: 'none',
+      fontWeight: 700, fontSize: 15,
+    },
+    smallNote: { fontSize: 12, color: '#9ca3af', marginTop: 14, lineHeight: 1.5 },
+  };
+
+  return (
+    <div style={RC.wrap}>
+      <div style={RC.headlineRow}>
+        <span style={RC.headlineKicker}>RETAIL — PAY ONLY WHEN YOU RING SALES</span>
+        <h2 style={RC.headline}>Free until you sell. Then half a cent each.</h2>
+        <p style={RC.headlineSub}>
+          No monthly subscription. No seats. No per-branch fee. Your first 1,000 receipts every
+          month are free — that covers most dukas entirely. After that, you pay half a US cent
+          per receipt, capped at $99/month no matter how big you grow.
+        </p>
+      </div>
+
+      <div style={RC.calc}>
+        <div style={RC.calcRow}>
+          <div style={RC.calcLabel}>Sales you ring per day</div>
+          <div style={RC.calcValue}>{dailySales} sales</div>
+          <input
+            type="range" min={0} max={500} step={5}
+            value={dailySales}
+            onChange={(e) => setDailySales(Number(e.target.value))}
+            style={RC.slider}
+          />
+          <div style={RC.tick}>
+            <span>0</span>
+            <span>50</span>
+            <span>150</span>
+            <span>300</span>
+            <span>500+</span>
+          </div>
+        </div>
+
+        <div style={RC.resultBox}>
+          <div>
+            <span style={RC.monthlyBig}>${result.final.toFixed(2)}</span>
+            <span style={RC.monthlyUnit}>per month</span>
+          </div>
+          <div style={RC.breakdown}>
+            That's ~<span style={RC.breakdownStrong}>{result.monthlyReceipts.toLocaleString()}</span> receipts
+            a month at 26 working days.&nbsp;
+            {result.monthlyReceipts <= FREE_TIER_RECEIPTS && (
+              <>You're inside the <span style={RC.breakdownStrong}>1,000-receipt free tier</span> — no bill at all.</>
+            )}
+            {result.monthlyReceipts > FREE_TIER_RECEIPTS && result.capped < MONTHLY_CAP && (
+              <>{result.chargeable.toLocaleString()} receipts above the free tier × $0.005 each.</>
+            )}
+            {result.capped >= MONTHLY_CAP && (
+              <>You'd hit the <span style={RC.breakdownStrong}>$99 monthly cap</span> — that's the most you'll ever pay, even at 50,000 sales/month.</>
+            )}
+            {dataShareOn && result.capped > 0 && (
+              <> Data-share rebate cuts your bill by 50%.</>
+            )}
+          </div>
+
+          <div style={RC.toggle}>
+            <div
+              style={RC.toggleSwitch(dataShareOn)}
+              onClick={() => setDataShareOn((v) => !v)}
+            >
+              <div style={RC.toggleKnob(dataShareOn)} />
+            </div>
+            <div style={RC.toggleLabel}>
+              <div style={RC.toggleTitle}>Opt in to data-share rebate — get 50% off</div>
+              <div style={RC.toggleHelp}>
+                Share anonymized aggregate sales (category × hour × geography) with the Pewil dataset.
+                No customer data, no SKU prices. Cancel anytime.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={RC.rulesGrid}>
+        <div style={RC.rule}>
+          <div style={RC.ruleNum}>1,000</div>
+          <div style={RC.ruleTitle}>Free receipts every month</div>
+          <div style={RC.ruleBody}>
+            That's around 33 sales a day. A typical neighborhood duka pays $0, forever. The free tier
+            resets on the 1st of every month.
+          </div>
+        </div>
+        <div style={RC.rule}>
+          <div style={RC.ruleNum}>$0.005</div>
+          <div style={RC.ruleTitle}>Per receipt above the free tier</div>
+          <div style={RC.ruleBody}>
+            Half a US cent per chargeable sale — less than the cost of the till roll the receipt prints on.
+            Returns, voids, stock adjustments, cash drops never count.
+          </div>
+        </div>
+        <div style={RC.rule}>
+          <div style={RC.ruleNum}>$99</div>
+          <div style={RC.ruleTitle}>Maximum monthly bill</div>
+          <div style={RC.ruleBody}>
+            Hard ceiling. A 10-branch supermarket chain doing 50,000 sales/month pays the same as
+            Pick n Pay scale would — $99. No per-branch fee, no enterprise tier to negotiate.
+          </div>
+        </div>
+        <div style={RC.rule}>
+          <div style={RC.ruleNum}>50%</div>
+          <div style={RC.ruleTitle}>Data-share rebate</div>
+          <div style={RC.ruleBody}>
+            Opt in to anonymized aggregate data sharing and cut your bill in half. Most months even a
+            busy shop pays $0 net — your data funds your own subscription.
+          </div>
+        </div>
+      </div>
+
+      <div style={RC.ctaRow}>
+        <Link to="/register?persona=retail" style={RC.cta}>
+          Start free — no card needed
+        </Link>
+        <div style={RC.smallNote}>
+          Same pricing for every country, every shop size. The calculator is the price list.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 export default function Pricing() {
   const { user } = useAuth();
   const [cycle, setCycle] = useState('monthly');
@@ -344,8 +578,11 @@ export default function Pricing() {
         </div>
       </div>
 
-      {/* Plan cards */}
-      <div style={S.grid}>
+      {/* Retail per-receipt section (only when module === 'retail') */}
+      {module === 'retail' && <RetailReceiptPricing />}
+
+      {/* Plan cards — farm only (retail uses the calculator above) */}
+      {module === 'farm' && <div style={S.grid}>
         {plans.map((plan) => {
           const price = cycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
           const unit = cycle === 'yearly' ? '/year' : '/month';
@@ -413,7 +650,7 @@ export default function Pricing() {
             </div>
           );
         })}
-      </div>
+      </div>}
 
       {/* Combine section */}
       <section style={S.combineSection}>
