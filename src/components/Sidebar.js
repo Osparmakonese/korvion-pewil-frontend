@@ -155,6 +155,19 @@ const NAV_ITEMS = [
   { section: 'ENTERPRISE', module: 'retail', collapsible: false, items: [
     { key: 'Chain Rollup', emoji: '\u{1F30D}', label: 'Chain Rollup', ownerOnly: true },
   ]},
+  // FORECOURT — service-station ops (May 2026). Visible to every retail
+  // tenant; an empty state on the Forecourt dashboard guides setup if
+  // no tanks exist. Collapsible to keep the sidebar tight for tenants
+  // that don't sell fuel.
+  { section: 'FORECOURT', module: 'retail', collapsible: true, items: [
+    { key: 'Forecourt', emoji: '⛽', label: 'Forecourt' },
+    { key: 'Fuel Tanks', emoji: '\u{1F6E2}️', label: 'Tanks' },
+    { key: 'Fuel Grades', emoji: '\u{1F539}', label: 'Grades' },
+    { key: 'Fuel Deliveries', emoji: '\u{1F69B}', label: 'Deliveries' },
+    { key: 'Dip Readings', emoji: '\u{1F4CF}', label: 'Dip Log' },
+    { key: 'Fleet Cards', emoji: '\u{1F4B3}', label: 'Fleet Cards' },
+    { key: 'Regulator Returns', emoji: '\u{1F4DC}', label: 'Regulator Returns', ownerOnly: true },
+  ]},
   { section: 'INVENTORY', module: 'retail', collapsible: true, items: [
     { key: 'Categories', emoji: '\u{1F5C2}', label: 'Categories' },
     { key: 'Suppliers', emoji: '\u{1F4E6}', label: 'Suppliers & POs' },
