@@ -1,6 +1,31 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { initials, avatarColor } from '../utils/format';
+import { listBranches, listFuelTanks } from '../api/retailApi';
 import Logo from './Logo';
+
+// localStorage key for persisting per-section expand/collapse state.
+// One blob per user so tabs on different accounts don't fight.
+const EXPAND_STATE_KEY = 'pewil-sidebar-expanded-v1';
+
+function loadExpandedState() {
+  try {
+    const raw = window.localStorage.getItem(EXPAND_STATE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return (parsed && typeof parsed === 'object') ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveExpandedState(state) {
+  try {
+    window.localStorage.setItem(EXPAND_STATE_KEY, JSON.stringify(state));
+  } catch {
+    /* localStorage disabled — fall through silently */
+  }
+}
 
 /* ─── Design 3 — Living Africa tokens ─── */
 const TOKENS = {
@@ -136,70 +161,74 @@ const NAV_ITEMS = [
     { key: 'Workers', emoji: '\u{1F477}', label: 'Workers' },
     { key: 'Hours & Pay', emoji: '\u23F1', label: 'Hours & Pay' },
   ]},
+  // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  // RETAIL \u2014 sidebar redesign 2026-05-19. Eleven sections collapsed
+  // to six themed groups so a tenant doesn't see a wall of nav on
+  // first load. Section keys: MAIN, DAILY, STOCK, OPERATIONS,
+  // MONEY & INSIGHTS, LOSS PREVENTION, SETUP. Everything except DAILY
+  // is collapsible (and collapsed by default \u2014 open state persists in
+  // localStorage). OPERATIONS only renders when the tenant has
+  // multi-branch OR fuel (signalled via showWhen \u2014 see render below).
+  // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
   { section: 'MAIN', module: 'retail', collapsible: false, items: [
     { key: 'Retail', emoji: '\u{1F4CA}', label: 'Dashboard' },
   ]},
-  { section: 'RETAIL', module: 'retail', collapsible: false, items: [
+  { section: 'DAILY', module: 'retail', collapsible: false, items: [
     { key: 'POS', emoji: '\u{1F6D2}', label: 'Point of Sale' },
     { key: 'Products', emoji: '\u{1F3F7}\uFE0F', label: 'Products' },
     { key: 'Customers', emoji: '\u{1F465}', label: 'Customers' },
     { key: 'Sales History', emoji: '\u{1F4CB}', label: 'Sales History' },
+    { key: 'Cashier Sessions', emoji: '\u{1F4B5}', label: 'Sessions' },
     { key: 'Returns', emoji: '\u{1F504}', label: 'Returns & Refunds' },
-    { key: 'Cashier Sessions', emoji: '\u{1F4B5}', label: 'Cashier Sessions' },
     { key: 'Discounts', emoji: '\u{1F3F7}\uFE0F', label: 'Discounts' },
   ]},
-  // ENTERPRISE — multi-branch retail (May 2026). Owner-only entry points
-  // sit between RETAIL (daily ops) and INVENTORY because chain-wide
-  // surfaces are an HQ-level concern that should be discoverable
-  // separately from per-branch operations.
-  { section: 'ENTERPRISE', module: 'retail', collapsible: false, items: [
-    { key: 'Chain Rollup', emoji: '\u{1F30D}', label: 'Chain Rollup', ownerOnly: true },
+  // OPERATIONS — multi-branch + forecourt. Only renders when the
+  // tenant has > 1 branch OR >= 1 fuel tank. Items inside also use
+  // showWhen to hide branch-only or fuel-only entries when only one
+  // signal is true. Keeps the section a single tight chunk for the
+  // "more than one moving part" tenant.
+  { section: 'OPERATIONS', module: 'retail', collapsible: true, showWhen: 'multibranch_or_fuel', items: [
+    { key: 'Branches', emoji: '\u{1F3EA}', label: 'Branches', ownerOnly: true, showWhen: 'multibranch' },
+    { key: 'Stock Transfers', emoji: '\u{1F4E6}', label: 'Stock Transfers', showWhen: 'multibranch' },
+    { key: 'Chain Rollup', emoji: '\u{1F30D}', label: 'Chain Rollup', ownerOnly: true, showWhen: 'multibranch' },
+    // Forecourt — service-station ops (May 2026). Hidden unless tenant has fuel tanks.
+    { key: 'Forecourt', emoji: '⛽', label: 'Forecourt', showWhen: 'fuel' },
+    { key: 'Fuel Tanks', emoji: '\u{1F6E2}️', label: 'Tanks', showWhen: 'fuel' },
+    { key: 'Fuel Grades', emoji: '\u{1F539}', label: 'Grades', showWhen: 'fuel' },
+    { key: 'Fuel Deliveries', emoji: '\u{1F69B}', label: 'Deliveries', showWhen: 'fuel' },
+    { key: 'Dip Readings', emoji: '\u{1F4CF}', label: 'Dip Log', showWhen: 'fuel' },
+    { key: 'Fleet Cards', emoji: '\u{1F4B3}', label: 'Fleet Cards', showWhen: 'fuel' },
+    { key: 'Regulator Returns', emoji: '\u{1F4DC}', label: 'Regulator Returns', ownerOnly: true, showWhen: 'fuel' },
   ]},
-  // FORECOURT — service-station ops (May 2026). Visible to every retail
-  // tenant; an empty state on the Forecourt dashboard guides setup if
-  // no tanks exist. Collapsible to keep the sidebar tight for tenants
-  // that don't sell fuel.
-  { section: 'FORECOURT', module: 'retail', collapsible: true, items: [
-    { key: 'Forecourt', emoji: '⛽', label: 'Forecourt' },
-    { key: 'Fuel Tanks', emoji: '\u{1F6E2}️', label: 'Tanks' },
-    { key: 'Fuel Grades', emoji: '\u{1F539}', label: 'Grades' },
-    { key: 'Fuel Deliveries', emoji: '\u{1F69B}', label: 'Deliveries' },
-    { key: 'Dip Readings', emoji: '\u{1F4CF}', label: 'Dip Log' },
-    { key: 'Fleet Cards', emoji: '\u{1F4B3}', label: 'Fleet Cards' },
-    { key: 'Regulator Returns', emoji: '\u{1F4DC}', label: 'Regulator Returns', ownerOnly: true },
-  ]},
-  { section: 'INVENTORY', module: 'retail', collapsible: true, items: [
+  { section: 'STOCK', module: 'retail', collapsible: true, items: [
     { key: 'Categories', emoji: '\u{1F5C2}', label: 'Categories' },
     { key: 'Suppliers', emoji: '\u{1F4E6}', label: 'Suppliers & POs' },
     { key: 'WhatsApp PO', emoji: '\u{1F4AC}', label: 'WhatsApp PO' },
     { key: 'Stock Adjustments', emoji: '\u{1F504}', label: 'Stock Adjustments' },
-    { key: 'Stock Transfers', emoji: '\u{1F4E6}', label: 'Stock Transfers' },
-    { key: 'Branches', emoji: '\u{1F3EA}', label: 'Branches', ownerOnly: true },
     { key: 'Low Stock Alerts', emoji: '\u{1F6A8}', label: 'Low Stock Alerts' },
     { key: 'Barcode Labels', emoji: '\u{1F4CF}', label: 'Barcode & Labels' },
   ]},
-  { section: 'ACCOUNTING', module: 'retail', collapsible: false, items: [
-    { key: 'Journal Entries', emoji: '\u{1F4D2}', label: 'Journal Entries' },
+  { section: 'MONEY & INSIGHTS', module: 'retail', collapsible: true, items: [
+    { key: 'End of Day', emoji: '\u{1F4C4}', label: 'End of Day' },
     { key: 'Retail Report', emoji: '\u{1F4CA}', label: 'Reports', ownerOnly: true },
-    { key: 'Retail Payroll', emoji: '\u{1F4B0}', label: 'Payroll' },
-    { key: 'End of Day', emoji: '\u{1F4C4}', label: 'End of Day Report' },
     { key: 'Profit Margins', emoji: '\u{1F4C8}', label: 'Profit Margins', ownerOnly: true },
+    { key: 'Journal Entries', emoji: '\u{1F4D2}', label: 'Journal Entries' },
+    { key: 'Retail Payroll', emoji: '\u{1F4B0}', label: 'Payroll' },
+    { key: 'Customer Loyalty', emoji: '⭐', label: 'Loyalty' },
+    { key: 'Cashier Performance', emoji: '\u{1F3C6}', label: 'Cashier Performance' },
   ]},
   { section: 'LOSS PREVENTION', module: 'retail', collapsible: true, items: [
     { key: 'Loss Prevention', emoji: '\u{1F6E1}\uFE0F', label: 'LP Dashboard' },
     { key: 'Theft Scan', emoji: '\u{1F50D}', label: 'Theft Scan', ownerOnly: true },
     { key: 'Price Drift', emoji: '\u{1F4B0}', label: 'Price Drift', ownerOnly: true },
   ]},
-  { section: 'MARKETING', module: 'retail', collapsible: true, items: [
-    { key: 'Customer Loyalty', emoji: '\u2B50', label: 'Loyalty Program' },
-    { key: 'Cashier Performance', emoji: '\u{1F3C6}', label: 'Cashier Performance' },
-  ]},
+  // MARKETING items moved to MONEY & INSIGHTS in the 2026-05-19 redesign.
   // Retail SYSTEM section is intentionally minimal — everything that used to
   // live here as a dedicated sidebar entry (Device Config, ZIMRA Fiscal,
   // Multi-Currency, Receipt Setup, POS Settings, Manager PIN, Tax Config) now
   // lives as a sub-tab inside the Retail Settings page. This keeps the retail
   // sidebar focused on daily operations rather than configuration plumbing.
-  { section: 'SYSTEM', module: 'retail', collapsible: false, items: [
+  { section: 'SETUP', module: 'retail', collapsible: true, items: [
     { key: 'Retail Settings', emoji: '\u2699\uFE0F', label: 'Settings' },
     // Tax Compliance \u2014 country-aware fiscal credentials grid.
     // Promoted to the sidebar (rather than a sub-tab inside Retail Settings)
@@ -236,45 +265,93 @@ export default function Sidebar({ activeTab, onTabChange, user, onLogout, lowSto
   const role = user?.role || 'worker';
   const isSuperAdmin = !!user?.is_super_admin;
   const ac = avatarColor(user?.username || '');
-  const [expanded, setExpanded] = useState({});
+  // Expand state is persisted to localStorage so a returning user sees
+  // the sidebar in the same shape they left it. Default: everything
+  // collapsed except MAIN + DAILY, which are non-collapsible anyway.
+  const [expanded, setExpanded] = useState(() => loadExpandedState());
 
   // Get tenant info from JWT stored in localStorage
   const tenantName = user?.tenant_name || 'Pewil';
   const tenantPlan = user?.plan || 'free';
   const planLabel = tenantPlan.charAt(0).toUpperCase() + tenantPlan.slice(1) + ' Plan';
   // SINGLE-MODULE RULE (April 2026): every tenant runs exactly one module.
-  // The module switcher dropdown has been removed — activeModule is derived
-  // from tenant.modules[0] and never changes for a given account. Operators
-  // who need both farm and retail create two separate accounts.
   const modules = user?.modules || ['farm'];
   const tenantModule = (modules[0] === 'retail') ? 'retail' : 'farm';
   const hasFarm = tenantModule === 'farm';
   const hasRetail = tenantModule === 'retail';
 
-  // Module-based section filtering using the `module` property on each section.
-  // Each section declares which module it belongs to (farm or retail).
+  // ─── Conditional rendering signals (2026-05-19 sidebar redesign) ───
+  // OPERATIONS section + its items only render when the tenant has
+  // multi-branch (>1 active branch) OR fuel (>=1 active tank). Use the
+  // existing list endpoints — they're already fetched by Branches /
+  // FuelTanks pages so react-query dedupes the call.
+  const { data: branches = [] } = useQuery({
+    queryKey: ['retail-branches'],
+    queryFn: listBranches,
+    enabled: hasRetail,
+    staleTime: 60_000,
+  });
+  const { data: fuelTanks = [] } = useQuery({
+    queryKey: ['fuel-tanks'],
+    queryFn: () => listFuelTanks(),
+    enabled: hasRetail,
+    staleTime: 60_000,
+  });
+  const hasMultibranch = (branches?.length || 0) > 1;
+  const hasFuel = (fuelTanks?.length || 0) > 0;
+
+  // showWhen filter — applies to both section-level and item-level
+  // `showWhen` properties. Strings: 'multibranch', 'fuel',
+  // 'multibranch_or_fuel'. Items without showWhen always render.
+  const meetsShowWhen = (showWhen) => {
+    if (!showWhen) return true;
+    if (showWhen === 'multibranch') return hasMultibranch;
+    if (showWhen === 'fuel') return hasFuel;
+    if (showWhen === 'multibranch_or_fuel') return hasMultibranch || hasFuel;
+    return true;
+  };
+
   const shouldShowSection = (section) => {
-    if (section.module === 'retail') return hasRetail;
-    if (section.module === 'farm') return hasFarm;
-    // `module: 'any'` — show for any tenant (cross-cutting surfaces)
-    if (section.module === 'any') return true;
-    // Sections without a module tag default to farm
-    return hasFarm;
+    if (section.module === 'retail' && !hasRetail) return false;
+    if (section.module === 'farm' && !hasFarm) return false;
+    // `module: 'any'` and untagged: defer to module check.
+    if (section.module && section.module !== 'any' && section.module !== 'retail' && section.module !== 'farm') {
+      return false;
+    }
+    if (!section.module) {
+      // Untagged sections default to farm.
+      if (!hasFarm) return false;
+    }
+    // Conditional rendering — section-level showWhen.
+    if (!meetsShowWhen(section.showWhen)) return false;
+    return true;
   };
 
   // Brand display: show the tenant's one module, no switching
   const brandModuleLabel = hasRetail ? 'Pewil Retail' : 'Pewil Farm';
 
+  // Auto-expand the section that contains the active tab. Runs every
+  // time the active tab changes so navigating into a collapsed section
+  // doesn't visually orphan the user.
   useEffect(() => {
     NAV_ITEMS.forEach(section => {
       if (section.collapsible && section.items.some(item => item.key === activeTab)) {
-        setExpanded(prev => ({ ...prev, [section.section]: true }));
+        setExpanded(prev => {
+          if (prev[section.section]) return prev;
+          const next = { ...prev, [section.section]: true };
+          saveExpandedState(next);
+          return next;
+        });
       }
     });
   }, [activeTab]);
 
   const toggleSection = (sectionName) => {
-    setExpanded(prev => ({ ...prev, [sectionName]: !prev[sectionName] }));
+    setExpanded(prev => {
+      const next = { ...prev, [sectionName]: !prev[sectionName] };
+      saveExpandedState(next);
+      return next;
+    });
   };
   const sectionHasActive = (section) => section.items.some(item => item.key === activeTab);
 
@@ -297,10 +374,21 @@ export default function Sidebar({ activeTab, onTabChange, user, onLogout, lowSto
           if (section.ownerOnly && role !== 'owner') return null;
           if (section.superOnly && !isSuperAdmin) return null;
           if (!shouldShowSection(section)) return null;
-          // Retail sections are always flat (non-collapsible)
-          const isCollapsible = section.collapsible && !section.module;
+          // Filter items by ownerOnly + item-level showWhen so the
+          // section knows its real visible count for the badge.
+          const visibleItems = section.items.filter(item =>
+            (!item.ownerOnly || role === 'owner')
+            && meetsShowWhen(item.showWhen)
+          );
+          // Skip the section entirely if every item got filtered out
+          // (e.g. OPERATIONS for a tenant with only fuel hides Branches).
+          if (visibleItems.length === 0) return null;
+          // Sidebar redesign 2026-05-19: any section with collapsible: true
+          // is now actually collapsible, regardless of module. Previously the
+          // `&& !section.module` clause forced every retail section flat.
+          const isCollapsible = section.collapsible === true;
           const isExpanded = isCollapsible ? !!expanded[section.section] : true;
-          const hasActive = sectionHasActive(section);
+          const hasActive = visibleItems.some(item => item.key === activeTab);
 
           return (
             <React.Fragment key={section.section}>
@@ -315,7 +403,7 @@ export default function Sidebar({ activeTab, onTabChange, user, onLogout, lowSto
                   <span style={{ display: 'flex', alignItems: 'center' }}>
                     {section.section}
                     {isCollapsible && !isExpanded && (
-                      <span style={S.sectionCount}>{section.items.length}</span>
+                      <span style={S.sectionCount}>{visibleItems.length}</span>
                     )}
                     {isCollapsible && !isExpanded && hasActive && (
                       <span style={S.sectionActiveDot} />
@@ -326,7 +414,7 @@ export default function Sidebar({ activeTab, onTabChange, user, onLogout, lowSto
                   )}
                 </div>
                 <div style={S.sectionItems(isExpanded)}>
-                  {section.items.filter(item => !item.ownerOnly || role === 'owner').map(item => (
+                  {visibleItems.map(item => (
                     <button
                       key={item.key}
                       style={S.navItem(activeTab === item.key)}
