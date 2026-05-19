@@ -182,17 +182,20 @@ const NAV_ITEMS = [
     { key: 'Returns', emoji: '\u{1F504}', label: 'Returns & Refunds' },
     { key: 'Discounts', emoji: '\u{1F3F7}\uFE0F', label: 'Discounts' },
   ]},
-  // OPERATIONS — multi-branch + forecourt. Only renders when the
-  // tenant has > 1 branch OR >= 1 fuel tank. Items inside also use
-  // showWhen to hide branch-only or fuel-only entries when only one
-  // signal is true. Keeps the section a single tight chunk for the
-  // "more than one moving part" tenant.
-  { section: 'OPERATIONS', module: 'retail', collapsible: true, showWhen: 'multibranch_or_fuel', items: [
-    { key: 'Branches', emoji: '\u{1F3EA}', label: 'Branches', ownerOnly: true, showWhen: 'multibranch' },
+  // OPERATIONS — multi-branch + forecourt. Two "entry-point" items
+  // (Branches and Forecourt) are ALWAYS visible for retail tenants
+  // so the user can reach the setup flow without a chicken-and-egg
+  // (can't reach Branches because no 2nd branch exists; can't reach
+  // Forecourt because no tank exists). Downstream items (Stock
+  // Transfers, Chain Rollup, Tanks, Grades, etc.) stay gated so they
+  // don't clutter the sidebar for tenants who don't use them.
+  { section: 'OPERATIONS', module: 'retail', collapsible: true, items: [
+    { key: 'Branches', emoji: '\u{1F3EA}', label: 'Branches', ownerOnly: true },
     { key: 'Stock Transfers', emoji: '\u{1F4E6}', label: 'Stock Transfers', showWhen: 'multibranch' },
     { key: 'Chain Rollup', emoji: '\u{1F30D}', label: 'Chain Rollup', ownerOnly: true, showWhen: 'multibranch' },
-    // Forecourt — service-station ops (May 2026). Hidden unless tenant has fuel tanks.
-    { key: 'Forecourt', emoji: '⛽', label: 'Forecourt', showWhen: 'fuel' },
+    // Forecourt is the entry-point — its own page has an empty-state
+    // walking the operator through "add your first fuel grade + tank".
+    { key: 'Forecourt', emoji: '⛽', label: 'Forecourt' },
     { key: 'Fuel Tanks', emoji: '\u{1F6E2}️', label: 'Tanks', showWhen: 'fuel' },
     { key: 'Fuel Grades', emoji: '\u{1F539}', label: 'Grades', showWhen: 'fuel' },
     { key: 'Fuel Deliveries', emoji: '\u{1F69B}', label: 'Deliveries', showWhen: 'fuel' },
