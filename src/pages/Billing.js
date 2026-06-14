@@ -7,6 +7,9 @@ import {
   emailReceipt,
   getUsage,
   initializePayment,
+  getBillingSummary,
+  subscribeAddon,
+  cancelAddon,
 } from '../api/billingApi';
 import { useAuth } from '../context/AuthContext';
 import PlansTable from '../components/PlansTable';
@@ -63,6 +66,16 @@ export default function Billing({ activeModule }) {
   });
   const { data: invoices } = useQuery({ queryKey: ['invoices'], queryFn: getInvoices, staleTime: 60000 });
   const { data: usage } = useQuery({ queryKey: ['usage'], queryFn: getUsage, staleTime: 60000 });
+
+  // Canonical billing state for this module — drives whether we show the
+  // per-receipt (retail) experience or the flat-plan (farm) experience.
+  const { data: summary } = useQuery({
+    queryKey: ['billingSummary', currentModule],
+    queryFn: () => getBillingSummary(currentModule),
+    staleTime: 60000,
+  });
+  const billingModel = summary?.billing_model || (currentModule === 'retail' ? 'usage' : 'flat');
+  const isUsage = billingModel === 'usage';
 
   // Only show the subscription for the current module — the other module's
   // data shouldn't be visible to this tenant even if the API happens to
@@ -158,12 +171,19 @@ export default function Billing({ activeModule }) {
       {tab === 'overview' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div>
-            {/* Only the tenant's own module — single-module rule */}
-            <ModuleSubCard title={moduleLabel} sub={currentSub} onManage={() => setTab('plans')} />
-            {/* Per-receipt usage card. Retail only — farm tenants never
-                see this because farms are flat-priced per the model
-                decision in billing/usage_pricing.py docstring. */}
-            {currentModule === 'retail' && <UsageCard />}
+            {isUsage ? (
+              <>
+                {/* Retail is billed per receipt — usage is the headline,
+                    followed by the how-you're-billed ladder and the
+                    Pewil AI / Pewil Enterprise add-ons. No flat plan. */}
+                <UsageCard />
+                <HowBilledCard pricing={summary?.pricing} />
+                <AddonsSection addons={summary?.addons} />
+              </>
+            ) : (
+              /* Farm (and any flat plan) keeps the plan card. */
+              <ModuleSubCard title={moduleLabel} sub={currentSub} onManage={() => setTab('plans')} />
+            )}
           </div>
           <div>
             <div style={card}>
@@ -207,16 +227,33 @@ export default function Billing({ activeModule }) {
 
       {/* PLANS */}
       {tab === 'plans' && (
-        <div>
-          <p style={{ color: '#6b7280', marginBottom: 16, fontSize: 12 }}>
-            Choose your {moduleLabel} plan. Annual plans save 17%.
-          </p>
-          <PlansTable
-            activeSubscriptions={activeSubs}
-            onSelectPlan={handleSelectPlan}
-            lockedModule={currentModule}
-          />
-        </div>
+        isUsage ? (
+          <div>
+            <div style={{ ...card, marginBottom: 12 }}>
+              <div style={sLabel}>How {moduleLabel} billing works</div>
+              <p style={{ color: '#374151', fontSize: 13, lineHeight: 1.6, margin: 0 }}>
+                {moduleLabel} has no plans or tiers — you pay as you sell. Your first{' '}
+                {(summary?.pricing?.free_tier_receipts || 1000).toLocaleString()} receipts
+                each month are free, then it's just cents per receipt, capped at{' '}
+                ${summary?.pricing?.cap || '999.00'}/month. Add Pewil AI or Pewil
+                Enterprise below whenever you need them.
+              </p>
+            </div>
+            <HowBilledCard pricing={summary?.pricing} />
+            <AddonsSection addons={summary?.addons} />
+          </div>
+        ) : (
+          <div>
+            <p style={{ color: '#6b7280', marginBottom: 16, fontSize: 12 }}>
+              Choose your {moduleLabel} plan. Annual plans save 17%.
+            </p>
+            <PlansTable
+              activeSubscriptions={activeSubs}
+              onSelectPlan={handleSelectPlan}
+              lockedModule={currentModule}
+            />
+          </div>
+        )
       )}
 
       {/* INVOICES */}
@@ -583,6 +620,143 @@ function ModuleSubCard({ title, sub, onManage }) {
         <span style={{ fontSize: 11, color: '#6b7280', fontFamily: 'Inter', fontWeight: 400 }}>/{cycleLabel}</span>
       </div>
       <button style={{ ...btnS(false), marginTop: 8 }} onClick={onManage}>Manage</button>
+    </div>
+  );
+}
+
+
+// ─── How-you're-billed ladder (retail / usage) ───────────────
+// Renders the per-receipt tier table straight from the backend's
+// summary.pricing so the explainer can never drift from what the
+// billing engine actually charges.
+function HowBilledCard({ pricing }) {
+  if (!pricing || !Array.isArray(pricing.tiers)) return null;
+  const free = Number(pricing.free_tier_receipts || 0);
+  const fmtRate = (r) => (Number(r) === 0 ? 'Free' : `$${Number(r).toFixed(3)} / receipt`);
+  const fmtRange = (t) => {
+    if (t.free) return `First ${free.toLocaleString()}`;
+    const from = Number(t.from).toLocaleString();
+    return t.to ? `${from} – ${Number(t.to).toLocaleString()}` : `${from}+`;
+  };
+  return (
+    <div style={{ ...card, marginTop: 12 }}>
+      <div style={sLabel}>How you're billed</div>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+        <tbody>
+          {pricing.tiers.map((t, i) => (
+            <tr key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
+              <td style={{ padding: '7px 4px', color: '#374151' }}>{fmtRange(t)} receipts / mo</td>
+              <td style={{ padding: '7px 4px', textAlign: 'right', fontWeight: 700, color: t.free ? '#1a6b3a' : '#111827' }}>
+                {fmtRate(t.rate)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div style={{ marginTop: 8, fontSize: 11, color: '#6b7280', lineHeight: 1.5 }}>
+        Capped at <strong>${pricing.cap}/month</strong> — you'll never pay more, whatever
+        your volume. Voided sales and returns aren't counted.
+      </div>
+    </div>
+  );
+}
+
+
+// ─── Add-ons section (Pewil AI, Pewil Enterprise) ────────────
+// Flat-monthly extras billed independently of receipts. Subscribing
+// reuses the existing invoice → Pesepay checkout flow.
+function AddonsSection({ addons }) {
+  const queryClient = useQueryClient();
+  const [busy, setBusy] = useState(null);
+  const [err, setErr] = useState('');
+  if (!addons) return null;
+  const available = addons.available || [];
+  const active = addons.active || [];
+  const activeSlugs = new Set(
+    active.filter(a => a.is_entitled).map(a => a.addon && a.addon.slug)
+  );
+  if (available.length === 0) return null;
+
+  const handleSubscribe = async (slug) => {
+    setBusy(slug); setErr('');
+    try {
+      const res = await subscribeAddon(slug);
+      const pay = await initializePayment({ invoice_id: res.invoice_id, payment_method: 'card' });
+      const url = pay.redirect_url || pay.checkout_url;
+      if (url) { window.location.href = url; return; }
+      setErr('Could not start checkout.');
+    } catch (e) {
+      setErr(e?.response?.data?.detail || 'Could not start checkout.');
+    } finally { setBusy(null); }
+  };
+  const handleCancel = async (slug) => {
+    setBusy(slug); setErr('');
+    try {
+      await cancelAddon(slug);
+      queryClient.invalidateQueries({ queryKey: ['billingSummary'] });
+    } catch (e) {
+      setErr(e?.response?.data?.detail || 'Could not cancel.');
+    } finally { setBusy(null); }
+  };
+
+  return (
+    <div style={{ ...card, marginTop: 12 }}>
+      <div style={sLabel}>Add-ons</div>
+      <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 12 }}>
+        Optional extras, billed flat monthly {'—'} never charged against your receipts.
+      </div>
+      {err && (
+        <div style={{ background: '#FEE2E2', color: '#991B1B', borderRadius: 8, padding: '8px 10px', fontSize: 11, marginBottom: 10 }}>
+          {err}
+        </div>
+      )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {available.map(a => {
+          const on = activeSlugs.has(a.slug);
+          return (
+            <div key={a.slug} style={{ border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: 10 }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontWeight: 700, fontSize: 14 }}>{a.name}</span>
+                    {on && <span style={pill('#e8f5ee', '#1a6b3a')}>ACTIVE</span>}
+                  </div>
+                  <div style={{ fontSize: 11.5, color: '#6b7280', marginTop: 2 }}>{a.tagline}</div>
+                </div>
+                <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 700, color: '#1a6b3a' }}>
+                    ${Number(a.price_monthly).toFixed(0)}<span style={{ fontSize: 10, color: '#6b7280', fontWeight: 400 }}>/mo</span>
+                  </div>
+                </div>
+              </div>
+              {Array.isArray(a.features) && a.features.length > 0 && (
+                <ul style={{ margin: '8px 0 0', padding: 0, listStyle: 'none' }}>
+                  {a.features.map((f, i) => (
+                    <li key={i} style={{ fontSize: 11.5, color: '#374151', padding: '2px 0', display: 'flex', gap: 6 }}>
+                      <span style={{ color: '#1a6b3a' }}>{'✓'}</span>{f}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div style={{ marginTop: 10 }}>
+                {on ? (
+                  <button style={btnS(false)} disabled={busy === a.slug} onClick={() => handleCancel(a.slug)}>
+                    {busy === a.slug ? 'Working…' : 'Cancel add-on'}
+                  </button>
+                ) : a.is_self_serve ? (
+                  <button style={btnS(true)} disabled={busy === a.slug} onClick={() => handleSubscribe(a.slug)}>
+                    {busy === a.slug ? 'Starting…' : `Add ${a.name} — $${Number(a.price_monthly).toFixed(0)}/mo`}
+                  </button>
+                ) : (
+                  <a href="mailto:hello@pewil.org?subject=Pewil%20Enterprise" style={{ ...btnS(false), textDecoration: 'none' }}>
+                    Talk to us
+                  </a>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
