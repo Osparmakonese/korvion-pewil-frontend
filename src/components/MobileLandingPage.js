@@ -200,7 +200,7 @@ export default function MobileLandingPage() {
         <p style={heroSub}>
           Sell, track stock, close the till — all on the phone in your hand.
         </p>
-        <Link to="/register" style={heroCta}>Start 14-day free trial</Link>
+        <Link to="/register" style={heroCta}>Start free — pay as you sell</Link>
         <div style={heroDemo}>
           Or try it instantly —{' '}
           <button
@@ -357,7 +357,7 @@ export default function MobileLandingPage() {
           <Stat tone="green" val="12 min"  label="to first sale"     meta="Signup → first receipt" />
           <Stat tone="amber" val="$48"     label="variance caught"   meta="Spaza pilot, Harare" />
           <Stat tone="ink"   val="98%"     label="offline sync rate" meta="Sales during outages" />
-          <Stat tone="green" val="14 days" label="free, no card"     meta="Cancel from in-app" />
+          <Stat tone="green" val="$0"      label="to start"         meta="No card — pay as you sell" />
         </div>
       </section>
 
@@ -367,8 +367,8 @@ export default function MobileLandingPage() {
           Run your shop or farm{' '}
           <em style={{ fontStyle: 'italic', color: '#ffd480' }}>from your pocket</em>.
         </h2>
-        <p style={finalCtaP}>14 days free, no card. Pay by mobile money or card after that.</p>
-        <Link to="/register" style={finalCtaPrimary}>Start free trial</Link>
+        <p style={finalCtaP}>Free to start, no card. Your first 1,000 receipts each month are free — pay by mobile money or card after that.</p>
+        <Link to="/register" style={finalCtaPrimary}>Start free</Link>
         <a href="#operators" style={finalCtaGhost}>▶ Watch the demo</a>
         <div style={finalCtaMicro}>Made in Harare. Used wherever there's a phone signal.</div>
       </section>
@@ -389,7 +389,7 @@ export default function MobileLandingPage() {
 
       {/* Sticky bottom CTA */}
       <div style={stickyCta}>
-        <Link to="/register" style={stickyCtaBtn}>Start 14-day free trial</Link>
+        <Link to="/register" style={stickyCtaBtn}>Start free — pay as you sell</Link>
       </div>
 
       <MobileInstallPrompt />
