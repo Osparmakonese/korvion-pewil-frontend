@@ -15,7 +15,7 @@ const S = {
 
 const FAQ = [
   { q: 'How do I add a new field or product?', a: 'Navigate to the relevant page (Fields for farms, Products for retail) and click the "+" button in the top-right corner. Fill in the required details and save.' },
-  { q: 'How does the 30-day free trial work?', a: 'Every new account gets full access to all features for 30 days with no credit card required. After the trial, choose a plan to continue. Your data is preserved.' },
+  { q: 'Is there a free trial, and how does pricing work?', a: 'It depends on what you run. Retail (shops): no trial needed — you pay as you sell. Your first 1,000 receipts every month are free, then a few cents per receipt, capped at $999/month. No card to start. Farm: a 14-day free trial on any plan, no card required; after the trial, choose a plan to continue. Either way, your data is always preserved.' },
   { q: 'Can I use Pewil on my phone?', a: 'Yes! Pewil is a Progressive Web App (PWA). Open pewil.org on your phone browser and tap "Add to Home Screen" for a native app-like experience.' },
   { q: 'How do I export my data?', a: 'Go to Settings or the Data Export page. You can download all your farm or retail data as CSV or JSON files at any time.' },
   { q: 'What payment methods do you accept?', a: 'We accept Visa, Mastercard, EcoCash, and OneMoney through our Pesepay integration. All payments are securely processed.' },

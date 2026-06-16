@@ -283,7 +283,7 @@ export default function Login() {
 
               <div className="lg-foot">
                 Don{'’'}t have an account yet?{' '}
-                <Link to="/register">Start a free trial &rarr;</Link>
+                <Link to="/register">Get started free &rarr;</Link>
               </div>
             </form>
           ) : (

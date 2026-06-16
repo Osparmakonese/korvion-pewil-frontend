@@ -43,7 +43,7 @@ const STEPS = [
     title: 'You\'re All Set!',
     desc: 'Explore the platform, add your data, and start running your business smarter. Visit Help & Support anytime if you need assistance.',
     emoji: '\u{1F389}',
-    tip: 'Your 30-day free trial is active. Enjoy!',
+    tip: 'No card needed to start — explore everything Pewil can do.',
   },
 ];
 
