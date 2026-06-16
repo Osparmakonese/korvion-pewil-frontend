@@ -90,7 +90,7 @@ export default function DemoBanner() {
           boxShadow: '0 2px 6px rgba(0,0,0,.12)',
         }}
       >
-        Start 14-day free trial →
+        Start free →
       </Link>
     </div>
   );

@@ -376,7 +376,7 @@ const LandingPage = () => {
             what enterprise POS does at a tenth of the cost.
           </p>
           <div className="pl-hero-actions">
-            <Link to="/register?persona=retail" className="pl-btn pl-btn-dark">Start free for 14 days &rarr;</Link>
+            <Link to="/register?persona=retail" className="pl-btn pl-btn-dark">Start free &mdash; pay as you sell &rarr;</Link>
             <a href="#operators" className="pl-btn pl-btn-ghost">See how it works</a>
           </div>
           <div className="pl-hero-demo">

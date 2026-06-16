@@ -185,7 +185,7 @@ function PersonaCopy({ persona }) {
   }
   return (
     <>
-      <div className="rg-eye">Pewil Retail · 14-day free trial</div>
+      <div className="rg-eye">Pewil Retail · Free to start</div>
       <h1 className="rg-serif">Open the till &mdash; <em>close the day clean</em>.</h1>
       <p>
         Pewil Retail is the operating system for African shops &mdash; ZIMRA-ready, EcoCash-native, multi-branch
@@ -193,8 +193,8 @@ function PersonaCopy({ persona }) {
       </p>
       <div className="rg-trust">
         <div className="rg-trust-item">
-          <div className="rg-trust-title">No card up front</div>
-          <div className="rg-trust-sub">14 days free, cancel from the dashboard</div>
+          <div className="rg-trust-title">Free to start</div>
+          <div className="rg-trust-sub">First 1,000 receipts a month free &mdash; then cents per receipt</div>
         </div>
         <div className="rg-trust-item">
           <div className="rg-trust-title">Tax authority native</div>
@@ -327,11 +327,23 @@ export default function Register() {
           <div className="rg-trial">
             <span className="rg-trial-dot" />
             <div>
-              <div className="rg-trial-title">Starts on the Growth trial</div>
-              <div className="rg-trial-body">
-                14 days free on Growth &mdash; the full feature set. No card now, switch tiers anytime from
-                Settings → Billing.
-              </div>
+              {persona === 'farm' ? (
+                <>
+                  <div className="rg-trial-title">Starts on the Growth trial</div>
+                  <div className="rg-trial-body">
+                    14 days free on Growth &mdash; the full feature set. No card now, switch tiers anytime from
+                    Settings → Billing.
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="rg-trial-title">Free to start &mdash; pay as you sell</div>
+                  <div className="rg-trial-body">
+                    No trial, no card. Your first 1,000 receipts every month are free, then a few cents per
+                    receipt &mdash; capped at $999/mo. Add Pewil AI or Pewil Enterprise anytime from Settings → Billing.
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </aside>
@@ -351,7 +363,11 @@ export default function Register() {
                 ? <>Start your <em>farm</em>.</>
                 : <>Open your <em>shop</em>.</>}
             </h2>
-            <p className="rg-sub">14-day free trial on Growth. No card. Cancel anytime from your dashboard.</p>
+            <p className="rg-sub">
+              {persona === 'farm'
+                ? '14-day free trial on Growth. No card. Cancel anytime from your dashboard.'
+                : 'Free to start — your first 1,000 receipts each month are free. No card, no trial. Cancel anytime.'}
+            </p>
 
             {/* Persona pill — locked, with a cross-link to switch */}
             <div className={`rg-persona ${persona}`}>
