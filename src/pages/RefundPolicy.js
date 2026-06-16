@@ -26,8 +26,8 @@ export default function RefundPolicy() {
         <h2 style={S.h2}>1. Overview</h2>
         <p style={S.p}>This Refund Policy explains when and how refunds are issued for Pewil subscription payments. Pewil is operated by Korvion Solution (Pvt) Ltd, registered in Zimbabwe. It supplements Section 4 (Subscription and Payment) of our Terms of Service. By subscribing to Pewil, you agree to the refund terms described here.</p>
 
-        <h2 style={S.h2}>2. Free Trial</h2>
-        <p style={S.p}>All new accounts receive a 30-day free trial. No payment is taken during the trial. If you cancel before the trial ends, you will never be charged and no refund is required. If you do not subscribe at the end of the trial, your account enters a read-only state and you can still export your data.</p>
+        <h2 style={S.h2}>2. Free Tier &amp; Trial</h2>
+        <p style={S.p}>Retail (shop) accounts have no trial period — they pay as they sell, with the first 1,000 receipts each calendar month free. No payment is taken while you stay within that free monthly allowance. Farm accounts receive a 14-day free trial, during which no payment is taken. If you cancel before any charge applies, you will never be charged and no refund is required. If a farm account does not subscribe at the end of its trial — or a retail account leaves an invoice unpaid past the grace period — the account enters a read-only state and you can still export your data.</p>
 
         <h2 style={S.h2}>3. Subscription Fees Are Generally Non-Refundable</h2>
         <p style={S.p}>Monthly subscription fees are charged in advance and are generally non-refundable. Once a billing cycle has started, we do not pro-rate or refund unused days if you cancel mid-cycle. Your subscription will remain active through the end of the billing period you have already paid for, and will not renew thereafter.</p>
