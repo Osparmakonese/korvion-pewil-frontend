@@ -28,6 +28,29 @@ export const emailReceipt = (invoiceId) =>
 // Usage
 export const getUsage = () => api.get('/billing/billing/usage/').then(r => r.data);
 
+// Canonical billing summary — single source of truth for the billing UI.
+// Returns { module, billing_model, subscription, usage?, pricing?, addons }.
+export const getBillingSummary = (module) => {
+  const url = module
+    ? `/billing/billing/summary/?module=${encodeURIComponent(module)}`
+    : '/billing/billing/summary/';
+  return api.get(url).then(r => r.data);
+};
+
+// Add-ons (Pewil AI, Pewil Enterprise)
+export const getAddons = (module) => {
+  const url = module
+    ? `/billing/billing/addons/?module=${encodeURIComponent(module)}`
+    : '/billing/billing/addons/';
+  return api.get(url).then(r => r.data);
+};
+// Start an add-on subscription — returns { invoice_id, amount, addon }.
+// Pay the returned invoice via initializePayment({ invoice_id }).
+export const subscribeAddon = (addon_slug) =>
+  api.post('/billing/billing/subscribe_addon/', { addon_slug }).then(r => r.data);
+export const cancelAddon = (addon_slug) =>
+  api.post('/billing/billing/cancel_addon/', { addon_slug }).then(r => r.data);
+
 // Payment methods — which providers are configured
 export const getPaymentMethods = () => api.get('/billing/billing/payment_methods/').then(r => r.data);
 
