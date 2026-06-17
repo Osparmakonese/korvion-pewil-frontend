@@ -672,9 +672,12 @@ function AddonsSection({ addons }) {
   if (!addons) return null;
   const available = addons.available || [];
   const active = addons.active || [];
+  const pending = addons.pending || [];
   const activeSlugs = new Set(
     active.filter(a => a.is_entitled).map(a => a.addon && a.addon.slug)
   );
+  const pendingBySlug = {};
+  pending.forEach(p => { if (p.slug && !pendingBySlug[p.slug]) pendingBySlug[p.slug] = p; });
   if (available.length === 0) return null;
 
   const handleSubscribe = async (slug) => {
@@ -682,6 +685,18 @@ function AddonsSection({ addons }) {
     try {
       const res = await subscribeAddon(slug);
       const pay = await initializePayment({ invoice_id: res.invoice_id, payment_method: 'card' });
+      const url = pay.redirect_url || pay.checkout_url;
+      if (url) { window.location.href = url; return; }
+      setErr('Could not start checkout.');
+    } catch (e) {
+      setErr(e?.response?.data?.detail || 'Could not start checkout.');
+    } finally { setBusy(null); }
+  };
+  const handlePay = async (invoiceId) => {
+    const key = `pay:${invoiceId}`;
+    setBusy(key); setErr('');
+    try {
+      const pay = await initializePayment({ invoice_id: invoiceId, payment_method: 'card' });
       const url = pay.redirect_url || pay.checkout_url;
       if (url) { window.location.href = url; return; }
       setErr('Could not start checkout.');
@@ -713,6 +728,8 @@ function AddonsSection({ addons }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {available.map(a => {
           const on = activeSlugs.has(a.slug);
+          const pendingInv = pendingBySlug[a.slug];
+          const payKey = pendingInv ? `pay:${pendingInv.invoice_id}` : null;
           return (
             <div key={a.slug} style={{ border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: 10 }}>
@@ -739,7 +756,20 @@ function AddonsSection({ addons }) {
                 </ul>
               )}
               <div style={{ marginTop: 10 }}>
-                {on ? (
+                {pendingInv ? (
+                  <>
+                    <button style={btnS(true)} disabled={busy === payKey} onClick={() => handlePay(pendingInv.invoice_id)}>
+                      {busy === payKey
+                        ? 'Starting…'
+                        : `${on ? 'Renew' : 'Pay now'} — $${Number(pendingInv.amount).toFixed(0)}`}
+                    </button>
+                    <div style={{ fontSize: 10.5, color: '#92400E', marginTop: 6 }}>
+                      {on
+                        ? 'Renewal due — pay to keep this add-on active next month.'
+                        : 'Payment pending — pay to activate this add-on.'}
+                    </div>
+                  </>
+                ) : on ? (
                   <button style={btnS(false)} disabled={busy === a.slug} onClick={() => handleCancel(a.slug)}>
                     {busy === a.slug ? 'Working…' : 'Cancel add-on'}
                   </button>
