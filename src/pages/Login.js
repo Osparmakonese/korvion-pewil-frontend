@@ -158,6 +158,10 @@ export default function Login() {
       navigate('/app');
       return;
     }
+    if (res && res.passwordExpired) {
+      navigate(`/reset-password?token=${encodeURIComponent(res.resetToken)}&expired=1`);
+      return;
+    }
     if (res && res.requires2fa) {
       setPendingToken(res.pendingToken);
       setTwofaUsername(res.username || username);

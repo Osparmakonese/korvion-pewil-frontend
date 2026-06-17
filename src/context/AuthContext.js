@@ -88,7 +88,18 @@ export function AuthProvider({ children }) {
       _commitSession(res, username);
       return { ok: true };
     } catch (err) {
-      setError(err.response?.data?.detail || 'Invalid username or password');
+      // Password expired under the tenant policy — backend withholds the JWT
+      // and hands back a one-time reset token. Route the user to set a new one.
+      const data = err.response?.data;
+      if (data && data.password_expired && data.reset_token) {
+        return {
+          ok: false,
+          passwordExpired: true,
+          resetToken: data.reset_token,
+          username: data.username || username,
+        };
+      }
+      setError(data?.detail || 'Invalid username or password');
       return { ok: false };
     } finally {
       setLoading(false);
