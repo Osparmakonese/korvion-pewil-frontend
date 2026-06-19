@@ -290,8 +290,10 @@ input, select, textarea, button {
     align-items: center;
     justify-content: center;
     border-radius: 10px;
-    transition: background 0.15s ease;
+    transition: background 0.18s ease, transform 0.18s cubic-bezier(0.2,0,0,1);
   }
+  /* Tactile press — the icon dips under the finger. */
+  .bn-tab:active .bn-icon { transform: scale(0.84); }
   .bn-tab .bn-label {
     font-size: 10px;
     font-weight: 600;
@@ -301,7 +303,7 @@ input, select, textarea, button {
     font-family: inherit;
   }
   .bn-tab.active { color: var(--bn-active, #1a6b3a); }
-  .bn-tab.active .bn-icon { background: rgba(26, 107, 58, 0.10); }
+  .bn-tab.active .bn-icon { background: rgba(26, 107, 58, 0.10); transform: translateY(-1px); }
   .bn-tab.active::before { content: none; }
   .bn-badge {
     position: absolute;

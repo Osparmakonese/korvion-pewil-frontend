@@ -4,6 +4,7 @@ import Topbar from './Topbar';
 import Logo from './Logo';
 import QuickCapture from './QuickCapture';
 import { initials, avatarColor } from '../utils/format';
+import haptics from '../utils/haptics';
 
 /*
   UX Laws applied to mobile drawer:
@@ -133,6 +134,7 @@ export default function Layout({
   // retail. Each tenant is one-or-the-other. Mobile drawer drops the toggle.
   const isMore = !BOTTOM_PRIMARY.includes(activeTab);
   const goTab = (tab) => {
+    haptics.tap();
     onTabChange(tab);
     setShowMobileMore(false);
   };

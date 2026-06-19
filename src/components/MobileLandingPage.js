@@ -23,6 +23,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import MobileInstallPrompt from './MobileInstallPrompt';
+import Reveal from './mobile/Reveal';
+import haptics from '../utils/haptics';
 
 /* Desktop palette — same tokens as PL_CSS in LandingPage.js. */
 const T = {
@@ -162,12 +164,15 @@ export default function MobileLandingPage() {
 
   const enterDemo = async (module) => {
     if (busy || !module) return;
+    haptics.tap();
     setBusy(module);
     try {
       const ok = await demoLogin?.(module);
       if (ok) navigate('/app');
     } finally { setBusy(null); }
   };
+  const pickOp = (key) => { haptics.select(); setActiveOp(key); };
+  const toggleParity = (idx) => { haptics.tap(); setOpenParity(openParity === idx ? -1 : idx); };
 
   const op = OPERATORS[activeOp];
 
@@ -200,7 +205,7 @@ export default function MobileLandingPage() {
         <p style={heroSub}>
           Sell, track stock, close the till — all on the phone in your hand.
         </p>
-        <Link to="/register" style={heroCta}>Start free — pay as you sell</Link>
+        <Link to="/register" onClick={() => haptics.tap()} style={heroCta}>Start free — pay as you sell</Link>
         <div style={heroDemo}>
           Or try it instantly —{' '}
           <button
@@ -252,7 +257,7 @@ export default function MobileLandingPage() {
             <button
               key={key}
               type="button"
-              onClick={() => setActiveOp(key)}
+              onClick={() => pickOp(key)}
               style={tab(activeOp === key, o.accent)}
             >{o.chip}</button>
           ))}
@@ -326,7 +331,7 @@ export default function MobileLandingPage() {
               <div key={row.capability} style={accCard}>
                 <button
                   type="button"
-                  onClick={() => setOpenParity(isOpen ? -1 : idx)}
+                  onClick={() => toggleParity(idx)}
                   style={accQ}
                   aria-expanded={isOpen}
                 >
@@ -350,7 +355,7 @@ export default function MobileLandingPage() {
       </section>
 
       {/* Proof 2x2 */}
-      <section style={proofSection}>
+      <Reveal><section style={proofSection}>
         <h2 style={proofH2} className="ml-serif">Numbers that justify the subscription.</h2>
         <p style={proofSub}>From operators piloting Pewil across the continent.</p>
         <div style={proofGrid}>
@@ -359,10 +364,10 @@ export default function MobileLandingPage() {
           <Stat tone="ink"   val="98%"     label="offline sync rate" meta="Sales during outages" />
           <Stat tone="green" val="$0"      label="to start"         meta="No card — pay as you sell" />
         </div>
-      </section>
+      </section></Reveal>
 
       {/* Final CTA */}
-      <section style={finalCta}>
+      <Reveal><section style={finalCta}>
         <h2 style={finalCtaH2} className="ml-serif">
           Run your shop or farm{' '}
           <em style={{ fontStyle: 'italic', color: '#ffd480' }}>from your pocket</em>.
@@ -371,7 +376,7 @@ export default function MobileLandingPage() {
         <Link to="/register" style={finalCtaPrimary}>Start free</Link>
         <a href="#operators" style={finalCtaGhost}>▶ Watch the demo</a>
         <div style={finalCtaMicro}>Made in Harare. Used wherever there's a phone signal.</div>
-      </section>
+      </section></Reveal>
 
       {/* Footer */}
       <footer style={foot}>
@@ -389,7 +394,7 @@ export default function MobileLandingPage() {
 
       {/* Sticky bottom CTA */}
       <div style={stickyCta}>
-        <Link to="/register" style={stickyCtaBtn}>Start free — pay as you sell</Link>
+        <Link to="/register" onClick={() => haptics.tap()} style={stickyCtaBtn}>Start free — pay as you sell</Link>
       </div>
 
       <MobileInstallPrompt />
