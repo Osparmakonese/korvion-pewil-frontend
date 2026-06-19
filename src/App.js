@@ -20,6 +20,7 @@ import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import SetupWizard from './pages/SetupWizard';
 
 /* Farm landing page — separate funnel at /farm (May 2026 split).
  * Eager so the marketing surface stays fast for SEO + ad clicks. */
@@ -383,6 +384,16 @@ function ProtectedRoute({ children }) {
   return user ? children : <Navigate to="/login" replace />;
 }
 
+/* First-run setup gate. An owner whose tenant hasn't completed setup is sent
+   to the SetupWizard before the app shell. Separate component so FarmApp's
+   hooks never mount until setup is done (keeps hook order stable). */
+function SetupGate({ children }) {
+  const { user } = useAuth();
+  const needsSetup = !!user && user.role === 'owner' && user.setup_completed === false;
+  if (needsSetup) return <SetupWizard onDone={() => {}} />;
+  return children;
+}
+
 /* --- */
 function FarmApp() {
   const { user, logout } = useAuth();
@@ -478,7 +489,9 @@ export default function App() {
                   standing it renders a full-screen lockout instead of
                   FarmApp, so unpaid tenants can't navigate around it. */}
               <BillingLockoutGate>
-                <FarmApp />
+                <SetupGate>
+                  <FarmApp />
+                </SetupGate>
               </BillingLockoutGate>
             </ProtectedRoute>
           }

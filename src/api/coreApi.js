@@ -11,6 +11,14 @@ export const switchTenant = (tenantId) => api.post('/core/tenants/switch/', { te
 // Usage stats
 export const getUsageStats = () => api.get('/core/tenants/usage/').then(r => r.data);
 
+// Business type / vertical + first-run setup
+export const getVerticals = (module) =>
+  api.get('/core/tenants/verticals/', { params: module ? { module } : {} }).then(r => r.data);
+export const setBusinessType = (business_type) =>
+  api.patch('/core/tenants/business-type/', { business_type }).then(r => r.data);
+export const completeSetup = (payload) =>
+  api.post('/core/tenants/complete-setup/', payload || {}).then(r => r.data);
+
 // User management (owner)
 export const getTenantUsers = () => api.get('/core/tenants/users/').then(r => r.data);
 export const inviteUser = (data) => api.post('/core/tenants/invite/', data).then(r => r.data);

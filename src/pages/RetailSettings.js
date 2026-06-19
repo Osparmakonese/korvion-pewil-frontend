@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { updateMyTenant } from '../api/coreApi';
 import { getVapidKey, subscribePush, unsubscribePush, sendTestPush } from '../api/farmApi';
 import SecuritySettings from '../components/SecuritySettings';
+import BusinessTypePanel from '../components/BusinessTypePanel';
 import api from '../api/axios';
 
 /* ─── Design 3 — Living Africa tokens (shared with Landing/Login/Register/Settings) ─── */
@@ -435,6 +436,7 @@ export default function RetailSettings({ onTabChange }) {
         <div style={rightPane}>
           {activeTab === 'general' && (
             <>
+              <BusinessTypePanel />
               <section style={sectionCard}>
                 <div style={sectionHead}>
                   <h2 style={sectionTitle}>General</h2>

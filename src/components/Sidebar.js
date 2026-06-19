@@ -189,19 +189,19 @@ const NAV_ITEMS = [
   // Forecourt because no tank exists). Downstream items (Stock
   // Transfers, Chain Rollup, Tanks, Grades, etc.) stay gated so they
   // don't clutter the sidebar for tenants who don't use them.
+  // Fuel items are gated by the tenant's business type (feature keys), not by
+  // "does a tank exist yet" — so fuel tools never appear for non-fuel shops.
   { section: 'OPERATIONS', module: 'retail', collapsible: true, items: [
     { key: 'Branches', emoji: '\u{1F3EA}', label: 'Branches', ownerOnly: true },
     { key: 'Stock Transfers', emoji: '\u{1F4E6}', label: 'Stock Transfers', showWhen: 'multibranch' },
     { key: 'Chain Rollup', emoji: '\u{1F30D}', label: 'Chain Rollup', ownerOnly: true, showWhen: 'multibranch' },
-    // Forecourt is the entry-point — its own page has an empty-state
-    // walking the operator through "add your first fuel grade + tank".
-    { key: 'Forecourt', emoji: '⛽', label: 'Forecourt' },
-    { key: 'Fuel Tanks', emoji: '\u{1F6E2}️', label: 'Tanks', showWhen: 'fuel' },
-    { key: 'Fuel Grades', emoji: '\u{1F539}', label: 'Grades', showWhen: 'fuel' },
-    { key: 'Fuel Deliveries', emoji: '\u{1F69B}', label: 'Deliveries', showWhen: 'fuel' },
-    { key: 'Dip Readings', emoji: '\u{1F4CF}', label: 'Dip Log', showWhen: 'fuel' },
-    { key: 'Fleet Cards', emoji: '\u{1F4B3}', label: 'Fleet Cards', showWhen: 'fuel' },
-    { key: 'Regulator Returns', emoji: '\u{1F4DC}', label: 'Regulator Returns', ownerOnly: true, showWhen: 'fuel' },
+    { key: 'Forecourt', emoji: '⛽', label: 'Forecourt', feature: 'fuel_forecourt' },
+    { key: 'Fuel Tanks', emoji: '\u{1F6E2}️', label: 'Tanks', feature: 'fuel_tanks' },
+    { key: 'Fuel Grades', emoji: '\u{1F539}', label: 'Grades', feature: 'fuel_tanks' },
+    { key: 'Fuel Deliveries', emoji: '\u{1F69B}', label: 'Deliveries', feature: 'fuel_deliveries' },
+    { key: 'Dip Readings', emoji: '\u{1F4CF}', label: 'Dip Log', feature: 'fuel_dips' },
+    { key: 'Fleet Cards', emoji: '\u{1F4B3}', label: 'Fleet Cards', feature: 'fleet_cards' },
+    { key: 'Regulator Returns', emoji: '\u{1F4DC}', label: 'Regulator Returns', ownerOnly: true, feature: 'regulator_returns' },
   ]},
   { section: 'STOCK', module: 'retail', collapsible: true, items: [
     { key: 'Categories', emoji: '\u{1F5C2}', label: 'Categories' },
@@ -303,6 +303,11 @@ export default function Sidebar({ activeTab, onTabChange, user, onLogout, lowSto
   const hasMultibranch = (branches?.length || 0) > 1;
   const hasFuel = (fuelTanks?.length || 0) > 0;
 
+  // Business-type feature set (from the JWT). When absent (older cached token)
+  // we don't feature-gate, preserving prior behaviour until the next login.
+  const features = Array.isArray(user?.features) ? user.features : null;
+  const hasFeature = (key) => !key || !features || features.includes(key);
+
   // showWhen filter — applies to both section-level and item-level
   // `showWhen` properties. Strings: 'multibranch', 'fuel',
   // 'multibranch_or_fuel'. Items without showWhen always render.
@@ -382,6 +387,7 @@ export default function Sidebar({ activeTab, onTabChange, user, onLogout, lowSto
           const visibleItems = section.items.filter(item =>
             (!item.ownerOnly || role === 'owner')
             && meetsShowWhen(item.showWhen)
+            && hasFeature(item.feature)
           );
           // Skip the section entirely if every item got filtered out
           // (e.g. OPERATIONS for a tenant with only fuel hides Branches).

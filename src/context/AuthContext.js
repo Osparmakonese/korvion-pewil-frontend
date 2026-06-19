@@ -23,6 +23,9 @@ export function AuthProvider({ children }) {
     let farm_perms = {};
     let is_demo = false;
     let is_super_admin = false;
+    let business_type = 'general';
+    let features = [];
+    let setup_completed = true;
     try {
       const payload = JSON.parse(atob(res.data.access.split('.')[1]));
       role = payload.role || 'owner';
@@ -35,6 +38,11 @@ export function AuthProvider({ children }) {
       farm_perms = payload.farm_perms || {};
       is_demo = !!payload.is_demo;
       is_super_admin = !!payload.is_super_admin;
+      business_type = payload.business_type || 'general';
+      features = Array.isArray(payload.features) ? payload.features : [];
+      // Default true if the claim is absent (older tokens) so we never trap
+      // existing users in a setup wizard they can't be in.
+      setup_completed = payload.setup_completed !== false;
     } catch { /* fallback */ }
 
     return {
@@ -50,6 +58,11 @@ export function AuthProvider({ children }) {
       farm_perms: res.data.farm_perms || farm_perms,
       is_demo: res.data.is_demo === true ? true : is_demo,
       is_super_admin: res.data.is_super_admin === true ? true : is_super_admin,
+      business_type: res.data.business_type || business_type,
+      features: (Array.isArray(res.data.features) ? res.data.features : null) || features,
+      setup_completed: res.data.setup_completed !== undefined
+        ? res.data.setup_completed !== false
+        : setup_completed,
     };
   }
 
@@ -224,6 +237,27 @@ export function AuthProvider({ children }) {
     setUser(userData);
   }
 
+  /**
+   * Apply a fresh token + business-type/feature payload returned by the
+   * setup-wizard / change-business-type endpoints, so the new feature set
+   * takes effect immediately without a re-login.
+   */
+  function applyAuthUpdate(data) {
+    if (!data) return;
+    if (data.access) localStorage.setItem('access_token', data.access);
+    if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
+    const userData = {
+      ...user,
+      ...(data.business_type ? { business_type: data.business_type } : {}),
+      ...(Array.isArray(data.features) ? { features: data.features } : {}),
+      ...(data.setup_completed !== undefined
+        ? { setup_completed: data.setup_completed !== false }
+        : {}),
+    };
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+  }
+
   function logout() {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
@@ -258,6 +292,7 @@ export function AuthProvider({ children }) {
         register,
         demoLogin,
         switchTenant,
+        applyAuthUpdate,
         logout,
         loading,
         error,
