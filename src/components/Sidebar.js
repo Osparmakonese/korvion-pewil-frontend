@@ -207,6 +207,7 @@ const NAV_ITEMS = [
   { section: 'PHARMACY', module: 'retail', collapsible: true, items: [
     { key: 'Batches', emoji: '\u{1F4E6}', label: 'Batches & Expiry', feature: 'batch_tracking' },
     { key: 'Prescriptions', emoji: '\u{1F48A}', label: 'Prescriptions', feature: 'prescriptions' },
+    { key: 'Controlled Register', emoji: '\u{1F512}', label: 'Controlled Register', ownerOnly: true, feature: 'controlled_substances' },
   ]},
   // Restaurant vertical — only shows for restaurant business type (feature-gated).
   { section: 'RESTAURANT', module: 'retail', collapsible: true, items: [

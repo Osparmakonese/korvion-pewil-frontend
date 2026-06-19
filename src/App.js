@@ -125,6 +125,7 @@ const PriceBoard = React.lazy(() => import('./pages/PriceBoard'));
 // Phase 2 verticals — pharmacy + restaurant
 const ProductBatches = React.lazy(() => import('./pages/ProductBatches'));
 const Prescriptions = React.lazy(() => import('./pages/Prescriptions'));
+const ControlledRegister = React.lazy(() => import('./pages/ControlledRegister'));
 const RestaurantTables = React.lazy(() => import('./pages/RestaurantTables'));
 const KitchenOrders = React.lazy(() => import('./pages/KitchenOrders'));
 const Modifiers = React.lazy(() => import('./pages/Modifiers'));
@@ -224,6 +225,7 @@ const PAGES = {
   // Pharmacy
   'Batches': ProductBatches,
   'Prescriptions': Prescriptions,
+  'Controlled Register': ControlledRegister,
   // Restaurant
   'Tables': RestaurantTables,
   'Kitchen': KitchenOrders,
@@ -315,6 +317,7 @@ const PAGE_META = {
   // Pharmacy
   'Batches': { title: 'Batches & Expiry', sub: 'Track lots and expiry dates' },
   'Prescriptions': { title: 'Prescriptions', sub: 'Patient prescriptions and dispensing' },
+  'Controlled Register': { title: 'Controlled Register', sub: 'Audit log of scheduled-drug dispensing' },
   // Restaurant
   'Tables': { title: 'Tables', sub: 'Floor plan and table status' },
   'Kitchen': { title: 'Kitchen Orders', sub: 'Order tickets from table to kitchen' },
