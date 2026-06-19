@@ -122,6 +122,12 @@ const FuelDipReadings = React.lazy(() => import('./pages/FuelDipReadings'));
 const FleetCards = React.lazy(() => import('./pages/FleetCards'));
 const RegulatorReturns = React.lazy(() => import('./pages/RegulatorReturns'));
 const PriceBoard = React.lazy(() => import('./pages/PriceBoard'));
+// Phase 2 verticals — pharmacy + restaurant
+const ProductBatches = React.lazy(() => import('./pages/ProductBatches'));
+const Prescriptions = React.lazy(() => import('./pages/Prescriptions'));
+const RestaurantTables = React.lazy(() => import('./pages/RestaurantTables'));
+const KitchenOrders = React.lazy(() => import('./pages/KitchenOrders'));
+const Modifiers = React.lazy(() => import('./pages/Modifiers'));
 
 /* --- Loading fallback for lazy pages --- */
 const PageLoader = () => (
@@ -215,6 +221,13 @@ const PAGES = {
   'Dip Readings': FuelDipReadings,
   'Fleet Cards': FleetCards,
   'Regulator Returns': RegulatorReturns,
+  // Pharmacy
+  'Batches': ProductBatches,
+  'Prescriptions': Prescriptions,
+  // Restaurant
+  'Tables': RestaurantTables,
+  'Kitchen': KitchenOrders,
+  'Modifiers': Modifiers,
 };
 
 /* --- */
@@ -299,6 +312,13 @@ const PAGE_META = {
   'Dip Readings': { title: 'Dip Readings', sub: 'Manual wet-stock reconciliation' },
   'Fleet Cards': { title: 'Fleet Cards', sub: 'Engen, Total, Puma and custom card accounts' },
   'Regulator Returns': { title: 'Regulator Returns', sub: 'ZERA / EPRA / NMDPRA monthly returns' },
+  // Pharmacy
+  'Batches': { title: 'Batches & Expiry', sub: 'Track lots and expiry dates' },
+  'Prescriptions': { title: 'Prescriptions', sub: 'Patient prescriptions and dispensing' },
+  // Restaurant
+  'Tables': { title: 'Tables', sub: 'Floor plan and table status' },
+  'Kitchen': { title: 'Kitchen Orders', sub: 'Order tickets from table to kitchen' },
+  'Modifiers': { title: 'Modifiers', sub: 'Menu options and extras' },
 };
 
 /* --- */

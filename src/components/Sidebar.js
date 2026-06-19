@@ -203,6 +203,17 @@ const NAV_ITEMS = [
     { key: 'Fleet Cards', emoji: '\u{1F4B3}', label: 'Fleet Cards', feature: 'fleet_cards' },
     { key: 'Regulator Returns', emoji: '\u{1F4DC}', label: 'Regulator Returns', ownerOnly: true, feature: 'regulator_returns' },
   ]},
+  // Pharmacy vertical — only shows for pharmacy business type (feature-gated).
+  { section: 'PHARMACY', module: 'retail', collapsible: true, items: [
+    { key: 'Batches', emoji: '\u{1F4E6}', label: 'Batches & Expiry', feature: 'batch_tracking' },
+    { key: 'Prescriptions', emoji: '\u{1F48A}', label: 'Prescriptions', feature: 'prescriptions' },
+  ]},
+  // Restaurant vertical — only shows for restaurant business type (feature-gated).
+  { section: 'RESTAURANT', module: 'retail', collapsible: true, items: [
+    { key: 'Tables', emoji: '\u{1F37D}️', label: 'Tables', feature: 'tables' },
+    { key: 'Kitchen', emoji: '\u{1F373}', label: 'Kitchen', feature: 'kitchen_orders' },
+    { key: 'Modifiers', emoji: '➕', label: 'Modifiers', feature: 'modifiers' },
+  ]},
   { section: 'STOCK', module: 'retail', collapsible: true, items: [
     { key: 'Categories', emoji: '\u{1F5C2}', label: 'Categories' },
     { key: 'Suppliers', emoji: '\u{1F4E6}', label: 'Suppliers & POs' },
