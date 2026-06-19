@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import PasswordChecklist from '../components/PasswordChecklist';
+import { DEFAULT_POLICY, allSatisfied } from '../utils/passwordPolicy';
 
 /**
  * Register.js — Pewil signup, persona-aware.
@@ -305,7 +307,7 @@ export default function Register() {
 
   const canSubmit = (
     form.business_name && form.email && form.username
-    && form.password.length >= 8 && form.terms_agreed && !loading
+    && allSatisfied(form.password, DEFAULT_POLICY) && form.terms_agreed && !loading
   );
 
   return (
@@ -445,6 +447,7 @@ export default function Register() {
                     {strength === 'medium' && 'Medium — almost there'}
                     {strength === 'strong' && 'Strong'}
                   </div>
+                  <PasswordChecklist value={form.password} policy={DEFAULT_POLICY} />
                 </>
               )}
             </div>

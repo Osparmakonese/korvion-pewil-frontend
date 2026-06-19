@@ -23,6 +23,12 @@ export const verifyEmailConfirm = (token) =>
 export const changePassword = (current_password, new_password) =>
   api.post('/core/auth/change_password/', { current_password, new_password }).then(r => r.data);
 
+// Password policy (per-tenant). GET = any signed-in user; PUT = owner only.
+export const getPasswordPolicy = () =>
+  api.get('/core/auth/password_policy/').then(r => r.data);
+export const updatePasswordPolicy = (policy) =>
+  api.put('/core/auth/password_policy/', policy).then(r => r.data);
+
 // Data export
 export const exportData = (format = 'json') =>
   api.get(`/core/export/?format=${format}`, { responseType: 'blob' }).then(r => r.data);

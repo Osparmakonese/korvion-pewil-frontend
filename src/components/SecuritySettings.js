@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
-import { totpSetup, totpConfirm, totpDisable, totpStatus, changePassword, sendVerificationEmail } from '../api/authApi';
+import { totpSetup, totpConfirm, totpDisable, totpStatus, changePassword, sendVerificationEmail, getPasswordPolicy } from '../api/authApi';
 import { useAuth } from '../context/AuthContext';
+import PasswordChecklist from './PasswordChecklist';
+import PasswordPolicyPanel from './PasswordPolicyPanel';
+import { DEFAULT_POLICY, allSatisfied, backendPasswordError } from '../utils/passwordPolicy';
 
 const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '18px 20px', marginBottom: 16 };
 const cardTitle = { fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 12 };
@@ -27,10 +30,16 @@ export default function SecuritySettings() {
   // Email verification
   const [emailSent, setEmailSent] = useState(false);
 
+  // Tenant policy — used to drive the live checklist on the change form.
+  const [policy, setPolicy] = useState(DEFAULT_POLICY);
+
   useEffect(() => {
     totpStatus()
       .then(res => setTwoFA({ enabled: res.data.totp_verified }))
       .catch(() => setTwoFA({ enabled: false }));
+    getPasswordPolicy()
+      .then(p => setPolicy(p))
+      .catch(() => setPolicy(DEFAULT_POLICY));
   }, []);
 
   const handleSetup2FA = async () => {
@@ -71,14 +80,17 @@ export default function SecuritySettings() {
   const handleChangePassword = async (e) => {
     e.preventDefault();
     if (newPw !== newPw2) { setPwMsg({ ok: false, text: 'Passwords do not match.' }); return; }
-    if (newPw.length < 8) { setPwMsg({ ok: false, text: 'Password must be at least 8 characters.' }); return; }
+    if (!allSatisfied(newPw, policy)) {
+      setPwMsg({ ok: false, text: 'Your new password does not meet the requirements below.' });
+      return;
+    }
     setPwLoading(true); setPwMsg({ ok: false, text: '' });
     try {
       await changePassword(oldPw, newPw);
       setPwMsg({ ok: true, text: 'Password changed successfully!' });
       setOldPw(''); setNewPw(''); setNewPw2('');
     } catch (err) {
-      setPwMsg({ ok: false, text: err.response?.data?.detail || 'Failed to change password.' });
+      setPwMsg({ ok: false, text: backendPasswordError(err, 'Failed to change password.') });
     } finally { setPwLoading(false); }
   };
 
@@ -165,12 +177,16 @@ export default function SecuritySettings() {
           <label style={fl}>Current password</label>
           <input style={fi} type="password" value={oldPw} onChange={e => setOldPw(e.target.value)} required />
           <label style={fl}>New password</label>
-          <input style={fi} type="password" value={newPw} onChange={e => setNewPw(e.target.value)} placeholder="At least 8 characters" required />
+          <input style={fi} type="password" value={newPw} onChange={e => setNewPw(e.target.value)} placeholder={`At least ${policy.min_length} characters`} required />
+          <PasswordChecklist value={newPw} policy={policy} />
           <label style={fl}>Confirm new password</label>
           <input style={fi} type="password" value={newPw2} onChange={e => setNewPw2(e.target.value)} required />
           <button style={btnP} disabled={pwLoading}>{pwLoading ? 'Changing...' : 'Change Password'}</button>
         </form>
       </div>
+
+      {/* Password policy — owner-configurable (shared component) */}
+      <PasswordPolicyPanel />
 
       {/* Active Sessions info */}
       <div style={card}>
@@ -183,3 +199,4 @@ export default function SecuritySettings() {
     </div>
   );
 }
+

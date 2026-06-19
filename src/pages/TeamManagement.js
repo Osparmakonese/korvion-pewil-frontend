@@ -2,7 +2,29 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
+import { getPasswordPolicy } from '../api/authApi';
 import { initials, avatarColor } from '../utils/format';
+
+// Generate a password that satisfies any tenant policy: always one of each
+// character class, length meets the policy minimum. Excludes look-alike
+// characters (0/O, 1/l) for readability when shared with a new teammate.
+function strongPassword(policy) {
+  const P = policy || {};
+  const target = Math.max(Number(P.min_length) || 12, 14);
+  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lower = 'abcdefghijkmnpqrstuvwxyz';
+  const digit = '23456789';
+  const symbol = '!@#$%*?-_';
+  const all = upper + lower + digit + symbol;
+  const pick = (set) => set[Math.floor(Math.random() * set.length)];
+  const chars = [pick(upper), pick(lower), pick(digit), pick(symbol)];
+  while (chars.length < target) chars.push(pick(all));
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.join('');
+}
 
 const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' };
 const pill = (bg, color) => ({ fontSize: 8, fontWeight: 700, padding: '2px 7px', borderRadius: 20, display: 'inline-block', letterSpacing: '0.02em', textTransform: 'uppercase', background: bg, color });
@@ -48,6 +70,7 @@ export default function TeamManagement() {
     password: '',
     role: 'worker',
   });
+  const { data: policy } = useQuery({ queryKey: ['passwordPolicy'], queryFn: getPasswordPolicy, staleTime: 60000 });
   const [autoPassword, setAutoPassword] = useState(true);
   const [inviteStatus, setInviteStatus] = useState(null); // null | 'loading' | 'success' | 'error'
   const [inviteMessage, setInviteMessage] = useState('');
@@ -132,7 +155,7 @@ export default function TeamManagement() {
       last_name: formData.last_name.trim(),
       email: formData.email.trim(),
       username: formData.username.trim(),
-      password: autoPassword ? Math.random().toString(36).slice(-12) : formData.password,
+      password: autoPassword ? strongPassword(policy) : formData.password,
       role: formData.role,
     };
 
@@ -141,7 +164,7 @@ export default function TeamManagement() {
   };
 
   const generatePassword = () => {
-    const newPass = Math.random().toString(36).slice(-12);
+    const newPass = strongPassword(policy);
     setFormData({ ...formData, password: newPass });
   };
 
