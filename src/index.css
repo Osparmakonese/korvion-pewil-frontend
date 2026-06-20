@@ -550,4 +550,29 @@ body.pewil-pos-focus main.page-content-mobile {
     -webkit-overflow-scrolling: touch;
   }
   .set-rail button { white-space: nowrap; flex: 0 0 auto; }
+
+  /* ── GLOBAL: kill horizontal overflow from fixed-sidebar grids ──────
+     Many desktop pages use a `1fr <N>px` or `<N>px 1fr` two-column grid
+     (list + side form, content + rail). On a phone the fixed pixel column
+     squeezes the other pane and pushes content off-screen with nothing to
+     scroll. This collapses ALL such fixed-pixel two-column grids to a single
+     column automatically — no per-page edits. Flexible grids (1fr 1fr,
+     repeat(N, 1fr)) are intentionally NOT matched, so the POS and the
+     dedicated mobile screens keep their layouts. */
+  main.page-content-mobile [style*="1fr 200px"], main.page-content-mobile [style*="200px 1fr"],
+  main.page-content-mobile [style*="1fr 220px"], main.page-content-mobile [style*="220px 1fr"],
+  main.page-content-mobile [style*="1fr 240px"], main.page-content-mobile [style*="240px 1fr"],
+  main.page-content-mobile [style*="1fr 260px"], main.page-content-mobile [style*="260px 1fr"],
+  main.page-content-mobile [style*="1fr 280px"], main.page-content-mobile [style*="280px 1fr"],
+  main.page-content-mobile [style*="1fr 300px"], main.page-content-mobile [style*="300px 1fr"],
+  main.page-content-mobile [style*="1fr 310px"], main.page-content-mobile [style*="310px 1fr"],
+  main.page-content-mobile [style*="1fr 320px"], main.page-content-mobile [style*="320px 1fr"],
+  main.page-content-mobile [style*="1fr 340px"], main.page-content-mobile [style*="340px 1fr"],
+  main.page-content-mobile [style*="1fr 360px"], main.page-content-mobile [style*="360px 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Wide preformatted/code blocks scroll instead of forcing the page wide. */
+  main.page-content-mobile pre,
+  main.page-content-mobile code { overflow-x: auto; max-width: 100%; }
 }
