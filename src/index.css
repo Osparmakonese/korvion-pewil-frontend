@@ -533,4 +533,21 @@ body.pewil-pos-focus main.page-content-mobile {
   .vtl-stack { grid-template-columns: 1fr !important; }
   .vtl-board { grid-template-columns: 1fr !important; }
   .vtl-form  { grid-template-columns: 1fr !important; gap: 8px !important; }
+
+  /* Settings pages: collapse the 240px tab-rail + content layout to a single
+     column, and turn the vertical tab rail into a horizontal, swipeable strip
+     so no tab or content is clipped off-screen on a phone. */
+  .set-shell { padding: 14px 12px !important; }
+  .set-2col  { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .set-grid2 { grid-template-columns: 1fr !important; }
+  .set-rail {
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    position: static !important;
+    top: auto !important;
+    gap: 6px !important;
+    padding: 6px !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .set-rail button { white-space: nowrap; flex: 0 0 auto; }
 }

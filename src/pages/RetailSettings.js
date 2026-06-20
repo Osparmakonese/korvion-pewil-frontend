@@ -411,7 +411,7 @@ export default function RetailSettings({ onTabChange }) {
 
   /* ── Render ── */
   return (
-    <div style={pageShell}>
+    <div className="set-shell" style={pageShell}>
       <header style={heroRow}>
         <h1 style={pageTitle}>Settings</h1>
         <p style={pageSub}>
@@ -419,9 +419,9 @@ export default function RetailSettings({ onTabChange }) {
         </p>
       </header>
 
-      <div style={twoCol}>
+      <div className="set-2col" style={twoCol}>
         {/* Left rail — tabs */}
-        <nav style={leftRail} aria-label="Settings sections">
+        <nav className="set-rail" style={leftRail} aria-label="Settings sections">
           {TABS.map((t) => (
             <button
               key={t.key}
