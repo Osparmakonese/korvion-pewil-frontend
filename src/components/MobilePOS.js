@@ -1,669 +1,320 @@
 /**
- * MobilePOS.js — phone-first POS lane.
- *
- * Renders Frame 1 + Frame 2 of the locked mobile design (see
- * mobile-mockups/PEWIL_MOBILE_PREVIEW_2026-04-26.html). Used by
- * pages/POS.js when window.innerWidth <= 500. Reuses ALL state and
- * handlers from POS.js — no duplicated logic. Same backend payload,
- * same split-tender, same offline queue. Only the layout differs.
- *
- * Design tokens come from the mockup file. They live as plain JS
- * objects here rather than CSS variables so the component is fully
- * self-contained and doesn't need a stylesheet import.
+ * MobilePOS.js — phone-first POS lane (rebuilt 2026-06 on the mobile design
+ * system). Scan-first AND tap-to-add, with a sticky cart bar in the thumb
+ * zone and cart + payment as slide-up sheets. Reuses ALL state/handlers from
+ * POS.js — same payload, same split-tender, same offline queue.
  */
-import React from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { fmt } from '../utils/format';
+import { M } from '../styles/mobileTokens';
+import haptics from '../utils/haptics';
+import BottomSheet from './mobile/BottomSheet';
 
-/* Pewil mobile palette — sourced 1:1 from PEWIL_MOBILE_PREVIEW_2026-04-26.html */
-const T = {
-  cream:   '#ffffff',
-  cream2:  '#f9fafb',
-  ink:     '#111827',
-  inkSoft: '#374151',
-  muted:   '#6b7280',
-  line:    '#e5e7eb',
-  green:   '#1a6b3a',
-  green2:  '#2d9e58',
-  orange:  '#c77700',
-  orange2: '#e09a2b',
-  amber:   '#f5c518',
-  red:     '#c0392b',
-  shadow:  '0 4px 12px rgba(28,22,10,0.08)',
-};
+const money = (v) => fmt(v, 'zwd');
 
-/* ─────────────────────────────────────────────────────────────────
-   Frame 1 — main POS lane
-   ───────────────────────────────────────────────────────────────── */
 export default function MobilePOS({
-  // Cart state + handlers
-  cart, removeFromCart, updateCartQty,
-  // Scan input
+  cart, removeFromCart, updateCartQty, addToCart,
+  products = [], search, setSearch,
   barcode, setBarcode, handleBarcodeSubmit, barcodeInputRef,
-  // Totals
   subtotal, discountAmount, taxAmount, grandTotal, change,
-  // Payment + tender
   paymentMethod, setPaymentMethod,
   amountTendered, setAmountTendered,
-  // Split-tender state
   splitMode, setSplitMode, splitPayments, setSplitPayments,
-  // Submit + park + state
-  handleCompleteSale, handleSuspendSale,
-  createSaleMutPending,
-  // Status
-  offline, pendingCount,
-  user, activeSessionDurationLabel, syncStateLabel,
+  handleCompleteSale, handleSuspendSale, createSaleMutPending,
+  offline, pendingCount, user,
 }) {
+  const [sheet, setSheet] = useState(null); // null | 'cart' | 'pay'
+  const [justAdded, setJustAdded] = useState(null);
+
+  // When a sale completes the parent clears the cart — close any open sheet.
+  useEffect(() => { if (cart.length === 0) setSheet(null); }, [cart.length]);
+
   const cartCount = cart.reduce((s, l) => s + (l.quantity || 0), 0);
   const cashierInitial = (user?.username || '?').slice(0, 1).toUpperCase();
-  const cashierName = user?.username || 'Cashier';
 
-  return (
-    <div
-      className="pewil-mobile-pos"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: `linear-gradient(180deg, ${T.cream}, #f1e8d4)`,
-        color: T.ink,
-        fontFamily: "'Inter', system-ui, sans-serif",
-        display: 'flex',
-        flexDirection: 'column',
-        zIndex: 30,
-        WebkitFontSmoothing: 'antialiased',
-      }}
-    >
-      {/* App bar — avatar + cashier + settings icon */}
-      <div style={{
-        padding: '12px 18px 8px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: '50%',
-            background: `linear-gradient(135deg, ${T.orange2}, ${T.orange})`,
-            color: '#fff', fontWeight: 700, fontSize: 14,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>{cashierInitial}</div>
-          <div>
-            <div style={{ fontSize: 11, color: T.muted }}>Cashier</div>
-            <div style={{ fontSize: 14, fontWeight: 700 }}>{cashierName}</div>
-          </div>
-        </div>
-        {/* Right-side: offline / pending pill */}
-        <div style={{
-          fontSize: 11, fontWeight: 700,
-          padding: '4px 10px', borderRadius: 999,
-          background: offline ? '#fde2e2' : 'rgba(26,107,58,0.10)',
-          color: offline ? T.red : T.green,
-        }}>
-          {offline ? 'Offline' : (pendingCount > 0 ? `Syncing · ${pendingCount}` : 'Synced')}
-        </div>
-      </div>
+  const tap = (product) => {
+    haptics.tap();
+    addToCart(product);
+    setJustAdded(product.id);
+    setTimeout(() => setJustAdded((id) => (id === product.id ? null : id)), 320);
+  };
 
-      {/* Session pill row */}
-      <div style={{
-        padding: '4px 18px 10px',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      }}>
-        <span style={{
-          background: 'rgba(26,107,58,0.10)', color: T.green,
-          padding: '5px 10px', borderRadius: 999,
-          fontSize: 11, fontWeight: 700,
-          display: 'inline-flex', alignItems: 'center', gap: 6,
-        }}>
-          <span style={{
-            width: 7, height: 7, borderRadius: '50%',
-            background: T.green,
-            boxShadow: '0 0 0 4px rgba(26,107,58,0.18)',
-          }} />
-          Session open · {activeSessionDurationLabel || 'live'}
-        </span>
-        <span style={{ fontSize: 11, color: T.muted, fontWeight: 600 }}>
-          {syncStateLabel || (offline ? 'Will sync when back online' : 'All synced')}
-        </span>
-      </div>
+  const openCart = () => { if (cart.length) { haptics.select(); setSheet('cart'); } };
+  const goPay = () => { haptics.select(); setSheet('pay'); };
+  const complete = () => { haptics.success(); handleCompleteSale(); };
 
-      {/* Scan input */}
-      <div style={{
-        margin: '0 18px 12px',
-        background: '#fff',
-        border: `1px solid ${T.line}`,
-        borderRadius: 16,
-        padding: '12px 14px',
-        display: 'flex', alignItems: 'center', gap: 12,
-        boxShadow: '0 2px 6px rgba(28,22,10,0.04)',
-      }}>
-        <div style={{
-          width: 40, height: 40,
-          background: `linear-gradient(135deg, ${T.orange2}, ${T.orange})`,
-          borderRadius: 12, color: '#fff', fontSize: 20,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flex: '0 0 40px',
-        }}>📷</div>
-        <input
-          ref={barcodeInputRef}
-          value={barcode}
-          onChange={(e) => setBarcode(e.target.value)}
-          onKeyDown={handleBarcodeSubmit}
-          placeholder="Scan or type barcode"
-          inputMode="search"
-          autoComplete="off"
-          style={{
-            flex: 1,
-            border: 'none', outline: 'none', background: 'transparent',
-            fontSize: 15, fontWeight: 600, color: T.ink,
-            fontFamily: 'inherit',
-          }}
-        />
-      </div>
+  const list = useMemo(() => products.slice(0, 120), [products]);
 
-      {/* Cart card — scrollable */}
-      <div style={{
-        flex: 1, minHeight: 0,
-        margin: '0 18px',
-        borderRadius: 16,
-        background: '#fff',
-        border: `1px solid ${T.line}`,
-        display: 'flex', flexDirection: 'column',
-        overflow: 'hidden',
-      }}>
-        <div style={{
-          padding: '12px 14px 10px',
-          borderBottom: `1px dashed ${T.line}`,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          fontSize: 11, fontWeight: 700, color: T.inkSoft,
-          textTransform: 'uppercase', letterSpacing: '0.06em',
-        }}>
-          <span>Cart · {cartCount} {cartCount === 1 ? 'item' : 'items'}</span>
-          {cart.length > 0 && (
-            <span style={{ color: T.orange, fontStyle: 'normal' }}>swipe to remove</span>
-          )}
-        </div>
-
-        <div style={{ flex: 1, overflow: 'auto', padding: '4px 0' }}>
-          {cart.length === 0 ? (
-            <div style={{
-              height: '100%', display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center', padding: 24,
-              color: T.muted, textAlign: 'center', fontSize: 13,
-            }}>
-              <div style={{ fontSize: 36, marginBottom: 8 }}>🛒</div>
-              Scan an item to start a sale.
-            </div>
-          ) : cart.map((item) => (
-            <div key={item.product_id} style={{
-              padding: '10px 14px',
-              display: 'grid',
-              gridTemplateColumns: '1fr auto',
-              columnGap: 8,
-              borderBottom: `1px solid #f3ecdc`,
-            }}>
-              <div style={{ gridColumn: 1, fontWeight: 700, fontSize: 14 }}>
-                {item.name}
-              </div>
-              <div style={{
-                gridColumn: 2, gridRow: '1 / 3', alignSelf: 'center',
-                fontWeight: 700, fontSize: 15,
-                fontFamily: "'Playfair Display', Georgia, serif",
-              }}>
-                {fmt(parseFloat(item.unit_price) * item.quantity, 'zwd')}
-              </div>
-              <div style={{ gridColumn: 1, fontSize: 11, color: T.muted, marginTop: 2 }}>
-                {fmt(parseFloat(item.unit_price), 'zwd')} each
-              </div>
-              <div style={{ gridColumn: 1, marginTop: 4 }}>
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 8,
-                  background: T.cream2, borderRadius: 999, padding: '2px 4px',
-                }}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (item.quantity <= 1) removeFromCart(item.product_id);
-                      else updateCartQty(item.product_id, item.quantity - 1);
-                    }}
-                    style={qtyBtnStyle}
-                    aria-label="Decrease quantity"
-                  >−</button>
-                  <span style={{ fontSize: 12, fontWeight: 700, minWidth: 20, textAlign: 'center' }}>
-                    {item.quantity}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => updateCartQty(item.product_id, item.quantity + 1)}
-                    style={qtyBtnStyle}
-                    aria-label="Increase quantity"
-                  >+</button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Totals card */}
-      <div style={{
-        margin: '12px 18px 0',
-        padding: '12px 14px',
-        background: '#fff',
-        borderRadius: 16,
-        border: `1px solid ${T.line}`,
-      }}>
-        <Line label="Subtotal" value={fmt(subtotal, 'zwd')} />
-        {discountAmount > 0 && (
-          <Line label="Discount" value={`− ${fmt(discountAmount, 'zwd')}`} />
-        )}
-        <Line label="Tax" value={fmt(taxAmount, 'zwd')} />
-        <div style={{
-          display: 'flex', justifyContent: 'space-between',
-          fontFamily: "'Playfair Display', Georgia, serif",
-          fontSize: 22, color: T.ink, fontWeight: 700,
-          marginTop: 6, paddingTop: 8,
-          borderTop: `1px dashed ${T.line}`,
-        }}>
-          <span>Total</span>
-          <span>{fmt(grandTotal, 'zwd')}</span>
-        </div>
-      </div>
-
-      {/* 4-button payment row */}
-      <div style={{
-        margin: '10px 18px 0',
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: 6,
-      }}>
-        <PayBtn icon="💵" label="Cash"
-          active={!splitMode && paymentMethod === 'cash'}
-          onClick={() => { setSplitMode(false); setPaymentMethod('cash'); }} />
-        <PayBtn icon="📱" label="EcoCash"
-          active={!splitMode && paymentMethod === 'mobile_money'}
-          onClick={() => { setSplitMode(false); setPaymentMethod('mobile_money'); }} />
-        <PayBtn icon="💳" label="Card"
-          active={!splitMode && paymentMethod === 'card'}
-          onClick={() => { setSplitMode(false); setPaymentMethod('card'); }} />
-        <PayBtn icon="🔀" label="Split"
-          active={splitMode}
-          onClick={() => setSplitMode(!splitMode)} />
-      </div>
-
-      {/* Tendered input — only when not split mode */}
-      {!splitMode && (
-        <div style={{ margin: '8px 18px 0', display: 'flex', gap: 8 }}>
-          <input
-            type="number"
-            inputMode="decimal"
-            placeholder="Amount tendered"
-            value={amountTendered}
-            onChange={(e) => setAmountTendered(e.target.value)}
-            style={{
-              flex: 1,
-              padding: '10px 14px',
-              fontSize: 14, fontWeight: 600, color: T.ink,
-              background: '#fff',
-              border: `1px solid ${T.line}`,
-              borderRadius: 12,
-              outline: 'none', fontFamily: 'inherit',
-            }}
-          />
-          {change > 0 && (
-            <div style={{
-              padding: '10px 14px',
-              background: 'rgba(26,107,58,0.10)',
-              color: T.green, fontWeight: 700,
-              borderRadius: 12, fontSize: 13,
-              display: 'inline-flex', alignItems: 'center',
-            }}>
-              Change {fmt(change, 'zwd')}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Bottom CTA row — Complete + Park */}
-      <div style={{
-        margin: '12px 18px 14px',
-        display: 'flex', gap: 8,
-      }}>
-        <button
-          type="button"
-          onClick={handleCompleteSale}
-          disabled={createSaleMutPending || cart.length === 0}
-          style={{
-            flex: 1,
-            background: T.ink,
-            color: T.cream,
-            padding: 14,
-            borderRadius: 14,
-            border: 'none',
-            fontWeight: 800,
-            fontSize: 14,
-            letterSpacing: '0.03em',
-            opacity: (createSaleMutPending || cart.length === 0) ? 0.55 : 1,
-            cursor: (createSaleMutPending || cart.length === 0) ? 'not-allowed' : 'pointer',
-            fontFamily: 'inherit',
-          }}
-        >
-          {createSaleMutPending ? 'Processing…' : 'Complete sale'}
-          <span style={{
-            display: 'block', fontSize: 11, color: T.orange2,
-            fontWeight: 600, marginTop: 2, letterSpacing: 0,
-          }}>
-            {fmt(grandTotal, 'zwd')} ·{' '}
-            {splitMode ? 'Split' : (paymentMethod === 'mobile_money' ? 'EcoCash' : capitalize(paymentMethod))}
-          </span>
-        </button>
-        <button
-          type="button"
-          onClick={handleSuspendSale}
-          aria-label="Park sale"
-          title="Park this sale (suspend)"
-          style={{
-            width: 56,
-            background: 'rgba(0,0,0,0.05)',
-            color: T.ink,
-            border: `1px solid ${T.line}`,
-            borderRadius: 14,
-            fontSize: 18,
-          }}
-        >⏸</button>
-      </div>
-
-      {/* Bottom 5-tab nav — for now POS is active and only "More"
-          is wired (rest are placeholders until Phase 3 lands the
-          full nav routes). */}
-      <BottomNav active="pos" />
-
-      {/* Frame 2 — split-tender slide-up sheet */}
-      {splitMode && (
-        <SplitSheet
-          grandTotal={grandTotal}
-          splitPayments={splitPayments}
-          setSplitPayments={setSplitPayments}
-          onCancel={() => setSplitMode(false)}
-          onComplete={handleCompleteSale}
-          processing={createSaleMutPending}
-        />
-      )}
-    </div>
-  );
-}
-
-/* ─── Sub-components ─────────────────────────────────────────────── */
-
-function Line({ label, value }) {
   return (
     <div style={{
-      display: 'flex', justifyContent: 'space-between',
-      fontSize: 12, color: T.inkSoft, padding: '2px 0',
+      position: 'fixed', inset: 0, zIndex: 30,
+      background: M.surface, color: M.ink,
+      fontFamily: "'Inter', system-ui, sans-serif",
+      display: 'flex', flexDirection: 'column',
+      WebkitFontSmoothing: 'antialiased',
+      paddingTop: M.safeTop,
     }}>
-      <span>{label}</span>
-      <span>{value}</span>
+      {/* App bar */}
+      <div style={{ padding: '10px 16px 6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 34, height: 34, borderRadius: '50%', background: `linear-gradient(135deg, ${M.green2}, ${M.green})`, color: '#fff', fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{cashierInitial}</div>
+          <div>
+            <div style={{ fontSize: 10.5, color: M.ink3 }}>Till</div>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>{user?.username || 'Cashier'}</div>
+          </div>
+        </div>
+        <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: M.radius.pill, background: offline ? '#fde2e2' : M.green3, color: offline ? M.red : M.green }}>
+          {offline ? 'Offline' : (pendingCount > 0 ? `Syncing · ${pendingCount}` : 'Synced')}
+        </span>
+      </div>
+
+      {/* Scan field */}
+      <div style={{ margin: '4px 16px 10px', background: M.card, border: `1px solid ${M.line}`, borderRadius: M.radius.lg, padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 10, boxShadow: M.shadow.card }}>
+        <div style={{ width: 38, height: 38, background: `linear-gradient(135deg, ${M.green2}, ${M.green})`, borderRadius: M.radius.md, color: '#fff', fontSize: 19, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 38px' }}>📷</div>
+        <input
+          ref={barcodeInputRef} value={barcode}
+          onChange={(e) => setBarcode(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') haptics.tap(); handleBarcodeSubmit(e); }}
+          placeholder="Scan or type barcode" inputMode="search" autoComplete="off"
+          style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: M.font.input, fontWeight: 600, color: M.ink, fontFamily: 'inherit' }}
+        />
+      </div>
+
+      {/* Search */}
+      <div style={{ margin: '0 16px 8px' }}>
+        <input
+          value={search} onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search products…" inputMode="search"
+          style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', fontSize: M.font.input, border: `1px solid ${M.line}`, borderRadius: M.radius.md, outline: 'none', background: M.card, fontFamily: 'inherit' }}
+        />
+      </div>
+
+      {/* Product grid — tap to add */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: `2px 16px calc(${M.bottomNavH}px + ${M.safeBottom} + 84px)` }}>
+        {list.length === 0 ? (
+          <div style={{ textAlign: 'center', color: M.ink3, fontSize: 13, marginTop: 40 }}>
+            <div style={{ fontSize: 34, marginBottom: 8 }}>🔍</div>
+            {search ? 'No products match.' : 'Scan an item or search to start.'}
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+            {list.map((p) => {
+              const added = justAdded === p.id;
+              return (
+                <button key={p.id} type="button" onClick={() => tap(p)}
+                  style={{
+                    textAlign: 'left', border: `1px solid ${added ? M.green : M.line}`,
+                    background: added ? M.green3 : M.card, borderRadius: M.radius.lg,
+                    padding: 12, cursor: 'pointer', fontFamily: 'inherit',
+                    transform: added ? 'scale(0.97)' : 'scale(1)',
+                    transition: `transform ${M.motion.fast}, background ${M.motion.fast}, border-color ${M.motion.fast}`,
+                    minHeight: 78, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                  }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: M.ink, lineHeight: 1.25, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.name}</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 8 }}>
+                    <span style={{ fontSize: 15, fontWeight: 800, color: M.green }}>{money(p.selling_price)}</span>
+                    <span style={{ fontSize: 16, color: added ? M.green : M.ink3, fontWeight: 700 }}>{added ? '✓' : '+'}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Sticky cart bar — thumb zone */}
+      <button type="button" onClick={openCart}
+        style={{
+          position: 'fixed', left: 12, right: 12,
+          bottom: `calc(${M.bottomNavH}px + ${M.safeBottom} + 8px)`, zIndex: 450,
+          height: 58, border: 'none', borderRadius: M.radius.lg,
+          background: cart.length ? M.green : '#cbd5d8',
+          color: '#fff', boxShadow: M.shadow.raised,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '0 18px', fontFamily: 'inherit',
+          cursor: cart.length ? 'pointer' : 'default',
+          transition: `background ${M.motion.base}`,
+        }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ background: 'rgba(255,255,255,0.22)', borderRadius: M.radius.pill, minWidth: 26, height: 26, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13 }}>{cartCount}</span>
+          <span style={{ fontWeight: 700, fontSize: 14 }}>{cart.length ? 'View cart' : 'Cart empty'}</span>
+        </span>
+        <span style={{ fontWeight: 800, fontSize: 17 }}>{money(grandTotal)}</span>
+      </button>
+
+      {/* Cart sheet */}
+      <BottomSheet open={sheet === 'cart'} onClose={() => setSheet(null)} title={`Cart · ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`}>
+        {cart.length === 0 ? (
+          <div style={{ textAlign: 'center', color: M.ink3, padding: 24 }}>Cart is empty.</div>
+        ) : (
+          <>
+            <div style={{ maxHeight: '42vh', overflowY: 'auto', marginBottom: 8 }}>
+              {cart.map((item) => (
+                <div key={item.product_id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0', borderBottom: `1px solid ${M.line}` }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700 }}>{item.name}</div>
+                    <div style={{ fontSize: 11, color: M.ink3 }}>{money(item.unit_price)} each</div>
+                  </div>
+                  <Stepper
+                    value={item.quantity}
+                    onDec={() => { haptics.tap(); item.quantity <= 1 ? removeFromCart(item.product_id) : updateCartQty(item.product_id, item.quantity - 1); }}
+                    onInc={() => { haptics.tap(); updateCartQty(item.product_id, item.quantity + 1); }}
+                  />
+                  <div style={{ width: 72, textAlign: 'right', fontWeight: 800, fontSize: 14 }}>{money(parseFloat(item.unit_price) * item.quantity)}</div>
+                </div>
+              ))}
+            </div>
+            <Totals subtotal={subtotal} discountAmount={discountAmount} taxAmount={taxAmount} grandTotal={grandTotal} />
+            <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+              <button type="button" onClick={() => { haptics.select(); handleSuspendSale(); setSheet(null); }}
+                style={{ width: 56, height: 52, borderRadius: M.radius.md, background: '#fff', border: `1px solid ${M.line}`, fontSize: 18, cursor: 'pointer' }} title="Park sale">⏸</button>
+              <button type="button" onClick={goPay} disabled={cart.length === 0}
+                style={{ flex: 1, height: 52, borderRadius: M.radius.md, background: M.green, color: '#fff', border: 'none', fontWeight: 800, fontSize: 15, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Charge {money(grandTotal)}
+              </button>
+            </div>
+          </>
+        )}
+      </BottomSheet>
+
+      {/* Payment sheet */}
+      <BottomSheet open={sheet === 'pay'} onClose={() => setSheet(null)} title={`Charge ${money(grandTotal)}`}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 12 }}>
+          <Method icon="💵" label="Cash" active={!splitMode && paymentMethod === 'cash'} onClick={() => { haptics.tap(); setSplitMode(false); setPaymentMethod('cash'); }} />
+          <Method icon="📱" label="EcoCash" active={!splitMode && paymentMethod === 'mobile_money'} onClick={() => { haptics.tap(); setSplitMode(false); setPaymentMethod('mobile_money'); }} />
+          <Method icon="💳" label="Card" active={!splitMode && paymentMethod === 'card'} onClick={() => { haptics.tap(); setSplitMode(false); setPaymentMethod('card'); }} />
+          <Method icon="🔀" label="Split" active={splitMode} onClick={() => { haptics.tap(); setSplitMode(!splitMode); }} />
+        </div>
+
+        {splitMode ? (
+          <SplitEditor grandTotal={grandTotal} splitPayments={splitPayments} setSplitPayments={setSplitPayments} />
+        ) : (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+              <span style={{ fontSize: 12, color: M.ink3 }}>Amount tendered</span>
+              {change > 0 && <span style={{ fontSize: 13, fontWeight: 800, color: M.green }}>Change {money(change)}</span>}
+            </div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: M.ink, padding: '6px 14px', background: M.surface, borderRadius: M.radius.md, marginBottom: 10, minHeight: 30 }}>
+              {amountTendered ? money(parseFloat(amountTendered) || 0) : <span style={{ color: '#cbd5d8' }}>{money(0)}</span>}
+            </div>
+            <Keypad
+              onKey={(k) => {
+                haptics.tap();
+                if (k === '⌫') setAmountTendered((s) => String(s || '').slice(0, -1));
+                else if (k === 'exact') setAmountTendered(String(grandTotal));
+                else setAmountTendered((s) => `${s || ''}${k}`);
+              }}
+            />
+          </>
+        )}
+
+        <button type="button" onClick={complete}
+          disabled={createSaleMutPending || cart.length === 0 || (splitMode && splitRemaining(grandTotal, splitPayments) > 0.001)}
+          style={{
+            width: '100%', height: 56, marginTop: 14, borderRadius: M.radius.md,
+            background: M.green, color: '#fff', border: 'none', fontWeight: 800, fontSize: 16,
+            opacity: (createSaleMutPending || cart.length === 0 || (splitMode && splitRemaining(grandTotal, splitPayments) > 0.001)) ? 0.5 : 1,
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}>
+          {createSaleMutPending ? 'Processing…' : `Charge ${money(grandTotal)}`}
+        </button>
+      </BottomSheet>
     </div>
   );
 }
 
-function PayBtn({ icon, label, active, onClick }) {
+/* ─── sub-components ─────────────────────────────────────────────── */
+
+function Stepper({ value, onDec, onInc }) {
+  const btn = { width: 30, height: 30, border: 'none', background: '#fff', borderRadius: '50%', fontSize: 16, fontWeight: 700, color: M.ink, boxShadow: M.shadow.card, cursor: 'pointer', fontFamily: 'inherit' };
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        background: active ? T.green : '#fff',
-        border: `1px solid ${active ? T.green : T.line}`,
-        color: active ? '#fff' : T.ink,
-        borderRadius: 12,
-        padding: '10px 4px',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-        fontSize: 10, fontWeight: 700,
-        fontFamily: 'inherit',
-      }}
-    >
-      <span style={{ fontSize: 18 }}>{icon}</span>
-      <span>{label}</span>
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: M.surface, borderRadius: M.radius.pill, padding: 3 }}>
+      <button type="button" onClick={onDec} style={btn} aria-label="Decrease">−</button>
+      <span style={{ fontSize: 13, fontWeight: 800, minWidth: 18, textAlign: 'center' }}>{value}</span>
+      <button type="button" onClick={onInc} style={btn} aria-label="Increase">+</button>
+    </div>
+  );
+}
+
+function Totals({ subtotal, discountAmount, taxAmount, grandTotal }) {
+  const row = { display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: M.ink2, padding: '3px 0' };
+  return (
+    <div style={{ padding: '10px 0', borderTop: `1px dashed ${M.line}` }}>
+      <div style={row}><span>Subtotal</span><span>{money(subtotal)}</span></div>
+      {discountAmount > 0 && <div style={row}><span>Discount</span><span>− {money(discountAmount)}</span></div>}
+      <div style={row}><span>Tax</span><span>{money(taxAmount)}</span></div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 19, fontWeight: 800, marginTop: 6, paddingTop: 8, borderTop: `1px dashed ${M.line}` }}>
+        <span>Total</span><span>{money(grandTotal)}</span>
+      </div>
+    </div>
+  );
+}
+
+function Method({ icon, label, active, onClick }) {
+  return (
+    <button type="button" onClick={onClick}
+      style={{ background: active ? M.green : '#fff', border: `1px solid ${active ? M.green : M.line}`, color: active ? '#fff' : M.ink, borderRadius: M.radius.md, padding: '10px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, fontSize: 10, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer' }}>
+      <span style={{ fontSize: 18 }}>{icon}</span>{label}
     </button>
   );
 }
 
-function BottomNav({ active }) {
-  const items = [
-    { id: 'home', icon: '🏠', label: 'Home' },
-    { id: 'pos',  icon: '🛒', label: 'POS'  },
-    { id: 'sales',icon: '📈', label: 'Sales'},
-    { id: 'people',icon:'👥', label: 'People'},
-    { id: 'more', icon: '⋯', label: 'More' },
-  ];
+function Keypad({ onKey }) {
+  const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '00', '0', '⌫'];
   return (
-    <nav style={{
-      flex: '0 0 76px',
-      background: 'rgba(255,253,245,0.92)',
-      backdropFilter: 'blur(18px)',
-      WebkitBackdropFilter: 'blur(18px)',
-      borderTop: `1px solid ${T.line}`,
-      display: 'grid',
-      gridTemplateColumns: 'repeat(5, 1fr)',
-      alignItems: 'center',
-      padding: '6px 8px 18px',
-    }}>
-      {items.map((it) => {
-        const isActive = it.id === active;
-        return (
-          <div key={it.id} style={{
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', gap: 3,
-            color: isActive ? T.green : T.muted,
-            fontSize: 10, fontWeight: 600,
-          }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: 10,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 20,
-              background: isActive ? 'rgba(26,107,58,0.10)' : 'transparent',
-            }}>{it.icon}</div>
-            <span>{it.label}</span>
-          </div>
-        );
-      })}
-    </nav>
-  );
-}
-
-/* ─────────────────────────────────────────────────────────────────
-   Frame 2 — Split-tender slide-up sheet
-   Renders over the POS lane when splitMode is true. Same backend
-   payload as the desktop Split UI; only the layout is mobile-first.
-   ───────────────────────────────────────────────────────────────── */
-function SplitSheet({
-  grandTotal, splitPayments, setSplitPayments,
-  onCancel, onComplete, processing,
-}) {
-  const tendered = splitPayments.reduce(
-    (s, p) => s + (parseFloat(p.amount) || 0), 0
-  );
-  const remaining = grandTotal - tendered;
-  const over = tendered - grandTotal;
-
-  const trackerColors = remaining > 0
-    ? { bg: '#fef3c7', fg: '#92400e', label: `Need ${fmt(remaining, 'zwd')}` }
-    : over > 0.001
-    ? { bg: '#dbeafe', fg: '#1e40af', label: `Change ${fmt(over, 'zwd')}` }
-    : { bg: '#dcfce7', fg: '#166534', label: 'Exact' };
-
-  const updateLeg = (idx, patch) => setSplitPayments((legs) =>
-    legs.map((l, i) => i === idx ? { ...l, ...patch } : l)
-  );
-  const removeLeg = (idx) => setSplitPayments((legs) =>
-    legs.length > 1 ? legs.filter((_, i) => i !== idx) : legs
-  );
-  const addLeg = () => setSplitPayments((legs) => [
-    ...legs, { method: 'cash', amount: '', reference: '' },
-  ]);
-
-  return (
-    <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 50,
-        background: 'rgba(20,16,8,0.55)',
-        display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-        WebkitFontSmoothing: 'antialiased',
-      }}
-      onClick={onCancel}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: T.cream,
-          borderTopLeftRadius: 28, borderTopRightRadius: 28,
-          padding: '14px 20px 24px',
-          boxShadow: '0 -10px 40px rgba(0,0,0,0.25)',
-          maxHeight: '85vh', overflow: 'auto',
-        }}
-      >
-        <div style={{
-          width: 44, height: 4, background: T.line,
-          borderRadius: 999, margin: '4px auto 14px',
-        }} />
-        <h3 style={{
-          fontFamily: "'Playfair Display', Georgia, serif",
-          margin: '0 0 4px', fontSize: 22, letterSpacing: '-0.01em',
-        }}>
-          Split this {fmt(grandTotal, 'zwd')} ticket
-        </h3>
-        <div style={{ fontSize: 12, color: T.muted, marginBottom: 14 }}>
-          Customer is paying with more than one method.
-        </div>
-
-        {splitPayments.map((leg, idx) => (
-          <div key={idx} style={{
-            display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center',
-          }}>
-            <select
-              value={leg.method}
-              onChange={(e) => updateLeg(idx, { method: e.target.value })}
-              style={{
-                flex: '1 1 110px',
-                padding: '12px 10px',
-                background: '#fff',
-                border: `1px solid ${T.line}`,
-                borderRadius: 12,
-                fontSize: 13, fontWeight: 600, color: T.ink,
-                fontFamily: 'inherit',
-              }}
-            >
-              <option value="cash">💵 Cash</option>
-              <option value="mobile_money">📱 EcoCash / Mobile</option>
-              <option value="card">💳 Card</option>
-              <option value="bank_transfer">🏦 Bank Transfer</option>
-            </select>
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              placeholder="Amount"
-              value={leg.amount}
-              onChange={(e) => updateLeg(idx, { amount: e.target.value })}
-              style={{
-                width: 110,
-                padding: '12px 10px',
-                background: '#fff',
-                border: `1px solid ${T.line}`,
-                borderRadius: 12,
-                fontSize: 14, fontWeight: 700, textAlign: 'right',
-                color: T.ink, fontFamily: 'inherit', outline: 'none',
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => removeLeg(idx)}
-              disabled={splitPayments.length <= 1}
-              aria-label="Remove leg"
-              style={{
-                width: 38, height: 38, borderRadius: 10,
-                background: 'rgba(192,57,43,0.08)',
-                color: splitPayments.length <= 1 ? '#fca5a5' : T.red,
-                border: 'none', fontSize: 18,
-                cursor: splitPayments.length <= 1 ? 'not-allowed' : 'pointer',
-              }}
-            >×</button>
-          </div>
+    <div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+        {keys.map((k) => (
+          <button key={k} type="button" onClick={() => onKey(k)}
+            style={{ height: 52, borderRadius: M.radius.md, border: `1px solid ${M.line}`, background: '#fff', fontSize: 20, fontWeight: 700, color: M.ink, cursor: 'pointer', fontFamily: 'inherit' }}>{k}</button>
         ))}
-
-        <button
-          type="button"
-          onClick={addLeg}
-          style={{
-            width: '100%', marginTop: 6, padding: 12,
-            border: `1.5px dashed rgba(26,107,58,0.4)`,
-            color: T.green,
-            background: 'transparent',
-            borderRadius: 12,
-            fontWeight: 700, fontSize: 12,
-            fontFamily: 'inherit',
-          }}
-        >
-          + Add another method
-        </button>
-
-        <div style={{
-          margin: '14px 0 12px',
-          padding: '12px 14px',
-          background: trackerColors.bg, color: trackerColors.fg,
-          borderRadius: 12,
-          display: 'flex', justifyContent: 'space-between',
-          fontWeight: 700, fontSize: 13,
-        }}>
-          <span>Tendered: {fmt(tendered, 'zwd')}</span>
-          <span>{trackerColors.label}</span>
-        </div>
-
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            type="button"
-            onClick={onCancel}
-            style={{
-              flex: '0 0 90px',
-              background: '#fff',
-              color: T.ink,
-              border: `1px solid ${T.line}`,
-              borderRadius: 14, padding: 14,
-              fontWeight: 700, fontSize: 13,
-              fontFamily: 'inherit',
-            }}
-          >Cancel</button>
-          <button
-            type="button"
-            onClick={onComplete}
-            disabled={processing || remaining > 0.001}
-            style={{
-              flex: 1,
-              background: T.ink, color: T.cream,
-              border: 'none', borderRadius: 14, padding: 16,
-              fontWeight: 800, fontSize: 14,
-              opacity: (processing || remaining > 0.001) ? 0.55 : 1,
-              cursor: (processing || remaining > 0.001) ? 'not-allowed' : 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
-            {processing ? 'Processing…' : 'Complete split sale'}
-          </button>
-        </div>
       </div>
+      <button type="button" onClick={() => onKey('exact')}
+        style={{ width: '100%', height: 44, marginTop: 8, borderRadius: M.radius.md, border: `1px dashed ${M.green}`, background: M.green3, color: M.green, fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Exact amount</button>
     </div>
   );
 }
 
-/* ─── Helpers ────────────────────────────────────────────────────── */
+function splitRemaining(grandTotal, legs) {
+  const t = (legs || []).reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
+  return grandTotal - t;
+}
 
-const qtyBtnStyle = {
-  width: 24, height: 24, border: 'none',
-  background: '#fff', borderRadius: '50%',
-  fontSize: 14, fontWeight: 700, color: T.ink,
-  boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-  cursor: 'pointer',
-  fontFamily: 'inherit',
-};
+function SplitEditor({ grandTotal, splitPayments, setSplitPayments }) {
+  const tendered = splitPayments.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
+  const remaining = grandTotal - tendered;
+  const over = tendered - grandTotal;
+  const tracker = remaining > 0
+    ? { bg: '#fef3c7', fg: '#92400e', label: `Need ${money(remaining)}` }
+    : over > 0.001 ? { bg: '#dbeafe', fg: '#1e40af', label: `Change ${money(over)}` }
+    : { bg: '#dcfce7', fg: '#166534', label: 'Exact' };
+  const update = (idx, patch) => setSplitPayments((legs) => legs.map((l, i) => i === idx ? { ...l, ...patch } : l));
+  const remove = (idx) => setSplitPayments((legs) => legs.length > 1 ? legs.filter((_, i) => i !== idx) : legs);
+  const add = () => { haptics.tap(); setSplitPayments((legs) => [...legs, { method: 'cash', amount: '', reference: '' }]); };
 
-function capitalize(s) {
-  if (!s) return '';
-  return s.charAt(0).toUpperCase() + s.slice(1);
+  return (
+    <div>
+      {splitPayments.map((leg, idx) => (
+        <div key={idx} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+          <select value={leg.method} onChange={(e) => update(idx, { method: e.target.value })}
+            style={{ flex: 1, padding: '11px 8px', background: '#fff', border: `1px solid ${M.line}`, borderRadius: M.radius.md, fontSize: 13, fontWeight: 600, fontFamily: 'inherit' }}>
+            <option value="cash">💵 Cash</option>
+            <option value="mobile_money">📱 EcoCash</option>
+            <option value="card">💳 Card</option>
+            <option value="bank_transfer">🏦 Bank</option>
+          </select>
+          <input type="number" inputMode="decimal" step="0.01" placeholder="Amount" value={leg.amount}
+            onChange={(e) => update(idx, { amount: e.target.value })}
+            style={{ width: 100, padding: '11px 10px', background: '#fff', border: `1px solid ${M.line}`, borderRadius: M.radius.md, fontSize: M.font.input, fontWeight: 700, textAlign: 'right', fontFamily: 'inherit', outline: 'none' }} />
+          <button type="button" onClick={() => remove(idx)} disabled={splitPayments.length <= 1}
+            style={{ width: 40, borderRadius: M.radius.md, background: 'rgba(192,57,43,0.08)', color: splitPayments.length <= 1 ? '#fca5a5' : M.red, border: 'none', fontSize: 18, cursor: 'pointer' }}>×</button>
+        </div>
+      ))}
+      <button type="button" onClick={add}
+        style={{ width: '100%', padding: 11, border: `1.5px dashed rgba(26,107,58,0.4)`, color: M.green, background: 'transparent', borderRadius: M.radius.md, fontWeight: 700, fontSize: 12, fontFamily: 'inherit', cursor: 'pointer' }}>+ Add method</button>
+      <div style={{ margin: '12px 0 0', padding: '11px 14px', background: tracker.bg, color: tracker.fg, borderRadius: M.radius.md, display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 13 }}>
+        <span>Tendered {money(tendered)}</span><span>{tracker.label}</span>
+      </div>
+    </div>
+  );
 }

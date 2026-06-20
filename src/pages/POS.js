@@ -1384,6 +1384,10 @@ export default function POS() {
           cart={cart}
           removeFromCart={removeFromCart}
           updateCartQty={updateCartQty}
+          addToCart={addToCart}
+          products={filteredProducts}
+          search={search}
+          setSearch={setSearch}
           barcode={barcode}
           setBarcode={setBarcode}
           handleBarcodeSubmit={handleBarcodeSubmit}
