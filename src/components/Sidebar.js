@@ -132,7 +132,7 @@ const S = {
   },
 };
 
-const NAV_ITEMS = [
+export const NAV_ITEMS = [
   { section: 'MAIN', collapsible: false, items: [
     { key: 'Dashboard', emoji: '\u{1F4CA}', label: 'Dashboard' },
     { key: 'Fields', emoji: '\u{1F33E}', label: 'Fields' },

@@ -1,9 +1,11 @@
 ﻿import React, { useState } from 'react';
-import Sidebar from './Sidebar';
+import { useQuery } from '@tanstack/react-query';
+import Sidebar, { NAV_ITEMS } from './Sidebar';
 import Topbar from './Topbar';
 import Logo from './Logo';
 import QuickCapture from './QuickCapture';
 import { initials, avatarColor } from '../utils/format';
+import { listBranches, listFuelTanks } from '../api/retailApi';
 import haptics from '../utils/haptics';
 
 /*
@@ -142,7 +144,51 @@ export default function Layout({
   const features = Array.isArray(user?.features) ? user.features : null;
   const hasFeature = (key) => !key || !features || features.includes(key);
   const BOTTOM_PRIMARY = activeModule === 'retail' ? RETAIL_BOTTOM_PRIMARY : FARM_BOTTOM_PRIMARY;
-  const DRAWER_SECTIONS = activeModule === 'retail' ? RETAIL_DRAWER_SECTIONS : FARM_DRAWER_SECTIONS;
+
+  // ── Mobile drawer, derived from the desktop sidebar's single source ──
+  // Same NAV_ITEMS + same role/feature/showWhen gating as Sidebar.js, so the
+  // mobile "More" menu can never drift from the real system again.
+  const isSuperAdmin = !!user?.is_super_admin;
+  const hasRetail = activeModule === 'retail';
+  const hasFarm = activeModule === 'farm';
+  const { data: navBranches = [] } = useQuery({
+    queryKey: ['retail-branches'], queryFn: listBranches, enabled: hasRetail, staleTime: 60000,
+  });
+  const { data: navFuelTanks = [] } = useQuery({
+    queryKey: ['fuel-tanks'], queryFn: () => listFuelTanks(), enabled: hasRetail, staleTime: 60000,
+  });
+  const hasMultibranch = (navBranches?.length || 0) > 1;
+  const hasFuel = (navFuelTanks?.length || 0) > 0;
+  const meetsShowWhen = (sw) => {
+    if (!sw) return true;
+    if (sw === 'multibranch') return hasMultibranch;
+    if (sw === 'fuel') return hasFuel;
+    if (sw === 'multibranch_or_fuel') return hasMultibranch || hasFuel;
+    return true;
+  };
+  const navDrawerSections = NAV_ITEMS
+    .filter((s) => {
+      if (s.ownerOnly && role !== 'owner') return false;
+      if (s.superOnly && !isSuperAdmin) return false;
+      if (s.module === 'retail' && !hasRetail) return false;
+      if (s.module === 'farm' && !hasFarm) return false;
+      if (s.module && s.module !== 'any' && s.module !== 'retail' && s.module !== 'farm') return false;
+      if (!s.module && !hasFarm) return false; // untagged sections default to farm
+      if (!meetsShowWhen(s.showWhen)) return false;
+      return true;
+    })
+    .map((s) => ({
+      label: s.section,
+      items: s.items.filter((it) =>
+        (!it.ownerOnly || role === 'owner') && meetsShowWhen(it.showWhen) && hasFeature(it.feature)
+      ),
+    }))
+    .filter((s) => s.items.length > 0);
+  // The legacy *_DRAWER_SECTIONS consts above are kept only as a defensive
+  // fallback and are otherwise unused — NAV_ITEMS is the source of truth.
+  const DRAWER_SECTIONS = navDrawerSections.length
+    ? navDrawerSections
+    : (activeModule === 'retail' ? RETAIL_DRAWER_SECTIONS : FARM_DRAWER_SECTIONS);
   const moduleAccent = activeModule === 'retail' ? '#c97d1a' : '#1a6b3a';
   const moduleAccentBg = activeModule === 'retail' ? '#fdeedd' : '#e8f5ee';
   const moduleAccentRing = activeModule === 'retail' ? 'rgba(201,125,26,0.15)' : 'rgba(26,107,58,0.15)';
