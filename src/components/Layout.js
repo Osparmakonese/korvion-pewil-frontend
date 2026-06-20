@@ -72,17 +72,28 @@ const RETAIL_DRAWER_SECTIONS = [
   { label: 'Enterprise', items: [
     { key: 'Chain Rollup', emoji: '\u{1F30D}', label: 'Chain Rollup', sub: 'All branches at a glance', ownerOnly: true },
   ]},
-  // Forecourt module (May 2026) — service-station / fuel ops.
-  // Surfaced for every retail tenant; an empty state on the Forecourt
-  // dashboard walks shop owners with no tanks through onboarding.
+  // Forecourt module — gated to fuel-station business type via feature keys
+  // (same gating as the desktop sidebar). Hidden for hardware/general/etc.
   { label: 'Forecourt', items: [
-    { key: 'Forecourt', emoji: '⛽', label: 'Forecourt', sub: 'Live tanks + dashboard' },
-    { key: 'Fuel Tanks', emoji: '\u{1F6E2}️', label: 'Tanks', sub: 'Storage + capacity' },
-    { key: 'Fuel Grades', emoji: '\u{1F539}', label: 'Grades', sub: 'Diesel, ULP93, etc' },
-    { key: 'Fuel Deliveries', emoji: '\u{1F69B}', label: 'Deliveries', sub: 'Bulk fills' },
-    { key: 'Dip Readings', emoji: '\u{1F4CF}', label: 'Dip log', sub: 'Wet-stock reconciliation' },
-    { key: 'Fleet Cards', emoji: '\u{1F4B3}', label: 'Fleet cards', sub: 'Engen, Total, Puma...' },
-    { key: 'Regulator Returns', emoji: '\u{1F4DC}', label: 'Regulator', sub: 'ZERA / EPRA / NMDPRA' },
+    { key: 'Forecourt', emoji: '⛽', label: 'Forecourt', sub: 'Live tanks + dashboard', feature: 'fuel_forecourt' },
+    { key: 'Fuel Tanks', emoji: '\u{1F6E2}️', label: 'Tanks', sub: 'Storage + capacity', feature: 'fuel_tanks' },
+    { key: 'Fuel Grades', emoji: '\u{1F539}', label: 'Grades', sub: 'Diesel, ULP93, etc', feature: 'fuel_tanks' },
+    { key: 'Fuel Deliveries', emoji: '\u{1F69B}', label: 'Deliveries', sub: 'Bulk fills', feature: 'fuel_deliveries' },
+    { key: 'Dip Readings', emoji: '\u{1F4CF}', label: 'Dip log', sub: 'Wet-stock reconciliation', feature: 'fuel_dips' },
+    { key: 'Fleet Cards', emoji: '\u{1F4B3}', label: 'Fleet cards', sub: 'Engen, Total, Puma...', feature: 'fleet_cards' },
+    { key: 'Regulator Returns', emoji: '\u{1F4DC}', label: 'Regulator', sub: 'ZERA / EPRA / NMDPRA', ownerOnly: true, feature: 'regulator_returns' },
+  ]},
+  // Pharmacy module — gated to pharmacy business type.
+  { label: 'Pharmacy', items: [
+    { key: 'Batches', emoji: '\u{1F4E6}', label: 'Batches & Expiry', sub: 'Lot + expiry tracking', feature: 'batch_tracking' },
+    { key: 'Prescriptions', emoji: '\u{1F48A}', label: 'Prescriptions', sub: 'Dispensing', feature: 'prescriptions' },
+    { key: 'Controlled Register', emoji: '\u{1F512}', label: 'Controlled Register', sub: 'Scheduled-drug log', ownerOnly: true, feature: 'controlled_substances' },
+  ]},
+  // Restaurant module — gated to restaurant business type.
+  { label: 'Restaurant', items: [
+    { key: 'Tables', emoji: '\u{1F37D}️', label: 'Tables', sub: 'Floor & status', feature: 'tables' },
+    { key: 'Kitchen', emoji: '\u{1F373}', label: 'Kitchen', sub: 'Order tickets', feature: 'kitchen_orders' },
+    { key: 'Modifiers', emoji: '➕', label: 'Modifiers', sub: 'Menu options', feature: 'modifiers' },
   ]},
   { label: 'Accounting', items: [
     { key: 'Journal Entries', emoji: '\u{1F4D2}', label: 'Journal', sub: 'Double-entry' },
@@ -125,6 +136,11 @@ export default function Layout({
   const [showMobileMore, setShowMobileMore] = useState(false);
   const role = user?.role || 'worker';
   const ac = avatarColor(user?.username || '');
+  // Business-type feature gating for the mobile nav (mirrors Sidebar.js). When
+  // the token has no `features` (older cached login) we don't gate, preserving
+  // prior behaviour until the next sign-in.
+  const features = Array.isArray(user?.features) ? user.features : null;
+  const hasFeature = (key) => !key || !features || features.includes(key);
   const BOTTOM_PRIMARY = activeModule === 'retail' ? RETAIL_BOTTOM_PRIMARY : FARM_BOTTOM_PRIMARY;
   const DRAWER_SECTIONS = activeModule === 'retail' ? RETAIL_DRAWER_SECTIONS : FARM_DRAWER_SECTIONS;
   const moduleAccent = activeModule === 'retail' ? '#c97d1a' : '#1a6b3a';
@@ -301,7 +317,9 @@ export default function Layout({
             {/* Grouped menu rows — one card per drawer section.
                 Single-module rule: DRAWER_SECTIONS already filtered by module. */}
             {DRAWER_SECTIONS.map((section, sIdx) => {
-              const visibleItems = section.items.filter(t => !t.ownerOnly || role === 'owner');
+              const visibleItems = section.items.filter(t =>
+                (!t.ownerOnly || role === 'owner') && hasFeature(t.feature)
+              );
               if (visibleItems.length === 0) return null;
               return (
                 <div key={section.label} style={{ marginBottom: sIdx < DRAWER_SECTIONS.length - 1 ? 14 : 0 }}>

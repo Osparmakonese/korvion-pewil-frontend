@@ -34,6 +34,22 @@ function registerValidSW(swUrl, config) {
         }
       };
     };
+
+    // Proactively check for a new version whenever the app regains focus
+    // (e.g. reopening the installed PWA on Android) and once an hour while
+    // it stays open. The browser otherwise only checks on a full
+    // navigation, so a standalone PWA that's just resumed could keep
+    // serving an old build until manually closed. With this, resuming the
+    // app finds the new service worker, which then auto-reloads (see the
+    // onUpdate handler in index.js).
+    const checkForUpdate = () => { registration.update().catch(() => {}); };
+    try {
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) checkForUpdate();
+      });
+      window.addEventListener('focus', checkForUpdate);
+      setInterval(checkForUpdate, 60 * 60 * 1000);
+    } catch (_) { /* best-effort */ }
   }).catch(error => console.error('SW error:', error));
 }
 
