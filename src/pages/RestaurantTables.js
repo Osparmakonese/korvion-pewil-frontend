@@ -29,7 +29,7 @@ export default function RestaurantTables() {
   };
 
   return (
-    <div style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 280px', gap: 16 }}>
+    <div className="vtl-stack" style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 280px', gap: 16 }}>
       <div style={card}>
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Floor — tap a table to change its status</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 10 }}>

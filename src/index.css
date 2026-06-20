@@ -517,3 +517,20 @@ body.pewil-pos-focus main.page-content-mobile {
     padding: 6px 8px !important;
   }
 }
+
+/* ── NATIVE MOBILE POLISH (2026-06) ───────────────────────────────
+   App-wide tactile press on content buttons (bottom-nav has its own),
+   and single-column collapse for the vertical pages' two-column
+   list/form layouts so they stack cleanly on a phone. The external
+   !important overrides the inline grid-template-columns on mobile. */
+@media (max-width: 768px) {
+  main.page-content-mobile button:not(.bn-tab) {
+    transition: transform 0.09s cubic-bezier(0.2, 0, 0, 1);
+  }
+  main.page-content-mobile button:not(.bn-tab):active {
+    transform: scale(0.97);
+  }
+  .vtl-stack { grid-template-columns: 1fr !important; }
+  .vtl-board { grid-template-columns: 1fr !important; }
+  .vtl-form  { grid-template-columns: 1fr !important; gap: 8px !important; }
+}

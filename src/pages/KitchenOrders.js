@@ -44,7 +44,7 @@ export default function KitchenOrders() {
     <div style={{ maxWidth: 1100, margin: '0 auto' }}>
       <div style={card}>
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>New order</h3>
-        <form onSubmit={submit} style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr auto', gap: 10, alignItems: 'end' }}>
+        <form onSubmit={submit} className="vtl-form" style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr auto', gap: 10, alignItems: 'end' }}>
           <div>
             <label style={label}>Table</label>
             <select style={input} value={form.table} onChange={(e) => setForm({ ...form, table: e.target.value })}>
@@ -64,7 +64,7 @@ export default function KitchenOrders() {
         </form>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+      <div className="vtl-board" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
         {COLUMNS.map((col) => {
           const items = orders.filter((o) => o.status === col.key);
           return (

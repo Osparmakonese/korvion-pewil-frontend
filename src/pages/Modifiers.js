@@ -24,7 +24,7 @@ export default function Modifiers() {
   const delOption = useMutation({ mutationFn: deleteModifierOption, onSuccess: () => qc.invalidateQueries({ queryKey: ['modifier-groups'] }) });
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 300px', gap: 16 }}>
+    <div className="vtl-stack" style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 300px', gap: 16 }}>
       <div style={card}>
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Modifier groups</h3>
         {groups.length === 0 && <p style={{ fontSize: 12, color: '#6b7280' }}>No modifier groups yet.</p>}

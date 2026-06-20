@@ -41,7 +41,7 @@ export default function ControlledRegister() {
   };
 
   return (
-    <div style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 320px', gap: 16 }}>
+    <div className="vtl-stack" style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 320px', gap: 16 }}>
       <div style={card}>
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Controlled-substance register</h3>
         <p style={{ fontSize: 11.5, color: '#6b7280', marginBottom: 10 }}>
