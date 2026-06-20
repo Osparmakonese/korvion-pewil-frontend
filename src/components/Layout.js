@@ -227,7 +227,7 @@ export default function Layout({
             </button>
           </>
         )}
-        <button className={`bn-tab${isMore ? ' active' : ''}`} onClick={() => setShowMobileMore(true)}>
+        <button className={`bn-tab${isMore ? ' active' : ''}`} onClick={() => { haptics.select(); setShowMobileMore(true); }}>
           <span className="bn-icon">{'\u22EF'}</span>
           <span className="bn-label">More</span>
         </button>
