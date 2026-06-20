@@ -1,29 +1,38 @@
-import React from 'react';
-export default function LogoIcon({ size = 32 }) {
-  const gold = '#C97D1A';
-  const darkGreen = '#0D4A22';
-  const w = size * 0.75;
+import React, { useId } from 'react';
+
+/**
+ * Pewil mark only — the Sprout tile. A point-of-sale "P" with a leaf rising
+ * from the bowl. Use where just the glyph is needed (avatars, compact headers).
+ */
+export default function LogoIcon({ size = 32, solid = false }) {
+  const uid = useId().replace(/[:]/g, '');
+  const gid = `pewilIcon-${uid}`;
   return (
-    <svg width={w} height={size} viewBox="0 0 75 100" xmlns="http://www.w3.org/2000/svg">
-      <rect width="75" height="100" rx="12" fill={darkGreen}/>
-      <ellipse cx="37.5" cy="52" rx="30" ry="40" fill="none" stroke={gold} strokeWidth="1.5"/>
-      <text x="37.5" y="50" textAnchor="middle" fontFamily="Georgia,serif" fontSize="16" fontWeight="700" fill={gold}>M</text>
-      <line x1="22" y1="68" x2="22" y2="54" stroke={gold} strokeWidth="1" strokeLinecap="round"/>
-      <path d="M22 54 Q19.5 50 18.5 54 Q20.5 55.5 22 54Z" fill={gold}/>
-      <path d="M22 54 Q24.5 50 25.5 54 Q23.5 55.5 22 54Z" fill={gold} opacity="0.85"/>
-      <line x1="29" y1="68" x2="29" y2="52" stroke={gold} strokeWidth="1" strokeLinecap="round"/>
-      <path d="M29 52 Q26.5 47 25.5 52 Q27.5 53.5 29 52Z" fill={gold}/>
-      <path d="M29 52 Q31.5 47 32.5 52 Q30.5 53.5 29 52Z" fill={gold} opacity="0.85"/>
-      <line x1="37.5" y1="68" x2="37.5" y2="50" stroke={gold} strokeWidth="1.2" strokeLinecap="round"/>
-      <path d="M37.5 50 Q34.5 44.5 33.5 50 Q35.5 51.5 37.5 50Z" fill={gold}/>
-      <path d="M37.5 50 Q40.5 44.5 41.5 50 Q39.5 51.5 37.5 50Z" fill={gold} opacity="0.85"/>
-      <line x1="46" y1="68" x2="46" y2="52" stroke={gold} strokeWidth="1" strokeLinecap="round"/>
-      <path d="M46 52 Q43.5 47 42.5 52 Q44.5 53.5 46 52Z" fill={gold}/>
-      <path d="M46 52 Q48.5 47 49.5 52 Q47.5 53.5 46 52Z" fill={gold} opacity="0.85"/>
-      <line x1="53" y1="68" x2="53" y2="54" stroke={gold} strokeWidth="1" strokeLinecap="round"/>
-      <path d="M53 54 Q50.5 50 49.5 54 Q51.5 55.5 53 54Z" fill={gold}/>
-      <path d="M53 54 Q55.5 50 56.5 54 Q54.5 55.5 53 54Z" fill={gold} opacity="0.85"/>
-      <line x1="18" y1="68" x2="57" y2="68" stroke={gold} strokeWidth="0.9"/>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 120 120"
+      xmlns="http://www.w3.org/2000/svg"
+      role="img"
+      aria-label="Pewil"
+      style={{ display: 'block' }}
+    >
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#1a6b3a" />
+          <stop offset="1" stopColor="#2e9e57" />
+        </linearGradient>
+      </defs>
+      <rect x="6" y="6" width="108" height="108" rx="30" fill={solid ? '#1a6b3a' : `url(#${gid})`} />
+      <path d="M66 53 C66 41 74 33 86 32 C85 44 78 53 66 53 Z" fill="#7cf0ae" />
+      <path
+        d="M46 92 V34 H66 a19 19 0 0 1 0 38 H46"
+        fill="none"
+        stroke="#ffffff"
+        strokeWidth="13"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }

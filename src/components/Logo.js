@@ -1,92 +1,90 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 /**
- * Pewil Logo - The Kernel
+ * Pewil Logo — The Sprout
+ *
+ * A point-of-sale "P" set in a rounded tile, with a leaf rising from the bowl:
+ * commerce + growth, retail + the land, in one glyph.
  *
  * Props:
- *   size       number - height of the icon in px (width scales proportionally)
- *   showText   boolean - render the "pewil" wordmark beside the icon
- *   variant    'light' | 'dark' - adjusts text colours for dark backgrounds
- *   tagline    boolean - show "Rooted in the work." under the wordmark
- *
- * The mark is a maize-kernel silhouette in forest green with an amber sprout
- * inside. Typography: Plus Jakarta Sans 700 for the wordmark, Fraunces 500
- * italic for the tagline.
+ *   size       number  - height of the icon tile in px (width = height)
+ *   showText   boolean - render the "Pewil" wordmark beside the mark
+ *   variant    'light' | 'dark' - wordmark colour for light/dark backgrounds
+ *   tagline    boolean - show the tagline under the wordmark
+ *   solid      boolean - flat green tile instead of the gradient (print / mono)
  */
 export default function Logo({
   size = 36,
   showText = true,
   variant = 'light',
   tagline = false,
+  solid = false,
 }) {
-  const forest = '#1f3d26';
-  const amber = '#f4a743';
-  const inkPrimary = variant === 'dark' ? '#fff7ec' : forest;
-  const inkSubtle = variant === 'dark' ? '#c9b79d' : '#8a6f4a';
+  const uid = useId().replace(/[:]/g, '');
+  const gid = `pewilGrad-${uid}`;
 
-  const iconW = Math.round(size * (110 / 120));
-  const iconH = size;
-  const wordSize = Math.round(size * 0.78);
-  const tagSize = Math.max(10, Math.round(size * 0.26));
+  const inkPrimary = variant === 'dark' ? '#ffffff' : '#0f172a';
+  const inkSubtle = variant === 'dark' ? 'rgba(255,255,255,.66)' : '#6b7280';
+  const wordSize = Math.round(size * 0.82);
+  const tagSize = Math.max(9, Math.round(size * 0.24));
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: Math.round(size * 0.32) }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: Math.round(size * 0.34) }}>
       <svg
-        width={iconW}
-        height={iconH}
-        viewBox="0 0 110 120"
+        width={size}
+        height={size}
+        viewBox="0 0 120 120"
         xmlns="http://www.w3.org/2000/svg"
         role="img"
         aria-label="Pewil"
-        style={{ flexShrink: 0 }}
+        style={{ flexShrink: 0, display: 'block' }}
       >
+        <defs>
+          <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#1a6b3a" />
+            <stop offset="1" stopColor="#2e9e57" />
+          </linearGradient>
+        </defs>
+        <rect x="6" y="6" width="108" height="108" rx="30" fill={solid ? '#1a6b3a' : `url(#${gid})`} />
+        {/* sprout leaf rising from the bowl */}
+        <path d="M66 53 C66 41 74 33 86 32 C85 44 78 53 66 53 Z" fill="#7cf0ae" />
+        {/* point-of-sale P */}
         <path
-          d="M 55 4 C 89 4, 105 28, 105 56 C 105 88, 83 108, 55 108 C 27 108, 5 88, 5 56 C 5 28, 21 4, 55 4 Z"
-          fill={forest}
-        />
-        <path d="M 55 34 L 55 86" stroke={amber} strokeWidth="5" strokeLinecap="round" />
-        <path
-          d="M 55 48 C 45 48, 39 40, 39 32"
-          stroke={amber}
-          strokeWidth="5"
-          strokeLinecap="round"
+          d="M46 92 V34 H66 a19 19 0 0 1 0 38 H46"
           fill="none"
-        />
-        <path
-          d="M 55 60 C 67 60, 75 52, 75 44"
-          stroke={amber}
-          strokeWidth="5"
+          stroke="#ffffff"
+          strokeWidth="13"
           strokeLinecap="round"
-          fill="none"
+          strokeLinejoin="round"
         />
       </svg>
       {showText && (
         <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
           <div
             style={{
-              fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+              fontFamily: "'Playfair Display', Georgia, serif",
               fontSize: wordSize,
-              fontWeight: 700,
+              fontWeight: 800,
               color: inkPrimary,
-              letterSpacing: '-0.04em',
+              letterSpacing: '-0.01em',
               lineHeight: 1,
             }}
           >
-            pewil
+            Pewil
           </div>
           {tagline && (
             <div
               style={{
-                fontFamily: "'Fraunces', Georgia, serif",
+                fontFamily: "'Inter', system-ui, sans-serif",
                 fontSize: tagSize,
-                fontStyle: 'italic',
-                fontWeight: 500,
+                fontWeight: 600,
                 color: inkSubtle,
-                marginTop: Math.round(size * 0.08),
-                letterSpacing: '0.01em',
+                marginTop: Math.round(size * 0.12),
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
               }}
             >
-              Rooted in the work.
+              Run your business
             </div>
           )}
         </div>
