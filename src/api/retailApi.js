@@ -6,6 +6,39 @@ export const createCategory = (data) => api.post('/retail/categories/', data).th
 export const updateCategory = (id, data) => api.patch(`/retail/categories/${id}/`, data).then(r => r.data);
 export const deleteCategory = (id) => api.delete(`/retail/categories/${id}/`);
 
+// ── Pharmacy: batches / prescriptions / controlled register (Phase 2) ──
+export const getProductBatches = (params) => api.get('/retail/product-batches/', { params }).then(r => r.data);
+export const createProductBatch = (data) => api.post('/retail/product-batches/', data).then(r => r.data);
+export const updateProductBatch = (id, data) => api.patch(`/retail/product-batches/${id}/`, data).then(r => r.data);
+export const deleteProductBatch = (id) => api.delete(`/retail/product-batches/${id}/`);
+export const getExpiringBatches = (days = 90) => api.get('/retail/product-batches/expiring/', { params: { days } }).then(r => r.data);
+
+export const getPrescriptions = (params) => api.get('/retail/prescriptions/', { params }).then(r => r.data);
+export const createPrescription = (data) => api.post('/retail/prescriptions/', data).then(r => r.data);
+export const updatePrescription = (id, data) => api.patch(`/retail/prescriptions/${id}/`, data).then(r => r.data);
+export const dispensePrescription = (id, data) => api.post(`/retail/prescriptions/${id}/dispense/`, data || {}).then(r => r.data);
+
+export const getControlledLog = (params) => api.get('/retail/controlled-log/', { params }).then(r => r.data);
+export const createControlledLog = (data) => api.post('/retail/controlled-log/', data).then(r => r.data);
+
+// ── Restaurant: tables / modifiers / kitchen orders (Phase 2) ──
+export const getRestaurantTables = () => api.get('/retail/restaurant-tables/').then(r => r.data);
+export const createRestaurantTable = (data) => api.post('/retail/restaurant-tables/', data).then(r => r.data);
+export const updateRestaurantTable = (id, data) => api.patch(`/retail/restaurant-tables/${id}/`, data).then(r => r.data);
+export const deleteRestaurantTable = (id) => api.delete(`/retail/restaurant-tables/${id}/`);
+export const setTableStatus = (id, status) => api.post(`/retail/restaurant-tables/${id}/set-status/`, { status }).then(r => r.data);
+
+export const getModifierGroups = () => api.get('/retail/modifier-groups/').then(r => r.data);
+export const createModifierGroup = (data) => api.post('/retail/modifier-groups/', data).then(r => r.data);
+export const updateModifierGroup = (id, data) => api.patch(`/retail/modifier-groups/${id}/`, data).then(r => r.data);
+export const deleteModifierGroup = (id) => api.delete(`/retail/modifier-groups/${id}/`);
+export const createModifierOption = (data) => api.post('/retail/modifier-options/', data).then(r => r.data);
+export const deleteModifierOption = (id) => api.delete(`/retail/modifier-options/${id}/`);
+
+export const getKitchenOrders = (params) => api.get('/retail/kitchen-orders/', { params }).then(r => r.data);
+export const createKitchenOrder = (data) => api.post('/retail/kitchen-orders/', data).then(r => r.data);
+export const transitionKitchenOrder = (id, status) => api.post(`/retail/kitchen-orders/${id}/transition/`, { status }).then(r => r.data);
+
 // ── Products ──
 export const getProducts = () => api.get('/retail/products/').then(r => r.data);
 export const createProduct = (data) => api.post('/retail/products/', data).then(r => r.data);

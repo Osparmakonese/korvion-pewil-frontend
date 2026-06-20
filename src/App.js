@@ -20,6 +20,7 @@ import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import SetupWizard from './pages/SetupWizard';
 
 /* Farm landing page — separate funnel at /farm (May 2026 split).
  * Eager so the marketing surface stays fast for SEO + ad clicks. */
@@ -121,6 +122,13 @@ const FuelDipReadings = React.lazy(() => import('./pages/FuelDipReadings'));
 const FleetCards = React.lazy(() => import('./pages/FleetCards'));
 const RegulatorReturns = React.lazy(() => import('./pages/RegulatorReturns'));
 const PriceBoard = React.lazy(() => import('./pages/PriceBoard'));
+// Phase 2 verticals — pharmacy + restaurant
+const ProductBatches = React.lazy(() => import('./pages/ProductBatches'));
+const Prescriptions = React.lazy(() => import('./pages/Prescriptions'));
+const ControlledRegister = React.lazy(() => import('./pages/ControlledRegister'));
+const RestaurantTables = React.lazy(() => import('./pages/RestaurantTables'));
+const KitchenOrders = React.lazy(() => import('./pages/KitchenOrders'));
+const Modifiers = React.lazy(() => import('./pages/Modifiers'));
 
 /* --- Loading fallback for lazy pages --- */
 const PageLoader = () => (
@@ -214,6 +222,14 @@ const PAGES = {
   'Dip Readings': FuelDipReadings,
   'Fleet Cards': FleetCards,
   'Regulator Returns': RegulatorReturns,
+  // Pharmacy
+  'Batches': ProductBatches,
+  'Prescriptions': Prescriptions,
+  'Controlled Register': ControlledRegister,
+  // Restaurant
+  'Tables': RestaurantTables,
+  'Kitchen': KitchenOrders,
+  'Modifiers': Modifiers,
 };
 
 /* --- */
@@ -298,6 +314,14 @@ const PAGE_META = {
   'Dip Readings': { title: 'Dip Readings', sub: 'Manual wet-stock reconciliation' },
   'Fleet Cards': { title: 'Fleet Cards', sub: 'Engen, Total, Puma and custom card accounts' },
   'Regulator Returns': { title: 'Regulator Returns', sub: 'ZERA / EPRA / NMDPRA monthly returns' },
+  // Pharmacy
+  'Batches': { title: 'Batches & Expiry', sub: 'Track lots and expiry dates' },
+  'Prescriptions': { title: 'Prescriptions', sub: 'Patient prescriptions and dispensing' },
+  'Controlled Register': { title: 'Controlled Register', sub: 'Audit log of scheduled-drug dispensing' },
+  // Restaurant
+  'Tables': { title: 'Tables', sub: 'Floor plan and table status' },
+  'Kitchen': { title: 'Kitchen Orders', sub: 'Order tickets from table to kitchen' },
+  'Modifiers': { title: 'Modifiers', sub: 'Menu options and extras' },
 };
 
 /* --- */
@@ -381,6 +405,16 @@ const PRIMARY_ACTIONS = {
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
   return user ? children : <Navigate to="/login" replace />;
+}
+
+/* First-run setup gate. An owner whose tenant hasn't completed setup is sent
+   to the SetupWizard before the app shell. Separate component so FarmApp's
+   hooks never mount until setup is done (keeps hook order stable). */
+function SetupGate({ children }) {
+  const { user } = useAuth();
+  const needsSetup = !!user && user.role === 'owner' && user.setup_completed === false;
+  if (needsSetup) return <SetupWizard onDone={() => {}} />;
+  return children;
 }
 
 /* --- */
@@ -478,7 +512,9 @@ export default function App() {
                   standing it renders a full-screen lockout instead of
                   FarmApp, so unpaid tenants can't navigate around it. */}
               <BillingLockoutGate>
-                <FarmApp />
+                <SetupGate>
+                  <FarmApp />
+                </SetupGate>
               </BillingLockoutGate>
             </ProtectedRoute>
           }

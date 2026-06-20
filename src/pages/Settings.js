@@ -6,6 +6,7 @@ import { getAIBudget } from '../api/aiApi';
 import { useQuery } from '@tanstack/react-query';
 import TwoFactorPanel from '../components/TwoFactorPanel';
 import PasswordPolicyPanel from '../components/PasswordPolicyPanel';
+import BusinessTypePanel from '../components/BusinessTypePanel';
 
 /* ─── Design 3 — Living Africa tokens (shared with Landing/Login/Register) ─── */
 const C = {
@@ -380,6 +381,7 @@ export default function Settings({ onTabChange }) {
         <div style={rightPane}>
           {activeTab === 'general' && (
             <>
+              <BusinessTypePanel />
               <section style={sectionCard}>
                 <div style={sectionHead}>
                   <h2 style={sectionTitle}>General settings</h2>

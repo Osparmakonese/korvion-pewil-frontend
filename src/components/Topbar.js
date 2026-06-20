@@ -70,8 +70,12 @@ function formatDate() {
  */
 function BranchChip({ activeModule }) {
   const isRetail = activeModule === 'retail';
+  // Same query key as Sidebar.js so react-query dedupes the call.
+  // Previously this used a different key ('retail-branches-for-session-open')
+  // which made the prod dashboard hit /api/retail/branches/ twice on every
+  // load — confirmed via network trace on pewil.org 2026-05-19.
   const { data: branches = [] } = useQuery({
-    queryKey: ['retail-branches-for-session-open'],
+    queryKey: ['retail-branches'],
     queryFn: listBranches,
     staleTime: 60000,
     enabled: isRetail,
