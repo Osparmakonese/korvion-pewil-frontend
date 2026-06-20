@@ -681,6 +681,10 @@ export default function POS() {
   const [lastPriceCheck, setLastPriceCheck] = useState(null); // { name, price, stock, ts }
   const [loyaltyMember, setLoyaltyMember] = useState(null);
   const [discountReason, setDiscountReason] = useState('');
+  // Signed manager approval token captured when a manual discount is approved.
+  // Sent with the sale so the backend can verify the price-override (the gate
+  // used to be UI-only).
+  const [discountApprovalToken, setDiscountApprovalToken] = useState(null);
   const [discountNotes, setDiscountNotes] = useState('');
   const [suspendedSales, setSuspendedSales] = useState(() => {
     try { return JSON.parse(localStorage.getItem('pewil_pos_suspended') || '[]'); }
@@ -1006,6 +1010,7 @@ export default function POS() {
     setLoyaltyMember(null);
     setDiscountReason('');
     setDiscountNotes('');
+    setDiscountApprovalToken(null);
     // Reset split-tender mode so the next ticket starts on a single method.
     setSplitMode(false);
     setSplitPayments([
@@ -1064,17 +1069,18 @@ export default function POS() {
     const picked = await promptDiscountReason({ current: discount, max: subtotal });
     if (!picked) return;
     try {
-      await requireManagerApproval('price_override', {
+      const approvalToken = await requireManagerApproval('price_override', {
         resourceType: 'cart',
         notes: `Discount ${picked.amount} (${picked.reason})${picked.notes ? ' — ' + picked.notes : ''}`,
       });
       setDiscount(String(picked.amount));
       setDiscountReason(picked.reason);
       setDiscountNotes(picked.notes);
+      setDiscountApprovalToken(approvalToken || null);
     } catch (_) { /* cancelled */ }
   };
   const clearDiscount = () => {
-    setDiscount(''); setDiscountReason(''); setDiscountNotes('');
+    setDiscount(''); setDiscountReason(''); setDiscountNotes(''); setDiscountApprovalToken(null);
   };
 
   // Suspend / resume park-sale (supermarket convention: pause for a forgotten item).
@@ -1087,7 +1093,7 @@ export default function POS() {
         : `${cart.length} item${cart.length > 1 ? 's' : ''} · ${fmt(grandTotal, 'zwd')}`,
       ts: Date.now(),
       cart, discount, tax, paymentMethod, amountTendered,
-      loyaltyMember, discountReason, discountNotes,
+      loyaltyMember, discountReason, discountNotes, discountApprovalToken,
     };
     setSuspendedSales((prev) => [ticket, ...prev].slice(0, 20));
     resetCart();
@@ -1101,6 +1107,7 @@ export default function POS() {
     setLoyaltyMember(ticket.loyaltyMember || null);
     setDiscountReason(ticket.discountReason || '');
     setDiscountNotes(ticket.discountNotes || '');
+    setDiscountApprovalToken(ticket.discountApprovalToken || null);
     setSuspendedSales((prev) => prev.filter((s) => s.id !== ticket.id));
     setSuspendDrawerOpen(false);
     barcodeInputRef.current?.focus();
@@ -1256,6 +1263,12 @@ export default function POS() {
     };
     if (payments_data_payload) {
       saleData.payments_data = payments_data_payload;
+    }
+
+    // A manual discount must carry its manager-approval token so the backend
+    // can verify the price override (the gate is no longer UI-only).
+    if (discountAmount > 0 && discountApprovalToken) {
+      saleData.manager_approval_token = discountApprovalToken;
     }
 
     if (ageVerification && !ageVerification.skipped) {

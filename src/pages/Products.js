@@ -17,25 +17,31 @@ import { confirm } from '../utils/confirm';
 import { invalidateProductCaches } from '../utils/queryCache';
 
 /* ─── Modal Component ─── */
+// Blank product form. Includes the specialist flags (weighable, age-restricted,
+// controlled drug, menu item, quick tile) and barcode, which the backend
+// serializer accepts but the form previously never exposed — so a shop could
+// not turn a product into a weighable / age-gated / controlled / menu item from
+// this screen. They now live under an "Advanced options" section.
+const BLANK_PRODUCT = {
+  name: '', sku: '', barcode: '', category: '', cost_price: '', selling_price: '',
+  quantity_in_stock: '', reorder_level: '', unit: 'piece', expiry_date: '', description: '',
+  is_weighable: false, unit_of_weight: 'kg',
+  is_age_restricted: false, age_restriction_type: 'none', requires_manager_age_check: false,
+  is_quick_tile: false, is_menu_item: false,
+  is_controlled: false, controlled_schedule: '',
+};
+
 function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initialData }) {
-  const [form, setForm] = useState({
-    name: '',
-    sku: '',
-    category: '',
-    cost_price: '',
-    selling_price: '',
-    quantity_in_stock: '',
-    reorder_level: '',
-    unit: 'piece',
-    expiry_date: '',
-    description: '',
-  });
+  const [form, setForm] = useState(BLANK_PRODUCT);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   useEffect(() => {
     if (initialData) {
       setForm({
+        ...BLANK_PRODUCT,
         name: initialData.name || '',
         sku: initialData.sku || '',
+        barcode: initialData.barcode || '',
         category: initialData.category || '',
         cost_price: initialData.cost_price || '',
         selling_price: initialData.selling_price || '',
@@ -44,43 +50,33 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
         unit: initialData.unit || 'piece',
         expiry_date: initialData.expiry_date || '',
         description: initialData.description || '',
+        is_weighable: !!initialData.is_weighable,
+        unit_of_weight: initialData.unit_of_weight || 'kg',
+        is_age_restricted: !!initialData.is_age_restricted,
+        age_restriction_type: initialData.age_restriction_type || 'none',
+        requires_manager_age_check: !!initialData.requires_manager_age_check,
+        is_quick_tile: !!initialData.is_quick_tile,
+        is_menu_item: !!initialData.is_menu_item,
+        is_controlled: !!initialData.is_controlled,
+        controlled_schedule: initialData.controlled_schedule || '',
       });
+      setShowAdvanced(!!(initialData.is_weighable || initialData.is_age_restricted ||
+        initialData.is_quick_tile || initialData.is_menu_item || initialData.is_controlled || initialData.barcode));
     } else {
-      setForm({
-        name: '',
-        sku: '',
-        category: '',
-        cost_price: '',
-        selling_price: '',
-        quantity_in_stock: '',
-        reorder_level: '',
-        unit: 'piece',
-        expiry_date: '',
-        description: '',
-      });
+      setForm(BLANK_PRODUCT);
+      setShowAdvanced(false);
     }
   }, [initialData]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit(form);
-    setForm({
-      name: '',
-      sku: '',
-      category: '',
-      cost_price: '',
-      selling_price: '',
-      quantity_in_stock: '',
-      reorder_level: '',
-      unit: 'Piece',
-      expiry_date: '',
-      description: '',
-    });
+    setForm(BLANK_PRODUCT);
   };
 
   if (!isOpen) return null;
@@ -378,6 +374,67 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
               }}
             />
           </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>
+              Barcode (optional)
+            </label>
+            <input
+              name="barcode"
+              value={form.barcode}
+              onChange={handleChange}
+              placeholder="Scan or type the barcode"
+              style={{ width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((v) => !v)}
+            style={{ background: 'none', border: 'none', color: '#1a6b3a', fontSize: 11, fontWeight: 700, cursor: 'pointer', padding: 0, marginBottom: 8 }}
+          >
+            {showAdvanced ? '▾' : '▸'} Advanced / specialist options
+          </button>
+
+          {showAdvanced && (
+            <div style={{ border: '1px solid #eef2f0', borderRadius: 8, padding: 12, marginBottom: 16, background: '#fafbfb' }}>
+              {(() => {
+                const chk = { display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#111827', margin: '6px 0', cursor: 'pointer' };
+                const sub = { marginLeft: 26, marginBottom: 8, padding: '6px 8px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 11 };
+                return (
+                  <>
+                    <label style={chk}><input type="checkbox" name="is_weighable" checked={form.is_weighable} onChange={handleChange} /> Sold by weight (use a scale)</label>
+                    {form.is_weighable && (
+                      <select name="unit_of_weight" value={form.unit_of_weight} onChange={handleChange} style={sub}>
+                        <option value="kg">priced per kg</option>
+                        <option value="g">priced per g</option>
+                        <option value="lb">priced per lb</option>
+                      </select>
+                    )}
+                    <label style={chk}><input type="checkbox" name="is_age_restricted" checked={form.is_age_restricted} onChange={handleChange} /> Age-restricted (18+ check at till)</label>
+                    {form.is_age_restricted && (
+                      <>
+                        <select name="age_restriction_type" value={form.age_restriction_type} onChange={handleChange} style={sub}>
+                          <option value="none">— type —</option>
+                          <option value="alcohol">Alcohol</option>
+                          <option value="tobacco">Tobacco</option>
+                          <option value="lottery">Lottery</option>
+                          <option value="other_18">Other 18+</option>
+                        </select>
+                        <label style={{ ...chk, marginLeft: 26 }}><input type="checkbox" name="requires_manager_age_check" checked={form.requires_manager_age_check} onChange={handleChange} /> Require manager approval</label>
+                      </>
+                    )}
+                    <label style={chk}><input type="checkbox" name="is_quick_tile" checked={form.is_quick_tile} onChange={handleChange} /> Show as a quick tile at the till</label>
+                    <label style={chk}><input type="checkbox" name="is_menu_item" checked={form.is_menu_item} onChange={handleChange} /> Menu item (restaurant)</label>
+                    <label style={chk}><input type="checkbox" name="is_controlled" checked={form.is_controlled} onChange={handleChange} /> Controlled substance (pharmacy)</label>
+                    {form.is_controlled && (
+                      <input name="controlled_schedule" value={form.controlled_schedule} onChange={handleChange} placeholder="Schedule (e.g. Schedule 3)" style={sub} />
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: 10 }}>
             <button
@@ -893,23 +950,28 @@ export default function Products() {
                 </thead>
                 <tbody>
                   {stockAdjustments.map((adj) => {
-                    const product = products.find((p) => p.id === adj.product_id);
-                    const reasonColor =
-                      adj.reason === 'Stolen'
-                        ? 'red'
-                        : adj.reason === 'Damaged'
-                        ? 'amber'
-                        : adj.reason === 'Expired'
-                        ? 'gray'
-                        : 'green';
+                    // The API returns: product (id), product_name, adjustment_type,
+                    // quantity, created_at, created_by. (This table used to read
+                    // product_id/adjusted_at/reason/adjusted_by_user, which don't
+                    // exist on the payload, so every row showed blanks.)
+                    const productName = adj.product_name
+                      || products.find((p) => p.id === adj.product)?.name
+                      || 'N/A';
+                    const type = adj.adjustment_type || 'other';
+                    const reasonColor = type === 'stolen'
+                      ? 'red'
+                      : (type === 'damaged' || type === 'broken' || type === 'expired')
+                      ? 'amber'
+                      : 'green';
+                    const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
 
                     return (
                       <tr key={adj.id}>
                         <td style={S.td}>
-                          {new Date(adj.adjusted_at).toLocaleDateString()}
+                          {adj.created_at ? new Date(adj.created_at).toLocaleDateString() : '—'}
                         </td>
                         <td style={{ ...S.td, fontWeight: 600 }}>
-                          {product?.name || 'N/A'}
+                          {productName}
                         </td>
                         <td style={{ ...S.td, color: adj.quantity < 0 ? '#c0392b' : '#374151', fontWeight: 700 }}>
                           {adj.quantity < 0 ? '' : '+'}{adj.quantity}
@@ -917,7 +979,7 @@ export default function Products() {
                         <td style={S.td}>
                           <span
                             style={{
-                              ...S.badge(reasonColor === 'gray' ? 'amber' : reasonColor),
+                              ...S.badge(reasonColor),
                               background:
                                 reasonColor === 'red'
                                   ? '#fdecea'
@@ -926,11 +988,11 @@ export default function Products() {
                                   : '#e8f5ee',
                             }}
                           >
-                            {adj.reason}
+                            {typeLabel}
                           </span>
                         </td>
                         <td style={S.td}>
-                          {adj.adjusted_by_user?.name || 'N/A'}
+                          {adj.created_by_name || adj.created_by_username || '—'}
                         </td>
                         <td style={{ ...S.td, fontSize: 10, color: '#9ca3af' }}>
                           {adj.notes || '—'}

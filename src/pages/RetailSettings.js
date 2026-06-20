@@ -520,6 +520,9 @@ export default function RetailSettings({ onTabChange }) {
                   Logo and receipt copy shown to customers on printed and digital receipts.
                 </p>
               </div>
+              <div style={{ background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', borderRadius: 8, padding: '10px 12px', fontSize: 12, marginBottom: 4 }}>
+                Logo upload is a preview and isn&apos;t saved yet. To set your shop name, address and the message printed on receipts today, use <strong>Receipt Customization</strong>.
+              </div>
               <div style={{ display: 'flex', gap: 20, alignItems: 'center', padding: '18px 0' }}>
                 <div
                   style={{
@@ -778,6 +781,9 @@ export default function RetailSettings({ onTabChange }) {
                   <h2 style={sectionTitle}>Cashier permissions</h2>
                   <p style={sectionSub}>Control what workers with the cashier role can see and do in the POS.</p>
                 </div>
+                <div style={{ background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', borderRadius: 8, padding: '10px 12px', fontSize: 12, marginBottom: 12 }}>
+                  These toggles are a preview. Permissions are set <strong>per staff member</strong> in <strong>Team &amp; Access</strong> — open that page to grant or restrict each person. Changes made here are not saved yet.
+                </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <ToggleItem label="View products" desc="See the product list and current prices." on={permViewProducts} onToggle={() => setPermViewProducts(!permViewProducts)} />
                   <ToggleItem label="Add products" desc="Create new products in the catalog." on={permAddProducts} onToggle={() => setPermAddProducts(!permAddProducts)} />
@@ -787,7 +793,14 @@ export default function RetailSettings({ onTabChange }) {
                   <ToggleItem label="View journal" desc="See double-entry accounting ledger for audit." on={permViewJournal} onToggle={() => setPermViewJournal(!permViewJournal)} />
                 </div>
                 <div style={{ marginTop: 16 }}>
-                  <button style={btnPrimary}>Save permissions</button>
+                  <button
+                    type="button"
+                    style={{ ...btnPrimary, opacity: 0.5, cursor: 'not-allowed' }}
+                    disabled
+                    title="Set permissions per staff member in Team & Access"
+                  >
+                    Manage in Team &amp; Access
+                  </button>
                 </div>
               </section>
 

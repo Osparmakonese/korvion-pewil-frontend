@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getReturns, getReturnsSummary, createReturn, completeReturn } from '../api/retailApi';
+import { getReturns, getReturnsSummary, createReturn, completeReturn, getSales } from '../api/retailApi';
 import { useAuth } from '../context/AuthContext';
 import { fmt } from '../utils/format';
 import { confirm } from '../utils/confirm';
@@ -12,9 +12,57 @@ export default function Returns({ onTabChange }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showAddForm, setShowAddForm] = useState(false);
-  const [formData, setFormData] = useState({ original_sale: '', customer_name: '', reason: '', refund_amount: '' });
+  // Fixed (June 2026): the old form sent the receipt number where a sale ID was
+  // expected, omitted refund_method (a required field) and items_data (needed to
+  // restock), so creating a return always 400-ed and never restocked. The new
+  // form picks a real sale, lists its lines with a return quantity, and sends a
+  // valid sale ID, reason, refund method, amount and items_data.
+  const REASONS = [
+    ['defective', 'Defective'], ['wrong_item', 'Wrong item'], ['damaged', 'Damaged'],
+    ['changed_mind', 'Changed mind'], ['expired', 'Expired'], ['other', 'Other'],
+  ];
+  const REFUND_METHODS = [
+    ['cash', 'Cash'], ['ecocash', 'Mobile money / EcoCash'], ['store_credit', 'Store credit'], ['card', 'Card'],
+  ];
+  const blankForm = { saleId: '', lines: [], reason: '', refund_method: '', refund_amount: '', notes: '' };
+  const [sel, setSel] = useState(blankForm);
 
   const isOwnerOrManager = user?.role === 'owner' || user?.role === 'manager';
+
+  // Recent sales to choose from (only fetched while the form is open).
+  const { data: salesList = [] } = useQuery({
+    queryKey: ['retail-sales-for-returns'],
+    queryFn: getSales,
+    staleTime: 30000,
+    enabled: showAddForm,
+  });
+
+  // Sale line items can arrive with slightly different key names depending on
+  // which POS version wrote them; read them defensively.
+  const itQty = (it) => Number(it.qty ?? it.quantity ?? 0) || 0;
+  const itPrice = (it) => Number(it.unit_price ?? it.price ?? it.selling_price ?? 0) || 0;
+  const itPid = (it) => it.product_id ?? it.product ?? null;
+  const itName = (it) => it.product_name ?? it.name ?? 'Item';
+
+  const pickSale = (id) => {
+    const s = (salesList || []).find((x) => String(x.id) === String(id));
+    const lines = s
+      ? (s.items_data || []).map((it) => ({
+          product_id: itPid(it), product_name: itName(it),
+          unit_price: itPrice(it), sold: itQty(it), returnQty: itQty(it),
+        }))
+      : [];
+    const amt = lines.reduce((a, l) => a + l.returnQty * l.unit_price, 0);
+    setSel({ ...blankForm, saleId: id, lines, refund_amount: amt.toFixed(2) });
+  };
+
+  const setLineQty = (i, v) => {
+    const lines = sel.lines.slice();
+    const q = Math.max(0, Math.min(lines[i].sold, Number(v) || 0));
+    lines[i] = { ...lines[i], returnQty: q };
+    const amt = lines.reduce((a, l) => a + l.returnQty * l.unit_price, 0);
+    setSel({ ...sel, lines, refund_amount: amt.toFixed(2) });
+  };
 
   // Fetch returns
   const { data: returns = [], isLoading: returnsLoading, error: returnsError } = useQuery({
@@ -44,7 +92,7 @@ export default function Returns({ onTabChange }) {
       queryClient.invalidateQueries({ queryKey: ['retail-returns'] });
       queryClient.invalidateQueries({ queryKey: ['retail-returns-summary'] });
       setShowAddForm(false);
-      setFormData({ original_sale: '', customer_name: '', reason: '', refund_amount: '' });
+      setSel(blankForm);
       if (data && data._offline_pending) {
         // Let the cashier know it queued (vs synced).
         confirm({
@@ -75,9 +123,34 @@ export default function Returns({ onTabChange }) {
 
   const handleAddReturn = async (e) => {
     e.preventDefault();
-    if (!formData.original_sale || !formData.refund_amount) return;
-    // submitWithQueue handles online + offline transparently.
-    createMutation.mutate(formData);
+    const items = sel.lines
+      .filter((l) => l.returnQty > 0 && l.product_id != null)
+      .map((l) => ({
+        product_id: l.product_id,
+        product_name: l.product_name,
+        qty: l.returnQty,
+        unit_price: l.unit_price,
+        total: +(l.returnQty * l.unit_price).toFixed(2),
+      }));
+    if (!sel.saleId || !sel.reason || !sel.refund_method || items.length === 0) {
+      await confirm({
+        title: 'Missing details',
+        message: 'Pick the original sale, choose at least one item to return, and select a reason and a refund method.',
+        confirmText: 'OK', cancelText: null, danger: false,
+      });
+      return;
+    }
+    // submitWithQueue handles online + offline transparently. We now send a
+    // real sale ID, refund_method and items_data so the return saves and (on
+    // completion) restocks correctly.
+    createMutation.mutate({
+      original_sale: Number(sel.saleId),
+      reason: sel.reason,
+      refund_method: sel.refund_method,
+      refund_amount: Number(sel.refund_amount) || 0,
+      items_data: items,
+      notes: sel.notes || '',
+    });
   };
 
   const handleCompleteReturn = async (id) => {
@@ -194,63 +267,69 @@ export default function Returns({ onTabChange }) {
       {showAddForm && (
         <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16, marginBottom: 24 }}>
           <form onSubmit={handleAddReturn}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 12 }}>
-              <input
-                type="text"
-                placeholder="Original Sale Receipt *"
-                value={formData.original_sale}
-                onChange={(e) => setFormData({ ...formData, original_sale: e.target.value })}
-                style={{
-                  padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 7,
-                  fontSize: 11,
-                  fontFamily: "'Inter', sans-serif",
-                }}
+            {/* Step 1 — choose the original sale */}
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Original sale *</label>
+              <select
+                value={sel.saleId}
+                onChange={(e) => pickSale(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, fontFamily: "'Inter', sans-serif", background: '#fff' }}
                 required
-              />
-              <input
-                type="text"
-                placeholder="Customer Name"
-                value={formData.customer_name}
-                onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
-                style={{
-                  padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 7,
-                  fontSize: 11,
-                  fontFamily: "'Inter', sans-serif",
-                }}
-              />
-              <input
-                type="text"
-                placeholder="Reason (e.g., Defective) *"
-                value={formData.reason}
-                onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                style={{
-                  padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 7,
-                  fontSize: 11,
-                  fontFamily: "'Inter', sans-serif",
-                }}
-                required
-              />
-              <input
-                type="number"
-                placeholder="Refund Amount *"
-                value={formData.refund_amount}
-                onChange={(e) => setFormData({ ...formData, refund_amount: e.target.value })}
-                style={{
-                  padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 7,
-                  fontSize: 11,
-                  fontFamily: "'Inter', sans-serif",
-                }}
-                step="0.01"
-                required
-              />
+              >
+                <option value="">Select the sale being returned…</option>
+                {(salesList || []).slice(0, 200).map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {(s.receipt_number || `Sale #${s.id}`)} — {fmt(s.total || 0, 'zwd')} — {s.created_at ? new Date(s.created_at).toLocaleDateString() : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Step 2 — choose which items + quantities */}
+            {sel.lines.length > 0 && (
+              <div style={{ border: '1px solid #f3f4f6', borderRadius: 8, marginBottom: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px 90px', gap: 8, padding: '8px 10px', background: '#f9fafb', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' }}>
+                  <div>Item</div><div style={{ textAlign: 'right' }}>Sold</div><div style={{ textAlign: 'right' }}>Return qty</div><div style={{ textAlign: 'right' }}>Refund</div>
+                </div>
+                {sel.lines.map((l, i) => (
+                  <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px 90px', gap: 8, padding: '8px 10px', borderTop: '1px solid #f3f4f6', alignItems: 'center', fontSize: 11 }}>
+                    <div style={{ color: '#111827' }}>{l.product_name}</div>
+                    <div style={{ textAlign: 'right', color: '#6b7280' }}>{l.sold}</div>
+                    <div style={{ textAlign: 'right' }}>
+                      <input type="number" min={0} max={l.sold} value={l.returnQty}
+                        onChange={(e) => setLineQty(i, e.target.value)}
+                        style={{ width: 64, padding: '4px 6px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 11, textAlign: 'right' }} />
+                    </div>
+                    <div style={{ textAlign: 'right', color: '#111827', fontWeight: 600 }}>{fmt(l.returnQty * l.unit_price, 'zwd')}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Step 3 — reason, method, amount */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 12 }}>
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Reason *</label>
+                <select value={sel.reason} onChange={(e) => setSel({ ...sel, reason: e.target.value })}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, background: '#fff' }} required>
+                  <option value="">Select…</option>
+                  {REASONS.map(([v, lab]) => <option key={v} value={v}>{lab}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Refund method *</label>
+                <select value={sel.refund_method} onChange={(e) => setSel({ ...sel, refund_method: e.target.value })}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, background: '#fff' }} required>
+                  <option value="">Select…</option>
+                  {REFUND_METHODS.map(([v, lab]) => <option key={v} value={v}>{lab}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Refund amount *</label>
+                <input type="number" step="0.01" value={sel.refund_amount}
+                  onChange={(e) => setSel({ ...sel, refund_amount: e.target.value })}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12 }} required />
+              </div>
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button
