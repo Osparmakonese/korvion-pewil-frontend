@@ -14,8 +14,11 @@ export const getUsageStats = () => api.get('/core/tenants/usage/').then(r => r.d
 // Business type / vertical + first-run setup
 export const getVerticals = (module) =>
   api.get('/core/tenants/verticals/', { params: module ? { module } : {} }).then(r => r.data);
-export const setBusinessType = (business_type) =>
-  api.patch('/core/tenants/business-type/', { business_type }).then(r => r.data);
+// Accepts a single slug or an array of slugs (a business can be several types,
+// e.g. a service station that's both fuel and general retail).
+export const setBusinessType = (types) =>
+  api.patch('/core/tenants/business-type/',
+    { business_types: Array.isArray(types) ? types : [types] }).then(r => r.data);
 export const completeSetup = (payload) =>
   api.post('/core/tenants/complete-setup/', payload || {}).then(r => r.data);
 

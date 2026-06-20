@@ -24,6 +24,7 @@ export function AuthProvider({ children }) {
     let is_demo = false;
     let is_super_admin = false;
     let business_type = 'general';
+    let business_types = [];
     let features = [];
     let setup_completed = true;
     try {
@@ -39,6 +40,8 @@ export function AuthProvider({ children }) {
       is_demo = !!payload.is_demo;
       is_super_admin = !!payload.is_super_admin;
       business_type = payload.business_type || 'general';
+      business_types = Array.isArray(payload.business_types) && payload.business_types.length
+        ? payload.business_types : [business_type];
       features = Array.isArray(payload.features) ? payload.features : [];
       // Default true if the claim is absent (older tokens) so we never trap
       // existing users in a setup wizard they can't be in.
@@ -59,6 +62,8 @@ export function AuthProvider({ children }) {
       is_demo: res.data.is_demo === true ? true : is_demo,
       is_super_admin: res.data.is_super_admin === true ? true : is_super_admin,
       business_type: res.data.business_type || business_type,
+      business_types: (Array.isArray(res.data.business_types) && res.data.business_types.length
+        ? res.data.business_types : null) || business_types,
       features: (Array.isArray(res.data.features) ? res.data.features : null) || features,
       setup_completed: res.data.setup_completed !== undefined
         ? res.data.setup_completed !== false
@@ -249,6 +254,7 @@ export function AuthProvider({ children }) {
     const userData = {
       ...user,
       ...(data.business_type ? { business_type: data.business_type } : {}),
+      ...(Array.isArray(data.business_types) ? { business_types: data.business_types } : {}),
       ...(Array.isArray(data.features) ? { features: data.features } : {}),
       ...(data.setup_completed !== undefined
         ? { setup_completed: data.setup_completed !== false }

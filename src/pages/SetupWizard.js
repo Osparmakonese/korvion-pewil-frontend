@@ -47,7 +47,11 @@ export default function SetupWizard({ onDone }) {
   const { user, applyAuthUpdate } = useAuth();
   const [step, setStep] = useState(1);
   const [verticals, setVerticals] = useState([]);
-  const [picked, setPicked] = useState(user?.business_type || '');
+  const [picked, setPicked] = useState(
+    user?.business_types && user.business_types.length
+      ? user.business_types
+      : (user?.business_type ? [user.business_type] : [])
+  );
   const [answers, setAnswers] = useState({});
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -58,19 +62,27 @@ export default function SetupWizard({ onDone }) {
       .catch(() => setVerticals([]));
   }, []);
 
-  const quick = QUICK[picked] || [];
+  // A business can be several types at once (e.g. a service station that also
+  // runs a shop) — gather the quick-setup questions for every selected type.
+  const quick = picked.flatMap((slug) => (QUICK[slug] || []));
 
-  const choose = (slug) => {
-    setPicked(slug);
-    const defs = {};
-    (QUICK[slug] || []).forEach((q) => { defs[q.key] = q.def; });
-    setAnswers(defs);
+  const toggle = (slug) => {
+    setPicked((prev) => {
+      const on = prev.includes(slug);
+      const next = on ? prev.filter((s) => s !== slug) : [...prev, slug];
+      if (!on) {
+        const defs = {};
+        (QUICK[slug] || []).forEach((q) => { defs[q.key] = q.def; });
+        setAnswers((a) => ({ ...defs, ...a }));
+      }
+      return next;
+    });
   };
 
   const finish = async () => {
     setBusy(true); setErr('');
     try {
-      const res = await completeSetup({ business_type: picked, vertical_settings: answers });
+      const res = await completeSetup({ business_types: picked, vertical_settings: answers });
       applyAuthUpdate(res);
       if (onDone) onDone();
     } catch (e) {
@@ -83,7 +95,9 @@ export default function SetupWizard({ onDone }) {
     // Skipping still records the (default/current) type and marks setup done.
     setBusy(true); setErr('');
     try {
-      const res = await completeSetup({ business_type: picked || user?.business_type || '' });
+      const fallback = picked.length ? picked
+        : (user?.business_types || (user?.business_type ? [user.business_type] : []));
+      const res = await completeSetup({ business_types: fallback });
       applyAuthUpdate(res);
       if (onDone) onDone();
     } catch {
@@ -91,7 +105,10 @@ export default function SetupWizard({ onDone }) {
     }
   };
 
-  const pickedLabel = verticals.find((v) => v.slug === picked)?.label || '';
+  const pickedLabel = picked
+    .map((p) => verticals.find((v) => v.slug === p)?.label)
+    .filter(Boolean)
+    .join(' + ');
 
   return (
     <div style={S.wrap}>
@@ -102,27 +119,33 @@ export default function SetupWizard({ onDone }) {
           <>
             <div style={S.eyebrow}>Welcome to Pewil</div>
             <h1 style={S.h1}>What kind of business do you run?</h1>
-            <p style={S.sub}>We'll tailor Pewil to show only the tools your business needs. You can change this later in Settings.</p>
+            <p style={S.sub}>Pick everything your business does — you can choose more than one (e.g. a fuel station that also runs a shop). We'll show only the tools you need. You can change this later in Settings.</p>
             <div style={S.grid}>
-              {verticals.map((v) => (
-                <div key={v.slug} style={S.tile(picked === v.slug)} onClick={() => choose(v.slug)}>
-                  <div style={S.tileIcon}>{v.icon}</div>
-                  <div style={S.tileLabel}>
-                    {v.label}
-                    {v.built === false && <span style={S.soon}>SOON</span>}
+              {verticals.map((v) => {
+                const on = picked.includes(v.slug);
+                return (
+                  <div key={v.slug} style={S.tile(on)} onClick={() => toggle(v.slug)}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                      <div style={S.tileIcon}>{v.icon}</div>
+                      <span style={{ fontSize: 16, fontWeight: 800, color: on ? '#1a6b3a' : '#cbd5d8' }}>{on ? '✓' : '＋'}</span>
+                    </div>
+                    <div style={S.tileLabel}>
+                      {v.label}
+                      {v.built === false && <span style={S.soon}>SOON</span>}
+                    </div>
+                    <div style={S.tileDesc}>{v.description}</div>
                   </div>
-                  <div style={S.tileDesc}>{v.description}</div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <div style={S.row}>
               <button style={S.skip} onClick={skip} disabled={busy}>Skip for now</button>
               <button
-                style={{ ...S.btn, opacity: picked ? 1 : 0.5 }}
-                disabled={!picked || busy}
+                style={{ ...S.btn, opacity: picked.length ? 1 : 0.5 }}
+                disabled={picked.length === 0 || busy}
                 onClick={() => setStep(quick.length ? 2 : 3)}
               >
-                Continue
+                Continue{picked.length > 1 ? ` (${picked.length})` : ''}
               </button>
             </div>
           </>
