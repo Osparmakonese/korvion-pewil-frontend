@@ -20,6 +20,7 @@ import {
 } from '../utils/offlinePOS';
 import { promptWeight } from '../utils/weightPrompt';
 import { requireAgeVerification } from '../utils/ageVerify';
+import { chargeMobileMoney } from '../utils/mobileMoneyCharge';
 import QuickTilesPanel from '../components/QuickTilesPanel';
 import ScannerLanePOS from '../components/ScannerLanePOS';
 import DarkSupermarketPOS from '../components/DarkSupermarketPOS';
@@ -1239,6 +1240,24 @@ export default function POS() {
       const distinctMethods = new Set(cleanedLegs.map((p) => p.method));
       effective_payment_method = distinctMethods.size > 1 ? 'mixed' : cleanedLegs[0].method;
       effective_amount_tendered = tenderedSum;
+    }
+
+    // Mobile money push-to-phone. When the whole sale is tendered via
+    // EcoCash / OneMoney, charge the customer's phone NOW and only record the
+    // sale once the payment is confirmed PAID. If the cashier cancels or the
+    // payment fails, abort so nothing is recorded as paid. (Split-tender legs
+    // that include mobile money are reconciled manually via their reference.)
+    let mobileMoneyTxn = null;
+    if (!splitMode && effective_payment_method === 'mobile_money') {
+      mobileMoneyTxn = await chargeMobileMoney({
+        amount: grandTotal,
+        currency: (localStorage.getItem('currency') || 'USD'),
+        customerName: loyaltyMember
+          ? (loyaltyMember.customer_name || loyaltyMember.customer_phone || '')
+          : '',
+      });
+      if (!mobileMoneyTxn) return; // cancelled or failed — leave the ticket open
+      effective_amount_tendered = grandTotal; // exact, no change for mobile money
     }
 
     const saleData = {
