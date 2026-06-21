@@ -89,6 +89,16 @@ export const getPaymentStatus = (id) => api.get(`/retail/payments/${id}/status/`
 export const linkPaymentToSale = (id, sale) => api.post(`/retail/payments/${id}/link/`, { sale }).then(r => r.data);
 export const getPaymentReconciliation = (params) => api.get('/retail/payments/reconciliation/', { params }).then(r => r.data);
 
+// ── Vending: airtime / ZESA / water tokens (own BillPay float) ──
+export const getVendingCredentials = () => api.get('/retail/vending-credentials/').then(r => r.data);
+export const createVendingCredentials = (data) => api.post('/retail/vending-credentials/', data).then(r => r.data);
+export const updateVendingCredentials = (id, data) => api.patch(`/retail/vending-credentials/${id}/`, data).then(r => r.data);
+export const deleteVendingCredentials = (id) => api.delete(`/retail/vending-credentials/${id}/`);
+export const getVendingBillers = (params) => api.get('/retail/vending/billers/', { params }).then(r => r.data);
+export const vend = (data) => api.post('/retail/vending/sell/', data).then(r => r.data);
+export const getVendStatus = (id) => api.get(`/retail/vending/${id}/status/`).then(r => r.data);
+export const getVendingTransactions = (params) => api.get('/retail/vending/', { params }).then(r => r.data);
+
 // Change-as-credit wallet
 export const getWallets = (params) => api.get('/retail/wallets/', { params }).then(r => r.data);
 export const lookupWallet = (data) => api.post('/retail/wallets/lookup/', data).then(r => r.data);

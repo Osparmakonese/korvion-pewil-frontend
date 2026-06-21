@@ -142,6 +142,8 @@ const MobileMoney = React.lazy(() => import('./pages/MobileMoney'));
 const Wallets = React.lazy(() => import('./pages/Wallets'));
 const PaymentSettings = React.lazy(() => import('./pages/PaymentSettings'));
 const Reconciliation = React.lazy(() => import('./pages/Reconciliation'));
+const Vending = React.lazy(() => import('./pages/Vending'));
+const VendingSetup = React.lazy(() => import('./pages/VendingSetup'));
 
 /* --- Loading fallback for lazy pages --- */
 const PageLoader = () => (
@@ -256,6 +258,8 @@ const PAGES = {
   'Wallets': Wallets,
   'Payment Setup': PaymentSettings,
   'Reconciliation': Reconciliation,
+  'Vending': Vending,
+  'Vending Setup': VendingSetup,
 };
 
 /* --- */
@@ -361,6 +365,8 @@ const PAGE_META = {
   'Wallets': { title: 'Customer Wallets', sub: 'Keep change as store credit' },
   'Payment Setup': { title: 'Payment Setup', sub: 'Connect your own mobile money account' },
   'Reconciliation': { title: 'Reconciliation', sub: 'EcoCash vs cash totals and settlement' },
+  'Vending': { title: 'Vending', sub: 'Sell airtime, ZESA and water tokens' },
+  'Vending Setup': { title: 'Vending Setup', sub: 'Connect your BillPay vendor float' },
 };
 
 /* --- */

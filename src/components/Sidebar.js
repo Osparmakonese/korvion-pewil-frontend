@@ -238,8 +238,10 @@ export const NAV_ITEMS = [
   { section: 'PAYMENTS', module: 'retail', collapsible: true, items: [
     { key: 'Mobile Money', emoji: '\u{1F4F2}', label: 'Mobile Money', feature: 'mobile_money' },
     { key: 'Wallets', emoji: '\u{1F45B}', label: 'Customer Wallets', feature: 'change_wallet' },
+    { key: 'Vending', emoji: '\u{1F4F6}', label: 'Vending (airtime/ZESA)', feature: 'vending' },
     { key: 'Reconciliation', emoji: '\u{1F9FE}', label: 'Reconciliation', ownerOnly: true, feature: 'mobile_money' },
     { key: 'Payment Setup', emoji: '\u{1F517}', label: 'Payment Setup', ownerOnly: true, feature: 'mobile_money' },
+    { key: 'Vending Setup', emoji: '\u{1F50C}', label: 'Vending Setup', ownerOnly: true, feature: 'vending' },
   ]},
   { section: 'STOCK', module: 'retail', collapsible: true, items: [
     { key: 'Categories', emoji: '\u{1F5C2}', label: 'Categories' },
