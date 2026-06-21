@@ -137,6 +137,10 @@ const SerialTracking = React.lazy(() => import('./pages/SerialTracking'));
 const Warranties = React.lazy(() => import('./pages/Warranties'));
 const Excise = React.lazy(() => import('./pages/Excise'));
 const BulkUnits = React.lazy(() => import('./pages/BulkUnits'));
+// Payments Phase 1 — mobile money + change-as-credit wallet
+const MobileMoney = React.lazy(() => import('./pages/MobileMoney'));
+const Wallets = React.lazy(() => import('./pages/Wallets'));
+const PaymentSettings = React.lazy(() => import('./pages/PaymentSettings'));
 
 /* --- Loading fallback for lazy pages --- */
 const PageLoader = () => (
@@ -246,6 +250,10 @@ const PAGES = {
   'Warranties': Warranties,
   'Excise': Excise,
   'Bulk Units': BulkUnits,
+  // Payments Phase 1
+  'Mobile Money': MobileMoney,
+  'Wallets': Wallets,
+  'Payment Setup': PaymentSettings,
 };
 
 /* --- */
@@ -346,6 +354,10 @@ const PAGE_META = {
   'Warranties': { title: 'Warranties', sub: 'Register and look up warranty cover' },
   'Excise': { title: 'Excise Returns', sub: 'Duty owed on alcohol sold' },
   'Bulk Units': { title: 'Bulk / Pack Units', sub: 'Buy by the box, sell by the each' },
+  // Payments Phase 1
+  'Mobile Money': { title: 'Mobile Money', sub: 'Request EcoCash / OneMoney payments to a phone' },
+  'Wallets': { title: 'Customer Wallets', sub: 'Keep change as store credit' },
+  'Payment Setup': { title: 'Payment Setup', sub: 'Connect your own mobile money account' },
 };
 
 /* --- */

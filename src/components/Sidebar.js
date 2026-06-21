@@ -234,6 +234,12 @@ export const NAV_ITEMS = [
     { key: 'Serials', emoji: '\u{1F516}', label: 'Serial / IMEI', feature: 'serial_tracking' },
     { key: 'Warranties', emoji: '\u{1F6E1}️', label: 'Warranties', feature: 'warranty' },
   ]},
+  // Payments — mobile money + change wallet (every retail tenant).
+  { section: 'PAYMENTS', module: 'retail', collapsible: true, items: [
+    { key: 'Mobile Money', emoji: '\u{1F4F2}', label: 'Mobile Money', feature: 'mobile_money' },
+    { key: 'Wallets', emoji: '\u{1F45B}', label: 'Customer Wallets', feature: 'change_wallet' },
+    { key: 'Payment Setup', emoji: '\u{1F517}', label: 'Payment Setup', ownerOnly: true, feature: 'mobile_money' },
+  ]},
   { section: 'STOCK', module: 'retail', collapsible: true, items: [
     { key: 'Categories', emoji: '\u{1F5C2}', label: 'Categories' },
     { key: 'Suppliers', emoji: '\u{1F4E6}', label: 'Suppliers & POs' },

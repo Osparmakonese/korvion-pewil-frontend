@@ -74,6 +74,27 @@ export const getExciseReturns = () => api.get('/retail/excise-returns/').then(r 
 export const generateExciseReturn = (data) => api.post('/retail/excise-returns/generate/', data).then(r => r.data);
 export const markExciseSubmitted = (id, data) => api.post(`/retail/excise-returns/${id}/mark-submitted/`, data || {}).then(r => r.data);
 
+// ── Payments Phase 1: mobile money + change-as-credit wallet ──
+// Merchant accounts (owner enters their OWN Paynow Integration ID + Key)
+export const getPaymentCredentials = () => api.get('/retail/payment-credentials/').then(r => r.data);
+export const createPaymentCredentials = (data) => api.post('/retail/payment-credentials/', data).then(r => r.data);
+export const updatePaymentCredentials = (id, data) => api.patch(`/retail/payment-credentials/${id}/`, data).then(r => r.data);
+export const deletePaymentCredentials = (id) => api.delete(`/retail/payment-credentials/${id}/`);
+export const getPaymentProviders = () => api.get('/retail/payment-credentials/providers/').then(r => r.data);
+
+// Mobile money collection (push-to-phone) + status polling
+export const getPaymentTransactions = (params) => api.get('/retail/payments/', { params }).then(r => r.data);
+export const collectPayment = (data) => api.post('/retail/payments/collect/', data).then(r => r.data);
+export const getPaymentStatus = (id) => api.get(`/retail/payments/${id}/status/`).then(r => r.data);
+
+// Change-as-credit wallet
+export const getWallets = (params) => api.get('/retail/wallets/', { params }).then(r => r.data);
+export const lookupWallet = (data) => api.post('/retail/wallets/lookup/', data).then(r => r.data);
+export const creditWallet = (id, data) => api.post(`/retail/wallets/${id}/credit/`, data).then(r => r.data);
+export const redeemWallet = (id, data) => api.post(`/retail/wallets/${id}/redeem/`, data).then(r => r.data);
+export const topupWallet = (id, data) => api.post(`/retail/wallets/${id}/topup/`, data).then(r => r.data);
+export const getWalletStatement = (id) => api.get(`/retail/wallets/${id}/statement/`).then(r => r.data);
+
 // ── Products ──
 export const getProducts = () => api.get('/retail/products/').then(r => r.data);
 export const createProduct = (data) => api.post('/retail/products/', data).then(r => r.data);
