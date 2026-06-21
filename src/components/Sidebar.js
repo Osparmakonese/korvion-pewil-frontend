@@ -215,6 +215,25 @@ export const NAV_ITEMS = [
     { key: 'Kitchen', emoji: '\u{1F373}', label: 'Kitchen', feature: 'kitchen_orders' },
     { key: 'Modifiers', emoji: '➕', label: 'Modifiers', feature: 'modifiers' },
   ]},
+  // Liquor / bottle store (Phase 3).
+  { section: 'LIQUOR', module: 'retail', collapsible: true, items: [
+    { key: 'Excise', emoji: '\u{1F37E}', label: 'Excise Returns', ownerOnly: true, feature: 'excise_notes' },
+  ]},
+  // Hardware / building supplies (Phase 3).
+  { section: 'HARDWARE', module: 'retail', collapsible: true, items: [
+    { key: 'Quotations', emoji: '\u{1F4DD}', label: 'Quotations', feature: 'quotations' },
+    { key: 'Bulk Units', emoji: '\u{1F4E6}', label: 'Bulk / Pack Units', feature: 'bulk_units' },
+  ]},
+  // Wholesale / distributor (Phase 3).
+  { section: 'WHOLESALE', module: 'retail', collapsible: true, items: [
+    { key: 'Price Tiers', emoji: '\u{1F4CA}', label: 'Volume Pricing', feature: 'price_tiers' },
+    { key: 'Credit Accounts', emoji: '\u{1F9FE}', label: 'Credit Accounts', feature: 'credit_accounts' },
+  ]},
+  // Electronics / phones (Phase 3).
+  { section: 'ELECTRONICS', module: 'retail', collapsible: true, items: [
+    { key: 'Serials', emoji: '\u{1F516}', label: 'Serial / IMEI', feature: 'serial_tracking' },
+    { key: 'Warranties', emoji: '\u{1F6E1}️', label: 'Warranties', feature: 'warranty' },
+  ]},
   { section: 'STOCK', module: 'retail', collapsible: true, items: [
     { key: 'Categories', emoji: '\u{1F5C2}', label: 'Categories' },
     { key: 'Suppliers', emoji: '\u{1F4E6}', label: 'Suppliers & POs' },

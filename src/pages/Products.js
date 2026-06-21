@@ -29,6 +29,7 @@ const BLANK_PRODUCT = {
   is_age_restricted: false, age_restriction_type: 'none', requires_manager_age_check: false,
   is_quick_tile: false, is_menu_item: false,
   is_controlled: false, controlled_schedule: '',
+  excise_rate: '',
 };
 
 function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initialData }) {
@@ -59,6 +60,7 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
         is_menu_item: !!initialData.is_menu_item,
         is_controlled: !!initialData.is_controlled,
         controlled_schedule: initialData.controlled_schedule || '',
+        excise_rate: initialData.excise_rate || '',
       });
       setShowAdvanced(!!(initialData.is_weighable || initialData.is_age_restricted ||
         initialData.is_quick_tile || initialData.is_menu_item || initialData.is_controlled || initialData.barcode));
@@ -430,6 +432,8 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
                     {form.is_controlled && (
                       <input name="controlled_schedule" value={form.controlled_schedule} onChange={handleChange} placeholder="Schedule (e.g. Schedule 3)" style={sub} />
                     )}
+                    <label style={{ ...chk, marginTop: 10, display: 'block' }}>Excise duty per unit (alcohol)</label>
+                    <input name="excise_rate" type="number" min={0} step="0.0001" value={form.excise_rate} onChange={handleChange} placeholder="0.00 — duty charged per unit sold" style={{ ...sub, marginLeft: 0 }} />
                   </>
                 );
               })()}

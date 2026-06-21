@@ -129,6 +129,14 @@ const ControlledRegister = React.lazy(() => import('./pages/ControlledRegister')
 const RestaurantTables = React.lazy(() => import('./pages/RestaurantTables'));
 const KitchenOrders = React.lazy(() => import('./pages/KitchenOrders'));
 const Modifiers = React.lazy(() => import('./pages/Modifiers'));
+// Phase 3 verticals — liquor / hardware / wholesale / electronics
+const Quotations = React.lazy(() => import('./pages/Quotations'));
+const PriceTiers = React.lazy(() => import('./pages/PriceTiers'));
+const CreditAccounts = React.lazy(() => import('./pages/CreditAccounts'));
+const SerialTracking = React.lazy(() => import('./pages/SerialTracking'));
+const Warranties = React.lazy(() => import('./pages/Warranties'));
+const Excise = React.lazy(() => import('./pages/Excise'));
+const BulkUnits = React.lazy(() => import('./pages/BulkUnits'));
 
 /* --- Loading fallback for lazy pages --- */
 const PageLoader = () => (
@@ -230,6 +238,14 @@ const PAGES = {
   'Tables': RestaurantTables,
   'Kitchen': KitchenOrders,
   'Modifiers': Modifiers,
+  // Phase 3 verticals
+  'Quotations': Quotations,
+  'Price Tiers': PriceTiers,
+  'Credit Accounts': CreditAccounts,
+  'Serials': SerialTracking,
+  'Warranties': Warranties,
+  'Excise': Excise,
+  'Bulk Units': BulkUnits,
 };
 
 /* --- */
@@ -322,6 +338,14 @@ const PAGE_META = {
   'Tables': { title: 'Tables', sub: 'Floor plan and table status' },
   'Kitchen': { title: 'Kitchen Orders', sub: 'Order tickets from table to kitchen' },
   'Modifiers': { title: 'Modifiers', sub: 'Menu options and extras' },
+  // Phase 3 verticals
+  'Quotations': { title: 'Quotations', sub: 'Quote jobs and convert them to sales' },
+  'Price Tiers': { title: 'Volume Pricing', sub: 'Quantity-break prices for wholesale' },
+  'Credit Accounts': { title: 'Credit Accounts', sub: 'Customers who buy on credit' },
+  'Serials': { title: 'Serial / IMEI', sub: 'Track each unit by its serial number' },
+  'Warranties': { title: 'Warranties', sub: 'Register and look up warranty cover' },
+  'Excise': { title: 'Excise Returns', sub: 'Duty owed on alcohol sold' },
+  'Bulk Units': { title: 'Bulk / Pack Units', sub: 'Buy by the box, sell by the each' },
 };
 
 /* --- */
