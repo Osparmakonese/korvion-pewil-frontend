@@ -39,6 +39,41 @@ export const getKitchenOrders = (params) => api.get('/retail/kitchen-orders/', {
 export const createKitchenOrder = (data) => api.post('/retail/kitchen-orders/', data).then(r => r.data);
 export const transitionKitchenOrder = (id, status) => api.post(`/retail/kitchen-orders/${id}/transition/`, { status }).then(r => r.data);
 
+// ── Hardware: quotations (Phase 3) ──
+export const getQuotations = (params) => api.get('/retail/quotations/', { params }).then(r => r.data);
+export const createQuotation = (data) => api.post('/retail/quotations/', data).then(r => r.data);
+export const setQuotationStatus = (id, data) => api.post(`/retail/quotations/${id}/set-status/`, data).then(r => r.data);
+export const deleteQuotation = (id) => api.delete(`/retail/quotations/${id}/`);
+
+// ── Wholesale: price tiers (Phase 3) ──
+export const getPriceTiers = (params) => api.get('/retail/price-tiers/', { params }).then(r => r.data);
+export const createPriceTier = (data) => api.post('/retail/price-tiers/', data).then(r => r.data);
+export const deletePriceTier = (id) => api.delete(`/retail/price-tiers/${id}/`);
+export const getBestPrice = (product, qty) => api.get('/retail/price-tiers/best-price/', { params: { product, qty } }).then(r => r.data);
+
+// ── Wholesale: credit accounts (Phase 3) ──
+export const getCreditAccounts = () => api.get('/retail/credit-accounts/').then(r => r.data);
+export const createCreditAccount = (data) => api.post('/retail/credit-accounts/', data).then(r => r.data);
+export const updateCreditAccount = (id, data) => api.patch(`/retail/credit-accounts/${id}/`, data).then(r => r.data);
+export const chargeCreditAccount = (id, data) => api.post(`/retail/credit-accounts/${id}/charge/`, data).then(r => r.data);
+export const payCreditAccount = (id, data) => api.post(`/retail/credit-accounts/${id}/payment/`, data).then(r => r.data);
+export const getCreditStatement = (id) => api.get(`/retail/credit-accounts/${id}/statement/`).then(r => r.data);
+
+// ── Electronics: serials + warranties (Phase 3) ──
+export const getProductSerials = (params) => api.get('/retail/product-serials/', { params }).then(r => r.data);
+export const createProductSerial = (data) => api.post('/retail/product-serials/', data).then(r => r.data);
+export const markSerialSold = (id, data) => api.post(`/retail/product-serials/${id}/mark-sold/`, data || {}).then(r => r.data);
+export const deleteProductSerial = (id) => api.delete(`/retail/product-serials/${id}/`);
+
+export const getWarranties = (params) => api.get('/retail/warranties/', { params }).then(r => r.data);
+export const createWarranty = (data) => api.post('/retail/warranties/', data).then(r => r.data);
+export const deleteWarranty = (id) => api.delete(`/retail/warranties/${id}/`);
+
+// ── Liquor: excise returns (Phase 3) ──
+export const getExciseReturns = () => api.get('/retail/excise-returns/').then(r => r.data);
+export const generateExciseReturn = (data) => api.post('/retail/excise-returns/generate/', data).then(r => r.data);
+export const markExciseSubmitted = (id, data) => api.post(`/retail/excise-returns/${id}/mark-submitted/`, data || {}).then(r => r.data);
+
 // ── Products ──
 export const getProducts = () => api.get('/retail/products/').then(r => r.data);
 export const createProduct = (data) => api.post('/retail/products/', data).then(r => r.data);
