@@ -22,6 +22,7 @@ import {
 import { promptWeight } from '../utils/weightPrompt';
 import { requireAgeVerification } from '../utils/ageVerify';
 import { chargeMobileMoney } from '../utils/mobileMoneyCharge';
+import { offerChangeOptions } from '../utils/changeOptions';
 import QuickTilesPanel from '../components/QuickTilesPanel';
 import ScannerLanePOS from '../components/ScannerLanePOS';
 import DarkSupermarketPOS from '../components/DarkSupermarketPOS';
@@ -866,6 +867,14 @@ export default function POS() {
       // loyalty balance, and cashier session totals.
       invalidateSaleCaches(qc);
       setPendingCount(getPendingCount());
+      // Cash sale with change due → offer to give it another way (store credit
+      // now; airtime / EcoCash payout / ZESA once a provider is connected).
+      if (source === 'online' && sale?.payment_method === 'cash' && Number(sale?.change_given) > 0) {
+        offerChangeOptions({
+          amount: Number(sale.change_given),
+          currency: localStorage.getItem('currency') || 'USD',
+        });
+      }
     },
   });
 
