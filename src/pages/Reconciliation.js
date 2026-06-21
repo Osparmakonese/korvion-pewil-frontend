@@ -14,6 +14,7 @@ const pill = (c) => ({ fontSize: 8, fontWeight: 700, padding: '2px 7px', borderR
 const today = () => new Date().toISOString().slice(0, 10);
 const TENDER_LABEL = { cash: '💵 Cash', mobile_money: '📲 Mobile money', card: '💳 Card', bank: '🏦 Bank' };
 const METHOD_LABEL = { cash: 'Cash', mobile_money: 'Mobile money', card: 'Card', mixed: 'Split (mixed)' };
+const VEND_LABEL = { airtime: '📶 Airtime', electricity: '⚡ ZESA', water: '💧 Water', tv: '📺 TV', other: '🧾 Other' };
 const MM_COLORS = {
   paid: { bg: '#e8f5ee', fg: '#1a6b3a' }, pending: { bg: '#fef3e2', fg: '#c97d1a' },
   failed: { bg: '#fdecea', fg: '#c0392b' }, cancelled: { bg: '#fdecea', fg: '#c0392b' },
@@ -37,6 +38,8 @@ export default function Reconciliation() {
   const byTender = r.by_tender || {};
   const byMethod = r.by_method || {};
   const mm = r.mobile_money || {};
+  const vending = r.vending || {};
+  const vendKeys = Object.keys(vending);
 
   const tenderKeys = Object.keys(byTender).sort((a, b) => Number(byTender[b]) - Number(byTender[a]));
 
@@ -107,6 +110,29 @@ export default function Reconciliation() {
           </table>
         </div>
       </div>
+
+      {/* Vending (airtime / ZESA / water) */}
+      {vendKeys.length > 0 && (
+        <div style={card}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Vending (airtime / ZESA / water)</h3>
+            <div style={{ fontSize: 12 }}>Sold: <b style={{ color: '#1a6b3a' }}>{fmt(r.vending_paid_total || 0, 'zwd')}</b></div>
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead><tr><th style={th}>Service</th><th style={th}>Vends</th><th style={th}>Paid</th><th style={th}>Sold</th></tr></thead>
+            <tbody>
+              {vendKeys.map((k) => (
+                <tr key={k}>
+                  <td style={td}>{VEND_LABEL[k] || k}</td>
+                  <td style={td}>{vending[k].count}</td>
+                  <td style={td}>{vending[k].paid_count}</td>
+                  <td style={{ ...td, fontWeight: 600 }}>{fmt(vending[k].paid_total || 0, 'zwd')}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Per-transaction settlement list */}
       <div style={card}>
