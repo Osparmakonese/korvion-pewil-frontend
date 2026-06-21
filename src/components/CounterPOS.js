@@ -105,10 +105,10 @@ export default function CounterPOS({
                   </div>
                   <div style={S.qty}>
                     <button type="button" style={S.qbtn} disabled={weigh} onClick={() => updateCartQty(item.product_id, Math.max(1, (item.quantity | 0) - 1))}>−</button>
-                    <span style={{ minWidth: 18, textAlign: 'center', fontWeight: 700, fontSize: 13 }}>{weigh ? Number(item.quantity).toFixed(3) : item.quantity}</span>
+                    <span style={{ minWidth: 20, textAlign: 'center', fontWeight: 700, fontSize: 14.5 }}>{weigh ? Number(item.quantity).toFixed(3) : item.quantity}</span>
                     <button type="button" style={S.qbtn} disabled={weigh} onClick={() => updateCartQty(item.product_id, (item.quantity | 0) + 1)}>+</button>
                   </div>
-                  <div style={{ width: 56, textAlign: 'right', fontWeight: 800, fontSize: 13 }}>${fmt(item.unit_price * item.quantity)}</div>
+                  <div style={{ width: 70, textAlign: 'right', fontWeight: 800, fontSize: 15 }}>${fmt(item.unit_price * item.quantity)}</div>
                   <button type="button" style={S.rm} onClick={() => removeFromCart(item.product_id)}>×</button>
                 </div>
               );
@@ -150,7 +150,7 @@ const S = {
   sprout: { width: 30, height: 30, borderRadius: 9, background: 'linear-gradient(135deg,#1a6b3a,#22844a)', display: 'grid', placeItems: 'center', color: '#fff', fontSize: 16 },
   crumb: { fontSize: 13, color: C.muted, fontWeight: 400 },
   meta: { display: 'flex', gap: 14, fontSize: 12, color: C.muted, alignItems: 'center' },
-  pos: { flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 380px' },
+  pos: { flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 460px' },
 
   left: { padding: '14px 16px', borderRight: `1px solid ${C.line}`, display: 'flex', flexDirection: 'column', minWidth: 0 },
   searchRow: { display: 'flex', gap: 10, marginBottom: 12 },
@@ -169,13 +169,13 @@ const S = {
   cart: { background: '#fbfcfa', display: 'flex', flexDirection: 'column', minWidth: 0 },
   cartHead: { padding: '14px 18px 8px', borderBottom: `1px solid ${C.line}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   lines: { flex: 1, overflow: 'auto', padding: '8px 14px' },
-  line: { display: 'flex', alignItems: 'center', gap: 10, background: '#fff', border: `1px solid ${C.line}`, borderRadius: 11, padding: '9px 10px', marginBottom: 8 },
-  lnm: { fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
-  lea: { fontSize: 11, color: C.muted },
+  line: { display: 'flex', alignItems: 'center', gap: 12, background: '#fff', border: `1px solid ${C.line}`, borderRadius: 11, padding: '12px 14px', marginBottom: 9 },
+  lnm: { fontSize: 14.5, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+  lea: { fontSize: 12, color: C.muted, marginTop: 1 },
   age: { display: 'inline-block', fontSize: 9, fontWeight: 900, color: '#fff', background: C.amber, borderRadius: 4, padding: '1px 5px', marginLeft: 6 },
   qty: { display: 'flex', alignItems: 'center', gap: 6 },
-  qbtn: { width: 24, height: 24, borderRadius: 7, border: `1px solid ${C.line}`, background: '#fff', color: '#374151', fontWeight: 800, cursor: 'pointer' },
-  rm: { background: 'none', border: 'none', color: '#c0392b', fontSize: 18, cursor: 'pointer' },
+  qbtn: { width: 28, height: 28, borderRadius: 7, border: `1px solid ${C.line}`, background: '#fff', color: '#374151', fontWeight: 800, fontSize: 15, cursor: 'pointer' },
+  rm: { background: 'none', border: 'none', color: '#c0392b', fontSize: 19, cursor: 'pointer' },
   totals: { padding: '12px 18px', borderTop: `1px solid ${C.line}`, background: '#fff' },
   trow: { display: 'flex', justifyContent: 'space-between', fontSize: 13, color: C.muted, margin: '3px 0' },
   grand: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 6 },
