@@ -26,6 +26,7 @@ import { offerChangeOptions } from '../utils/changeOptions';
 import QuickTilesPanel from '../components/QuickTilesPanel';
 import ScannerLanePOS from '../components/ScannerLanePOS';
 import DarkSupermarketPOS from '../components/DarkSupermarketPOS';
+import CounterPOS from '../components/CounterPOS';
 import MobilePOS from '../components/MobilePOS';
 import MobileSaleComplete from '../components/MobileSaleComplete';
 import POSImmersiveControls from '../components/POSImmersiveControls';
@@ -1624,6 +1625,60 @@ export default function POS() {
             setShowReceipt(false);
             barcodeInputRef.current?.focus();
           }}
+          receipt={receipt}
+        />
+      </div>
+    );
+  }
+
+  if (settings.theme === 'light') {
+    const laneLabel = sessions.find((s) => !s.closed_at)
+      ? `Lane #${sessions.find((s) => !s.closed_at).id}`
+      : 'No session';
+    return (
+      <div
+        className={themeCls}
+        data-pos-theme="light"
+        style={{ position: 'fixed', inset: 0, zIndex: 40, background: '#f4f6f2', display: 'flex', flexDirection: 'column' }}
+      >
+        {!isLockOwner && activeSessionId && (
+          <div style={{ background: '#b91c1c', color: '#fff', padding: '10px 16px', textAlign: 'center', fontSize: 13, fontWeight: 700 }}>
+            🔒 POS is already open in another tab on this register (session #{activeSessionId}).
+          </div>
+        )}
+        <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
+          <CounterPOS
+            products={products}
+            filteredProducts={filteredProducts}
+            addToCart={addToCart}
+            cart={cart}
+            removeFromCart={removeFromCart}
+            updateCartQty={updateCartQty}
+            barcode={barcode}
+            setBarcode={setBarcode}
+            handleBarcodeSubmit={handleBarcodeSubmit}
+            barcodeInputRef={barcodeInputRef}
+            search={search}
+            setSearch={setSearch}
+            subtotal={subtotal}
+            discountAmount={discountAmount}
+            taxAmount={taxAmount}
+            grandTotal={grandTotal}
+            paymentMethod={paymentMethod}
+            setPaymentMethod={setPaymentMethod}
+            handleCompleteSale={handleCompleteSale}
+            handleSuspendSale={handleSuspendSale}
+            offline={offline}
+            pendingCount={pendingCount}
+            user={user}
+            laneLabel={laneLabel}
+            brandName={user?.tenant_name || 'Pewil'}
+          />
+        </div>
+        <POSImmersiveControls variant="light" focusMode={focusMode} setFocusMode={setFocusMode} />
+        <ReceiptModal
+          isOpen={showReceipt}
+          onClose={() => { setShowReceipt(false); barcodeInputRef.current?.focus(); }}
           receipt={receipt}
         />
       </div>
