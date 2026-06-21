@@ -86,6 +86,8 @@ export const getPaymentProviders = () => api.get('/retail/payment-credentials/pr
 export const getPaymentTransactions = (params) => api.get('/retail/payments/', { params }).then(r => r.data);
 export const collectPayment = (data) => api.post('/retail/payments/collect/', data).then(r => r.data);
 export const getPaymentStatus = (id) => api.get(`/retail/payments/${id}/status/`).then(r => r.data);
+export const linkPaymentToSale = (id, sale) => api.post(`/retail/payments/${id}/link/`, { sale }).then(r => r.data);
+export const getPaymentReconciliation = (params) => api.get('/retail/payments/reconciliation/', { params }).then(r => r.data);
 
 // Change-as-credit wallet
 export const getWallets = (params) => api.get('/retail/wallets/', { params }).then(r => r.data);

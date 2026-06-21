@@ -141,6 +141,7 @@ const BulkUnits = React.lazy(() => import('./pages/BulkUnits'));
 const MobileMoney = React.lazy(() => import('./pages/MobileMoney'));
 const Wallets = React.lazy(() => import('./pages/Wallets'));
 const PaymentSettings = React.lazy(() => import('./pages/PaymentSettings'));
+const Reconciliation = React.lazy(() => import('./pages/Reconciliation'));
 
 /* --- Loading fallback for lazy pages --- */
 const PageLoader = () => (
@@ -254,6 +255,7 @@ const PAGES = {
   'Mobile Money': MobileMoney,
   'Wallets': Wallets,
   'Payment Setup': PaymentSettings,
+  'Reconciliation': Reconciliation,
 };
 
 /* --- */
@@ -358,6 +360,7 @@ const PAGE_META = {
   'Mobile Money': { title: 'Mobile Money', sub: 'Request EcoCash / OneMoney payments to a phone' },
   'Wallets': { title: 'Customer Wallets', sub: 'Keep change as store credit' },
   'Payment Setup': { title: 'Payment Setup', sub: 'Connect your own mobile money account' },
+  'Reconciliation': { title: 'Reconciliation', sub: 'EcoCash vs cash totals and settlement' },
 };
 
 /* --- */

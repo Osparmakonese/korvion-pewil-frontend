@@ -5,6 +5,7 @@ import {
   barcodeLookup,
   getCashierSessions,
   getPOSSettings,
+  linkPaymentToSale,
 } from '../api/retailApi';
 import apiClient from '../api/axios';
 import { fmt } from '../utils/format';
@@ -830,9 +831,17 @@ export default function POS() {
   // (or pre-detected offline), the sale gets an idempotent client key,
   // goes to the queue, and we show an optimistic receipt immediately. The
   // reconnect sync (installOfflineSync below) drains the queue on recovery.
+  // Holds the mobile-money transaction id for the in-flight sale so we can
+  // link payment ↔ sale once the sale is confirmed (for reconciliation).
+  const pendingMmTxnRef = useRef(null);
   const createSaleMut = useMutation({
     mutationFn: (saleData) => submitSaleOnline(api, saleData),
     onSuccess: ({ sale, source }) => {
+      // Link the mobile-money payment to the sale it settled (best-effort).
+      if (source === 'online' && pendingMmTxnRef.current && sale?.id) {
+        linkPaymentToSale(pendingMmTxnRef.current, sale.id).catch(() => {});
+      }
+      pendingMmTxnRef.current = null;
       setReceipt(sale);
       setLastReceiptId(sale?.id || null);
       setShowReceipt(true);
@@ -1258,6 +1267,7 @@ export default function POS() {
       });
       if (!mobileMoneyTxn) return; // cancelled or failed — leave the ticket open
       effective_amount_tendered = grandTotal; // exact, no change for mobile money
+      pendingMmTxnRef.current = mobileMoneyTxn.id; // link to the sale on success
     }
 
     const saleData = {
