@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getPaymentReconciliation } from '../api/retailApi';
+import { getPaymentReconciliation, getPaymentTransactions } from '../api/retailApi';
 import { fmt } from '../utils/format';
+
+const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
 
 const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginBottom: 16 };
 const input = { padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, boxSizing: 'border-box' };
@@ -25,6 +27,11 @@ export default function Reconciliation() {
     queryKey: ['reconciliation', from, to],
     queryFn: () => getPaymentReconciliation({ from, to }),
   });
+  const { data: txData } = useQuery({
+    queryKey: ['payment-transactions', from, to],
+    queryFn: () => getPaymentTransactions({ from, to }),
+  });
+  const txns = arr(txData);
 
   const r = data || {};
   const byTender = r.by_tender || {};
@@ -99,6 +106,30 @@ export default function Reconciliation() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Per-transaction settlement list */}
+      <div style={card}>
+        <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Mobile money transactions</h3>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead><tr>
+            <th style={th}>When</th><th style={th}>Phone</th><th style={th}>Wallet</th>
+            <th style={th}>Amount</th><th style={th}>Status</th><th style={th}>Sale</th>
+          </tr></thead>
+          <tbody>
+            {txns.length === 0 && <tr><td style={td} colSpan={6}>No mobile money attempts in this period.</td></tr>}
+            {txns.map((t) => (
+              <tr key={t.id}>
+                <td style={td}>{t.created_at ? new Date(t.created_at).toLocaleString() : '—'}</td>
+                <td style={td}>{t.phone || '—'}</td>
+                <td style={td}>{t.method}</td>
+                <td style={{ ...td, fontWeight: 600 }}>{fmt(t.amount || 0, (t.currency || 'usd').toLowerCase())}</td>
+                <td style={td}><span style={pill(MM_COLORS[t.status] || MM_COLORS.created)}>{t.status}</span></td>
+                <td style={td}>{t.sale ? `#${t.sale}` : '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
