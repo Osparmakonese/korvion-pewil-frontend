@@ -14,21 +14,21 @@ import { getPOSSettings, updatePOSSettings } from '../api/retailApi';
 const THEMES = [
   {
     id: 'light',
-    label: 'Light supermarket',
-    hint: 'Square / Clover aesthetic. Clean white, soft green accents. Best for boutique shops and cafés.',
-    preview: { bg: 'linear-gradient(135deg, #f9fafb 60%, #059669 100%)', fg: '#064e3b' },
+    label: 'Counter (Light)',
+    hint: 'Clean split layout — products on the left, the sale always visible on the right with big totals. Bright and friendly; fastest to learn.',
+    preview: { bg: 'linear-gradient(135deg, #f4f6f2 60%, #1a6b3a 100%)', fg: '#064e3b' },
   },
   {
     id: 'dark',
-    label: 'Dark supermarket',
-    hint: 'Toast / Lightspeed aesthetic. Low-glare dark UI with cyan accents. Best for brightly-lit stores.',
-    preview: { bg: 'linear-gradient(135deg, #0b1020 60%, #22d3ee 100%)', fg: '#fff' },
+    label: 'Counter (Dark)',
+    hint: 'The same Counter layout in an easy-on-the-eyes dark theme. Great for evening shifts and bright stores.',
+    preview: { bg: 'linear-gradient(135deg, #0e1411 55%, #34c172 100%)', fg: '#eafff1' },
   },
   {
     id: 'pnp',
-    label: 'Scanner lane',
-    hint: 'Pick n Pay / SAP CAR style. Receipt-style growing list, big yellow TOTAL, DynaKey function strip. Best for high-volume supermarkets.',
-    preview: { bg: 'linear-gradient(135deg, #e31e24 60%, #0f172a 100%)', fg: '#fff' },
+    label: 'Lane Terminal',
+    hint: 'Scan-first supermarket lane: itemised ledger with line numbers, a huge balance-due, colour-coded function keys (Qty / Void / Manager) and tender. Best for high-volume tills.',
+    preview: { bg: 'linear-gradient(135deg, #1f2937 58%, #15803d 100%)', fg: '#fff' },
   },
 ];
 
