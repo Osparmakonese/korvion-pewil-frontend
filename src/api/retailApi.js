@@ -242,6 +242,7 @@ export const flushFiscalQueue = () => api.post('/retail/zimra-devices/flush-queu
 export const getFiscalQueue = (queueStatus) => api.get('/retail/fiscal-queue/', { params: queueStatus ? { status: queueStatus } : {} }).then(r => r.data);
 export const retryFiscalItem = (id) => api.post(`/retail/fiscal-queue/${id}/retry/`).then(r => r.data);
 export const getFiscalQueueStats = () => api.get('/retail/fiscal-queue/stats/').then(r => r.data);
+export const fiscaliseReturn = (id) => api.post(`/retail/returns/${id}/fiscalise/`).then(r => r.data);
 
 // ── Analytics ──
 export const getRetailDashboard = () => api.get('/retail/analytics/dashboard/').then(r => r.data);
