@@ -244,6 +244,32 @@ export const retryFiscalItem = (id) => api.post(`/retail/fiscal-queue/${id}/retr
 export const getFiscalQueueStats = () => api.get('/retail/fiscal-queue/stats/').then(r => r.data);
 export const fiscaliseReturn = (id) => api.post(`/retail/returns/${id}/fiscalise/`).then(r => r.data);
 
+// ── Phase 2/3: Layby ──
+export const getLaybys = (st) => api.get('/retail/laybys/', { params: st ? { status: st } : {} }).then(r => r.data);
+export const createLayby = (data) => api.post('/retail/laybys/', data).then(r => r.data);
+export const updateLayby = (id, data) => api.patch(`/retail/laybys/${id}/`, data).then(r => r.data);
+export const addLaybyPayment = (id, data) => api.post(`/retail/laybys/${id}/add-payment/`, data).then(r => r.data);
+export const collectLayby = (id) => api.post(`/retail/laybys/${id}/collect/`).then(r => r.data);
+export const cancelLayby = (id) => api.post(`/retail/laybys/${id}/cancel/`).then(r => r.data);
+export const getLaybySummary = () => api.get('/retail/laybys/summary/').then(r => r.data);
+
+// ── Phase 2/3: Goods-Received Vouchers ──
+export const getGRVs = () => api.get('/retail/grvs/').then(r => r.data);
+
+// ── Phase 2/3: Recurring invoices ──
+export const getRecurringInvoices = () => api.get('/retail/recurring-invoices/').then(r => r.data);
+export const createRecurringInvoice = (data) => api.post('/retail/recurring-invoices/', data).then(r => r.data);
+export const updateRecurringInvoice = (id, data) => api.patch(`/retail/recurring-invoices/${id}/`, data).then(r => r.data);
+export const generateRecurringInvoice = (id) => api.post(`/retail/recurring-invoices/${id}/generate/`).then(r => r.data);
+export const runDueRecurring = () => api.post('/retail/recurring-invoices/run-due/').then(r => r.data);
+
+// ── Phase 3: Financial & tax reports ──
+export const getVatReturn = (params) => api.get('/retail/financials/vat-return/', { params }).then(r => r.data);
+export const getStockValuation = () => api.get('/retail/financials/stock-valuation/').then(r => r.data);
+export const getProfitLoss = (params) => api.get('/retail/financials/profit-loss/', { params }).then(r => r.data);
+export const getBalanceSheet = () => api.get('/retail/financials/balance-sheet/').then(r => r.data);
+export const getDebtorsCreditors = () => api.get('/retail/financials/debtors-creditors/').then(r => r.data);
+
 // ── Analytics ──
 export const getRetailDashboard = () => api.get('/retail/analytics/dashboard/').then(r => r.data);
 export const getEndOfDayReport = (date) => api.get('/retail/analytics/end_of_day/', { params: date ? { date } : {} }).then(r => r.data);

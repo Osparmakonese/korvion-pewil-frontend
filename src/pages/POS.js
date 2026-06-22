@@ -303,6 +303,31 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
             New Sale
           </button>
         </div>
+        <button
+          onClick={() => {
+            const items = receipt.items || receipt.items_data || [];
+            const lines = items.map((it) =>
+              `• ${it.product_name || it.name || 'Item'} x${it.qty || it.quantity || 1} — $${Number(it.total || 0).toFixed(2)}`
+            ).join('\n');
+            const verify = receipt.fiscal_verification_code
+              ? `\nZIMRA verify: ${receipt.fiscal_verification_code}` : '';
+            const msg =
+              `*${receipt.store_name || 'Your receipt'}*\n` +
+              `Receipt ${receipt.receipt_number}\n` +
+              (lines ? `${lines}\n` : '') +
+              `Total: $${Number(receipt.total || 0).toFixed(2)}${verify}\n` +
+              `Thank you for shopping with us!`;
+            const phone = String(receipt.customer_phone || '').replace(/\D/g, '');
+            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+          }}
+          style={{
+            width: '100%', marginTop: 10, padding: '10px', background: '#25D366',
+            color: '#fff', border: 'none', borderRadius: 7, fontSize: 12,
+            fontWeight: 700, cursor: 'pointer',
+          }}
+        >
+          {'\u{1F4AC}'} Send receipt via WhatsApp
+        </button>
       </div>
     </div>
   );

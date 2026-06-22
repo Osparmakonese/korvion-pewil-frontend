@@ -144,6 +144,11 @@ const PaymentSettings = React.lazy(() => import('./pages/PaymentSettings'));
 const Reconciliation = React.lazy(() => import('./pages/Reconciliation'));
 const Vending = React.lazy(() => import('./pages/Vending'));
 const VendingSetup = React.lazy(() => import('./pages/VendingSetup'));
+// Phase 2/3 — layby, financials, recurring billing, GRV
+const Layby = React.lazy(() => import('./pages/Layby'));
+const FinancialReports = React.lazy(() => import('./pages/FinancialReports'));
+const RecurringInvoices = React.lazy(() => import('./pages/RecurringInvoices'));
+const GoodsReceived = React.lazy(() => import('./pages/GoodsReceived'));
 
 /* --- Loading fallback for lazy pages --- */
 const PageLoader = () => (
@@ -260,6 +265,11 @@ const PAGES = {
   'Reconciliation': Reconciliation,
   'Vending': Vending,
   'Vending Setup': VendingSetup,
+  // Phase 2/3
+  'Layby': Layby,
+  'Financial Reports': FinancialReports,
+  'Recurring Invoices': RecurringInvoices,
+  'Goods Received': GoodsReceived,
 };
 
 /* --- */
@@ -365,6 +375,10 @@ const PAGE_META = {
   'Wallets': { title: 'Customer Wallets', sub: 'Keep change as store credit' },
   'Payment Setup': { title: 'Payment Setup', sub: 'Connect your own mobile money account' },
   'Reconciliation': { title: 'Reconciliation', sub: 'EcoCash vs cash totals and settlement' },
+  'Layby': { title: 'Layby', sub: 'Reserve goods, pay by instalments' },
+  'Financial Reports': { title: 'Financial Reports', sub: 'P&L, VAT-7, balance sheet, debtors' },
+  'Recurring Invoices': { title: 'Recurring Invoices', sub: 'Scheduled billing for account customers' },
+  'Goods Received': { title: 'Goods Received', sub: 'GRVs raised when purchase orders arrive' },
   'Vending': { title: 'Vending', sub: 'Sell airtime, ZESA and water tokens' },
   'Vending Setup': { title: 'Vending Setup', sub: 'Connect your BillPay vendor float' },
 };

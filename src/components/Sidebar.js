@@ -180,6 +180,7 @@ export const NAV_ITEMS = [
     { key: 'Sales History', emoji: '\u{1F4CB}', label: 'Sales History' },
     { key: 'Cashier Sessions', emoji: '\u{1F4B5}', label: 'Sessions' },
     { key: 'Returns', emoji: '\u{1F504}', label: 'Returns & Refunds' },
+    { key: 'Layby', emoji: '\u{1F4E5}', label: 'Layby', feature: 'layby' },
     { key: 'Discounts', emoji: '\u{1F3F7}\uFE0F', label: 'Discounts' },
   ]},
   // OPERATIONS — multi-branch + forecourt. Two "entry-point" items
@@ -248,12 +249,15 @@ export const NAV_ITEMS = [
     { key: 'Suppliers', emoji: '\u{1F4E6}', label: 'Suppliers & POs' },
     { key: 'WhatsApp PO', emoji: '\u{1F4AC}', label: 'WhatsApp PO' },
     { key: 'Stock Adjustments', emoji: '\u{1F504}', label: 'Stock Adjustments' },
+    { key: 'Goods Received', emoji: '\u{1F4E5}', label: 'Goods Received (GRV)' },
     { key: 'Low Stock Alerts', emoji: '\u{1F6A8}', label: 'Low Stock Alerts' },
     { key: 'Barcode Labels', emoji: '\u{1F4CF}', label: 'Barcode & Labels' },
   ]},
   { section: 'MONEY & INSIGHTS', module: 'retail', collapsible: true, items: [
     { key: 'End of Day', emoji: '\u{1F4C4}', label: 'End of Day' },
     { key: 'Retail Report', emoji: '\u{1F4CA}', label: 'Reports', ownerOnly: true },
+    { key: 'Financial Reports', emoji: '\u{1F9FE}', label: 'Financial Reports', ownerOnly: true, feature: 'financials' },
+    { key: 'Recurring Invoices', emoji: '\u{1F501}', label: 'Recurring Invoices', feature: 'recurring_billing' },
     { key: 'Profit Margins', emoji: '\u{1F4C8}', label: 'Profit Margins', ownerOnly: true },
     { key: 'Journal Entries', emoji: '\u{1F4D2}', label: 'Journal Entries' },
     { key: 'Retail Payroll', emoji: '\u{1F4B0}', label: 'Payroll' },

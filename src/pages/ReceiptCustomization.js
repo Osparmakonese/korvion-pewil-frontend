@@ -29,6 +29,10 @@ export default function ReceiptCustomization({ onTabChange }) {
   const [showBarcodeOnReceipt, setShowBarcodeOnReceipt] = useState(true);
   const [showQRCode, setShowQRCode] = useState(true);
   const [currencyDisplay, setCurrencyDisplay] = useState('Dual (USD + ZiG)');
+  // Branding (A4 / invoice templates)
+  const [logoUrl, setLogoUrl] = useState('');
+  const [brandColor, setBrandColor] = useState('#1a6b3a');
+  const [bankDetails, setBankDetails] = useState('');
 
   useEffect(() => {
     if (template) {
@@ -40,6 +44,9 @@ export default function ReceiptCustomization({ onTabChange }) {
       setFooterMessage(template.footer_message || '');
       setShowBarcodeOnReceipt(template.show_barcode ?? true);
       setPaperWidth(template.paper_width || '80mm');
+      setLogoUrl(template.logo_url || '');
+      setBrandColor(template.brand_color || '#1a6b3a');
+      setBankDetails(template.bank_details || '');
     }
   }, [template]);
 
@@ -107,7 +114,10 @@ export default function ReceiptCustomization({ onTabChange }) {
               show_logo: showLogo,
               show_barcode: showBarcodeOnReceipt,
               paper_width: paperWidth,
-              font_size: fontSize
+              font_size: fontSize,
+              logo_url: logoUrl,
+              brand_color: brandColor,
+              bank_details: bankDetails
             })}
             disabled={saveMutation.isPending}
             style={{
@@ -178,6 +188,43 @@ export default function ReceiptCustomization({ onTabChange }) {
                     boxSizing: 'border-box'
                   }}
                 />
+              </div>
+              <div>
+                <label style={{ fontSize: 9, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 4 }}>
+                  LOGO URL (branded A4 invoices)
+                </label>
+                <input
+                  type="text"
+                  value={logoUrl}
+                  onChange={(e) => setLogoUrl(e.target.value)}
+                  placeholder="https://…/logo.png"
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 11, boxSizing: 'border-box' }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <div>
+                  <label style={{ fontSize: 9, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 4 }}>
+                    BRAND COLOUR
+                  </label>
+                  <input
+                    type="color"
+                    value={brandColor}
+                    onChange={(e) => setBrandColor(e.target.value)}
+                    style={{ width: 48, height: 34, border: '1px solid #e5e7eb', borderRadius: 6, padding: 2, cursor: 'pointer' }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 9, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 4 }}>
+                    BANK DETAILS (printed on invoices)
+                  </label>
+                  <input
+                    type="text"
+                    value={bankDetails}
+                    onChange={(e) => setBankDetails(e.target.value)}
+                    placeholder="Bank · Acc name · Acc no · Branch"
+                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 11, boxSizing: 'border-box' }}
+                  />
+                </div>
               </div>
               <div>
                 <label style={{ fontSize: 9, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 4 }}>
