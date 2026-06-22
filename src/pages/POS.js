@@ -1432,6 +1432,7 @@ export default function POS() {
     return (
       <>
         <MobilePOS
+          theme={settings.theme}
           cart={cart}
           removeFromCart={removeFromCart}
           updateCartQty={updateCartQty}
