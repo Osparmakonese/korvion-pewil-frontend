@@ -230,6 +230,14 @@ export const updateZimraDevice = (id, data) => api.patch(`/retail/zimra-devices/
 export const getZReports = () => api.get('/retail/z-reports/').then(r => r.data);
 export const generateZReport = () => api.post('/retail/z-reports/generate/').then(r => r.data);
 
+// ── ZIMRA FDMS device lifecycle + compliance ──
+export const registerZimraDevice = (id) => api.post(`/retail/zimra-devices/${id}/register/`).then(r => r.data);
+export const syncZimraDevice = (id) => api.post(`/retail/zimra-devices/${id}/sync/`).then(r => r.data);
+export const openFiscalDay = (id) => api.post(`/retail/zimra-devices/${id}/open-day/`).then(r => r.data);
+export const closeFiscalDay = (id) => api.post(`/retail/zimra-devices/${id}/close-day/`).then(r => r.data);
+export const getFiscalCompliance = () => api.get('/retail/zimra-devices/compliance/').then(r => r.data);
+export const flushFiscalQueue = () => api.post('/retail/zimra-devices/flush-queue/').then(r => r.data);
+
 // ── Fiscal Queue ──
 export const getFiscalQueue = (queueStatus) => api.get('/retail/fiscal-queue/', { params: queueStatus ? { status: queueStatus } : {} }).then(r => r.data);
 export const retryFiscalItem = (id) => api.post(`/retail/fiscal-queue/${id}/retry/`).then(r => r.data);

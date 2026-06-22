@@ -30,6 +30,7 @@ const BLANK_PRODUCT = {
   is_quick_tile: false, is_menu_item: false,
   is_controlled: false, controlled_schedule: '',
   excise_rate: '',
+  hs_code: '', is_vat_exempt: false,
 };
 
 function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initialData }) {
@@ -61,6 +62,8 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
         is_controlled: !!initialData.is_controlled,
         controlled_schedule: initialData.controlled_schedule || '',
         excise_rate: initialData.excise_rate || '',
+        hs_code: initialData.hs_code || '',
+        is_vat_exempt: !!initialData.is_vat_exempt,
       });
       setShowAdvanced(!!(initialData.is_weighable || initialData.is_age_restricted ||
         initialData.is_quick_tile || initialData.is_menu_item || initialData.is_controlled || initialData.barcode));
@@ -434,6 +437,10 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
                     )}
                     <label style={{ ...chk, marginTop: 10, display: 'block' }}>Excise duty per unit (alcohol)</label>
                     <input name="excise_rate" type="number" min={0} step="0.0001" value={form.excise_rate} onChange={handleChange} placeholder="0.00 — duty charged per unit sold" style={{ ...sub, marginLeft: 0 }} />
+
+                    <label style={{ ...chk, marginTop: 10, display: 'block' }}>HS tariff code (ZIMRA fiscal receipts)</label>
+                    <input name="hs_code" value={form.hs_code} onChange={handleChange} placeholder="e.g. 0808.01.01 — required on fiscal receipt lines" style={{ ...sub, marginLeft: 0 }} />
+                    <label style={chk}><input type="checkbox" name="is_vat_exempt" checked={form.is_vat_exempt} onChange={handleChange} /> VAT exempt / zero-rated (e.g. basic foodstuffs)</label>
                   </>
                 );
               })()}

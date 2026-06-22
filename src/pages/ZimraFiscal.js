@@ -1,295 +1,274 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
-import { getZimraDevices, createZimraDevice, updateZimraDevice, getZReports, generateZReport } from '../api/retailApi';
+import {
+  getZimraDevices, createZimraDevice, updateZimraDevice,
+  getZReports, generateZReport,
+  getFiscalCompliance, registerZimraDevice, syncZimraDevice,
+  openFiscalDay, closeFiscalDay, flushFiscalQueue,
+} from '../api/retailApi';
 
+const G = '#1a6b3a', AMBER = '#c97d1a', RED = '#b91c1c';
 const S = {
   page: { maxWidth: 1200, margin: '0 auto', padding: 20 },
-  heroBanner: {
-    background: 'linear-gradient(135deg, #1e3a5f, #2563eb)',
-    height: 100,
-    borderRadius: 14,
-    padding: '0 24px',
-    color: '#fff',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-    position: 'relative',
-    overflow: 'hidden',
+  hero: {
+    background: 'linear-gradient(135deg, #1e3a5f, #2563eb)', borderRadius: 14,
+    padding: '20px 24px', color: '#fff', marginBottom: 16, position: 'relative', overflow: 'hidden',
   },
-  heroLeft: { display: 'flex', flexDirection: 'column', justifyContent: 'center' },
-  heroTitle: { fontSize: 18, fontWeight: 700, fontFamily: "'Playfair Display', serif", margin: 0, marginBottom: 4 },
-  heroSub: { fontSize: 10, opacity: 0.85, margin: 0 },
-  heroIcon: { fontSize: 80, opacity: 0.2, position: 'absolute', right: 24, top: -10 },
-  statusCard: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16, marginBottom: 16, borderLeftWidth: 4 },
-  statusCardGreen: { borderLeftColor: '#1a6b3a' },
-  statusCardAmber: { borderLeftColor: '#c97d1a' },
-  statusTitle: { fontSize: 11, fontWeight: 600, marginBottom: 8 },
-  statusBold: { fontWeight: 700, fontSize: 12 },
-  statusGreen: { color: '#1a6b3a' },
-  statusAmber: { color: '#c97d1a' },
-  metaRow: { fontSize: 10, color: '#6b7280', marginBottom: 4 },
-  badge: { display: 'inline-block', fontSize: 8, fontWeight: 700, padding: '2px 7px', borderRadius: 20, textTransform: 'uppercase' },
-  badgeGreen: { background: '#e8f5ee', color: '#1a6b3a' },
-  twoColumnGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 },
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 },
-  cardTitle: { fontSize: 12, fontWeight: 700, color: '#111827', marginBottom: 12 },
+  heroTitle: { fontSize: 20, fontWeight: 700, fontFamily: "'Playfair Display', serif", margin: 0, marginBottom: 4 },
+  heroSub: { fontSize: 12, opacity: 0.9, margin: 0 },
+  heroIcon: { fontSize: 90, opacity: 0.15, position: 'absolute', right: 20, top: -8 },
+  grid3: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, marginBottom: 16 },
+  stat: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16, borderLeft: '4px solid #e5e7eb' },
+  statLabel: { fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' },
+  statValue: { fontSize: 22, fontWeight: 800, color: '#111827', marginTop: 6 },
+  statHint: { fontSize: 11, color: '#6b7280', marginTop: 4 },
+  twoCol: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 },
+  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 18 },
+  cardTitle: { fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 14 },
   formGroup: { marginBottom: 12 },
-  label: { display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' },
-  input: { width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 11, boxSizing: 'border-box', background: '#f9fafb', color: '#374151' },
-  select: { width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 11, boxSizing: 'border-box', background: '#fff' },
-  buttonRow: { display: 'flex', gap: 8 },
-  btnOutline: { flex: 1, padding: 10, background: '#fff', color: '#1a6b3a', border: '1px solid #1a6b3a', borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: 'pointer' },
-  btnSolid: { flex: 1, padding: 10, background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: 'pointer' },
-  infoBox: { background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, marginTop: 12, fontSize: 10, color: '#6b7280', lineHeight: 1.6 },
-  table: { width: '100%', borderCollapse: 'collapse', fontSize: 11, marginTop: 12 },
-  th: { fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', background: '#f9fafb', textAlign: 'left' },
-  td: { padding: '7px 8px', borderBottom: '1px solid #f3f4f6', color: '#374151' },
-  receipt: {
-    fontFamily: 'monospace',
-    fontSize: 10,
-    background: '#f9fafb',
-    padding: 16,
-    border: '1px dashed #e5e7eb',
-    maxWidth: 280,
-    margin: '16px auto',
-    borderRadius: 8,
-    color: '#374151',
-    lineHeight: 1.6,
-  },
-  receiptLine: { textAlign: 'center', marginBottom: 8 },
-  receiptDivider: { borderTop: '1px solid #e5e7eb', margin: '8px 0' },
+  label: { display: 'block', fontSize: 10, fontWeight: 700, color: '#6b7280', marginBottom: 5, textTransform: 'uppercase' },
+  input: { width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 13, boxSizing: 'border-box', background: '#f9fafb', color: '#374151' },
+  select: { width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 13, boxSizing: 'border-box', background: '#fff' },
+  btnRow: { display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6 },
+  btn: { padding: '10px 14px', borderRadius: 7, fontSize: 12, fontWeight: 700, cursor: 'pointer', border: 'none' },
+  btnSolid: { background: G, color: '#fff' },
+  btnOutline: { background: '#fff', color: G, border: `1px solid ${G}` },
+  btnBlue: { background: '#2563eb', color: '#fff' },
+  btnAmber: { background: AMBER, color: '#fff' },
+  btnGhost: { background: '#f3f4f6', color: '#374151' },
+  info: { background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, marginTop: 12, fontSize: 11, color: '#6b7280', lineHeight: 1.6 },
+  msgOk: { background: '#e8f5ee', border: `1px solid ${G}`, color: G, borderRadius: 8, padding: '10px 12px', fontSize: 12, marginBottom: 12 },
+  msgErr: { background: '#fef2f2', border: `1px solid ${RED}`, color: RED, borderRadius: 8, padding: '10px 12px', fontSize: 12, marginBottom: 12 },
+  table: { width: '100%', borderCollapse: 'collapse', fontSize: 12, marginTop: 6 },
+  th: { fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', padding: '8px', borderBottom: '1px solid #e5e7eb', background: '#f9fafb', textAlign: 'left' },
+  td: { padding: '8px', borderBottom: '1px solid #f3f4f6', color: '#374151' },
+  badge: { display: 'inline-block', fontSize: 9, fontWeight: 700, padding: '3px 9px', borderRadius: 20, textTransform: 'uppercase' },
+  pill: (bg, fg) => ({ display: 'inline-block', fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 20, background: bg, color: fg }),
 };
 
-export default function ZimraFiscal({ onTabChange }) {
+export default function ZimraFiscal() {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const [newDevice, setNewDevice] = useState({
-    vat_number: '',
-    device_type: 'vfd',
-    fdms_url: 'https://fdms.zimra.co.zw/api/v1',
-    device_serial: '',
+  const qc = useQueryClient();
+  const canEdit = user?.role === 'owner' || user?.role === 'manager' || user?.is_staff;
+  const [msg, setMsg] = useState(null);   // {type:'ok'|'err', text}
+  const flash = (type, text) => { setMsg({ type, text }); setTimeout(() => setMsg(null), 6000); };
+
+  const { data: compliance, isLoading: compLoading } = useQuery({
+    queryKey: ['fiscal-compliance'], queryFn: getFiscalCompliance, staleTime: 15000,
+  });
+  const { data: devices = [] } = useQuery({
+    queryKey: ['retail-zimra-devices'], queryFn: getZimraDevices, staleTime: 30000,
+  });
+  const { data: zReports = [] } = useQuery({
+    queryKey: ['retail-z-reports'], queryFn: getZReports, staleTime: 30000,
   });
 
-  // Fetch ZIMRA devices
-  const { data: devices = [], isLoading: devicesLoading } = useQuery({
-    queryKey: ['retail-zimra-devices'],
-    queryFn: getZimraDevices,
-    staleTime: 30000,
-  });
+  const device = compliance?.device || (devices[0] || null);
 
-  // Fetch Z-Reports
-  const { data: zReportsData = [], isLoading: reportsLoading } = useQuery({
-    queryKey: ['retail-z-reports'],
-    queryFn: getZReports,
-    staleTime: 30000,
+  const [form, setForm] = useState({
+    vat_number: '', device_serial: '', device_id: '', activation_key: '',
+    device_type: 'VFD', environment: 'sandbox', model_name: 'Pewil', model_version: '1.0',
+    fdms_url: '',
   });
+  useEffect(() => {
+    if (device) {
+      setForm((f) => ({
+        ...f,
+        vat_number: device.vat_number || '',
+        device_serial: device.device_serial || '',
+        device_id: device.device_id || '',
+        device_type: device.device_type || 'VFD',
+        environment: device.environment || 'sandbox',
+        model_name: device.model_name || 'Pewil',
+        model_version: device.model_version || '1.0',
+      }));
+    }
+  }, [device?.id]);
 
-  // Create ZIMRA Device mutation
-  const createDeviceMutation = useMutation({
-    mutationFn: createZimraDevice,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['retail-zimra-devices'] });
-      setNewDevice({ vat_number: '', device_type: 'vfd', fdms_url: 'https://fdms.zimra.co.zw/api/v1', device_serial: '' });
-    },
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ['fiscal-compliance'] });
+    qc.invalidateQueries({ queryKey: ['retail-zimra-devices'] });
+  };
+
+  const onAct = (okMsg) => ({
+    onSuccess: (r) => { refresh(); flash(r?.success === false ? 'err' : 'ok', r?.message || okMsg); },
+    onError: (e) => flash('err', e?.response?.data?.message || e?.response?.data?.detail || 'Action failed.'),
   });
-
-  // Generate Z-Report mutation
-  const generateReportMutation = useMutation({
-    mutationFn: generateZReport,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['retail-z-reports'] });
-    },
+  const saveMut = useMutation({
+    mutationFn: (data) => device?.id ? updateZimraDevice(device.id, data) : createZimraDevice(data),
+    onSuccess: () => { refresh(); flash('ok', 'Device details saved.'); },
+    onError: (e) => flash('err', e?.response?.data?.detail || 'Could not save device.'),
   });
+  const registerMut = useMutation({ mutationFn: () => registerZimraDevice(device.id), ...onAct('Registered with ZIMRA.') });
+  const syncMut = useMutation({ mutationFn: () => syncZimraDevice(device.id), ...onAct('Synced with ZIMRA.') });
+  const openMut = useMutation({ mutationFn: () => openFiscalDay(device.id), ...onAct('Fiscal day opened.') });
+  const closeMut = useMutation({ mutationFn: () => closeFiscalDay(device.id), ...onAct('Fiscal day closed.') });
+  const flushMut = useMutation({ mutationFn: () => flushFiscalQueue(), ...onAct('Queue processed.') });
+  const zMut = useMutation({ mutationFn: generateZReport, onSuccess: () => qc.invalidateQueries({ queryKey: ['retail-z-reports'] }) });
 
-  // Get the first device for status display
-  const activeDevice = devices && devices.length > 0 ? devices[0] : null;
-  const isConnected = activeDevice?.status === 'active';
+  const provisioned = compliance?.is_provisioned;
+  const dayOpen = compliance?.fiscal_day_status === 'open';
 
   return (
     <div style={S.page}>
-      {/* Hero Banner */}
-      <div style={S.heroBanner}>
-        <div style={S.heroLeft}>
-          <h1 style={S.heroTitle}>ZIMRA Fiscalisation</h1>
-          <p style={S.heroSub}>Fiscal Device Management System (FDMS) compliance</p>
-        </div>
-        <div style={S.heroIcon}>📋</div>
+      <div style={S.hero}>
+        <h1 style={S.heroTitle}>ZIMRA Fiscalisation</h1>
+        <p style={S.heroSub}>Virtual fiscal device — real-time FDMS submission, QR receipts, fiscal day &amp; offline queue</p>
+        <div style={S.heroIcon}>🧾</div>
       </div>
 
-      {/* Compliance Status Card */}
-      {devicesLoading ? (
-        <div style={S.statusCard}>Loading ZIMRA device status...</div>
-      ) : activeDevice ? (
-        <div style={{ ...S.statusCard, ...(isConnected ? S.statusCardGreen : S.statusCardAmber) }}>
-          <div style={S.statusTitle}>
-            <span style={isConnected ? S.statusGreen : S.statusAmber}>
-              {isConnected ? '✓' : '○'} FDMS Status: {isConnected ? 'Connected' : 'Not Configured'}
-            </span>
-            <span style={{ ...S.badge, ...S.badgeGreen, marginLeft: 8 }}>
-              {isConnected ? 'Active' : 'Inactive'}
-            </span>
+      {msg && <div style={msg.type === 'ok' ? S.msgOk : S.msgErr}>{msg.text}</div>}
+
+      {/* Compliance snapshot */}
+      <div style={S.grid3}>
+        <div style={{ ...S.stat, borderLeftColor: provisioned ? G : AMBER }}>
+          <div style={S.statLabel}>Device</div>
+          <div style={{ ...S.statValue, color: provisioned ? G : AMBER }}>
+            {provisioned ? 'Provisioned' : (device ? 'Not registered' : 'None')}
           </div>
-          <div style={S.metaRow}>VAT Number: <span style={S.statusBold}>{activeDevice.vat_number}</span></div>
-          <div style={S.metaRow}>Device: <span style={S.statusBold}>{activeDevice.device_serial}</span></div>
-          <div style={S.metaRow}>Last Sync: <span style={S.statusBold}>{activeDevice.last_sync || 'Not synced'}</span></div>
+          <div style={S.statHint}>{device ? `Serial ${device.device_serial || '—'}` : 'Add a device below'}</div>
         </div>
-      ) : (
-        <div style={{ ...S.statusCard, ...S.statusCardAmber }}>
-          <div style={S.statusTitle}>
-            <span style={S.statusAmber}>○ FDMS Status: Not Configured</span>
-            <span style={{ ...S.badge, marginLeft: 8, background: '#fef3e2', color: '#b45309' }}>
-              Inactive
-            </span>
-          </div>
-          <div style={S.metaRow}>No ZIMRA device configured yet.</div>
+        <div style={{ ...S.stat, borderLeftColor: dayOpen ? G : '#9ca3af' }}>
+          <div style={S.statLabel}>Fiscal day</div>
+          <div style={{ ...S.statValue, color: dayOpen ? G : '#6b7280' }}>{dayOpen ? 'Open' : 'Closed'}</div>
+          <div style={S.statHint}>Day #{compliance?.fiscal_day_no ?? 0}</div>
+        </div>
+        <div style={{ ...S.stat, borderLeftColor: (compliance?.unfiscalised_today || compliance?.failed_submissions) ? AMBER : G }}>
+          <div style={S.statLabel}>Today</div>
+          <div style={S.statValue}>{compliance?.fiscalised_today ?? 0} <span style={{ fontSize: 13, color: '#9ca3af', fontWeight: 600 }}>fiscalised</span></div>
+          <div style={S.statHint}>{compliance?.unfiscalised_today ?? 0} not yet · {compliance?.pending_submissions ?? 0} queued · {compliance?.failed_submissions ?? 0} failed</div>
+        </div>
+      </div>
+
+      {/* Cert expiry warning */}
+      {compliance?.certificate_expiring_soon && (
+        <div style={S.msgErr}>
+          ⚠ This device's certificate expires on {device?.certificate_expiry}. Renew it with ZIMRA before it lapses or fiscalisation will stop.
         </div>
       )}
 
-      {/* Two-Column Grid */}
-      <div style={S.twoColumnGrid}>
-        {/* Left: Device Configuration */}
-        <div style={S.card}>
-          <h2 style={S.cardTitle}>Device Configuration</h2>
-
-          <div style={S.formGroup}>
-            <label style={S.label}>VAT Registration Number</label>
-            <input
-              type="text"
-              value={newDevice.vat_number}
-              onChange={(e) => setNewDevice({ ...newDevice, vat_number: e.target.value })}
-              style={S.input}
-            />
-          </div>
-
-          <div style={S.formGroup}>
-            <label style={S.label}>Device Type</label>
-            <select
-              style={S.select}
-              value={newDevice.device_type}
-              onChange={(e) => setNewDevice({ ...newDevice, device_type: e.target.value })}
-            >
-              <option value="esd">Hardware ESD</option>
-              <option value="vfd">Virtual Fiscal Device (VFD)</option>
-            </select>
-          </div>
-
-          <div style={S.formGroup}>
-            <label style={S.label}>FDMS Server URL</label>
-            <input
-              type="text"
-              value={newDevice.fdms_url}
-              onChange={(e) => setNewDevice({ ...newDevice, fdms_url: e.target.value })}
-              style={S.input}
-            />
-          </div>
-
-          <div style={S.formGroup}>
-            <label style={S.label}>Device Serial</label>
-            <input
-              type="text"
-              value={newDevice.device_serial}
-              onChange={(e) => setNewDevice({ ...newDevice, device_serial: e.target.value })}
-              style={S.input}
-            />
-          </div>
-
-          <div style={S.buttonRow}>
-            <button style={S.btnOutline} disabled={createDeviceMutation.isPending}>Test Connection</button>
-            <button
-              style={S.btnSolid}
-              onClick={() => createDeviceMutation.mutate(newDevice)}
-              disabled={createDeviceMutation.isPending}
-            >
-              {createDeviceMutation.isPending ? 'Saving...' : 'Save Configuration'}
+      {/* Device lifecycle actions */}
+      {device && (
+        <div style={{ ...S.card, marginBottom: 16 }}>
+          <h2 style={S.cardTitle}>Device control</h2>
+          <div style={S.btnRow}>
+            <button style={{ ...S.btn, ...S.btnSolid }} disabled={!canEdit || registerMut.isPending}
+              onClick={() => registerMut.mutate()}>
+              {registerMut.isPending ? 'Registering…' : (provisioned ? 'Re-register' : 'Register with ZIMRA')}
             </button>
+            <button style={{ ...S.btn, ...S.btnOutline }} disabled={!canEdit || !provisioned || syncMut.isPending}
+              onClick={() => syncMut.mutate()}>Sync config</button>
+            <button style={{ ...S.btn, ...S.btnBlue }} disabled={!canEdit || !provisioned || dayOpen || openMut.isPending}
+              onClick={() => openMut.mutate()}>Open fiscal day</button>
+            <button style={{ ...S.btn, ...S.btnAmber }} disabled={!canEdit || !dayOpen || closeMut.isPending}
+              onClick={() => closeMut.mutate()}>Close day (Z-report)</button>
+            {(compliance?.pending_submissions || compliance?.failed_submissions) ? (
+              <button style={{ ...S.btn, ...S.btnGhost }} disabled={!canEdit || flushMut.isPending}
+                onClick={() => flushMut.mutate()}>Retry queued ({(compliance?.pending_submissions || 0) + (compliance?.failed_submissions || 0)})</button>
+            ) : null}
           </div>
-
-          <div style={S.infoBox}>
-            VAT-registered businesses can claim 50% of fiscal device costs as Input Tax on their VAT 7 Return.
-          </div>
-        </div>
-
-        {/* Right: Daily Z-Reports */}
-        <div style={S.card}>
-          <h2 style={S.cardTitle}>Fiscal Z-Reports</h2>
-          {reportsLoading ? (
-            <div style={{ padding: 16, textAlign: 'center', color: '#6b7280' }}>Loading Z-Reports...</div>
-          ) : (
-            <table style={S.table}>
-              <thead>
-                <tr>
-                  <th style={S.th}>Date</th>
-                  <th style={S.th}>Transactions</th>
-                  <th style={S.th}>Gross Sales</th>
-                  <th style={S.th}>VAT Collected</th>
-                  <th style={S.th}>Net Sales</th>
-                  <th style={S.th}>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {zReportsData.map((report) => (
-                  <tr key={report.id}>
-                    <td style={S.td}>{new Date(report.report_date).toLocaleDateString()}</td>
-                    <td style={S.td}>{report.transaction_count}</td>
-                    <td style={S.td}>${report.gross_sales.toFixed(2)}</td>
-                    <td style={S.td}>${report.vat_collected.toFixed(2)}</td>
-                    <td style={S.td}>${report.net_sales.toFixed(2)}</td>
-                    <td style={S.td}>
-                      <span style={{ ...S.badge, ...S.badgeGreen }}>
-                        {report.submitted ? 'Submitted' : 'Pending'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {provisioned && (
+            <div style={S.info}>
+              <b>{device.taxpayer_name || '—'}</b> · TIN {device.taxpayer_tin || '—'} · VAT {device.vat_number || '—'}<br />
+              Environment: <b>{device.environment}</b> · Certificate valid till: <b>{device.certificate_expiry || '—'}</b> · Last receipt #{device.last_receipt_global_no || 0}
+            </div>
           )}
         </div>
+      )}
+
+      <div style={S.twoCol}>
+        {/* Device registration */}
+        <div style={S.card}>
+          <h2 style={S.cardTitle}>{device ? 'Device details' : 'Add fiscal device'}</h2>
+          <div style={S.formGroup}>
+            <label style={S.label}>Device ID (from ZIMRA portal)</label>
+            <input style={S.input} type="number" value={form.device_id}
+              onChange={(e) => setForm({ ...form, device_id: e.target.value })} placeholder="e.g. 24455" />
+          </div>
+          <div style={S.formGroup}>
+            <label style={S.label}>Device serial number</label>
+            <input style={S.input} value={form.device_serial}
+              onChange={(e) => setForm({ ...form, device_serial: e.target.value })} placeholder="Your chosen serial" />
+          </div>
+          <div style={S.formGroup}>
+            <label style={S.label}>Activation key</label>
+            <input style={S.input} value={form.activation_key}
+              onChange={(e) => setForm({ ...form, activation_key: e.target.value })} placeholder="8-char key from the portal" />
+          </div>
+          <div style={S.formGroup}>
+            <label style={S.label}>VAT number</label>
+            <input style={S.input} value={form.vat_number}
+              onChange={(e) => setForm({ ...form, vat_number: e.target.value })} />
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ ...S.formGroup, flex: 1 }}>
+              <label style={S.label}>Type</label>
+              <select style={S.select} value={form.device_type}
+                onChange={(e) => setForm({ ...form, device_type: e.target.value })}>
+                <option value="VFD">Virtual (VFD)</option>
+                <option value="PFD">Physical (PFD)</option>
+              </select>
+            </div>
+            <div style={{ ...S.formGroup, flex: 1 }}>
+              <label style={S.label}>Environment</label>
+              <select style={S.select} value={form.environment}
+                onChange={(e) => setForm({ ...form, environment: e.target.value })}>
+                <option value="sandbox">Test (sandbox)</option>
+                <option value="production">Live (production)</option>
+              </select>
+            </div>
+          </div>
+          <div style={S.btnRow}>
+            <button style={{ ...S.btn, ...S.btnSolid, flex: 1 }} disabled={!canEdit || saveMut.isPending}
+              onClick={() => saveMut.mutate({
+                ...form,
+                device_id: form.device_id ? parseInt(form.device_id, 10) : null,
+              })}>
+              {saveMut.isPending ? 'Saving…' : (device ? 'Save changes' : 'Add device')}
+            </button>
+          </div>
+          <div style={S.info}>
+            First create a <b>virtual device</b> on the ZIMRA FDMS portal to get a Device ID + Activation Key, enter them here,
+            then press <b>Register with ZIMRA</b> above. Pewil generates the key-pair and certificate request automatically — no fiscal printer needed.
+            VAT-registered businesses can claim 50% of fiscal device costs as input tax on the VAT 7 return.
+          </div>
+        </div>
+
+        {/* Z-Reports */}
+        <div style={S.card}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <h2 style={{ ...S.cardTitle, marginBottom: 0 }}>Fiscal Z-Reports</h2>
+            <button style={{ ...S.btn, ...S.btnGhost }} disabled={zMut.isPending}
+              onClick={() => zMut.mutate()}>{zMut.isPending ? '…' : 'Generate today'}</button>
+          </div>
+          <table style={S.table}>
+            <thead>
+              <tr><th style={S.th}>Date</th><th style={S.th}>Txns</th><th style={S.th}>Gross</th><th style={S.th}>VAT</th><th style={S.th}>Status</th></tr>
+            </thead>
+            <tbody>
+              {zReports.length === 0 && (
+                <tr><td style={S.td} colSpan={5}>No Z-reports yet.</td></tr>
+              )}
+              {zReports.map((r) => (
+                <tr key={r.id}>
+                  <td style={S.td}>{new Date(r.report_date).toLocaleDateString()}</td>
+                  <td style={S.td}>{r.transaction_count}</td>
+                  <td style={S.td}>${Number(r.gross_sales).toFixed(2)}</td>
+                  <td style={S.td}>${Number(r.vat_collected).toFixed(2)}</td>
+                  <td style={S.td}>
+                    <span style={r.submitted ? S.pill('#e8f5ee', G) : S.pill('#fef3e2', AMBER)}>
+                      {r.submitted ? 'Submitted' : 'Pending'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Fiscal Receipt Preview */}
-      <div style={S.card}>
-        <h2 style={S.cardTitle}>Fiscal Receipt Preview</h2>
-        <div style={S.receipt}>
-          <div style={S.receiptLine}>===== {user?.tenant_name?.toUpperCase() || 'MY STORE'} =====</div>
-          <div style={S.receiptLine}>VAT Reg: 10012345</div>
-          <div style={S.receiptLine}>Receipt: FIS-2026-04-12-0038</div>
-          <div style={S.receiptLine}>Date: 12 Apr 2026 17:45</div>
-          <div style={S.receiptDivider}></div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-            <span>USB-C Charger    x1</span>
-            <span>$15.00</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span>BT Earbuds       x1</span>
-            <span>$25.00</span>
-          </div>
-          <div style={S.receiptDivider}></div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
-            <span>Subtotal:</span>
-            <span>$40.00</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span>VAT (15%):</span>
-            <span>$6.00</span>
-          </div>
-          <div style={S.receiptDivider}></div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontWeight: 600 }}>
-            <span>TOTAL:</span>
-            <span>$46.00</span>
-          </div>
-          <div style={S.receiptDivider}></div>
-          <div style={S.receiptLine}>Payment: EcoCash</div>
-          <div style={S.receiptLine}>ZIMRA Fiscal Device: VFD-2026-00142</div>
-          <div style={S.receiptLine}>[QR CODE PLACEHOLDER]</div>
-          <div style={S.receiptLine}>Verification: zimra.co.zw/verify</div>
-        </div>
-        <div style={{ fontSize: 10, color: '#6b7280', textAlign: 'center', marginTop: 12 }}>
-          All fiscal receipts include ZIMRA QR code for verification by customers and auditors.
-        </div>
-      </div>
+      {compLoading && <div style={{ color: '#9ca3af', fontSize: 12 }}>Loading compliance status…</div>}
     </div>
   );
 }
