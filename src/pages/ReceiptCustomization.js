@@ -430,46 +430,125 @@ export default function ReceiptCustomization({ onTabChange }) {
             Receipt Preview
           </h3>
 
-          <div
-            style={{
-              fontFamily: 'monospace',
-              fontSize: 9,
-              background: '#f9fafb',
-              padding: 16,
-              border: '1px dashed #e5e7eb',
-              borderRadius: 8,
-              maxWidth: 280,
-              margin: '0 auto',
-              lineHeight: 1.5,
-              color: '#111827',
-              whiteSpace: 'pre-wrap'
-            }}
-          >
-            {`═══ ${businessName} ═══
-${address}
-Tel: ${phone}
-VAT: ${vatNumber}
-─────────────────────
-Receipt: #0108
-Date: 12 Apr 2026 17:45
-Cashier: Mary Banda
-─────────────────────
-USB-C Charger   x1  $15.00
-BT Earbuds      x1  $25.00
-iPhone Case     x2  $16.00
-─────────────────────
-Subtotal:       $56.00
-Discount (10%): -$5.60
-VAT (15%):       $7.56
-─────────────────────
-TOTAL:          $57.96
-Paid: EcoCash
-─────────────────────
-[QR Code placeholder]
+          {(() => {
+            // Faithful render of the real thermal receipt (POS.js → printThermal),
+            // driven by the live editor fields so the preview is TRUE to print.
+            const fs = fontSize === 'Small' ? 0.88 : fontSize === 'Large' ? 1.14 : 1;
+            const w = paperWidth === '58mm' ? 232 : 300;
+            const money = (n) => '$' + (Number(n) || 0).toFixed(2);
+            const sampleItems = [
+              { name: 'Mazoe Orange 2L', qty: 2, price: 3.5, total: 7.0 },
+              { name: 'White Bread', qty: 1, price: 1.2, total: 1.2 },
+              { name: 'Sugar 2kg', qty: 1, price: 2.8, total: 2.8 },
+            ];
+            const totalIncl = 11.0;
+            const subEx = totalIncl / 1.15;
+            const vat = totalIncl - subEx;
+            const pill = (businessName || 'Your Store');
+            const dual = currencyDisplay && currencyDisplay.indexOf('Dual') === 0;
+            return (
+              <div style={{
+                width: w, margin: '0 auto', background: '#fff', color: '#0f172a',
+                border: '1px solid #e6eaef', borderRadius: 10, padding: '16px 16px 18px',
+                fontFamily: 'Inter, system-ui, Arial, sans-serif', boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+              }}>
+                {/* brand bar */}
+                <div style={{ height: 5, background: brandColor, borderRadius: 3, marginBottom: 14 }} />
 
-${footerMessage}
-${showSocialMedia ? `WhatsApp: ${whatsappNumber}` : ''}`}
-          </div>
+                {/* header */}
+                <div style={{ textAlign: 'center', marginBottom: 14 }}>
+                  {showLogo && logoUrl
+                    ? <img src={logoUrl} alt="" style={{ maxHeight: 40, marginBottom: 8 }} />
+                    : null}
+                  <div style={{ fontSize: 17 * fs, fontWeight: 800 }}>{pill}</div>
+                  <div style={{ fontSize: 10.5 * fs, color: '#64748b', marginTop: 3 }}>
+                    {[address, phone].filter(Boolean).join(' · ') || 'Shop address · phone'}
+                  </div>
+                  {(vatNumber || tinNumber) && (
+                    <div style={{
+                      display: 'inline-block', marginTop: 6, fontSize: 9.5 * fs, fontWeight: 700,
+                      color: brandColor, background: '#eef7f1', borderRadius: 20, padding: '3px 10px',
+                    }}>
+                      {vatNumber ? `VAT ${vatNumber}` : ''}{vatNumber && tinNumber ? ' · ' : ''}{tinNumber ? `TIN ${tinNumber}` : ''}
+                    </div>
+                  )}
+                </div>
+
+                {/* invoice line */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <span style={{ fontSize: 10.5 * fs, fontWeight: 800, letterSpacing: '.13em' }}>FISCAL TAX INVOICE</span>
+                  <span style={{ fontSize: 8.5 * fs, fontWeight: 800, color: '#fff', background: '#0f172a', padding: '3px 8px', borderRadius: 6 }}>
+                    {dual ? 'USD/ZiG' : 'USD'}
+                  </span>
+                </div>
+                <div style={{ fontSize: 10 * fs, color: '#64748b', marginBottom: 10 }}>
+                  Invoice <b style={{ color: '#0f172a' }}>PIKNW000142</b> · {new Date().toLocaleDateString()} 17:45
+                </div>
+
+                {/* items */}
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 * fs }}>
+                  <tbody>
+                    {sampleItems.map((it, i) => (
+                      <tr key={i}>
+                        <td style={{ padding: '6px 0', borderBottom: '1px solid #eef0f3' }}>
+                          {it.name}
+                          <div style={{ color: '#94a3b8', fontSize: 9.5 * fs }}>{it.qty} × {money(it.price)}</div>
+                        </td>
+                        <td style={{ padding: '6px 0', borderBottom: '1px solid #eef0f3', textAlign: 'right', fontWeight: 600 }}>{money(it.total)}</td>
+                        <td style={{ padding: '6px 0', borderBottom: '1px solid #eef0f3', textAlign: 'right', color: '#94a3b8', fontSize: 9.5 * fs, width: 14 }}>A</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {/* totals */}
+                <div style={{ fontSize: 11 * fs, marginTop: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', padding: '3px 0' }}>
+                    <span>Subtotal (excl VAT)</span><b style={{ color: '#0f172a' }}>{money(subEx)}</b>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', padding: '3px 0' }}>
+                    <span>VAT 15% (A)</span><b style={{ color: '#0f172a' }}>{money(vat)}</b>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 8, paddingTop: 10, borderTop: '2px solid #0f172a' }}>
+                  <span style={{ fontSize: 12 * fs, fontWeight: 800 }}>TOTAL</span>
+                  <span style={{ fontSize: 21 * fs, fontWeight: 800, color: brandColor }}>{money(totalIncl)}</span>
+                </div>
+                {dual && <div style={{ textAlign: 'right', fontSize: 9 * fs, color: '#94a3b8', marginTop: 2 }}>≈ ZiG 374.00 @ 34.00</div>}
+                <div style={{ fontSize: 10 * fs, color: '#64748b', marginTop: 6 }}>Paid: EcoCash</div>
+                <div style={{ fontSize: 8.5 * fs, color: '#94a3b8', textAlign: 'center', marginTop: 8 }}>
+                  A = 15% Standard · B = 0% Zero-rated · C = Exempt
+                </div>
+
+                {/* ZIMRA fiscal block (the dark card from print) */}
+                <div style={{ background: '#0f172a', color: '#e2e8f0', borderRadius: 10, padding: 14, marginTop: 14, textAlign: 'center' }}>
+                  <div style={{ fontSize: 9.5 * fs, fontWeight: 800, letterSpacing: '.1em', color: '#7ee2a8', marginBottom: 8 }}>● ZIMRA FISCALISED</div>
+                  {showQRCode && (
+                    <div style={{ width: 76, height: 76, margin: '0 auto 8px', background: '#fff', borderRadius: 8, padding: 6 }}>
+                      <div style={{
+                        width: '100%', height: '100%', borderRadius: 3,
+                        backgroundColor: '#0f172a',
+                        backgroundImage: 'repeating-linear-gradient(0deg,#0f172a 0 3px,#fff 3px 6px),repeating-linear-gradient(90deg,#0f172a 0 3px,transparent 3px 6px)',
+                      }} />
+                    </div>
+                  )}
+                  <div style={{ fontSize: 8.5 * fs, color: '#94a3b8' }}>Verification Code</div>
+                  <div style={{ fontSize: 13 * fs, fontWeight: 800, letterSpacing: '.05em', color: '#fff', margin: '2px 0 6px' }}>A1B2-C3D4-E5F6-7G8H</div>
+                  <div style={{ fontSize: 8.5 * fs, color: '#94a3b8' }}>Day 7 · Global No 004182</div>
+                  <div style={{ fontSize: 8 * fs, color: '#94a3b8', marginTop: 8 }}>Verify at <b style={{ color: '#e2e8f0' }}>fdms.zimra.co.zw</b></div>
+                </div>
+
+                {/* footer */}
+                <div style={{ textAlign: 'center', fontSize: 10.5 * fs, fontWeight: 700, marginTop: 14 }}>
+                  {footerMessage || 'Thank you for shopping with us!'}
+                </div>
+                {showSocialMedia && whatsappNumber
+                  ? <div style={{ textAlign: 'center', fontSize: 9.5 * fs, color: '#64748b', marginTop: 4 }}>WhatsApp: {whatsappNumber}</div>
+                  : null}
+                <div style={{ textAlign: 'center', fontSize: 8 * fs, color: '#cbd5e1', marginTop: 6 }}>Powered by Pewil</div>
+              </div>
+            );
+          })()}
         </div>
       </div>
 
