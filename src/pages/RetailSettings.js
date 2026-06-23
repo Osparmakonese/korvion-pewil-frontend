@@ -190,6 +190,8 @@ export default function RetailSettings({ onTabChange }) {
   const [eodDigest, setEodDigest] = useState(() => localStorage.getItem('eod_digest') === 'true');
   const [digestRecipients, setDigestRecipients] = useState(() => localStorage.getItem('digest_recipients') || '');
   const [digestHour, setDigestHour] = useState(() => parseInt(localStorage.getItem('digest_hour') || '18', 10));
+  const browserTz = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Africa/Harare'; } catch { return 'Africa/Harare'; } })();
+  const [storeTimezone, setStoreTimezone] = useState(() => localStorage.getItem('store_timezone') || browserTz);
 
   /* ── Fiscal & Tax ── */
   const [tin, setTin] = useState(() => localStorage.getItem('zimra_tin') || '');
@@ -250,6 +252,7 @@ export default function RetailSettings({ onTabChange }) {
         if (s.eod_digest !== undefined) { setEodDigest(!!s.eod_digest); localStorage.setItem('eod_digest', String(!!s.eod_digest)); }
         if (s.digest_recipients !== undefined) { setDigestRecipients(safe(s.digest_recipients, '')); localStorage.setItem('digest_recipients', safe(s.digest_recipients, '')); }
         if (s.digest_hour !== undefined && s.digest_hour !== null) { setDigestHour(parseInt(s.digest_hour, 10) || 18); }
+        if (s.store_timezone) { setStoreTimezone(s.store_timezone); localStorage.setItem('store_timezone', s.store_timezone); }
         if (s.vat_rate !== undefined) { setVatRate(String(s.vat_rate)); localStorage.setItem('vat_rate', String(s.vat_rate)); }
         if (s.barcode_enabled !== undefined) { setBarcodeEnabled(!!s.barcode_enabled); localStorage.setItem('barcode_enabled', String(!!s.barcode_enabled)); }
         if (s.scanner_mode !== undefined) { setScannerMode(safe(s.scanner_mode, 'usb_hid')); localStorage.setItem('scanner_mode', safe(s.scanner_mode, 'usb_hid')); }
@@ -329,6 +332,7 @@ export default function RetailSettings({ onTabChange }) {
         eod_digest: eodDigest,
         digest_recipients: digestRecipients,
         digest_hour: digestHour,
+        store_timezone: storeTimezone,
         vat_rate: vatRate,
         barcode_enabled: barcodeEnabled,
         scanner_mode: scannerMode,
@@ -876,6 +880,17 @@ export default function RetailSettings({ onTabChange }) {
                             return <option key={h} value={h}>{hr}:00 {ampm}</option>;
                           })}
                         </select>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 4 }}>Timezone</label>
+                        <select style={{ ...input, maxWidth: 280 }} value={storeTimezone} onChange={(e) => setStoreTimezone(e.target.value)}>
+                          {[...new Set(['Africa/Harare', 'Africa/Johannesburg', 'Africa/Lusaka', 'Africa/Maputo', 'Africa/Nairobi', 'Africa/Lagos', 'Africa/Accra', 'Africa/Cairo', 'Europe/London', 'UTC', browserTz, storeTimezone])].map((tz) => (
+                            <option key={tz} value={tz}>{tz}</option>
+                          ))}
+                        </select>
+                        <p style={{ fontSize: 11, color: '#94a3b8', margin: '4px 0 0' }}>
+                          Detected on this device: <b>{browserTz}</b>. The report fires at your chosen hour in this zone, and the day's figures use this zone's midnight-to-midnight.
+                        </p>
                       </div>
                     </div>
                   )}
