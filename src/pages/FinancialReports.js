@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   getProfitLoss, getVatReturn, getBalanceSheet, getDebtorsCreditors, getStockValuation,
+  exportFinancialsExcel,
 } from '../api/retailApi';
 
 const G = '#1a6b3a';
@@ -62,10 +63,32 @@ export default function FinancialReports() {
     </div>
   );
 
+  const [exporting, setExporting] = useState(false);
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const blob = await exportFinancialsExcel(period);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `financial_reports_${end}.xlsx`;
+      document.body.appendChild(a); a.click(); a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) { alert('Could not export — please try again.'); }
+    finally { setExporting(false); }
+  };
+
   return (
     <div style={S.page}>
-      <h1 style={S.h1}>Financial Reports</h1>
-      <p style={S.sub}>Management accounts derived from your sales, purchases, stock and customer accounts.</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <h1 style={S.h1}>Financial Reports</h1>
+          <p style={S.sub}>Management accounts derived from your sales, purchases, stock and customer accounts.</p>
+        </div>
+        <button onClick={handleExport} disabled={exporting}
+          style={{ padding: '9px 16px', background: G, color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: exporting ? 'default' : 'pointer', opacity: exporting ? 0.6 : 1, whiteSpace: 'nowrap' }}>
+          {exporting ? 'Preparing…' : '⬇ Export all to Excel'}
+        </button>
+      </div>
       <div style={S.tabs}>{TABS.map((t) => <button key={t.id} style={S.tab(tab === t.id)} onClick={() => setTab(t.id)}>{t.label}</button>)}</div>
 
       {tab === 'pnl' && (

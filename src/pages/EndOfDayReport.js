@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
-import { getEndOfDayReport } from '../api/retailApi';
+import { getEndOfDayReport, exportSalesExcel } from '../api/retailApi';
 import AIInsightCard from '../components/AIInsightCard';
 import MobileEndOfDay from '../components/MobileEndOfDay';
 
@@ -288,6 +288,17 @@ export default function EndOfDayReport({ onTabChange }) {
 
   const maxHourly = Math.max(...hourlySales, 1);
 
+  const handleExport = async () => {
+    try {
+      const blob = await exportSalesExcel({ start: reportDate, end: reportDate });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `sales_export_${reportDate}.xlsx`;
+      document.body.appendChild(a); a.click(); a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) { alert('Could not export — please try again.'); }
+  };
+
   return (
     <div style={S.page}>
       {/* Header */}
@@ -304,6 +315,7 @@ export default function EndOfDayReport({ onTabChange }) {
             style={S.dateInput}
           />
           <button style={S.button} onClick={() => refetch()}>Generate Report</button>
+          <button style={{ ...S.button, background: '#fff', color: '#1a6b3a', border: '1px solid #1a6b3a' }} onClick={handleExport}>⬇ Export to Excel</button>
         </div>
       </div>
 
