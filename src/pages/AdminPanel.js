@@ -6,6 +6,7 @@ import {
 } from '../api/farmApi';
 import { useAuth } from '../context/AuthContext';
 import { initials, avatarColor } from '../utils/format';
+import PasswordPolicyPanel from '../components/PasswordPolicyPanel';
 
 const TABS = ['Users', 'Permissions', 'Audit Trail', 'Password Policy'];
 const ROLES = ['owner', 'manager', 'worker'];
@@ -142,7 +143,6 @@ export default function AdminPanel() {
   const [showResetFor, setShowResetFor] = useState(null);
   const [savedFlash, setSavedFlash] = useState(null); // userId for perm flash
   const [auditFilter, setAuditFilter] = useState('');
-  const [pwPolicy, setPwPolicy] = useState(8);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['adminUsers'],
@@ -489,40 +489,12 @@ export default function AdminPanel() {
 
       {/* ═══════ TAB 4: Password Policy ═══════ */}
       {activeTab === 'Password Policy' && (
-        <div style={{ maxWidth: 480 }}>
-          <div style={S.card}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 14 }}>Password Policy Settings</div>
-
-            <div style={{ background: '#e8f5ee', borderRadius: 8, padding: '12px 16px', marginBottom: 16 }}>
-              <div style={{ fontSize: 11, color: '#1a6b3a', fontWeight: 600 }}>
-                Current policy: Minimum {pwPolicy} characters for all password resets
-              </div>
-            </div>
-
-            <label style={S.label}>Global Minimum Password Length</label>
-            <input
-              style={{ ...S.input, width: 120 }}
-              type="number"
-              min={6}
-              max={32}
-              value={pwPolicy}
-              onChange={e => setPwPolicy(parseInt(e.target.value) || 8)}
-            />
-
-            <div style={{ fontSize: 10, color: '#6b7280', marginTop: 8 }}>
-              This applies to all new password resets performed from this panel.
-            </div>
-
-            <button
-              style={{ ...S.btn(), marginTop: 14 }}
-              onClick={() => {
-                // Save policy — would call API in production
-                alert(`Password policy saved: minimum ${pwPolicy} characters`);
-              }}
-            >
-              Save Policy
-            </button>
-          </div>
+        <div style={{ maxWidth: 560 }}>
+          <p style={{ fontSize: 11, color: '#6b7280', marginBottom: 12 }}>
+            Set the password rules enforced across your organisation. These apply to every
+            new password, reset, and team-member account.
+          </p>
+          <PasswordPolicyPanel />
         </div>
       )}
     </>
