@@ -8,6 +8,7 @@ import {
   linkPaymentToSale,
   getCreditAccounts,
   getReceiptTemplates,
+  emailReceipt,
 } from '../api/retailApi';
 import apiClient from '../api/axios';
 import { fmt } from '../utils/format';
@@ -42,7 +43,20 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
     queryKey: ['receipt-template'], queryFn: getReceiptTemplates,
     staleTime: 300000, retry: false,
   });
+  const [emailTo, setEmailTo] = useState('');
+  const [emailState, setEmailState] = useState(null); // 'sending' | 'sent' | 'error'
   if (!isOpen || !receipt) return null;
+
+  const sendEmail = async () => {
+    if (!emailTo || !emailTo.includes('@')) { setEmailState('invalid'); return; }
+    setEmailState('sending');
+    try {
+      await emailReceipt(receipt.id, { email: emailTo.trim() });
+      setEmailState('sent');
+    } catch (e) {
+      setEmailState('error');
+    }
+  };
 
   // ── Merchant branding (from Receipt Customization) + fiscal data ──
   const template = Array.isArray(tmplData)
@@ -478,6 +492,32 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
         >
           {'\u{1F4AC}'} Send receipt via WhatsApp
         </button>
+
+        {/* Email the receipt — sent by Pewil from no-reply@pewil.org */}
+        <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+          <input
+            type="email"
+            value={emailTo}
+            onChange={(e) => { setEmailTo(e.target.value); setEmailState(null); }}
+            placeholder="customer@email.com"
+            style={{ flex: 1, padding: '9px 11px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
+          />
+          <button
+            type="button"
+            onClick={sendEmail}
+            disabled={emailState === 'sending'}
+            style={{
+              padding: '9px 14px', background: '#1a6b3a', color: '#fff', border: 'none',
+              borderRadius: 7, fontSize: 12, fontWeight: 700,
+              cursor: emailState === 'sending' ? 'default' : 'pointer', whiteSpace: 'nowrap',
+            }}
+          >
+            {emailState === 'sending' ? 'Sending…' : '✉ Email'}
+          </button>
+        </div>
+        {emailState === 'sent' && <div style={{ fontSize: 11, color: '#1a6b3a', marginTop: 4, fontWeight: 600 }}>✓ Receipt emailed to {emailTo}.</div>}
+        {emailState === 'invalid' && <div style={{ fontSize: 11, color: '#b91c1c', marginTop: 4 }}>Enter a valid email address.</div>}
+        {emailState === 'error' && <div style={{ fontSize: 11, color: '#b91c1c', marginTop: 4 }}>Could not send — check the address and try again.</div>}
       </div>
     </div>
   );
