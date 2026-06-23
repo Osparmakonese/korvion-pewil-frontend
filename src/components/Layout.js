@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import Sidebar, { NAV_ITEMS } from './Sidebar';
 import Topbar from './Topbar';
 import Logo from './Logo';
-import QuickCapture from './QuickCapture';
 import { initials, avatarColor } from '../utils/format';
 import { listBranches, listFuelTanks } from '../api/retailApi';
 import haptics from '../utils/haptics';
@@ -243,9 +242,6 @@ export default function Layout({
           {children}
         </main>
       </div>
-
-      {/* Quick Capture FAB — always visible */}
-      <QuickCapture activeModule={activeModule} onTabChange={onTabChange} />
 
       {/* Bottom nav — Hick's Law: only 5 primary choices */}
       <div className="bottom-nav" style={{ '--bn-active': moduleAccent }}>
