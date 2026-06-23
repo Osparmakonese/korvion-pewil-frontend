@@ -157,7 +157,14 @@ function isRetryableNetworkError(err) {
  */
 export async function submitSaleOnline(api, saleData) {
   const crn = saleData.client_receipt_number || newClientReceiptNumber();
-  const payload = { ...saleData, client_receipt_number: crn };
+  // Stamp the real time of sale NOW. For offline sales synced minutes/hours
+  // later, the server uses this as `sold_at` so reports, day boundaries and the
+  // audit trail reflect when the sale actually happened — not when it synced.
+  const payload = {
+    client_sold_at: saleData.client_sold_at || new Date().toISOString(),
+    ...saleData,
+    client_receipt_number: crn,
+  };
 
   // Fast-path: offline detected up front — queue & return optimistic receipt.
   if (isOffline()) {

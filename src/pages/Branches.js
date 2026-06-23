@@ -343,6 +343,7 @@ function BranchModal({ branch, onClose, onSubmit, saving }) {
   const [form, setForm] = useState({
     name:    branch?.name    || '',
     code:    branch?.code    || '',
+    receipt_prefix: branch?.receipt_prefix || '',
     address: branch?.address || '',
     phone:   branch?.phone   || '',
     manager_name: branch?.manager_name || '',
@@ -363,6 +364,7 @@ function BranchModal({ branch, onClose, onSubmit, saving }) {
     onSubmit({
       name: form.name.trim(),
       code: form.code,
+      receipt_prefix: (form.receipt_prefix || '').trim(),
       address: form.address.trim(),
       phone: form.phone.trim(),
       manager_name: form.manager_name.trim(),
@@ -416,6 +418,15 @@ function BranchModal({ branch, onClose, onSubmit, saving }) {
               onChange={(e) => update('code', e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8))}
               placeholder="AVE"
               style={{ ...inputStyle, fontFamily: 'monospace', letterSpacing: '0.1em' }}
+            />
+          </Field>
+
+          <Field label="Receipt prefix" hint="How this branch's receipt numbers read, e.g. 'piknw' → piknw000001. Leave blank to use the code (AVE-000001).">
+            <input
+              type="text" value={form.receipt_prefix}
+              onChange={(e) => update('receipt_prefix', e.target.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 16))}
+              placeholder="piknw"
+              style={{ ...inputStyle, fontFamily: 'monospace', letterSpacing: '0.05em' }}
             />
           </Field>
 
