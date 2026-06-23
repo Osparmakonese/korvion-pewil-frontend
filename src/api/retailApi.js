@@ -244,6 +244,7 @@ export const retryFiscalItem = (id) => api.post(`/retail/fiscal-queue/${id}/retr
 export const getFiscalQueueStats = () => api.get('/retail/fiscal-queue/stats/').then(r => r.data);
 export const fiscaliseReturn = (id) => api.post(`/retail/returns/${id}/fiscalise/`).then(r => r.data);
 export const emailReceipt = (saleId, data) => api.post(`/retail/sales/${saleId}/email-receipt/`, data).then(r => r.data);
+export const exportSalesExcel = (params) => api.get('/retail/sales/export-excel/', { params, responseType: 'blob' }).then(r => r.data);
 
 // ── Phase 2/3: Layby ──
 export const getLaybys = (st) => api.get('/retail/laybys/', { params: st ? { status: st } : {} }).then(r => r.data);

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getSales } from '../api/retailApi';
+import { getSales, exportSalesExcel } from '../api/retailApi';
 import { fmt } from '../utils/format';
 import MobileSalesHistory from '../components/MobileSalesHistory';
 
@@ -129,6 +129,24 @@ export default function SalesHistory() {
   const [paymentFilter, setPaymentFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [selectedSale, setSelectedSale] = useState(null);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const blob = await exportSalesExcel(dateFilter ? { start: dateFilter, end: dateFilter } : {});
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sales_export_${(dateFilter || new Date().toISOString().slice(0, 10))}.xlsx`;
+      document.body.appendChild(a); a.click(); a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      alert('Could not export — please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // Mobile breakpoint — keep all hooks ABOVE the early return.
   const [isMobile, setIsMobile] = useState(
@@ -178,8 +196,20 @@ export default function SalesHistory() {
 
   return (
     <div style={S.page}>
-      <div style={S.header}>
+      <div style={{ ...S.header, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={S.title}>{'\u{1F4CB}'} Sales History</h1>
+        <button
+          onClick={handleExport}
+          disabled={exporting}
+          title={dateFilter ? `Export ${dateFilter} to Excel` : 'Export everything sold to Excel'}
+          style={{
+            padding: '9px 16px', background: '#1a6b3a', color: '#fff', border: 'none',
+            borderRadius: 8, fontSize: 13, fontWeight: 700,
+            cursor: exporting ? 'default' : 'pointer', opacity: exporting ? 0.6 : 1,
+          }}
+        >
+          {exporting ? 'Preparing…' : `⬇ Export to Excel${dateFilter ? ' (this day)' : ''}`}
+        </button>
       </div>
 
       {/* Summary Cards */}
