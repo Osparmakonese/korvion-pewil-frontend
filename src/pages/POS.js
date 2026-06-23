@@ -6,6 +6,7 @@ import {
   getCashierSessions,
   getPOSSettings,
   linkPaymentToSale,
+  getCreditAccounts,
 } from '../api/retailApi';
 import apiClient from '../api/axios';
 import { fmt } from '../utils/format';
@@ -670,6 +671,14 @@ export default function POS() {
   const [discount, setDiscount] = useState('');
   const [tax, setTax] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
+  // On-account tender: the credit account the sale is charged to.
+  const [accountId, setAccountId] = useState('');
+  const { data: creditAccounts = [] } = useQuery({
+    queryKey: ['pos-credit-accounts'],
+    queryFn: getCreditAccounts,
+    staleTime: 60000,
+    retry: false,
+  });
   const [amountTendered, setAmountTendered] = useState('');
   // Split-tender ("mixed") payments: customer pays e.g. $10 cash + $15 EcoCash
   // on one ticket. When `splitMode` is on, the cashier maintains a list of
@@ -1050,6 +1059,7 @@ export default function POS() {
     setDiscount('');
     setTax('');
     setPaymentMethod('cash');
+    setAccountId('');
     setAmountTendered('');
     setLoyaltyMember(null);
     setDiscountReason('');
@@ -1304,6 +1314,15 @@ export default function POS() {
       pendingMmTxnRef.current = mobileMoneyTxn.id; // link to the sale on success
     }
 
+    // On-account tender — the sale is charged to a customer's credit account.
+    if (!splitMode && effective_payment_method === 'on_account') {
+      if (!accountId) {
+        alert('Select a customer account to charge this sale to.');
+        return;
+      }
+      effective_amount_tendered = grandTotal; // on account — no cash changes hands
+    }
+
     const saleData = {
       session: activeSessions[0].id,
       customer_name: loyaltyMember
@@ -1326,6 +1345,9 @@ export default function POS() {
     };
     if (payments_data_payload) {
       saleData.payments_data = payments_data_payload;
+    }
+    if (!splitMode && effective_payment_method === 'on_account' && accountId) {
+      saleData.credit_account = accountId;
     }
 
     // A manual discount must carry its manager-approval token so the backend
@@ -2022,6 +2044,18 @@ export default function POS() {
                 >
                   💳 Card
                 </button>
+                {creditAccounts.length > 0 && (
+                  <button
+                    onClick={() => { setSplitMode(false); setPaymentMethod('on_account'); }}
+                    title="Charge this sale to a customer's credit account"
+                    style={{
+                      ...S.paymentBtn,
+                      ...(!splitMode && paymentMethod === 'on_account' ? S.paymentBtnActive : {}),
+                    }}
+                  >
+                    🧾 On Account
+                  </button>
+                )}
                 <button
                   onClick={() => setSplitMode((v) => !v)}
                   title="Split payment across multiple methods (e.g. cash + EcoCash)"
@@ -2033,6 +2067,30 @@ export default function POS() {
                   🔀 Split
                 </button>
               </div>
+
+              {/* On-account picker — choose which debtor the sale is charged to. */}
+              {!splitMode && paymentMethod === 'on_account' && (
+                <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: 10, marginTop: 8 }}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: '#374151', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    Charge to account
+                  </label>
+                  <select
+                    value={accountId}
+                    onChange={(e) => setAccountId(e.target.value)}
+                    style={{ width: '100%', padding: '9px 11px', border: '1px solid #d1d5db', borderRadius: 7, fontSize: 13, background: '#fff' }}
+                  >
+                    <option value="">— select customer account —</option>
+                    {creditAccounts.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.account_name} (owes ${Number(a.current_balance || 0).toFixed(2)}{a.credit_limit > 0 ? ` / limit $${Number(a.credit_limit).toFixed(2)}` : ''})
+                      </option>
+                    ))}
+                  </select>
+                  <p style={{ fontSize: 10, color: '#6b7280', margin: '6px 0 0' }}>
+                    The sale total is added to the customer's balance and a fiscal invoice is issued.
+                  </p>
+                </div>
+              )}
 
               {/* Split-tender editor — only visible when Split mode is on. */}
               {splitMode ? (
