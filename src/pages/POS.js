@@ -7,6 +7,7 @@ import {
   getPOSSettings,
   linkPaymentToSale,
   getCreditAccounts,
+  getReceiptTemplates,
 } from '../api/retailApi';
 import apiClient from '../api/axios';
 import { fmt } from '../utils/format';
@@ -37,7 +38,162 @@ import { getProductIcon } from '../utils/productIcons';
 
 /* ─── Receipt Modal ─── */
 function ReceiptModal({ isOpen, onClose, receipt }) {
+  const { data: tmplData } = useQuery({
+    queryKey: ['receipt-template'], queryFn: getReceiptTemplates,
+    staleTime: 300000, retry: false,
+  });
   if (!isOpen || !receipt) return null;
+
+  // ── Merchant branding (from Receipt Customization) + fiscal data ──
+  const template = Array.isArray(tmplData)
+    ? (tmplData[0] || null)
+    : ((tmplData && tmplData.results && tmplData.results[0]) || null);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const money = (n) => '$' + (parseFloat(n) || 0).toFixed(2);
+  const brand = (template && template.brand_color) || '#1a6b3a';
+  const storeName = (template && template.store_name) || 'Your Store';
+  const addr = template ? [template.address_line1, template.address_line2].filter(Boolean).join(', ') : '';
+  const vatNo = (template && template.vat_number) || '';
+  const tinNo = (template && template.tin) || '';
+  const phone = (template && template.phone) || '';
+  const email = (template && template.email) || '';
+  const logoUrl = (template && template.show_logo !== false && template.logo_url) ? template.logo_url : '';
+  const bankDetails = (template && template.bank_details) || '';
+  const footerMsg = (template && template.footer_message) || 'Thank you for shopping with us!';
+  const items = receipt.items_data || receipt.items || [];
+  const taxCodeFor = (it) => (it && it.is_vat_exempt) ? 'B' : 'A';
+  const qrText = receipt.fiscal_qr_code || '';
+  const vcode = receipt.fiscal_verification_code || '';
+  const fday = receipt.fiscal_day_no != null ? receipt.fiscal_day_no : '';
+  const gno = receipt.fiscal_global_no != null ? receipt.fiscal_global_no : '';
+  const fiscalised = !!receipt.fiscal_submitted;
+  const payLabel = () => {
+    const m = receipt.payment_method;
+    if (m === 'mobile_money') return 'Mobile Money';
+    if (m === 'mixed') return 'Split';
+    if (m === 'on_account') return 'On Account';
+    return m || 'Cash';
+  };
+
+  const openPrint = (bodyHtml) => {
+    const w = window.open('', '_blank', 'width=460,height=760');
+    if (!w) { alert('Allow pop-ups to print the receipt.'); return; }
+    w.document.write(
+      '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Receipt ' + esc(receipt.receipt_number) + '</title>' +
+      '<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>' +
+      '<style>*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;color:#0f172a;background:#fff}</style>' +
+      '</head><body>' + bodyHtml +
+      '<script>(function(){var t=' + JSON.stringify(qrText) + ';var el=document.getElementById("qr");var n=0;' +
+      'function go(){if(t&&el&&window.QRCode){try{new QRCode(el,{text:t,width:96,height:96,correctLevel:QRCode.CorrectLevel.M});}catch(e){}}' +
+      'else if(t&&el&&n++<40){return setTimeout(go,75);}setTimeout(function(){window.focus();window.print();},350);}go();})();<\/script>' +
+      '</body></html>'
+    );
+    w.document.close();
+  };
+
+  const fiscalThermal = () => fiscalised
+    ? '<div style="background:#0f172a;color:#e2e8f0;border-radius:10px;padding:14px;margin-top:14px;text-align:center">' +
+        '<div style="font-size:10px;font-weight:800;letter-spacing:.1em;color:#7ee2a8;margin-bottom:8px">● ZIMRA FISCALISED</div>' +
+        '<div id="qr" style="display:flex;justify-content:center;background:#fff;padding:7px;border-radius:8px;width:fit-content;margin:0 auto 8px"></div>' +
+        '<div style="font-size:9px;color:#94a3b8">Verification Code</div>' +
+        '<div style="font-size:14px;font-weight:800;letter-spacing:.05em;color:#fff;margin:2px 0 6px">' + esc(vcode) + '</div>' +
+        '<div style="font-size:9px;color:#94a3b8">Day ' + esc(fday) + ' · Global No ' + esc(gno) + (receipt.fiscal_receipt_number ? ' · #' + esc(receipt.fiscal_receipt_number) : '') + '</div>' +
+        '<div style="font-size:8.5px;color:#94a3b8;margin-top:8px">Verify at <b style="color:#e2e8f0">fdms.zimra.co.zw</b></div></div>'
+    : '<div style="border:1px dashed #f59e0b;background:#fffbeb;color:#92400e;border-radius:10px;padding:10px;margin-top:14px;text-align:center;font-size:10px;font-weight:700">⏳ FISCAL PENDING — will sync to ZIMRA when the device is online</div>';
+
+  const fiscalInvoice = () => fiscalised
+    ? '<div style="width:240px;border:1.5px solid #0f172a;border-radius:10px;padding:13px;text-align:center">' +
+        '<div style="font-size:10px;font-weight:800;letter-spacing:.09em;color:' + brand + '">● ZIMRA FISCALISED</div>' +
+        '<div id="qr" style="display:flex;justify-content:center;margin:9px 0"></div>' +
+        '<div style="font-size:9px;color:#64748b">Verification Code</div>' +
+        '<div style="font-size:14px;font-weight:800;color:#0f172a;margin:3px 0 6px">' + esc(vcode) + '</div>' +
+        '<div style="font-size:9px;color:#64748b">Day ' + esc(fday) + ' · Global No ' + esc(gno) + '</div>' +
+        '<div style="font-size:8.5px;color:#64748b;margin-top:6px">Verify at <b style="color:#0f172a">fdms.zimra.co.zw</b></div></div>'
+    : '<div style="width:240px;border:1px dashed #f59e0b;background:#fffbeb;color:#92400e;border-radius:10px;padding:13px;text-align:center;font-size:10px;font-weight:700">⏳ FISCAL PENDING — will sync to ZIMRA</div>';
+
+  const itemRowsThermal = items.map((it) =>
+    '<tr><td style="padding:7px 0;border-bottom:1px solid #eef0f3">' + esc(it.product_name || it.name || 'Item') +
+    '<div style="color:#94a3b8;font-size:10px">' + (it.qty || it.quantity || 1) + ' × ' + money(it.unit_price || ((it.total || 0) / (it.qty || it.quantity || 1))) + '</div></td>' +
+    '<td style="padding:7px 0;border-bottom:1px solid #eef0f3;text-align:right;font-weight:600">' + money(it.total) + '</td>' +
+    '<td style="padding:7px 0;border-bottom:1px solid #eef0f3;text-align:right;color:#94a3b8;font-size:10px;width:16px">' + taxCodeFor(it) + '</td></tr>'
+  ).join('');
+
+  const printThermal = () => openPrint(
+    '<div style="width:340px;margin:0 auto;padding:16px 18px">' +
+      '<div style="height:5px;background:' + brand + ';border-radius:3px;margin-bottom:14px"></div>' +
+      '<div style="text-align:center;margin-bottom:14px">' +
+        (logoUrl ? '<img src="' + esc(logoUrl) + '" style="max-height:46px;margin-bottom:8px"/>' : '') +
+        '<div style="font-size:18px;font-weight:800">' + esc(storeName) + '</div>' +
+        '<div style="font-size:11px;color:#64748b;margin-top:3px">' + esc(addr) + (phone ? ' · ' + esc(phone) : '') + '</div>' +
+        ((vatNo || tinNo) ? '<div style="display:inline-block;margin-top:6px;font-size:10px;font-weight:700;color:' + brand + ';background:#eef7f1;border-radius:20px;padding:3px 10px">' + (vatNo ? 'VAT ' + esc(vatNo) : '') + (vatNo && tinNo ? ' · ' : '') + (tinNo ? 'TIN ' + esc(tinNo) : '') + '</div>' : '') +
+      '</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="font-size:11px;font-weight:800;letter-spacing:.13em">FISCAL TAX INVOICE</span><span style="font-size:9px;font-weight:800;color:#fff;background:#0f172a;padding:3px 8px;border-radius:6px">USD</span></div>' +
+      '<div style="font-size:11px;color:#64748b;margin-bottom:12px">Invoice <b style="color:#0f172a">' + esc(receipt.receipt_number) + '</b> · ' + esc(new Date().toLocaleString()) + (receipt.customer_name ? '<br>Customer: ' + esc(receipt.customer_name) : '') + '</div>' +
+      '<table style="width:100%;border-collapse:collapse;font-size:12px">' + itemRowsThermal + '</table>' +
+      '<div style="font-size:12px;margin-top:12px">' +
+        '<div style="display:flex;justify-content:space-between;color:#64748b;padding:3px 0"><span>Subtotal (excl VAT)</span><b style="color:#0f172a">' + money(receipt.subtotal) + '</b></div>' +
+        (receipt.discount > 0 ? '<div style="display:flex;justify-content:space-between;color:#64748b;padding:3px 0"><span>Discount</span><b style="color:#0f172a">-' + money(receipt.discount) + '</b></div>' : '') +
+        '<div style="display:flex;justify-content:space-between;color:#64748b;padding:3px 0"><span>VAT 15% (A)</span><b style="color:#0f172a">' + money(receipt.tax) + '</b></div>' +
+      '</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;padding-top:10px;border-top:2px solid #0f172a"><span style="font-size:13px;font-weight:800">TOTAL</span><span style="font-size:22px;font-weight:800;color:' + brand + '">' + money(receipt.total) + '</span></div>' +
+      '<div style="font-size:11px;color:#64748b;margin-top:6px">Paid: ' + esc(payLabel()) + '</div>' +
+      '<div style="font-size:9px;color:#94a3b8;text-align:center;margin-top:8px">A = 15% Standard · B = 0% Zero-rated · C = Exempt</div>' +
+      fiscalThermal() +
+      '<div style="text-align:center;font-size:11px;font-weight:700;margin-top:14px">' + esc(footerMsg) + '</div>' +
+      '<div style="text-align:center;font-size:8px;color:#cbd5e1;margin-top:6px">Powered by Pewil</div>' +
+    '</div>'
+  );
+
+  const itemRowsInvoice = items.map((it, i) =>
+    '<tr style="background:' + (i % 2 ? '#f8fafc' : '#fff') + '">' +
+    '<td style="padding:9px 10px;border-bottom:1px solid #e6eaef">' + esc(it.product_name || it.name || 'Item') + '</td>' +
+    '<td style="padding:9px 10px;border-bottom:1px solid #e6eaef;text-align:center">' + taxCodeFor(it) + '</td>' +
+    '<td style="padding:9px 10px;border-bottom:1px solid #e6eaef;text-align:right">' + (it.qty || it.quantity || 1) + '</td>' +
+    '<td style="padding:9px 10px;border-bottom:1px solid #e6eaef;text-align:right">' + money(it.unit_price || ((it.total || 0) / (it.qty || it.quantity || 1))) + '</td>' +
+    '<td style="padding:9px 10px;border-bottom:1px solid #e6eaef;text-align:right">' + money(it.total) + '</td></tr>'
+  ).join('');
+
+  const buyerBlock = (receipt.buyer_tin || receipt.buyer_trade_name || receipt.customer_name)
+    ? '<div style="border:1px solid #e6eaef;border-radius:10px;padding:12px 15px;margin-bottom:18px;max-width:320px">' +
+        '<div style="font-size:9px;letter-spacing:.1em;color:#64748b;font-weight:800;margin-bottom:6px">BILL TO</div>' +
+        '<div style="font-size:14px;font-weight:700">' + esc(receipt.buyer_trade_name || receipt.customer_name || '') + '</div>' +
+        (receipt.buyer_address ? '<div style="font-size:11px;color:#64748b;margin-top:3px">' + esc(receipt.buyer_address) + '</div>' : '') +
+        ((receipt.buyer_tin || receipt.buyer_vat_number) ? '<div style="font-size:11px;margin-top:5px">' + (receipt.buyer_vat_number ? 'VAT ' + esc(receipt.buyer_vat_number) + ' ' : '') + (receipt.buyer_tin ? 'TIN ' + esc(receipt.buyer_tin) : '') + '</div>' : '') +
+      '</div>'
+    : '';
+
+  const printInvoice = () => openPrint(
+    '<div style="width:720px;margin:0 auto">' +
+      '<div style="display:flex;justify-content:space-between;padding:24px 30px;background:' + brand + ';color:#fff">' +
+        '<div style="display:flex;gap:14px;align-items:center">' +
+          (logoUrl ? '<img src="' + esc(logoUrl) + '" style="max-height:52px;background:#fff;border-radius:8px;padding:4px"/>' : '') +
+          '<div><div style="font-size:21px;font-weight:800">' + esc(storeName) + '</div>' +
+          '<div style="font-size:11px;opacity:.92;margin-top:3px">' + esc(addr) + ((vatNo || tinNo) ? '<br>' + (vatNo ? 'VAT ' + esc(vatNo) : '') + (vatNo && tinNo ? ' · ' : '') + (tinNo ? 'TIN ' + esc(tinNo) : '') : '') + (phone ? ' · ' + esc(phone) : '') + '</div></div>' +
+        '</div>' +
+        '<div style="text-align:right"><div style="font-size:14px;font-weight:800;letter-spacing:.1em">FISCAL TAX INVOICE</div>' +
+        '<div style="font-size:11px;opacity:.92;margin-top:8px">No: <b>' + esc(receipt.receipt_number) + '</b><br>' + esc(new Date().toLocaleString()) + '<br>Currency: <b>USD</b></div></div>' +
+      '</div>' +
+      '<div style="padding:22px 30px">' + buyerBlock +
+        '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#0f172a;color:#fff;font-size:9.5px;letter-spacing:.05em">' +
+          '<th style="text-align:left;padding:9px 10px">Description</th><th style="text-align:center;padding:9px 10px">Tax</th><th style="text-align:right;padding:9px 10px">Qty</th><th style="text-align:right;padding:9px 10px">Unit</th><th style="text-align:right;padding:9px 10px">Amount</th>' +
+        '</tr></thead><tbody>' + itemRowsInvoice + '</tbody></table>' +
+        '<div style="display:flex;justify-content:space-between;gap:20px;margin-top:18px">' +
+          '<div style="flex:1;font-size:9.5px;color:#94a3b8">A = 15% Standard · B = 0% Zero-rated · C = Exempt</div>' +
+          '<div style="width:250px">' +
+            '<div style="display:flex;justify-content:space-between;font-size:12px;color:#64748b;padding:6px 0"><span>Subtotal (excl VAT)</span><b style="color:#0f172a">' + money(receipt.subtotal) + '</b></div>' +
+            '<div style="display:flex;justify-content:space-between;font-size:12px;color:#64748b;padding:6px 0"><span>VAT 15%</span><b style="color:#0f172a">' + money(receipt.tax) + '</b></div>' +
+            '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:6px;padding:12px 14px;background:' + brand + ';color:#fff;border-radius:9px"><span style="font-size:12px;font-weight:800">TOTAL DUE</span><span style="font-size:22px;font-weight:800">' + money(receipt.total) + '</span></div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:20px;margin-top:18px">' +
+          '<div style="flex:1;border:1px dashed #e6eaef;border-radius:10px;padding:12px 14px"><div style="font-size:9px;letter-spacing:.1em;color:#64748b;font-weight:800;margin-bottom:6px">PAYMENT / BANK DETAILS</div>' +
+          '<div style="font-size:11px;color:#334155;line-height:1.7">' + (bankDetails ? esc(bankDetails).replace(/\n/g, '<br>') : 'Paid: ' + esc(payLabel())) + '</div></div>' +
+          fiscalInvoice() +
+        '</div>' +
+      '</div>' +
+      '<div style="text-align:center;font-size:10px;color:#94a3b8;padding:16px 30px;border-top:1px solid #e6eaef">' + esc(footerMsg) + ' · ' + esc(storeName) + (email ? ' · ' + esc(email) : '') + ' · Powered by Pewil</div>' +
+    '</div>'
+  );
 
   return (
     <div
@@ -241,38 +397,7 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
 
         <div style={{ display: 'flex', gap: 8 }}>
           <button
-            onClick={() => {
-              const printWin = window.open('', '_blank', 'width=400,height=600');
-              const items = receipt.items_data || [];
-              const rows = items.map(i =>
-                `<tr><td style="padding:4px 0;font-size:11px">${i.product_name || 'Item'} x${i.qty || 0}</td><td style="text-align:right;padding:4px 0;font-size:11px">$${(i.total || 0).toFixed(2)}</td></tr>`
-              ).join('');
-              printWin.document.write(`<html><head><title>Receipt</title></head><body style="font-family:monospace;max-width:300px;margin:0 auto;padding:20px">
-                <h2 style="text-align:center;margin:0 0 4px">PEWIL</h2>
-                <p style="text-align:center;font-size:10px;color:#666;margin:0 0 16px">Receipt #${receipt.receipt_number}</p>
-                <hr style="border:none;border-top:1px dashed #ccc"/>
-                <table style="width:100%;border-collapse:collapse">${rows}</table>
-                <hr style="border:none;border-top:1px dashed #ccc"/>
-                <table style="width:100%;font-size:11px">
-                  <tr><td>Subtotal</td><td style="text-align:right">$${parseFloat(receipt.subtotal || 0).toFixed(2)}</td></tr>
-                  ${receipt.discount > 0 ? `<tr><td>Discount</td><td style="text-align:right">-$${parseFloat(receipt.discount).toFixed(2)}</td></tr>` : ''}
-                  <tr><td>Tax</td><td style="text-align:right">$${parseFloat(receipt.tax || 0).toFixed(2)}</td></tr>
-                  <tr style="font-weight:bold;font-size:14px"><td>TOTAL</td><td style="text-align:right">$${parseFloat(receipt.total || 0).toFixed(2)}</td></tr>
-                </table>
-                <hr style="border:none;border-top:1px dashed #ccc"/>
-                <p style="text-align:center;font-size:10px;color:#666">Payment: ${receipt.payment_method === 'mobile_money' ? 'Mobile Money' : receipt.payment_method === 'mixed' ? 'Split' : receipt.payment_method}</p>
-                ${receipt.payment_method === 'mixed' && Array.isArray(receipt.payments_data) && receipt.payments_data.length > 0
-                  ? '<table style="width:100%;font-size:10px;color:#666;margin-top:-6px">' +
-                      receipt.payments_data.map((leg) =>
-                        `<tr><td style="padding:1px 0">&nbsp;&nbsp;${leg.method === 'mobile_money' ? 'EcoCash' : (leg.method || '')}${leg.reference ? ' · ' + leg.reference : ''}</td><td style="text-align:right;padding:1px 0">$${(parseFloat(leg.amount) || 0).toFixed(2)}</td></tr>`
-                      ).join('') +
-                    '</table>'
-                  : ''}
-                <p style="text-align:center;font-size:10px;color:#666">Thank you for shopping with us!</p>
-              </body></html>`);
-              printWin.document.close();
-              printWin.print();
-            }}
+            onClick={printThermal}
             style={{
               flex: 1,
               padding: '10px',
@@ -286,6 +411,23 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
             }}
           >
             {'\u{1F5A8}'} Print Receipt
+          </button>
+          <button
+            onClick={printInvoice}
+            title="Print a full A4 fiscal tax invoice (for business / account customers)"
+            style={{
+              flex: 1,
+              padding: '10px',
+              background: '#fff',
+              color: '#334155',
+              border: '1px solid #cbd5e1',
+              borderRadius: 7,
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            {'\u{1F4C4}'} Invoice (A4)
           </button>
           <button
             onClick={onClose}

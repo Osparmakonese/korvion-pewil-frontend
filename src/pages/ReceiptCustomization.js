@@ -20,6 +20,7 @@ export default function ReceiptCustomization({ onTabChange }) {
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
   const [vatNumber, setVatNumber] = useState('');
+  const [tinNumber, setTinNumber] = useState('');
   const [showLogo, setShowLogo] = useState(true);
   const [footerMessage, setFooterMessage] = useState('');
   const [showSocialMedia, setShowSocialMedia] = useState(false);
@@ -40,6 +41,7 @@ export default function ReceiptCustomization({ onTabChange }) {
       setAddress(`${template.address_line1 || ''}${template.address_line2 ? '\n' + template.address_line2 : ''}`);
       setPhone(template.phone || '');
       setVatNumber(template.vat_number || '');
+      setTinNumber(template.tin || '');
       setShowLogo(template.show_logo ?? true);
       setFooterMessage(template.footer_message || '');
       setShowBarcodeOnReceipt(template.show_barcode ?? true);
@@ -109,6 +111,7 @@ export default function ReceiptCustomization({ onTabChange }) {
               address_line2: address.split('\n')[1],
               phone: phone,
               vat_number: vatNumber,
+              tin: tinNumber,
               header_message: '',
               footer_message: footerMessage,
               show_logo: showLogo,
@@ -187,6 +190,18 @@ export default function ReceiptCustomization({ onTabChange }) {
                     fontFamily: "'Inter', sans-serif",
                     boxSizing: 'border-box'
                   }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: 9, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 4 }}>
+                  TIN (BPN) — printed beside VAT on fiscal receipts
+                </label>
+                <input
+                  type="text"
+                  value={tinNumber}
+                  onChange={(e) => setTinNumber(e.target.value)}
+                  placeholder="e.g. 2001234567"
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 11, boxSizing: 'border-box' }}
                 />
               </div>
               <div>
