@@ -188,6 +188,8 @@ export default function RetailSettings({ onTabChange }) {
   const [showChange, setShowChange] = useState(() => localStorage.getItem('pos_show_change') !== 'false');
   const [receiptCopies, setReceiptCopies] = useState(() => localStorage.getItem('receipt_copies') || '1');
   const [eodDigest, setEodDigest] = useState(() => localStorage.getItem('eod_digest') === 'true');
+  const [digestRecipients, setDigestRecipients] = useState(() => localStorage.getItem('digest_recipients') || '');
+  const [digestHour, setDigestHour] = useState(() => parseInt(localStorage.getItem('digest_hour') || '18', 10));
 
   /* ── Fiscal & Tax ── */
   const [tin, setTin] = useState(() => localStorage.getItem('zimra_tin') || '');
@@ -246,6 +248,8 @@ export default function RetailSettings({ onTabChange }) {
         if (s.pos_show_change !== undefined) { setShowChange(!!s.pos_show_change); localStorage.setItem('pos_show_change', String(!!s.pos_show_change)); }
         if (s.receipt_copies !== undefined) { setReceiptCopies(String(s.receipt_copies)); localStorage.setItem('receipt_copies', String(s.receipt_copies)); }
         if (s.eod_digest !== undefined) { setEodDigest(!!s.eod_digest); localStorage.setItem('eod_digest', String(!!s.eod_digest)); }
+        if (s.digest_recipients !== undefined) { setDigestRecipients(safe(s.digest_recipients, '')); localStorage.setItem('digest_recipients', safe(s.digest_recipients, '')); }
+        if (s.digest_hour !== undefined && s.digest_hour !== null) { setDigestHour(parseInt(s.digest_hour, 10) || 18); }
         if (s.vat_rate !== undefined) { setVatRate(String(s.vat_rate)); localStorage.setItem('vat_rate', String(s.vat_rate)); }
         if (s.barcode_enabled !== undefined) { setBarcodeEnabled(!!s.barcode_enabled); localStorage.setItem('barcode_enabled', String(!!s.barcode_enabled)); }
         if (s.scanner_mode !== undefined) { setScannerMode(safe(s.scanner_mode, 'usb_hid')); localStorage.setItem('scanner_mode', safe(s.scanner_mode, 'usb_hid')); }
@@ -323,6 +327,8 @@ export default function RetailSettings({ onTabChange }) {
         receipt_copies: parseInt(receiptCopies, 10) || 1,
         receipt_printer_enabled: receiptPrinterEnabled,
         eod_digest: eodDigest,
+        digest_recipients: digestRecipients,
+        digest_hour: digestHour,
         vat_rate: vatRate,
         barcode_enabled: barcodeEnabled,
         scanner_mode: scannerMode,
@@ -851,7 +857,28 @@ export default function RetailSettings({ onTabChange }) {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <ToggleItem label="Low-stock WhatsApp alerts" desc="Send a manager a WhatsApp when any SKU crosses its reorder threshold." on={lowStockWA} onToggle={() => setLowStockWA(!lowStockWA)} />
-                  <ToggleItem label="Daily end-of-day email digest" desc="06:00 summary to owners & managers." on={eodDigest} onToggle={() => setEodDigest(!eodDigest)} />
+                  <ToggleItem label="Daily report email" desc="A plain-language analysis of each trading day — sales & trend, payment mix, top sellers, refunds and low stock — written up and emailed by Pewil." on={eodDigest} onToggle={() => setEodDigest(!eodDigest)} />
+                  {eodDigest && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, borderLeft: '3px solid #1a6b3a', paddingLeft: 12, marginTop: 2 }}>
+                      <div>
+                        <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 4 }}>Send the report to</label>
+                        <input style={input} value={digestRecipients} onChange={(e) => setDigestRecipients(e.target.value)}
+                          placeholder={primaryEmail || 'owner@email.com'} />
+                        <p style={{ fontSize: 11, color: '#94a3b8', margin: '4px 0 0' }}>
+                          Comma-separate multiple addresses. Leave blank to use your primary email{primaryEmail ? ` (${primaryEmail})` : ''}.
+                        </p>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 4 }}>Time of day</label>
+                        <select style={{ ...input, maxWidth: 200 }} value={digestHour} onChange={(e) => setDigestHour(parseInt(e.target.value, 10))}>
+                          {Array.from({ length: 24 }).map((_, h) => {
+                            const ampm = h < 12 ? 'am' : 'pm'; const hr = (h % 12) || 12;
+                            return <option key={h} value={h}>{hr}:00 {ampm}</option>;
+                          })}
+                        </select>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </section>
 
