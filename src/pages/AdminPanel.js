@@ -143,6 +143,23 @@ export default function AdminPanel() {
   const [showResetFor, setShowResetFor] = useState(null);
   const [savedFlash, setSavedFlash] = useState(null); // userId for perm flash
   const [auditFilter, setAuditFilter] = useState('');
+  const [expandedRow, setExpandedRow] = useState(null);
+
+  // django-auditlog stores `changes` as { field: [old, new] } (dict or JSON
+  // string). Normalise to a list of {field, old, new} for the details panel.
+  const parseChanges = (changes) => {
+    let obj = changes;
+    if (typeof changes === 'string') {
+      try { obj = JSON.parse(changes); } catch { return []; }
+    }
+    if (!obj || typeof obj !== 'object') return [];
+    return Object.entries(obj).map(([field, val]) => {
+      if (Array.isArray(val)) return { field, old: val[0], new: val[1] };
+      if (val && typeof val === 'object') return { field, old: val.old ?? '', new: val.new ?? JSON.stringify(val) };
+      return { field, old: '', new: String(val) };
+    });
+  };
+  const showVal = (v) => (v === null || v === undefined || v === '') ? '—' : String(v);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['adminUsers'],
@@ -449,6 +466,7 @@ export default function AdminPanel() {
             <table style={S.table}>
               <thead>
                 <tr>
+                  <th style={{ ...S.th, width: 28 }}></th>
                   <th style={S.th}>Timestamp</th>
                   <th style={S.th}>User</th>
                   <th style={S.th}>Action</th>
@@ -458,28 +476,69 @@ export default function AdminPanel() {
                 </tr>
               </thead>
               <tbody>
-                {filteredAudit.map(a => (
-                  <tr key={a.id} style={{ background: actionBg(a.action) }}>
-                    <td style={S.td}>{a.timestamp}</td>
-                    <td style={{ ...S.td, fontWeight: 600 }}>{a.user}</td>
-                    <td style={S.td}>
-                      <span style={{
-                        fontWeight: 600,
-                        color: (a.action || '').toLowerCase().includes('create') ? '#1a6b3a'
-                          : (a.action || '').toLowerCase().includes('delete') ? '#c0392b' : '#c97d1a',
-                      }}>
-                        {a.action}
-                      </span>
-                    </td>
-                    <td style={{ ...S.td, textTransform: 'capitalize' }}>{a.model}</td>
-                    <td style={S.td}>{a.object}</td>
-                    <td style={{ ...S.td, fontSize: 10, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {typeof a.changes === 'string' ? a.changes : JSON.stringify(a.changes || '')}
-                    </td>
-                  </tr>
-                ))}
+                {filteredAudit.map(a => {
+                  const fields = parseChanges(a.changes);
+                  const open = expandedRow === a.id;
+                  const hasDetails = fields.length > 0;
+                  return (
+                    <React.Fragment key={a.id}>
+                      <tr
+                        style={{ background: actionBg(a.action), cursor: hasDetails ? 'pointer' : 'default' }}
+                        onClick={() => hasDetails && setExpandedRow(open ? null : a.id)}
+                      >
+                        <td style={{ ...S.td, textAlign: 'center', color: '#9ca3af' }}>
+                          {hasDetails ? (
+                            <span style={{ display: 'inline-block', transition: 'transform 0.15s', transform: open ? 'rotate(90deg)' : 'none' }}>▶</span>
+                          ) : ''}
+                        </td>
+                        <td style={S.td}>{a.timestamp}</td>
+                        <td style={{ ...S.td, fontWeight: 600 }}>{a.user}</td>
+                        <td style={S.td}>
+                          <span style={{
+                            fontWeight: 600,
+                            color: (a.action || '').toLowerCase().includes('create') ? '#1a6b3a'
+                              : (a.action || '').toLowerCase().includes('delete') ? '#c0392b' : '#c97d1a',
+                          }}>
+                            {a.action}
+                          </span>
+                        </td>
+                        <td style={{ ...S.td, textTransform: 'capitalize' }}>{a.model}</td>
+                        <td style={S.td}>{a.object}</td>
+                        <td style={{ ...S.td, fontSize: 10, color: '#6b7280' }}>
+                          {hasDetails ? `${fields.length} field${fields.length === 1 ? '' : 's'} changed` : '—'}
+                        </td>
+                      </tr>
+                      {open && (
+                        <tr>
+                          <td colSpan={7} style={{ padding: 0, borderBottom: '1px solid #f3f4f6', background: '#fafafa' }}>
+                            <div style={{ padding: '10px 16px 12px' }}>
+                              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+                                <thead>
+                                  <tr>
+                                    <th style={{ ...S.th, background: 'transparent', width: '28%' }}>Field</th>
+                                    <th style={{ ...S.th, background: 'transparent' }}>From</th>
+                                    <th style={{ ...S.th, background: 'transparent' }}>To</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {fields.map((f) => (
+                                    <tr key={f.field}>
+                                      <td style={{ ...S.td, fontWeight: 600, textTransform: 'capitalize' }}>{f.field.replace(/_/g, ' ')}</td>
+                                      <td style={{ ...S.td, color: '#c0392b' }}>{showVal(f.old)}</td>
+                                      <td style={{ ...S.td, color: '#1a6b3a' }}>{showVal(f.new)}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
                 {filteredAudit.length === 0 && (
-                  <tr><td style={S.td} colSpan={6}>No audit entries found.</td></tr>
+                  <tr><td style={S.td} colSpan={7}>No audit entries found.</td></tr>
                 )}
               </tbody>
             </table>
