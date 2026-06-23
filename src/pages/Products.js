@@ -9,6 +9,8 @@ import {
   getLowStockProducts,
   getExpiringProducts,
   getStockAdjustments,
+  importProducts,
+  downloadProductTemplate,
 } from '../api/retailApi';
 import MobileProducts from '../components/MobileProducts';
 import { useAuth } from '../context/AuthContext';
@@ -608,10 +610,77 @@ const S = {
   },
 };
 
+function ImportProductsModal({ isOpen, onClose, onDone }) {
+  const [file, setFile] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState(null);
+  const [err, setErr] = useState('');
+  if (!isOpen) return null;
+
+  const dl = async () => {
+    try {
+      const blob = await downloadProductTemplate();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'product_import_template.xlsx';
+      document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(url);
+    } catch { setErr('Could not download the template.'); }
+  };
+  const upload = async () => {
+    if (!file) { setErr('Choose a file first.'); return; }
+    setErr(''); setBusy(true); setResult(null);
+    try {
+      const fd = new FormData(); fd.append('file', file);
+      const res = await importProducts(fd);
+      setResult(res);
+      onDone && onDone();
+    } catch (e) {
+      setErr(e?.response?.data?.error || 'Import failed — make sure the file matches the template.');
+    } finally { setBusy(false); }
+  };
+
+  const box = { background: '#fff', borderRadius: 12, padding: 24, width: 460, maxWidth: '92%', maxHeight: '88vh', overflowY: 'auto' };
+  const link = { color: '#1a6b3a', fontWeight: 700, cursor: 'pointer', fontSize: 13 };
+  const btn = (bg = '#1a6b3a', c = '#fff') => ({ padding: '9px 16px', background: bg, color: c, border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' });
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+      <div onClick={(e) => e.stopPropagation()} style={box}>
+        <h2 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 6px', color: '#0f172a' }}>Import products</h2>
+        <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 14px', lineHeight: 1.6 }}>
+          Upload an Excel (.xlsx) or CSV file to add your whole catalogue at once. Existing products
+          (matched by SKU) are updated; new ones are created.
+        </p>
+        <div style={{ marginBottom: 14 }}>
+          <span onClick={dl} style={link}>⬇ Download the template</span>
+          <span style={{ fontSize: 12, color: '#94a3b8' }}> — fill it in, then upload it below.</span>
+        </div>
+        <input type="file" accept=".xlsx,.xls,.csv" onChange={(e) => { setFile(e.target.files[0] || null); setErr(''); setResult(null); }}
+          style={{ display: 'block', marginBottom: 14, fontSize: 13 }} />
+        {err && <div style={{ color: '#b91c1c', fontSize: 12, marginBottom: 10 }}>{err}</div>}
+        {result && (
+          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: 12, marginBottom: 12, fontSize: 13 }}>
+            <b style={{ color: '#166534' }}>✓ Done.</b> {result.created} created, {result.updated} updated
+            {result.error_count > 0 && <span style={{ color: '#b45309' }}> · {result.error_count} row(s) skipped</span>}.
+            {Array.isArray(result.errors) && result.errors.length > 0 && (
+              <ul style={{ margin: '8px 0 0', paddingLeft: 18, color: '#b45309', fontSize: 12 }}>
+                {result.errors.slice(0, 8).map((er, i) => <li key={i}>Row {er.row}: {er.error}</li>)}
+              </ul>
+            )}
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <button style={btn('#f3f4f6', '#374151')} onClick={onClose}>{result ? 'Close' : 'Cancel'}</button>
+          {!result && <button style={{ ...btn(), opacity: busy ? 0.6 : 1 }} disabled={busy} onClick={upload}>{busy ? 'Importing…' : 'Import'}</button>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Products() {
   const qc = useQueryClient();
   const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -782,14 +851,28 @@ export default function Products() {
       <div style={S.header}>
         <h1 style={S.title}>Products</h1>
         {!isWorker && (
-          <button
-            onClick={() => setShowModal(true)}
-            style={S.addBtn}
-          >
-            {'\u{2795}'} Add Product
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={() => setShowImport(true)}
+              style={{ ...S.addBtn, background: '#fff', color: '#1a6b3a', border: '1px solid #1a6b3a' }}
+            >
+              {'\u{1F4E5}'} Import
+            </button>
+            <button
+              onClick={() => setShowModal(true)}
+              style={S.addBtn}
+            >
+              {'\u{2795}'} Add Product
+            </button>
+          </div>
         )}
       </div>
+
+      <ImportProductsModal
+        isOpen={showImport}
+        onClose={() => setShowImport(false)}
+        onDone={() => { try { invalidateProductCaches(qc); } catch (e) {} }}
+      />
 
       <div style={S.controls}>
         <input

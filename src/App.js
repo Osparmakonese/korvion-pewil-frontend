@@ -149,6 +149,7 @@ const Layby = React.lazy(() => import('./pages/Layby'));
 const FinancialReports = React.lazy(() => import('./pages/FinancialReports'));
 const RecurringInvoices = React.lazy(() => import('./pages/RecurringInvoices'));
 const GoodsReceived = React.lazy(() => import('./pages/GoodsReceived'));
+const Stocktake = React.lazy(() => import('./pages/Stocktake'));
 
 /* --- Loading fallback for lazy pages --- */
 const PageLoader = () => (
@@ -270,6 +271,7 @@ const PAGES = {
   'Financial Reports': FinancialReports,
   'Recurring Invoices': RecurringInvoices,
   'Goods Received': GoodsReceived,
+  'Stocktake': Stocktake,
 };
 
 /* --- */
@@ -379,6 +381,7 @@ const PAGE_META = {
   'Financial Reports': { title: 'Financial Reports', sub: 'P&L, VAT-7, balance sheet, debtors' },
   'Recurring Invoices': { title: 'Recurring Invoices', sub: 'Scheduled billing for account customers' },
   'Goods Received': { title: 'Goods Received', sub: 'GRVs raised when purchase orders arrive' },
+  'Stocktake': { title: 'Stocktake', sub: 'Count physical stock and reconcile variance' },
   'Vending': { title: 'Vending', sub: 'Sell airtime, ZESA and water tokens' },
   'Vending Setup': { title: 'Vending Setup', sub: 'Connect your BillPay vendor float' },
 };

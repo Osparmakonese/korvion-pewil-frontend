@@ -246,6 +246,16 @@ export const fiscaliseReturn = (id) => api.post(`/retail/returns/${id}/fiscalise
 export const emailReceipt = (saleId, data) => api.post(`/retail/sales/${saleId}/email-receipt/`, data).then(r => r.data);
 export const exportSalesExcel = (params) => api.get('/retail/sales/export-excel/', { params, responseType: 'blob' }).then(r => r.data);
 export const exportFinancialsExcel = (params) => api.get('/retail/financials/export-excel/', { params, responseType: 'blob' }).then(r => r.data);
+export const importProducts = (formData) => api.post('/retail/products-import/', formData, { headers: { 'Content-Type': 'multipart/form-data' } }).then(r => r.data);
+export const downloadProductTemplate = () => api.get('/retail/products-import/', { responseType: 'blob' }).then(r => r.data);
+export const getOnboardingStatus = () => api.get('/retail/onboarding-status/').then(r => r.data);
+
+// ── Stocktake ──
+export const getStocktakes = () => api.get('/retail/stocktakes/').then(r => r.data);
+export const getStocktake = (id) => api.get(`/retail/stocktakes/${id}/`).then(r => r.data);
+export const startStocktake = (data) => api.post('/retail/stocktakes/', data || {}).then(r => r.data);
+export const saveStocktakeCounts = (id, counts) => api.post(`/retail/stocktakes/${id}/save-counts/`, { counts }).then(r => r.data);
+export const finalizeStocktake = (id) => api.post(`/retail/stocktakes/${id}/finalize/`).then(r => r.data);
 
 // ── Phase 2/3: Layby ──
 export const getLaybys = (st) => api.get('/retail/laybys/', { params: st ? { status: st } : {} }).then(r => r.data);

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   getRetailDashboard,
+  getOnboardingStatus,
 } from '../api/retailApi';
 import { fmt } from '../utils/format';
 import { useAuth } from '../context/AuthContext';
@@ -344,8 +345,13 @@ const S = {
   }),
 };
 
-export default function RetailDashboard() {
+export default function RetailDashboard({ onTabChange }) {
   const { user } = useAuth() || {};
+  const isOwnerOrMgr = user?.role === 'owner' || user?.role === 'manager' || user?.is_staff;
+  const { data: onboarding } = useQuery({
+    queryKey: ['onboarding-status'], queryFn: getOnboardingStatus,
+    enabled: isOwnerOrMgr, staleTime: 60000, retry: false,
+  });
 
   // Mobile breakpoint detection. Stays hook-ordering safe: declared
   // before any conditional return so React sees the same hook count
@@ -503,6 +509,38 @@ export default function RetailDashboard() {
 
   return (
     <div style={S.page}>
+      {/* First-run setup checklist — shows until every step is done. */}
+      {onboarding && !onboarding.complete && (
+        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, padding: 20, marginBottom: 18, boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>🚀 Finish setting up your shop</div>
+              <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{onboarding.done} of {onboarding.total} steps done</div>
+            </div>
+            <div style={{ width: 160, height: 8, background: '#e5e7eb', borderRadius: 99, overflow: 'hidden' }}>
+              <div style={{ width: `${(onboarding.done / onboarding.total) * 100}%`, height: '100%', background: '#1a6b3a' }} />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 10, marginTop: 14 }}>
+            {(onboarding.steps || []).map((s) => (
+              <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', border: '1px solid #eef0f3', borderRadius: 10, background: s.done ? '#f0fdf4' : '#fff' }}>
+                <span style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, background: s.done ? '#1a6b3a' : '#e5e7eb', color: s.done ? '#fff' : '#94a3b8' }}>{s.done ? '✓' : ''}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{s.label}</div>
+                  <div style={{ fontSize: 11, color: '#94a3b8' }}>{s.hint}</div>
+                </div>
+                {!s.done && (
+                  <button onClick={() => onTabChange && onTabChange(s.tab)}
+                    style={{ padding: '6px 12px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    Go →
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Design 5: amber today's-revenue hero strip */}
       <div style={S.banner}>
         <div style={S.bannerDecor} />

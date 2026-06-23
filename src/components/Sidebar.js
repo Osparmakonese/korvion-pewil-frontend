@@ -249,6 +249,7 @@ export const NAV_ITEMS = [
     { key: 'Suppliers', emoji: '\u{1F4E6}', label: 'Suppliers & POs' },
     { key: 'WhatsApp PO', emoji: '\u{1F4AC}', label: 'WhatsApp PO' },
     { key: 'Stock Adjustments', emoji: '\u{1F504}', label: 'Stock Adjustments' },
+    { key: 'Stocktake', emoji: '\u{1F4CB}', label: 'Stocktake', feature: 'stocktake' },
     { key: 'Goods Received', emoji: '\u{1F4E5}', label: 'Goods Received (GRV)' },
     { key: 'Low Stock Alerts', emoji: '\u{1F6A8}', label: 'Low Stock Alerts' },
     { key: 'Barcode Labels', emoji: '\u{1F4CF}', label: 'Barcode & Labels' },
