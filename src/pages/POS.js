@@ -395,6 +395,11 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
           )}
         </div>
 
+        {receipt.payment_method === 'on_account' && (
+          <div style={{ fontSize: 11, color: '#166534', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 7, padding: '7px 10px', marginBottom: 8, fontWeight: 600 }}>
+            {'\u{1F9FE}'} Account sale — give the customer the A4 fiscal invoice.
+          </div>
+        )}
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             onClick={printThermal}
@@ -418,13 +423,15 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
             style={{
               flex: 1,
               padding: '10px',
-              background: '#fff',
-              color: '#334155',
-              border: '1px solid #cbd5e1',
               borderRadius: 7,
               fontSize: 12,
               fontWeight: 600,
               cursor: 'pointer',
+              // For on-account (B2B / credit) sales the A4 fiscal invoice is the
+              // default deliverable, so it becomes the highlighted primary action.
+              ...(receipt.payment_method === 'on_account'
+                ? { background: '#1a6b3a', color: '#fff', border: '1px solid #1a6b3a' }
+                : { background: '#fff', color: '#334155', border: '1px solid #cbd5e1' }),
             }}
           >
             {'\u{1F4C4}'} Invoice (A4)
