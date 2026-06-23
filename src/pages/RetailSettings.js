@@ -5,6 +5,7 @@ import { getVapidKey, subscribePush, unsubscribePush, sendTestPush } from '../ap
 import SecuritySettings from '../components/SecuritySettings';
 import BusinessTypePanel from '../components/BusinessTypePanel';
 import HapticsToggle from '../components/HapticsToggle';
+import WhatsAppAssistant from '../components/WhatsAppAssistant';
 import api from '../api/axios';
 
 /* ─── Design 3 — Living Africa tokens (shared with Landing/Login/Register/Settings) ─── */
@@ -829,6 +830,8 @@ export default function RetailSettings({ onTabChange }) {
 
           {activeTab === 'notifications' && (
             <>
+              <WhatsAppAssistant />
+
               <section style={sectionCard}>
                 <div style={sectionHead}>
                   <h2 style={sectionTitle}>WhatsApp recipients</h2>
