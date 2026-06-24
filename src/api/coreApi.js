@@ -3,6 +3,13 @@ import api from './axios';
 // Platform (founder) analytics — super-admin only
 export const getPlatformAnalytics = () => api.get('/core/platform/').then(r => r.data);
 
+// Partners / collaborators — super-admin only
+export const getPartnersOverview = () => api.get('/core/partners/overview/').then(r => r.data);
+export const createPartner = (data) => api.post('/core/partners/', data).then(r => r.data);
+export const updatePartner = (id, data) => api.patch(`/core/partners/${id}/`, data).then(r => r.data);
+export const assignTenantPartner = (tenant_id, partner_id) =>
+  api.post('/core/partners/assign/', { tenant_id, partner_id }).then(r => r.data);
+
 // Tenant
 export const getMyTenant = () => api.get('/core/tenants/my-tenant/').then(r => r.data);
 export const updateMyTenant = (data) => api.patch('/core/tenants/my-tenant/update/', data).then(r => r.data);
