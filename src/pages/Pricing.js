@@ -43,11 +43,13 @@ const PLANS = {
     },
     {
       tier: 'enterprise', name: 'Retail Enterprise', slug: 'retail-enterprise',
-      price_monthly: 69, price_yearly: 690, blurb: 'For chains and service stations.',
+      price_monthly: 45, price_yearly: 450, per_branch: true,
+      blurb: 'For chains and service stations — priced per branch.',
       features: [
-        'Unlimited branches & tills', 'Unlimited users', 'Everything in Growth',
+        'Unlimited tills & users per branch', 'Everything in Growth',
         'Multi-branch chain rollup', 'Fuel forecourt & fleet cards',
         'White-label branding', 'API access', 'Dedicated account manager',
+        '20+ branches — contact us for volume pricing',
       ],
     },
   ],
@@ -180,10 +182,12 @@ export default function Pricing() {
               <p style={S.cardBlurb}>{plan.blurb}</p>
               <div style={S.priceRow}>
                 <span style={S.priceBig}>${price}</span>
-                <span style={S.priceUnit}>{unit}</span>
+                <span style={S.priceUnit}>{plan.per_branch ? `per branch${unit}` : unit}</span>
               </div>
               <div style={S.priceYearNote}>
-                {cycle === 'yearly' ? '2 months free vs monthly' : `or $${plan.price_yearly}/year (2 months free)`}
+                {plan.per_branch
+                  ? (cycle === 'yearly' ? 'per branch · 2 months free' : `or $${plan.price_yearly}/branch/year (2 months free)`)
+                  : (cycle === 'yearly' ? '2 months free vs monthly' : `or $${plan.price_yearly}/year (2 months free)`)}
               </div>
               <ul style={S.featList}>
                 {plan.features.map((f, i) => (

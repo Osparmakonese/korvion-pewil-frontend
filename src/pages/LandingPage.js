@@ -507,18 +507,19 @@ const LandingPage = () => {
                 </ul>
                 <div className="pl-op-price-ent">
                   <div className="pl-op-price-ent-head">
-                    <span className="amt">$69</span>
-                    <span className="per">/mo · unlimited branches &amp; tills</span>
+                    <span className="amt">$45</span>
+                    <span className="per">/branch/mo · unlimited tills &amp; users</span>
                   </div>
                   <div className="pl-op-price-ent-note">
-                    One flat price for the whole chain &mdash; unlimited branches, tills and users, multi-branch
-                    rollup, fuel forecourt and white-label branding. No per-receipt fees, no per-branch surprises.
-                    $690/year with 2 months free.
+                    Enterprise is priced per branch, so you only pay for the size you are &mdash; unlimited tills
+                    and users in each branch, multi-branch rollup, fuel forecourt and white-label branding.
+                    $450/branch/year with 2 months free. 20+ branches: contact us for volume pricing.
                   </div>
                   <div className="pl-op-price-ent-scale">
                     <div><span className="br">Starter — single shop</span><span className="pr">$10/mo</span></div>
                     <div><span className="br">Growth — busy / multi-till</span><span className="pr">$25/mo</span></div>
-                    <div><span className="br">Enterprise — chains &amp; forecourt</span><span className="pr">$69/mo</span></div>
+                    <div><span className="br">5-branch chain</span><span className="pr">$225/mo</span></div>
+                    <div><span className="br">10-branch chain</span><span className="pr">$450/mo</span></div>
                   </div>
                 </div>
                 <Link to="/contact?type=enterprise" className="pl-op-btn">Talk to us about your chain &rarr;</Link>
