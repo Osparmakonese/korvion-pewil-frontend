@@ -56,6 +56,7 @@ const Settings = React.lazy(() => import('./pages/Settings'));
 const Import = React.lazy(() => import('./pages/Import'));
 const AdminPanel = React.lazy(() => import('./pages/AdminPanel'));
 const PlanSimulator = React.lazy(() => import('./pages/PlanSimulator'));
+const PlatformAnalytics = React.lazy(() => import('./pages/PlatformAnalytics'));
 const FarmAssets = React.lazy(() => import('./pages/FarmAssets'));
 const Cattle = React.lazy(() => import('./pages/Cattle'));
 const Goats = React.lazy(() => import('./pages/Goats'));
@@ -185,6 +186,7 @@ const PAGES = {
   'Economics': Economics,
   'Admin Panel': AdminPanel,
   'Plan Simulator': PlanSimulator,
+  'Platform': PlatformAnalytics,
   // Retail module
   'Retail': RetailDashboard,
   'Products': Products,
@@ -301,6 +303,7 @@ const PAGE_META = {
   'Economics': { title: 'Farm Economics', sub: 'Profitability and enterprise analysis' },
   'Admin Panel': { title: 'Super Admin Panel', sub: 'Pewil system administration' },
   'Plan Simulator': { title: 'Plan Simulator', sub: 'Dev preview of every plan tier' },
+  'Platform': { title: 'Platform Analytics', sub: 'Signups, revenue & customers — super admin' },
   // Retail module
   'Retail': { title: 'Retail Dashboard', sub: 'Store overview and daily metrics' },
   'Products': { title: 'Products', sub: 'Product catalog and inventory' },

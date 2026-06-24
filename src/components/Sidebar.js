@@ -297,6 +297,7 @@ export const NAV_ITEMS = [
   // Super Admin section — gated on user.is_super_admin (not just owner).
   // The Plan Simulator shows every plan tier for dev/investor preview.
   { section: 'SUPER ADMIN', module: 'any', superOnly: true, collapsible: false, items: [
+    { key: 'Platform', emoji: '\u{1F4C8}', label: 'Platform Analytics' },
     { key: 'Plan Simulator', emoji: '\u{1F9EA}', label: 'Plan Simulator' },
   ]},
   // Admin Panel is cross-module. Available to owners in either module.
