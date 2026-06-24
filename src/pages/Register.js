@@ -339,10 +339,10 @@ export default function Register() {
                 </>
               ) : (
                 <>
-                  <div className="rg-trial-title">Free to start &mdash; pay as you sell</div>
+                  <div className="rg-trial-title">Start your 14-day free trial</div>
                   <div className="rg-trial-body">
-                    No trial, no card. Your first 1,000 receipts every month are free, then a few cents per
-                    receipt &mdash; capped at $999/mo. Add Pewil AI or Pewil Enterprise anytime from Settings → Billing.
+                    No card required. Full till, ZIMRA fiscalisation and mobile money from day one. After the
+                    trial, one simple flat price from $10/month — pay by EcoCash. Cancel anytime.
                   </div>
                 </>
               )}
@@ -368,7 +368,7 @@ export default function Register() {
             <p className="rg-sub">
               {persona === 'farm'
                 ? '14-day free trial on Growth. No card. Cancel anytime from your dashboard.'
-                : 'Free to start — your first 1,000 receipts each month are free. No card, no trial. Cancel anytime.'}
+                : '14-day free trial — no card required. Then from $10/month, fiscalisation included. Cancel anytime.'}
             </p>
 
             {/* Persona pill — locked, with a cross-link to switch */}

@@ -381,7 +381,7 @@ const LandingPage = () => {
             what enterprise POS does at a tenth of the cost.
           </p>
           <div className="pl-hero-actions">
-            <Link to="/register?persona=retail" className="pl-btn pl-btn-dark">Start free &mdash; pay as you sell &rarr;</Link>
+            <Link to="/register?persona=retail" className="pl-btn pl-btn-dark">Start your 14-day free trial &rarr;</Link>
             <a href="#operators" className="pl-btn pl-btn-ghost">See how it works</a>
           </div>
           <div className="pl-hero-demo">
@@ -470,12 +470,12 @@ const LandingPage = () => {
                 </ul>
                 <div className="pl-op-price">
                   <div>
-                    <span className="tier">Up to 1,000 receipts a month</span>
-                    <div><span className="amt">$0</span><span className="per">/mo</span></div>
+                    <span className="tier">Starter — single shop</span>
+                    <div><span className="amt">$10</span><span className="per">/mo</span></div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <span className="tier">Above that &mdash; tiered, drops with volume</span>
-                    <div className="pl-op-price-sub">from $0.005<span className="per">/receipt</span></div>
+                    <span className="tier">Growth — multi-till &amp; reports</span>
+                    <div className="pl-op-price-sub">$25<span className="per">/mo</span></div>
                   </div>
                 </div>
                 <Link to="/register?persona=retail" className="pl-op-btn">Start Pewil Retail &rarr;</Link>
@@ -507,18 +507,18 @@ const LandingPage = () => {
                 </ul>
                 <div className="pl-op-price-ent">
                   <div className="pl-op-price-ent-head">
-                    <span className="amt">$999</span>
-                    <span className="per">max per month, ever</span>
+                    <span className="amt">$69</span>
+                    <span className="per">/mo · unlimited branches &amp; tills</span>
                   </div>
                   <div className="pl-op-price-ent-note">
-                    Same tiered per-receipt rate as the smallest shop &mdash; you pay less per receipt as you grow.
-                    Half a cent each on early receipts, dropping to a tenth of a cent at chain volume.
-                    Hard ceiling at $999/month no matter how many branches or millions of sales you ring.
+                    One flat price for the whole chain &mdash; unlimited branches, tills and users, multi-branch
+                    rollup, fuel forecourt and white-label branding. No per-receipt fees, no per-branch surprises.
+                    $690/year with 2 months free.
                   </div>
                   <div className="pl-op-price-ent-scale">
-                    <div><span className="br">3 branches · 9,000 sales/mo</span><span className="pr">$40/mo</span></div>
-                    <div><span className="br">12 branches · 180,000 sales/mo</span><span className="pr">$415/mo</span></div>
-                    <div><span className="br">40 branches · 1.2M sales/mo</span><span className="pr">$999/mo (capped)</span></div>
+                    <div><span className="br">Starter — single shop</span><span className="pr">$10/mo</span></div>
+                    <div><span className="br">Growth — busy / multi-till</span><span className="pr">$25/mo</span></div>
+                    <div><span className="br">Enterprise — chains &amp; forecourt</span><span className="pr">$69/mo</span></div>
                   </div>
                 </div>
                 <Link to="/contact?type=enterprise" className="pl-op-btn">Talk to us about your chain &rarr;</Link>
@@ -642,13 +642,12 @@ const LandingPage = () => {
       {/* ─── cta ───────────────────────────────────────── */}
       <section className="pl-cta" id="cta">
         <div className="pl-cta-in">
-          <h2 className="pl-serif">Open the till tomorrow &mdash; <em>free</em> until you cross 1,000 sales a month.</h2>
+          <h2 className="pl-serif">Open the till tomorrow &mdash; <em>free</em> for 14 days, then from $10 a month.</h2>
           <p>
-            Pewil Retail is free for the first 1,000 receipts every month &mdash; covers most dukas entirely.
-            After that, a tiered marginal rate that drops as you grow &mdash; from half a cent each at the
-            busy-shop tier down to a tenth of a cent at chain volume. Hard ceiling of $999/month, no matter
-            how big you get. No per-branch fee, no per-seat fee, no tier upgrades. Cancel anytime,
-            export everything &mdash; the data was always yours.
+            Start with a 14-day free trial &mdash; no card required. After that, one simple flat price:
+            Starter $10/mo, Growth $25/mo, Enterprise $69/mo &mdash; with ZIMRA fiscalisation, EcoCash and
+            the full till included in every plan. Pay yearly and get 2 months free. No per-receipt fees,
+            no surprises. Cancel anytime, export everything &mdash; the data was always yours.
           </p>
           <div className="pl-cta-actions">
             <Link to="/register?persona=retail" className="pl-btn pl-btn-white">Start as a shopkeeper &rarr;</Link>

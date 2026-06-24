@@ -5,61 +5,14 @@ import { useAuth } from '../context/AuthContext';
 /**
  * Public pricing page — pewil.org/pricing
  *
- * Retail (2026-05-17 pricing revolution):
- *   Tiered per-receipt model. Free up to 1,000 receipts/month, then
- *   $0.005 each up to 20k, $0.003 to 100k, $0.001 above that. Hard cap
- *   at $999/month. Optional opt-in to the data-share rebate cuts the
- *   bill 50%. No seats, no branches, no tier upgrades to navigate. The
- *   shop pays less per receipt the bigger they grow — AWS pattern.
- *   See backend/billing/usage_pricing.py for the canonical math.
+ * Flat-tier subscriptions in USD (2026 repricing — per-receipt model retired).
+ * Fiscalisation, mobile money and the core POS are included in every retail tier;
+ * tiers differ by branches/tills/users and advanced tools. Every plan starts with
+ * a 14-day free trial. Yearly = 10× monthly (2 months free).
  *
- * Farm:
- *   Still flat-fee tiers (Starter / Growth / Enterprise) — farms only
- *   produce a handful of sales per season so per-receipt would charge
- *   them too little to sustain. Numbers come from
- *   billing/migrations/0005_seed_per_module_plans.py.
- *
- * Keep both pricing surfaces honest with the server-side calc in
- * billing.usage_pricing.estimate_bill_from_receipt_count — the
- * calculator below mirrors that function exactly so prospects see
- * the same number they'll be billed.
+ * The in-app Billing page reads live prices from the API; these cards mirror the
+ * seeded plans (billing/migrations/0005 + 0012). Keep them in sync if prices change.
  */
-
-// ── Per-receipt pricing constants (mirror billing/usage_pricing.py) ──
-// Don't change tier boundaries here without updating the Python module too —
-// the calculator on this page is a UX cache of the server's math.
-const FREE_TIER_RECEIPTS = 1000;
-const PRICING_TIERS = [
-  { upTo: 1_000,    rate: 0       },   // 0 – 1,000        free
-  { upTo: 20_000,   rate: 0.005   },   // 1,001 – 20,000   half a cent
-  { upTo: 100_000,  rate: 0.003   },   // 20,001 – 100,000 0.3 of a cent
-  { upTo: Infinity, rate: 0.001   },   // 100,001 +        0.1 of a cent
-];
-const MONTHLY_CAP = 999;             // dollars — hard ceiling for chains
-const DATA_SHARE_REBATE_PCT = 50;    // when opted in
-
-function tieredCharge(receipts) {
-  if (receipts <= 0) return 0;
-  let total = 0;
-  let floor = 0;
-  for (const { upTo, rate } of PRICING_TIERS) {
-    const cap = Math.min(receipts, upTo);
-    const inTier = Math.max(0, cap - floor);
-    if (inTier > 0 && rate > 0) total += inTier * rate;
-    floor = upTo;
-    if (receipts <= upTo) break;
-  }
-  return total;
-}
-
-function estimateMonthlyBill(dailySales, daysOpenPerMonth = 26, dataShareOn = false) {
-  const monthlyReceipts = Math.max(0, Math.round(dailySales * daysOpenPerMonth));
-  const chargeable = Math.max(monthlyReceipts - FREE_TIER_RECEIPTS, 0);
-  const gross = tieredCharge(monthlyReceipts);
-  const capped = Math.min(gross, MONTHLY_CAP);
-  const final = dataShareOn ? capped * (1 - DATA_SHARE_REBATE_PCT / 100) : capped;
-  return { monthlyReceipts, chargeable, gross, capped, final };
-}
 
 const C = {
   green: '#1a6b3a', greenDark: '#0D4A22', green2: '#2d9e58', green3: '#e8f5ee',
@@ -68,439 +21,115 @@ const C = {
 };
 
 const PLANS = {
-  farm: [
+  retail: [
     {
-      tier: 'starter',
-      name: 'Pewil Farm Starter',
-      slug: 'farm-starter',
-      price_monthly: 10,
-      price_yearly: 100,
-      max_users: 2,
-      blurb: 'For small farms getting started.',
+      tier: 'starter', name: 'Retail Starter', slug: 'retail-starter',
+      price_monthly: 10, price_yearly: 100, blurb: 'For a single shop or restaurant.',
       features: [
-        'Up to 2 users',
-        '5 fields',
-        '10 workers',
-        '50 livestock records',
-        'Costs, stock, sales, reports',
-        'Email support',
+        '1 branch · 1 till', 'Up to 2 users', 'ZIMRA fiscal receipts',
+        'EcoCash / OneMoney, card & cash', 'Products, stock & basic reports',
+        'Email & WhatsApp receipts', 'Email support',
       ],
     },
     {
-      tier: 'growth',
-      name: 'Pewil Farm Growth',
-      slug: 'farm-growth',
-      price_monthly: 25,
-      price_yearly: 250,
-      max_users: 5,
-      popular: true,
-      blurb: 'Most popular — for growing operations.',
+      tier: 'growth', name: 'Retail Growth', slug: 'retail-growth',
+      price_monthly: 25, price_yearly: 250, popular: true,
+      blurb: 'Most popular — for a busy or multi-till shop.',
       features: [
-        'Up to 5 users',
-        '20 fields',
-        '30 workers',
-        '500 livestock records',
-        'Everything in Starter',
-        'Basic AI insights',
-        'WhatsApp alerts',
-        'Priority email support',
+        'Up to 2 branches · 3 tills', 'Up to 5 users', 'Everything in Starter',
+        'Financial reports & VAT return', 'Layby & customer credit',
+        'WhatsApp assistant + AI insights', 'Loyalty & multi-currency', 'Priority support',
       ],
     },
     {
-      tier: 'enterprise',
-      name: 'Pewil Farm Enterprise',
-      slug: 'farm-enterprise',
-      price_monthly: 60,
-      price_yearly: 600,
-      max_users: 'Unlimited',
-      blurb: 'For large estates and multi-site farms.',
+      tier: 'enterprise', name: 'Retail Enterprise', slug: 'retail-enterprise',
+      price_monthly: 69, price_yearly: 690, blurb: 'For chains and service stations.',
       features: [
-        'Unlimited users',
-        'Unlimited fields, workers, livestock',
-        'Everything in Growth',
-        'Advanced AI insights',
-        'White-label branding',
-        'Dedicated account manager',
-        'Phone support',
+        'Unlimited branches & tills', 'Unlimited users', 'Everything in Growth',
+        'Multi-branch chain rollup', 'Fuel forecourt & fleet cards',
+        'White-label branding', 'API access', 'Dedicated account manager',
       ],
     },
   ],
-  // Retail moved to per-receipt pricing 2026-05-17 — see <RetailReceiptPricing />.
-  // The flat-tier entries previously here are deliberately gone; the Retail tab
-  // renders a calculator instead of plan cards. PLANS.retail = [] is kept so
-  // `plans.map(...)` in the farm code path stays defensive without checks.
-  retail: [],
+  farm: [
+    {
+      tier: 'starter', name: 'Pewil Farm Starter', slug: 'farm-starter',
+      price_monthly: 10, price_yearly: 100, blurb: 'For small farms getting started.',
+      features: ['Up to 2 users', '5 fields', '10 workers', '50 livestock records',
+        'Costs, stock, sales, reports', 'Email support'],
+    },
+    {
+      tier: 'growth', name: 'Pewil Farm Growth', slug: 'farm-growth',
+      price_monthly: 25, price_yearly: 250, popular: true,
+      blurb: 'Most popular — for growing operations.',
+      features: ['Up to 5 users', '20 fields', '30 workers', '500 livestock records',
+        'Everything in Starter', 'Basic AI insights', 'WhatsApp alerts', 'Priority email support'],
+    },
+    {
+      tier: 'enterprise', name: 'Pewil Farm Enterprise', slug: 'farm-enterprise',
+      price_monthly: 60, price_yearly: 600, blurb: 'For large estates and multi-site farms.',
+      features: ['Unlimited users', 'Unlimited fields, workers, livestock', 'Everything in Growth',
+        'Advanced AI insights', 'White-label branding', 'Dedicated account manager', 'Phone support'],
+    },
+  ],
 };
 
 const FAQ = [
-  { q: 'How does per-receipt pricing actually work for retail?', a: 'Your first 1,000 receipts every calendar month are free. After that you pay a tiered marginal rate: half a cent (US $0.005) per receipt up to 20,000/month, three-tenths of a cent ($0.003) between 20,001 and 100,000, then one-tenth of a cent ($0.001) above that. Hard cap of $999/month no matter how big you grow. The calculator above shows your exact monthly bill — there are no plans to upgrade between, no per-seat fees, no per-branch fees.' },
-  { q: 'What counts as a "receipt"?', a: 'A completed customer sale — one transaction at the till. Returns, voids, stock adjustments, cash drops, end-of-day reports and dashboard views are all free. Only customer-facing receipts count toward your bill.' },
-  { q: 'What\'s the data-share rebate?', a: 'Opt in (anytime, from your Billing page) to share anonymized aggregate sales — category, hour, geography only. No customer data, no SKU prices, no individual receipts. In exchange we knock 50% off your monthly bill. We fund the discount by selling the aggregate dataset to FMCG brands and market-research firms, the same way Nielsen does — except we share the revenue with you.' },
-  { q: 'Why is farm priced differently?', a: 'Farms only ring a handful of sales per season — tobacco, maize, livestock cycles — so per-receipt would charge them essentially nothing. Farm stays on flat-fee plans (Starter $10, Growth $25, Enterprise $60) that match actual value delivered.' },
-  { q: 'Can I try Pewil for free?', a: 'Yes — sign up and start. Retail tenants pay $0 until they cross 1,000 receipts in a month; farm tenants get a 14-day free trial on any plan. No card required upfront.' },
-  { q: 'What payment methods do you accept?', a: 'Visa and Mastercard via Pesepay for card payments, plus EcoCash and OneMoney via Paynow for mobile money in Zimbabwe. M-Pesa (Daraja) for Kenya. Pesepay also handles international cards from anywhere.' },
-  { q: 'I already pay a flat subscription — what happens to me?', a: 'Existing tenants keep their current pricing until you choose to switch. From your Billing page you can see what you\'d pay under the per-receipt model and migrate yourself if it\'s cheaper. Most shops save money on the switch.' },
-  { q: 'Can I combine Pewil Farm + Pewil Retail?', a: 'Each tenant runs one module (farm OR retail) — that\'s deliberate, the systems are deeply specialized. If you genuinely need both, register two separate tenants with the same email; you\'ll see both modules in one login.' },
-  { q: 'Do you offer refunds?', a: 'You barely ever pay enough to need one — but yes, refunds within 7 days of your first payment, no questions asked. Email billing@pewil.org from your Billing page.' },
-  { q: 'Is my data safe?', a: 'HTTPS everywhere, JWT authentication, optional 2FA, role-based access, full audit logs, and nightly automated backups. You can export all your data anytime as CSV or JSON.' },
-  { q: 'Can I cancel anytime?', a: 'Yes. Cancel from your Billing page. Your subscription stays active until the end of the current period — no immediate lockout. Per-receipt tenants are effectively always-cancellable: stop ringing sales and your bill stops growing.' },
+  { q: 'How does the free trial work?', a: 'Every new shop gets a 14-day free trial on the Starter plan — no card required upfront. You get the full till, fiscal receipts and mobile money from day one. At the end of the trial you pick a plan and pay by EcoCash, OneMoney or card.' },
+  { q: 'Is ZIMRA fiscalisation included?', a: 'Yes — fiscalisation is built into every tier, including Starter. Every sale is reported to ZIMRA and the receipt carries the QR and verification code. There is no separate fiscalisation fee.' },
+  { q: 'Why a flat monthly price instead of per-receipt?', a: 'A flat price is simpler to budget and means you are never surprised by a bill. You pay for the system — the till, stock, reports and compliance — not for how many sales you ring. A quiet day costs the same as a busy one.' },
+  { q: 'What if I have more than one branch or till?', a: 'Starter covers 1 branch and 1 till; Growth covers up to 2 branches and 3 tills; Enterprise is unlimited. Need an extra branch or two on Growth? Add-on branches are available from your Billing page.' },
+  { q: 'Do you offer a yearly discount?', a: 'Yes — pay yearly and get 2 months free (about 17% off). Starter is $100/yr, Growth $250/yr, Enterprise $690/yr.' },
+  { q: 'What payment methods do you accept?', a: 'EcoCash and OneMoney via Paynow, plus Visa and Mastercard via Pesepay. You can pay your subscription with mobile money — no card required.' },
+  { q: 'Why is farm priced differently?', a: 'Farm is a separate module with its own tools (fields, livestock, harvest). Its tiers (Starter $10, Growth $25, Enterprise $60) match the value a farm gets. Each tenant runs one module — farm OR retail.' },
+  { q: 'Can I cancel anytime?', a: 'Yes. Cancel from your Billing page; your subscription stays active until the end of the current period — no immediate lockout.' },
+  { q: 'Is my data safe?', a: 'HTTPS everywhere, JWT authentication, role-based access, full audit logs and automated backups. You can export your data anytime as Excel.' },
 ];
 
 const S = {
-  page: { minHeight: '100vh', background: C.white, color: C.ink, fontFamily: "'Inter', sans-serif" },
-  nav: {
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '16px 32px', borderBottom: `1px solid ${C.border}`, background: C.white,
-    position: 'sticky', top: 0, zIndex: 10,
-  },
-  navLogo: {
-    background: C.greenDark, borderRadius: 8, padding: '6px 14px',
-    color: C.amber, fontWeight: 800, fontSize: 18,
-    fontFamily: "'Playfair Display', serif", letterSpacing: 1,
-    textDecoration: 'none',
-  },
-  navLinks: { display: 'flex', gap: 24, alignItems: 'center' },
+  page: { fontFamily: "'Inter', system-ui, sans-serif", color: C.ink, background: C.white, minHeight: '100vh' },
+  nav: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 28px', borderBottom: `1px solid ${C.border}`, position: 'sticky', top: 0, background: C.white, zIndex: 10 },
+  navLogo: { fontWeight: 800, fontSize: 20, color: C.green, textDecoration: 'none', letterSpacing: '.02em' },
+  navLinks: { display: 'flex', gap: 22, alignItems: 'center' },
   navLink: { color: C.ink2, textDecoration: 'none', fontSize: 14, fontWeight: 500 },
-  navCta: {
-    background: C.green, color: C.white, padding: '10px 20px', borderRadius: 8,
-    textDecoration: 'none', fontWeight: 600, fontSize: 14,
-  },
-
-  hero: { padding: '80px 24px 40px', textAlign: 'center', maxWidth: 900, margin: '0 auto' },
-  heroTitle: {
-    fontFamily: "'Playfair Display', serif", fontSize: 52, fontWeight: 700,
-    margin: '0 0 20px', letterSpacing: '-1.5px', color: C.ink,
-  },
-  heroSub: { fontSize: 18, color: C.ink2, lineHeight: 1.6, marginBottom: 32 },
-  pill: {
-    display: 'inline-block', background: C.green3, color: C.green,
-    padding: '6px 14px', borderRadius: 999, fontSize: 13, fontWeight: 600, marginBottom: 20,
-  },
-  toggleRow: {
-    display: 'inline-flex', background: C.surface, borderRadius: 999,
-    padding: 4, border: `1px solid ${C.border}`, marginBottom: 16,
-  },
-  toggleBtn: (active) => ({
-    padding: '10px 22px', borderRadius: 999, border: 'none', cursor: 'pointer',
-    background: active ? C.green : 'transparent', color: active ? C.white : C.ink2,
-    fontWeight: 600, fontSize: 13, transition: 'all 0.15s',
-  }),
-  save: { fontSize: 12, color: C.green, fontWeight: 600, marginLeft: 10 },
-
-  moduleTabs: {
-    display: 'flex', justifyContent: 'center', gap: 12,
-    padding: '0 24px 24px', maxWidth: 900, margin: '0 auto',
-  },
-  moduleTab: (active) => ({
-    padding: '14px 28px', borderRadius: 12, cursor: 'pointer',
-    background: active ? C.green3 : C.white, color: active ? C.green : C.ink2,
-    border: active ? `2px solid ${C.green}` : `2px solid ${C.border}`,
-    fontWeight: 700, fontSize: 15, transition: 'all 0.15s',
-  }),
-
-  grid: {
-    display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24,
-    maxWidth: 1100, margin: '0 auto', padding: '0 24px 80px',
-  },
-  card: (popular) => ({
-    background: C.white, borderRadius: 16,
-    padding: 32,
-    border: popular ? `2px solid ${C.green}` : `1px solid ${C.border}`,
-    position: 'relative', boxShadow: popular ? '0 20px 40px rgba(26,107,58,0.1)' : 'none',
-  }),
-  popularBadge: {
-    position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
-    background: C.green, color: C.white, padding: '4px 14px', borderRadius: 999,
-    fontSize: 12, fontWeight: 700, letterSpacing: 0.5,
-  },
-  cardName: {
-    fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 700,
-    color: C.ink, margin: '0 0 4px',
-  },
-  cardBlurb: { fontSize: 14, color: C.ink3, marginBottom: 20, minHeight: 40 },
-  priceRow: { display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 4 },
-  priceBig: { fontSize: 44, fontWeight: 800, color: C.ink, lineHeight: 1 },
-  priceUnit: { fontSize: 14, color: C.ink3 },
-  priceYearNote: { fontSize: 12, color: C.ink3, marginBottom: 20 },
-  perBranchUnit: { fontSize: 13, color: C.ink3, fontWeight: 500 },
-  scalePreview: {
-    background: C.green3, border: `1px solid ${C.green}33`, borderRadius: 10,
-    padding: '12px 14px', marginBottom: 20,
-  },
-  scalePreviewTitle: {
-    fontSize: 11, fontWeight: 700, color: C.green, letterSpacing: '0.05em',
-    textTransform: 'uppercase', marginBottom: 8,
-  },
-  scaleRow: {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '4px 0', fontSize: 13,
-  },
-  scaleRowBranches: { color: C.ink2, fontWeight: 500 },
-  scaleRowPrice: { color: C.green, fontWeight: 700, fontFamily: "'Playfair Display', serif" },
-  userLimit: { fontSize: 13, color: C.green, fontWeight: 600, marginBottom: 20 },
-  featuresList: { listStyle: 'none', padding: 0, margin: '0 0 24px' },
-  featureItem: {
-    display: 'flex', alignItems: 'flex-start', gap: 10,
-    padding: '8px 0', fontSize: 14, color: C.ink2, lineHeight: 1.5,
-  },
-  check: { color: C.green, fontWeight: 700, flexShrink: 0, marginTop: 1 },
-  cta: (popular) => ({
-    display: 'block', width: '100%', padding: '14px',
-    background: popular ? C.green : C.white, color: popular ? C.white : C.green,
-    border: popular ? 'none' : `1.5px solid ${C.green}`, borderRadius: 10,
-    fontSize: 15, fontWeight: 700, textAlign: 'center', textDecoration: 'none',
-    cursor: 'pointer', transition: 'all 0.15s',
-  }),
-
-  combineSection: {
-    background: C.surface, padding: '60px 24px', textAlign: 'center',
-  },
-  combineInner: { maxWidth: 800, margin: '0 auto' },
-  combineTitle: {
-    fontFamily: "'Playfair Display', serif", fontSize: 32, fontWeight: 700,
-    color: C.ink, margin: '0 0 12px',
-  },
-  combineSub: { fontSize: 16, color: C.ink2, marginBottom: 24, lineHeight: 1.6 },
-
-  faq: { maxWidth: 800, margin: '0 auto', padding: '60px 24px 80px' },
-  faqTitle: {
-    fontFamily: "'Playfair Display', serif", fontSize: 32, fontWeight: 700,
-    color: C.ink, textAlign: 'center', margin: '0 0 36px',
-  },
-  faqItem: {
-    border: `1px solid ${C.border}`, borderRadius: 10, padding: 18,
-    marginBottom: 12, cursor: 'pointer', transition: 'all 0.15s',
-  },
-  faqQ: {
-    fontSize: 15, fontWeight: 600, color: C.ink,
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-  },
-  faqA: { fontSize: 14, color: C.ink2, marginTop: 10, lineHeight: 1.6 },
-
-  footer: {
-    background: C.greenDark, color: C.white, padding: '40px 24px',
-    textAlign: 'center', fontSize: 13,
-  },
-  footerLinks: { display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 16 },
-  footerLink: { color: C.white, textDecoration: 'none', opacity: 0.8 },
+  navCta: { background: C.green, color: '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 700, padding: '9px 16px', borderRadius: 8 },
+  hero: { textAlign: 'center', padding: '54px 20px 10px', maxWidth: 820, margin: '0 auto' },
+  pill: { display: 'inline-block', background: C.green3, color: C.green, fontWeight: 700, fontSize: 12.5, padding: '6px 14px', borderRadius: 20, marginBottom: 18 },
+  heroTitle: { fontFamily: "'Playfair Display', serif", fontWeight: 800, fontSize: 40, margin: '0 0 12px', color: C.ink },
+  heroSub: { fontSize: 16, color: C.ink3, lineHeight: 1.65, margin: 0 },
+  toggleRow: { display: 'inline-flex', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: 4, marginTop: 24, gap: 4 },
+  toggleBtn: (on) => ({ border: 'none', cursor: 'pointer', padding: '9px 20px', borderRadius: 7, fontSize: 14, fontWeight: 700, background: on ? C.green : 'transparent', color: on ? '#fff' : C.ink2, display: 'flex', alignItems: 'center', gap: 8 }),
+  save: { fontSize: 11, fontWeight: 700, background: '#fff', color: C.green, borderRadius: 12, padding: '2px 8px' },
+  moduleTabs: { display: 'flex', justifyContent: 'center', gap: 8, margin: '28px auto 8px', maxWidth: 360 },
+  moduleTab: (on) => ({ flex: 1, textAlign: 'center', cursor: 'pointer', padding: '10px 0', borderRadius: 9, fontWeight: 700, fontSize: 14, border: `1px solid ${on ? C.green : C.border}`, background: on ? C.green3 : '#fff', color: on ? C.green : C.ink3 }),
+  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, maxWidth: 1040, margin: '24px auto 10px', padding: '0 20px' },
+  card: (pop) => ({ position: 'relative', background: '#fff', border: `1.5px solid ${pop ? C.green : C.border}`, borderRadius: 16, padding: '28px 24px', boxShadow: pop ? '0 8px 30px rgba(26,107,58,.12)' : '0 1px 4px rgba(0,0,0,.04)' }),
+  popularBadge: { position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: C.green, color: '#fff', fontSize: 11, fontWeight: 800, letterSpacing: '.05em', padding: '4px 14px', borderRadius: 20 },
+  cardName: { fontSize: 18, fontWeight: 800, margin: '4px 0 4px' },
+  cardBlurb: { fontSize: 13, color: C.ink3, margin: '0 0 14px', minHeight: 34 },
+  priceRow: { display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 6 },
+  priceBig: { fontSize: 40, fontWeight: 800, color: C.ink, fontFamily: "'Playfair Display', serif" },
+  priceUnit: { fontSize: 15, color: C.ink3, fontWeight: 600 },
+  priceYearNote: { fontSize: 12.5, color: C.green2, fontWeight: 600, marginBottom: 12 },
+  featList: { listStyle: 'none', padding: 0, margin: '16px 0 22px' },
+  feat: { display: 'flex', gap: 9, alignItems: 'flex-start', fontSize: 13.5, color: C.ink2, padding: '5px 0' },
+  check: { color: C.green, fontWeight: 800, flexShrink: 0 },
+  cardCta: (pop) => ({ display: 'block', textAlign: 'center', textDecoration: 'none', padding: '12px 0', borderRadius: 9, fontWeight: 700, fontSize: 14.5, background: pop ? C.green : '#fff', color: pop ? '#fff' : C.green, border: `1.5px solid ${C.green}` }),
+  included: { maxWidth: 1040, margin: '14px auto 0', padding: '0 20px', textAlign: 'center', fontSize: 13.5, color: C.ink3 },
+  faqWrap: { maxWidth: 760, margin: '46px auto 0', padding: '0 20px' },
+  faqTitle: { fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 800, textAlign: 'center', marginBottom: 18 },
+  faqItem: { borderBottom: `1px solid ${C.border}`, padding: '14px 0', cursor: 'pointer' },
+  faqQ: { display: 'flex', justifyContent: 'space-between', gap: 12, fontWeight: 700, fontSize: 15, color: C.ink },
+  faqA: { fontSize: 14, color: C.ink3, lineHeight: 1.65, marginTop: 10 },
+  footer: { marginTop: 60, borderTop: `1px solid ${C.border}`, padding: '26px 20px', textAlign: 'center', color: C.ink3, fontSize: 13 },
+  footLinks: { display: 'flex', gap: 18, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 10 },
+  footLink: { color: C.ink2, textDecoration: 'none', fontSize: 13 },
 };
-
-/**
- * RetailReceiptPricing — the calculator + explainer block we show on
- * the Retail tab. Replaces the old fixed-price plan cards entirely.
- *
- * Why the calculator is the headline: every shopkeeper we talked to
- * said the same thing — they don't want to compare three tiers, they
- * want to know what they will pay. Show them.
- */
-function RetailReceiptPricing() {
-  const [dailySales, setDailySales] = useState(50);
-  const [dataShareOn, setDataShareOn] = useState(false);
-  const result = estimateMonthlyBill(dailySales, 26, dataShareOn);
-
-  const RC = {
-    wrap: { maxWidth: 980, margin: '0 auto', padding: '0 24px 40px' },
-    headlineRow: { textAlign: 'center', marginBottom: 32 },
-    headlineKicker: {
-      display: 'inline-block', background: '#e8f5ee', color: '#1a6b3a',
-      padding: '6px 14px', borderRadius: 999, fontSize: 12, fontWeight: 700,
-      letterSpacing: '0.05em', marginBottom: 14,
-    },
-    headline: {
-      fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 700,
-      letterSpacing: '-0.5px', margin: '0 0 12px',
-    },
-    headlineSub: { color: '#374151', fontSize: 16, lineHeight: 1.6, maxWidth: 640, margin: '0 auto' },
-
-    calc: {
-      background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16,
-      boxShadow: '0 1px 3px rgba(0,0,0,0.04)', padding: '32px 28px', marginBottom: 24,
-    },
-    calcRow: { marginBottom: 24 },
-    calcLabel: { fontSize: 13, color: '#6b7280', fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' },
-    calcValue: { fontSize: 36, fontWeight: 800, color: '#111827', fontFamily: "'Playfair Display', serif" },
-    slider: { width: '100%', accentColor: '#1a6b3a' },
-    tick: { display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#9ca3af', marginTop: 4 },
-
-    resultBox: {
-      background: 'linear-gradient(180deg, #f4faf6 0%, #fffefb 100%)',
-      border: '1px solid #d1e8d8', borderRadius: 14, padding: '22px 24px',
-    },
-    monthlyBig: {
-      fontFamily: "'Playfair Display', serif", fontSize: 56, fontWeight: 800,
-      color: '#0D4A22', letterSpacing: '-1.5px', lineHeight: 1,
-    },
-    monthlyUnit: { color: '#6b7280', fontSize: 14, fontWeight: 600, marginLeft: 8 },
-    breakdown: { fontSize: 13, color: '#374151', marginTop: 10, lineHeight: 1.6 },
-    breakdownStrong: { color: '#0D4A22', fontWeight: 700 },
-
-    toggle: {
-      display: 'flex', alignItems: 'center', gap: 12, marginTop: 18, padding: '12px 14px',
-      background: '#fff', border: '1px solid #d1e8d8', borderRadius: 12,
-    },
-    toggleSwitch: (on) => ({
-      width: 40, height: 22, borderRadius: 999, background: on ? '#1a6b3a' : '#d1d5db',
-      position: 'relative', cursor: 'pointer', transition: 'background 0.15s',
-    }),
-    toggleKnob: (on) => ({
-      width: 16, height: 16, borderRadius: 999, background: '#fff', position: 'absolute',
-      top: 3, left: on ? 21 : 3, transition: 'left 0.15s',
-      boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
-    }),
-    toggleLabel: { flex: 1 },
-    toggleTitle: { fontSize: 14, fontWeight: 700, color: '#111827' },
-    toggleHelp: { fontSize: 12, color: '#6b7280', marginTop: 2 },
-
-    rulesGrid: {
-      display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 18,
-      marginTop: 32, marginBottom: 32,
-    },
-    rule: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '20px 22px' },
-    ruleNum: { color: '#1a6b3a', fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 800, marginBottom: 6 },
-    ruleTitle: { fontWeight: 700, fontSize: 15, color: '#111827', marginBottom: 4 },
-    ruleBody: { fontSize: 13.5, color: '#374151', lineHeight: 1.55 },
-
-    ctaRow: { textAlign: 'center', marginTop: 28 },
-    cta: {
-      display: 'inline-block', background: '#1a6b3a', color: '#fff',
-      padding: '14px 32px', borderRadius: 10, textDecoration: 'none',
-      fontWeight: 700, fontSize: 15,
-    },
-    smallNote: { fontSize: 12, color: '#9ca3af', marginTop: 14, lineHeight: 1.5 },
-  };
-
-  return (
-    <div style={RC.wrap}>
-      <div style={RC.headlineRow}>
-        <span style={RC.headlineKicker}>RETAIL — PAY WHAT YOU COST, NEVER MORE</span>
-        <h2 style={RC.headline}>Free for the long tail. Fair at every scale.</h2>
-        <p style={RC.headlineSub}>
-          Your first 1,000 receipts every month are free &mdash; that covers most dukas entirely.
-          After that, the rate per receipt drops as you grow: half a cent at the busy-shop tier,
-          three-tenths of a cent at chain volume, a tenth of a cent at supermarket-group scale.
-          Hard ceiling of $999 a month, no matter how big you get.
-        </p>
-      </div>
-
-      <div style={RC.calc}>
-        <div style={RC.calcRow}>
-          <div style={RC.calcLabel}>Sales you ring per day</div>
-          <div style={RC.calcValue}>
-            {dailySales.toLocaleString()} sales
-            {dailySales >= 3000 && <span style={{ fontSize: 14, color: '#6b7280', fontWeight: 500, marginLeft: 8 }}>(chain scale)</span>}
-          </div>
-          <input
-            type="range" min={0} max={5000} step={10}
-            value={dailySales}
-            onChange={(e) => setDailySales(Number(e.target.value))}
-            style={RC.slider}
-          />
-          <div style={RC.tick}>
-            <span>0</span>
-            <span>50</span>
-            <span>500</span>
-            <span>2,000</span>
-            <span>5,000+</span>
-          </div>
-        </div>
-
-        <div style={RC.resultBox}>
-          <div>
-            <span style={RC.monthlyBig}>${result.final.toFixed(2)}</span>
-            <span style={RC.monthlyUnit}>per month</span>
-          </div>
-          <div style={RC.breakdown}>
-            That's ~<span style={RC.breakdownStrong}>{result.monthlyReceipts.toLocaleString()}</span> receipts
-            a month at 26 working days.&nbsp;
-            {result.monthlyReceipts <= FREE_TIER_RECEIPTS && (
-              <>You're inside the <span style={RC.breakdownStrong}>1,000-receipt free tier</span> — no bill at all.</>
-            )}
-            {result.monthlyReceipts > FREE_TIER_RECEIPTS && result.capped < MONTHLY_CAP && (
-              <>
-                Tiered rate kicks in above the free 1,000: half a cent each up to 20k receipts,
-                three-tenths of a cent up to 100k, a tenth of a cent after that.
-              </>
-            )}
-            {result.capped >= MONTHLY_CAP && (
-              <>You'd hit the <span style={RC.breakdownStrong}>$999 monthly cap</span> — that's the most you'll ever pay, even at millions of sales/month.</>
-            )}
-            {dataShareOn && result.capped > 0 && (
-              <> Data-share rebate cuts your bill by 50%.</>
-            )}
-          </div>
-
-          <div style={RC.toggle}>
-            <div
-              style={RC.toggleSwitch(dataShareOn)}
-              onClick={() => setDataShareOn((v) => !v)}
-            >
-              <div style={RC.toggleKnob(dataShareOn)} />
-            </div>
-            <div style={RC.toggleLabel}>
-              <div style={RC.toggleTitle}>Opt in to data-share rebate — get 50% off</div>
-              <div style={RC.toggleHelp}>
-                Share anonymized aggregate sales (category × hour × geography) with the Pewil dataset.
-                No customer data, no SKU prices. Cancel anytime.
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div style={RC.rulesGrid}>
-        <div style={RC.rule}>
-          <div style={RC.ruleNum}>1,000</div>
-          <div style={RC.ruleTitle}>Free receipts every month</div>
-          <div style={RC.ruleBody}>
-            Around 33 sales a day. Most neighborhood dukas pay $0, forever. The free tier resets
-            on the 1st of every month.
-          </div>
-        </div>
-        <div style={RC.rule}>
-          <div style={RC.ruleNum}>$0.005 &rarr; $0.001</div>
-          <div style={RC.ruleTitle}>Tiered marginal rate</div>
-          <div style={RC.ruleBody}>
-            Half a cent each on the first 19k receipts above the free tier. Drops to
-            $0.003 between 20k and 100k. Drops again to $0.001 above 100k. You pay less per receipt
-            the bigger you grow &mdash; the AWS pattern, applied to retail.
-          </div>
-        </div>
-        <div style={RC.rule}>
-          <div style={RC.ruleNum}>$999</div>
-          <div style={RC.ruleTitle}>Maximum monthly bill</div>
-          <div style={RC.ruleBody}>
-            Hard ceiling. A 40-branch chain doing 1.2 M sales a month pays the same as the busiest
-            day-only supermarket &mdash; $999. No per-branch fee, no enterprise tier to negotiate,
-            no surprise invoice.
-          </div>
-        </div>
-        <div style={RC.rule}>
-          <div style={RC.ruleNum}>50%</div>
-          <div style={RC.ruleTitle}>Data-share rebate</div>
-          <div style={RC.ruleBody}>
-            Opt in to anonymized aggregate data sharing and cut your bill in half. Most months even a
-            busy shop pays $0 net — your data funds your own subscription.
-          </div>
-        </div>
-      </div>
-
-      <div style={RC.ctaRow}>
-        <Link to="/register?persona=retail" style={RC.cta}>
-          Start free — no card needed
-        </Link>
-        <div style={RC.smallNote}>
-          Same pricing for every country, every shop size. The calculator is the price list.
-        </div>
-      </div>
-    </div>
-  );
-}
-
 
 export default function Pricing() {
   const { user } = useAuth();
   const [cycle, setCycle] = useState('monthly');
-  const [module, setModule] = useState('farm');
+  const [module, setModule] = useState('retail');
   const [openFaq, setOpenFaq] = useState(null);
 
   if (user) return <Navigate to="/app" replace />;
@@ -509,59 +138,41 @@ export default function Pricing() {
 
   return (
     <div style={S.page}>
-      {/* Nav */}
       <nav style={S.nav}>
         <Link to="/" style={S.navLogo}>PEWIL</Link>
         <div style={S.navLinks}>
           <Link to="/" style={S.navLink}>Home</Link>
-          <Link to="/pricing" style={{ ...S.navLink, color: C.green, fontWeight: 600 }}>Pricing</Link>
+          <Link to="/pricing" style={{ ...S.navLink, color: C.green, fontWeight: 700 }}>Pricing</Link>
           <Link to="/status" style={S.navLink}>Status</Link>
           <Link to="/login" style={S.navLink}>Sign in</Link>
-          <Link to="/register" style={S.navCta}>Start Free</Link>
+          <Link to="/register" style={S.navCta}>Start free</Link>
         </div>
       </nav>
 
-      {/* Hero */}
       <section style={S.hero}>
-        <div style={S.pill}>Retail: free up to 1,000 receipts/mo · Farm: 14-day trial</div>
-        <h1 style={S.heroTitle}>Simple pricing. Pay for what you use.</h1>
+        <div style={S.pill}>14-day free trial · no card required · cancel anytime</div>
+        <h1 style={S.heroTitle}>Simple, flat pricing.</h1>
         <p style={S.heroSub}>
-          Retail bills per receipt with a tiered marginal rate — your first 1,000 sales every month are free,
-          $0.005 each up to 20k, dropping to $0.001 at chain volume. Hard cap of $999/month no matter how big you grow.
-          Farm has flat-tier plans with a 14-day trial. Each module is priced independently.
+          One clear monthly price — fiscalisation, mobile money and the full till included in every plan.
+          No per-receipt fees, no surprises. Pay yearly and get 2 months free.
         </p>
-
-        {module === 'farm' && (
-          <div style={S.toggleRow}>
-            <button style={S.toggleBtn(cycle === 'monthly')} onClick={() => setCycle('monthly')}>
-              Monthly
-            </button>
-            <button style={S.toggleBtn(cycle === 'yearly')} onClick={() => setCycle('yearly')}>
-              Yearly<span style={S.save}>Save 17%</span>
-            </button>
-          </div>
-        )}
+        <div style={S.toggleRow}>
+          <button style={S.toggleBtn(cycle === 'monthly')} onClick={() => setCycle('monthly')}>Monthly</button>
+          <button style={S.toggleBtn(cycle === 'yearly')} onClick={() => setCycle('yearly')}>
+            Yearly<span style={S.save}>2 months free</span>
+          </button>
+        </div>
       </section>
 
-      {/* Module tabs */}
       <div style={S.moduleTabs}>
-        <div style={S.moduleTab(module === 'farm')} onClick={() => setModule('farm')}>
-          Farm
-        </div>
-        <div style={S.moduleTab(module === 'retail')} onClick={() => setModule('retail')}>
-          Retail
-        </div>
+        <div style={S.moduleTab(module === 'retail')} onClick={() => setModule('retail')}>Retail / Shop</div>
+        <div style={S.moduleTab(module === 'farm')} onClick={() => setModule('farm')}>Farm</div>
       </div>
 
-      {/* Retail per-receipt section (only when module === 'retail') */}
-      {module === 'retail' && <RetailReceiptPricing />}
-
-      {/* Plan cards — farm only (retail uses the calculator above) */}
-      {module === 'farm' && <div style={S.grid}>
+      <div style={S.grid}>
         {plans.map((plan) => {
           const price = cycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
           const unit = cycle === 'yearly' ? '/year' : '/month';
-          const isPerBranch = !!plan.per_branch;
           return (
             <div key={plan.slug} style={S.card(plan.popular)}>
               {plan.popular && <div style={S.popularBadge}>MOST POPULAR</div>}
@@ -569,108 +180,48 @@ export default function Pricing() {
               <p style={S.cardBlurb}>{plan.blurb}</p>
               <div style={S.priceRow}>
                 <span style={S.priceBig}>${price}</span>
-                {isPerBranch ? (
-                  <span style={S.perBranchUnit}>per branch{unit}</span>
-                ) : (
-                  <span style={S.priceUnit}>{unit}</span>
-                )}
+                <span style={S.priceUnit}>{unit}</span>
               </div>
-              {isPerBranch && cycle === 'monthly' && (
-                <div style={S.priceYearNote}>
-                  {plan.min_branches}-branch minimum — floor ${plan.price_monthly * plan.min_branches}/mo
-                </div>
-              )}
-              {isPerBranch && cycle === 'yearly' && (
-                <div style={S.priceYearNote}>
-                  {plan.min_branches}-branch minimum — floor ${plan.price_yearly * plan.min_branches}/yr (2 months free)
-                </div>
-              )}
-              {!isPerBranch && cycle === 'yearly' && (
-                <div style={S.priceYearNote}>
-                  That's ${(plan.price_yearly / 12).toFixed(2)}/month — 2 months free
-                </div>
-              )}
-              {!isPerBranch && cycle === 'monthly' && <div style={{ height: 20 }} />}
-
-              {isPerBranch && (
-                <div style={S.scalePreview}>
-                  <div style={S.scalePreviewTitle}>At a glance</div>
-                  {[4, 12, 50].map((n) => (
-                    <div key={n} style={S.scaleRow}>
-                      <span style={S.scaleRowBranches}>{n} branches</span>
-                      <span style={S.scaleRowPrice}>
-                        ${(plan.price_monthly * n).toLocaleString()}/mo
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div style={S.userLimit}>
-                {typeof plan.max_users === 'number'
-                  ? `Up to ${plan.max_users} users`
-                  : plan.max_users + ' users'}
+              <div style={S.priceYearNote}>
+                {cycle === 'yearly' ? '2 months free vs monthly' : `or $${plan.price_yearly}/year (2 months free)`}
               </div>
-              <ul style={S.featuresList}>
+              <ul style={S.featList}>
                 {plan.features.map((f, i) => (
-                  <li key={i} style={S.featureItem}>
-                    <span style={S.check}>{'\u2713'}</span>
-                    <span>{f}</span>
-                  </li>
+                  <li key={i} style={S.feat}><span style={S.check}>✓</span><span>{f}</span></li>
                 ))}
               </ul>
-              <Link to={isPerBranch ? '/contact' : '/register'} style={S.cta(plan.popular)}>
-                {isPerBranch ? 'Talk to sales' : 'Start 14-day free trial'}
+              <Link to={`/register?persona=${module}`} style={S.cardCta(plan.popular)}>
+                Start 14-day free trial
               </Link>
             </div>
           );
         })}
-      </div>}
+      </div>
 
-      {/* Combine section */}
-      <section style={S.combineSection}>
-        <div style={S.combineInner}>
-          <h2 style={S.combineTitle}>Running a farm AND a shop?</h2>
-          <p style={S.combineSub}>
-            Subscribe to both Farm and Retail and manage everything from one login. Each module
-            bills independently — cancel either one at any time without losing the other.
-          </p>
-          <Link to="/register" style={{ ...S.cta(true), display: 'inline-block', width: 'auto', padding: '14px 32px' }}>
-            Try Farm + Retail Free
-          </Link>
-        </div>
-      </section>
+      <div style={S.included}>
+        Every retail plan includes ZIMRA fiscalisation, EcoCash/OneMoney, card &amp; cash, offline selling, and email/WhatsApp receipts.
+      </div>
 
-      {/* FAQ */}
-      <section style={S.faq}>
+      <div style={S.faqWrap}>
         <h2 style={S.faqTitle}>Frequently asked questions</h2>
         {FAQ.map((item, i) => (
-          <div
-            key={i}
-            style={S.faqItem}
-            onClick={() => setOpenFaq(openFaq === i ? null : i)}
-          >
-            <div style={S.faqQ}>
-              {item.q}
-              <span style={{ color: C.green, fontSize: 20 }}>
-                {openFaq === i ? '\u2212' : '+'}
-              </span>
-            </div>
+          <div key={i} style={S.faqItem} onClick={() => setOpenFaq(openFaq === i ? null : i)}>
+            <div style={S.faqQ}><span>{item.q}</span><span>{openFaq === i ? '−' : '+'}</span></div>
             {openFaq === i && <div style={S.faqA}>{item.a}</div>}
           </div>
         ))}
-      </section>
+      </div>
 
-      {/* Footer */}
       <footer style={S.footer}>
-        <div style={S.footerLinks}>
-          <Link to="/" style={S.footerLink}>Home</Link>
-          <Link to="/pricing" style={S.footerLink}>Pricing</Link>
-          <Link to="/status" style={S.footerLink}>Status</Link>
-          <Link to="/terms" style={S.footerLink}>Terms</Link>
-          <Link to="/privacy" style={S.footerLink}>Privacy</Link>
+        <div style={S.footLinks}>
+          <Link to="/" style={S.footLink}>Home</Link>
+          <Link to="/pricing" style={S.footLink}>Pricing</Link>
+          <Link to="/contact" style={S.footLink}>Contact</Link>
+          <Link to="/status" style={S.footLink}>Status</Link>
+          <Link to="/refund-policy" style={S.footLink}>Refund policy</Link>
+          <Link to="/login" style={S.footLink}>Sign in</Link>
         </div>
-        <div style={{ opacity: 0.7 }}>&copy; {new Date().getFullYear()} Pewil. All rights reserved.</div>
+        <div>Pewil — a Korvion Solutions product. Prices in USD. © {new Date().getFullYear()}</div>
       </footer>
     </div>
   );

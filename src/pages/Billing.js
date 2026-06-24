@@ -74,7 +74,7 @@ export default function Billing({ activeModule }) {
     queryFn: () => getBillingSummary(currentModule),
     staleTime: 60000,
   });
-  const billingModel = summary?.billing_model || (currentModule === 'retail' ? 'usage' : 'flat');
+  const billingModel = summary?.billing_model || 'flat';
   const isUsage = billingModel === 'usage';
 
   // Only show the subscription for the current module — the other module's

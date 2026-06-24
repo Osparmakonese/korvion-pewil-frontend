@@ -57,7 +57,7 @@ const FAQ = [
   { cat: 'reports', q: 'How do I prepare my VAT return?', a: 'Financial Reports → VAT-7 Return shows output VAT (from sales) minus input VAT (from purchases) for the period, with the net payable to ZIMRA. Reconcile it against your fiscalised receipts before filing.' },
   { cat: 'reports', q: 'How do I export my data?', a: 'Use the Data Export page (or the Export buttons on reports and the Audit Log) to download CSV/JSON of your data at any time.' },
 
-  { cat: 'billing', q: 'Is there a free trial and how does pricing work?', a: 'Retail (shops): no trial needed — you pay as you sell, with your first 1,000 receipts each month free, then a few cents per receipt, capped at $999/month. Farm: a 14-day free trial on any plan, no card required. Your data is always preserved.' },
+  { cat: 'billing', q: 'Is there a free trial and how does pricing work?', a: 'Yes — every new shop gets a 14-day free trial, no card required. After that, one flat monthly price: Starter $10, Growth $25, Enterprise $69 (or pay yearly and get 2 months free). ZIMRA fiscalisation and mobile money are included in every plan. Farm has the same 14-day trial on its own tiers. Your data is always preserved.' },
 
   { cat: 'security', q: 'How do I add team members and set what they can see?', a: 'Owners open Administration → Team & Access → Add User to create a username, role (manager/worker) and password. Use the Permissions tab to control what each person can view. Roles and every change are recorded in the Audit Trail.' },
   { cat: 'security', q: 'Can I set password rules for my team?', a: 'Yes — Administration → Password Policy (or Settings → Security) lets the owner set minimum length and complexity rules enforced on every password and reset.' },

@@ -94,9 +94,9 @@ const OPERATORS = {
       'Stock + reorder alerts + supplier WhatsApp',
       'Tax-compliant fiscalisation (ZIMRA, KRA, SARS, RRA & more)',
     ],
-    price: '$0',
-    priceSub: 'first 1,000 receipts/mo free · $0.005 each after',
-    tier: 'Per receipt',
+    price: '$10',
+    priceSub: '14-day free trial · then from $10/mo, fiscalisation included',
+    tier: 'per month',
     accent: T.amber,
     photoGradient: `linear-gradient(135deg, ${T.amber}, ${T.amber2})`,
     cta: 'Try retail demo →',
@@ -112,9 +112,9 @@ const OPERATORS = {
       'Cashier perf, loss prevention, manager PIN',
       'Bulk WhatsApp purchase orders to suppliers',
     ],
-    price: '$999',
-    priceSub: 'max per month — tiered per-receipt rate drops with volume',
-    tier: 'Capped',
+    price: '$69',
+    priceSub: 'per month — unlimited branches, tills & users',
+    tier: 'Enterprise',
     accent: T.ink,
     photoGradient: 'linear-gradient(135deg, #111827, #374151)',
     cta: 'Talk to sales →',
@@ -205,7 +205,7 @@ export default function MobileLandingPage() {
         <p style={heroSub}>
           Sell, track stock, close the till — all on the phone in your hand.
         </p>
-        <Link to="/register" onClick={() => haptics.tap()} style={heroCta}>Start free — pay as you sell</Link>
+        <Link to="/register" onClick={() => haptics.tap()} style={heroCta}>Start your 14-day free trial</Link>
         <div style={heroDemo}>
           Or try it instantly —{' '}
           <button
@@ -362,7 +362,7 @@ export default function MobileLandingPage() {
           <Stat tone="green" val="12 min"  label="to first sale"     meta="Signup → first receipt" />
           <Stat tone="amber" val="$48"     label="variance caught"   meta="Spaza pilot, Harare" />
           <Stat tone="ink"   val="98%"     label="offline sync rate" meta="Sales during outages" />
-          <Stat tone="green" val="$0"      label="to start"         meta="No card — pay as you sell" />
+          <Stat tone="green" val="14 days" label="free trial"       meta="No card — then from $10/mo" />
         </div>
       </section></Reveal>
 
@@ -372,7 +372,7 @@ export default function MobileLandingPage() {
           Run your shop or farm{' '}
           <em style={{ fontStyle: 'italic', color: '#ffd480' }}>from your pocket</em>.
         </h2>
-        <p style={finalCtaP}>Free to start, no card. Your first 1,000 receipts each month are free — pay by mobile money or card after that.</p>
+        <p style={finalCtaP}>14-day free trial, no card. Then one simple flat price from $10/month — pay by EcoCash, OneMoney or card.</p>
         <Link to="/register" style={finalCtaPrimary}>Start free</Link>
         <a href="#operators" style={finalCtaGhost}>▶ Watch the demo</a>
         <div style={finalCtaMicro}>Made in Harare. Used wherever there's a phone signal.</div>
@@ -394,7 +394,7 @@ export default function MobileLandingPage() {
 
       {/* Sticky bottom CTA */}
       <div style={stickyCta}>
-        <Link to="/register" onClick={() => haptics.tap()} style={stickyCtaBtn}>Start free — pay as you sell</Link>
+        <Link to="/register" onClick={() => haptics.tap()} style={stickyCtaBtn}>Start your 14-day free trial</Link>
       </div>
 
       <MobileInstallPrompt />
