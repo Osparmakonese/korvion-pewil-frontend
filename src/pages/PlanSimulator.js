@@ -313,7 +313,7 @@ function PlanCard({ plan, module, cycle, highlight }) {
 
       <div style={S.priceRow}>
         <span style={S.priceNum}>${fmtPrice(price)}</span>
-        <span style={S.priceSuffix}>{cycleLabel}</span>
+        <span style={S.priceSuffix}>{plan.is_per_branch ? `/branch${cycleLabel}` : cycleLabel}</span>
       </div>
       <div style={S.priceNote}>{priceNote}</div>
       {plan.is_per_branch && (
