@@ -26,8 +26,8 @@ const PLANS = {
       tier: 'starter', name: 'Retail Starter', slug: 'retail-starter',
       price_monthly: 10, price_yearly: 100, blurb: 'For a single shop or restaurant.',
       features: [
-        '1 branch · 1 till', 'Up to 2 users', 'ZIMRA fiscal receipts',
-        'EcoCash / OneMoney, card & cash', 'Products, stock & basic reports',
+        '1 branch · 1 till', 'Up to 2 users', 'Tax-authority fiscal receipts',
+        'Mobile money, card & cash', 'Products, stock & basic reports',
         'Email & WhatsApp receipts', 'Email support',
       ],
     },
@@ -75,6 +75,36 @@ const PLANS = {
     },
   ],
 };
+
+// Local-currency overlay for the public pricing page. Mirrors the backend
+// billing/pricing.py table so marketing and in-app prices never disagree.
+// USD stays the default; visitors in a priced market can switch currency.
+const CURRENCIES = {
+  USD: { code: 'USD', symbol: '$', label: 'USD ($)' },
+  ZMW: { code: 'ZMW', symbol: 'K', label: 'Kwacha (K)' },
+};
+
+// slug → { <currency>: [monthly, yearly] }. Only non-USD currencies listed;
+// USD always falls back to the plan's own price_monthly / price_yearly.
+const LOCAL_PRICES = {
+  'retail-starter':    { ZMW: [199, 1990] },
+  'retail-growth':     { ZMW: [499, 4990] },
+  'retail-enterprise': { ZMW: [899, 8990] },
+  'farm-starter':      { ZMW: [199, 1990] },
+  'farm-growth':       { ZMW: [499, 4990] },
+  'farm-enterprise':   { ZMW: [1099, 10990] },
+};
+
+// Thousands separator so K4,990 reads cleanly.
+const fmtMoney = (n) => Number(n).toLocaleString('en-US');
+
+function priceFor(plan, currency) {
+  const tbl = LOCAL_PRICES[plan.slug];
+  if (currency !== 'USD' && tbl && tbl[currency]) {
+    return { monthly: tbl[currency][0], yearly: tbl[currency][1], symbol: CURRENCIES[currency].symbol };
+  }
+  return { monthly: plan.price_monthly, yearly: plan.price_yearly, symbol: '$' };
+}
 
 const FAQ = [
   { q: 'How does the free trial work?', a: 'Every new shop gets a 14-day free trial on the Starter plan — no card required upfront. You get the full till, fiscal receipts and mobile money from day one. At the end of the trial you pick a plan and pay by EcoCash, OneMoney or card.' },
@@ -132,6 +162,7 @@ export default function Pricing() {
   const { user } = useAuth();
   const [cycle, setCycle] = useState('monthly');
   const [module, setModule] = useState('retail');
+  const [currency, setCurrency] = useState('USD');
   const [openFaq, setOpenFaq] = useState(null);
 
   if (user) return <Navigate to="/app" replace />;
@@ -164,6 +195,13 @@ export default function Pricing() {
             Yearly<span style={S.save}>2 months free</span>
           </button>
         </div>
+        <div style={{ ...S.toggleRow, marginTop: 12 }}>
+          {Object.values(CURRENCIES).map((c) => (
+            <button key={c.code} style={S.toggleBtn(currency === c.code)} onClick={() => setCurrency(c.code)}>
+              {c.label}
+            </button>
+          ))}
+        </div>
       </section>
 
       <div style={S.moduleTabs}>
@@ -173,7 +211,9 @@ export default function Pricing() {
 
       <div style={S.grid}>
         {plans.map((plan) => {
-          const price = cycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
+          const lp = priceFor(plan, currency);
+          const sym = lp.symbol;
+          const price = cycle === 'yearly' ? lp.yearly : lp.monthly;
           const unit = cycle === 'yearly' ? '/year' : '/month';
           return (
             <div key={plan.slug} style={S.card(plan.popular)}>
@@ -181,13 +221,13 @@ export default function Pricing() {
               <h3 style={S.cardName}>{plan.name}</h3>
               <p style={S.cardBlurb}>{plan.blurb}</p>
               <div style={S.priceRow}>
-                <span style={S.priceBig}>${price}</span>
+                <span style={S.priceBig}>{sym}{fmtMoney(price)}</span>
                 <span style={S.priceUnit}>{plan.per_branch ? `per branch${unit}` : unit}</span>
               </div>
               <div style={S.priceYearNote}>
                 {plan.per_branch
-                  ? (cycle === 'yearly' ? 'per branch · 2 months free' : `or $${plan.price_yearly}/branch/year (2 months free)`)
-                  : (cycle === 'yearly' ? '2 months free vs monthly' : `or $${plan.price_yearly}/year (2 months free)`)}
+                  ? (cycle === 'yearly' ? 'per branch · 2 months free' : `or ${sym}${fmtMoney(lp.yearly)}/branch/year (2 months free)`)
+                  : (cycle === 'yearly' ? '2 months free vs monthly' : `or ${sym}${fmtMoney(lp.yearly)}/year (2 months free)`)}
               </div>
               <ul style={S.featList}>
                 {plan.features.map((f, i) => (
