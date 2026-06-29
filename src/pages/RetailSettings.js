@@ -6,6 +6,7 @@ import SecuritySettings from '../components/SecuritySettings';
 import BusinessTypePanel from '../components/BusinessTypePanel';
 import HapticsToggle from '../components/HapticsToggle';
 import WhatsAppAssistant from '../components/WhatsAppAssistant';
+import getLocalization from '../utils/localization';
 import api from '../api/axios';
 
 /* ─── Design 3 — Living Africa tokens (shared with Landing/Login/Register/Settings) ─── */
@@ -176,6 +177,7 @@ export default function RetailSettings({ onTabChange }) {
   const [primaryEmail, setPrimaryEmail] = useState(() => localStorage.getItem('primary_email') || user?.email || '');
   const [primaryPhone, setPrimaryPhone] = useState(() => localStorage.getItem('primary_phone') || '');
   const [country, setCountry] = useState('ZW');
+  const LOC = getLocalization();   // country terms: ZRA vs ZIMRA, ZRA Smart Invoice vs FDMS
   const [currency, setCurrency] = useState(() => localStorage.getItem('currency') || 'USD');
   const [timezone, setTimezone] = useState('Africa/Harare');
   const [saved, setSaved] = useState('');
@@ -585,7 +587,7 @@ export default function RetailSettings({ onTabChange }) {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <ToggleItem label="Offline-first mode" desc="Cashiers can keep selling when the network drops; orders sync when back online." on={offlineFirst} onToggle={() => setOfflineFirst(!offlineFirst)} />
-                  <ToggleItem label="Auto-print ZIMRA fiscal receipt" desc="Every successful POS charge prints a ZIMRA-compliant paper receipt." on={autoFiscal} onToggle={() => setAutoFiscal(!autoFiscal)} />
+                  <ToggleItem label={`Auto-print ${LOC.authority_short} fiscal receipt`} desc={`Every successful POS charge prints a ${LOC.authority_short}-compliant paper receipt.`} on={autoFiscal} onToggle={() => setAutoFiscal(!autoFiscal)} />
                   <ToggleItem label="Show change calculator" desc="Pop up a tender/change pad when the cashier selects cash." on={showChange} onToggle={() => setShowChange(!showChange)} />
                 </div>
                 <div style={{ ...grid2, marginTop: 16 }}>
@@ -686,10 +688,10 @@ export default function RetailSettings({ onTabChange }) {
               <section style={sectionCard}>
                 <div style={sectionHead}>
                   <h2 style={sectionTitle}>Device configuration</h2>
-                  <p style={sectionSub}>Pair hardware, set up Print Bridge, and configure ZIMRA fiscal devices.</p>
+                  <p style={sectionSub}>Pair hardware, set up Print Bridge, and configure {LOC.authority_short} fiscal devices.</p>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <QuickLink title="Device & bridge setup" desc="Add a new terminal, pair a printer, check ZIMRA fiscal device health." cta="Open Device Config" onClick={() => go('Device Config')} />
+                  <QuickLink title="Device & bridge setup" desc={`Add a new terminal, pair a printer, check ${LOC.authority_short} fiscal device health.`} cta="Open Device Config" onClick={() => go('Device Config')} />
                 </div>
               </section>
             </>
@@ -699,12 +701,12 @@ export default function RetailSettings({ onTabChange }) {
             <>
               <section style={sectionCard}>
                 <div style={sectionHead}>
-                  <h2 style={sectionTitle}>ZIMRA registration</h2>
+                  <h2 style={sectionTitle}>{LOC.authority_short} registration</h2>
                   <p style={sectionSub}>Tax IDs printed on every fiscal receipt.</p>
                 </div>
                 <div style={grid2}>
                   <div style={fieldBlock}>
-                    <label style={fieldLabel}>TIN (ZIMRA)</label>
+                    <label style={fieldLabel}>{LOC.tax_id_label} ({LOC.authority_short})</label>
                     <input style={input} value={tin} onChange={(e) => setTin(e.target.value)} placeholder="e.g. 1234567" />
                   </div>
                   <div style={fieldBlock}>
@@ -721,7 +723,7 @@ export default function RetailSettings({ onTabChange }) {
                   </div>
                 </div>
                 <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <ToggleItem label="Auto-submit fiscal receipts" desc="Every POS sale is transmitted to the ZIMRA FDMS within 5 seconds." on={autoFiscal} onToggle={() => setAutoFiscal(!autoFiscal)} />
+                  <ToggleItem label="Auto-submit fiscal receipts" desc={`Every POS sale is transmitted to the ${LOC.fiscal_system} within 5 seconds.`} on={autoFiscal} onToggle={() => setAutoFiscal(!autoFiscal)} />
                 </div>
                 <div style={{ marginTop: 18 }}>
                   <button style={btnPrimary} onClick={saveTenant}>Save tax settings</button>
@@ -734,7 +736,7 @@ export default function RetailSettings({ onTabChange }) {
                   <p style={sectionSub}>Fiscal device health, invoice queue, and Zimbabwe PAYE / NSSA bands.</p>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <QuickLink title="ZIMRA fiscalisation" desc="Fiscal device status, re-queue failed receipts, view transmission log." cta="Open ZIMRA Fiscal" onClick={() => go('ZIMRA Fiscal')} />
+                  <QuickLink title={`${LOC.authority_short} fiscalisation`} desc="Fiscal device status, re-queue failed receipts, view transmission log." cta={`Open ${LOC.authority_short} Fiscal`} onClick={() => go(LOC.country === 'ZW' ? 'ZIMRA Fiscal' : 'Tax Compliance')} />
                   <QuickLink title="PAYE & NSSA bands" desc="Current-year Zimbabwe payroll tax tables and NSSA contribution rates." cta="Open Tax Config" onClick={() => go('Tax Config')} />
                 </div>
               </section>

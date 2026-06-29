@@ -190,20 +190,20 @@ function PersonaCopy({ persona }) {
       <div className="rg-eye">Pewil Retail · Free to start</div>
       <h1 className="rg-serif">Open the till &mdash; <em>close the day clean</em>.</h1>
       <p>
-        Pewil Retail is the operating system for African shops &mdash; ZIMRA-ready, EcoCash-native, multi-branch
+        Pewil Retail is the operating system for African shops &mdash; tax-authority ready, mobile-money native, multi-branch
         out of the box. The till that closes clean, the stock that counts itself, the chain that runs your city.
       </p>
       <div className="rg-trust">
         <div className="rg-trust-item">
           <div className="rg-trust-title">Free to start</div>
-          <div className="rg-trust-sub">First 1,000 receipts a month free &mdash; then cents per receipt</div>
+          <div className="rg-trust-sub">14-day free trial &mdash; then simple monthly plans</div>
         </div>
         <div className="rg-trust-item">
           <div className="rg-trust-title">Tax authority native</div>
           <div className="rg-trust-sub">ZIMRA, KRA, SARS, FIRS and 10+ more</div>
         </div>
         <div className="rg-trust-item">
-          <div className="rg-trust-title">EcoCash + card</div>
+          <div className="rg-trust-title">Mobile money + card</div>
           <div className="rg-trust-sub">Mobile money, card, cash &mdash; same till</div>
         </div>
         <div className="rg-trust-item">
@@ -341,8 +341,8 @@ export default function Register() {
                 <>
                   <div className="rg-trial-title">Start your 14-day free trial</div>
                   <div className="rg-trial-body">
-                    No card required. Full till, ZIMRA fiscalisation and mobile money from day one. After the
-                    trial, one simple flat price from $10/month — pay by EcoCash. Cancel anytime.
+                    No card required. Full till, tax-authority fiscalisation and mobile money from day one. After the
+                    trial, one simple flat price from $10/month — pay by mobile money or card. Cancel anytime.
                   </div>
                 </>
               )}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { getReceiptTemplates, createReceiptTemplate, updateReceiptTemplate } from '../api/retailApi';
+import getLocalization from '../utils/localization';
 
 export default function ReceiptCustomization({ onTabChange }) {
   const { user } = useAuth();
@@ -394,7 +395,7 @@ export default function ReceiptCustomization({ onTabChange }) {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label style={{ fontSize: 10, fontWeight: 600, color: '#111827' }}>SHOW QR CODE (ZIMRA)</label>
+                <label style={{ fontSize: 10, fontWeight: 600, color: '#111827' }}>SHOW QR CODE ({getLocalization().authority_short})</label>
                 <Toggle checked={showQRCode} onChange={setShowQRCode} />
               </div>
 
@@ -515,14 +516,14 @@ export default function ReceiptCustomization({ onTabChange }) {
                   <span style={{ fontSize: 21 * fs, fontWeight: 800, color: brandColor }}>{money(totalIncl)}</span>
                 </div>
                 {dual && <div style={{ textAlign: 'right', fontSize: 9 * fs, color: '#94a3b8', marginTop: 2 }}>≈ ZiG 374.00 @ 34.00</div>}
-                <div style={{ fontSize: 10 * fs, color: '#64748b', marginTop: 6 }}>Paid: EcoCash</div>
+                <div style={{ fontSize: 10 * fs, color: '#64748b', marginTop: 6 }}>Paid: {(getLocalization().mobile_money || [])[0] || 'Cash'}</div>
                 <div style={{ fontSize: 8.5 * fs, color: '#94a3b8', textAlign: 'center', marginTop: 8 }}>
                   A = 15% Standard · B = 0% Zero-rated · C = Exempt
                 </div>
 
                 {/* ZIMRA fiscal block (the dark card from print) */}
                 <div style={{ background: '#0f172a', color: '#e2e8f0', borderRadius: 10, padding: 14, marginTop: 14, textAlign: 'center' }}>
-                  <div style={{ fontSize: 9.5 * fs, fontWeight: 800, letterSpacing: '.1em', color: '#7ee2a8', marginBottom: 8 }}>● ZIMRA FISCALISED</div>
+                  <div style={{ fontSize: 9.5 * fs, fontWeight: 800, letterSpacing: '.1em', color: '#7ee2a8', marginBottom: 8 }}>● {getLocalization().authority_short} FISCALISED</div>
                   {showQRCode && (
                     <div style={{ width: 76, height: 76, margin: '0 auto 8px', background: '#fff', borderRadius: 8, padding: 6 }}>
                       <div style={{
