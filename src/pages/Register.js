@@ -154,7 +154,16 @@ const CSS = `
   }
 `;
 
-function PersonaCopy({ persona }) {
+function PersonaCopy({ persona, loc }) {
+  // Country-aware terms for the retail hero. Falls back to neutral pan-African
+  // wording before a country's data has loaded.
+  const authority = (loc && loc.authority_short) || 'your tax authority';
+  const momoList = (loc && loc.mobile_money) || [];
+  const momo = momoList[0] || 'mobile money';
+  const momoPair = momoList.length > 1
+    ? `${momoList[0]} / ${momoList[1].replace(' Money', '').replace(' MoMo', '')}`
+    : momo;
+
   if (persona === 'farm') {
     return (
       <>
@@ -190,7 +199,7 @@ function PersonaCopy({ persona }) {
       <div className="rg-eye">Pewil Retail · Free to start</div>
       <h1 className="rg-serif">Open the till &mdash; <em>close the day clean</em>.</h1>
       <p>
-        Pewil Retail is the operating system for African shops &mdash; tax-authority ready, mobile-money native, multi-branch
+        Pewil Retail is the operating system for African shops &mdash; {authority}-ready, {momo}-native, multi-branch
         out of the box. The till that closes clean, the stock that counts itself, the chain that runs your city.
       </p>
       <div className="rg-trust">
@@ -200,11 +209,11 @@ function PersonaCopy({ persona }) {
         </div>
         <div className="rg-trust-item">
           <div className="rg-trust-title">Tax authority native</div>
-          <div className="rg-trust-sub">ZIMRA, KRA, SARS, FIRS and 10+ more</div>
+          <div className="rg-trust-sub">{authority} ready &mdash; plus 10+ authorities across Africa</div>
         </div>
         <div className="rg-trust-item">
           <div className="rg-trust-title">Mobile money + card</div>
-          <div className="rg-trust-sub">Mobile money, card, cash &mdash; same till</div>
+          <div className="rg-trust-sub">{momoPair}, card, cash &mdash; same till</div>
         </div>
         <div className="rg-trust-item">
           <div className="rg-trust-title">Multi-branch ready</div>
@@ -283,6 +292,15 @@ export default function Register() {
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
+  // Localization for the currently-selected country — drives the signup hero
+  // so it speaks that country's own terms (e.g. ZRA / Kwacha / MTN MoMo for
+  // Zambia vs ZIMRA / $ / EcoCash for Zimbabwe) the moment it's picked,
+  // before any tenant exists.
+  const selectedCountry = countries.find(c => c.code === form.country);
+  const selectedLoc = selectedCountry && selectedCountry.localization;
+  const locAuthority = (selectedLoc && selectedLoc.authority_short) || 'your tax authority';
+  const locMomo = (selectedLoc && selectedLoc.mobile_money && selectedLoc.mobile_money[0]) || 'mobile money';
+
   const calcStrength = (pwd) => {
     if (pwd.length < 6) return 'weak';
     if (pwd.length < 10) return 'medium';
@@ -323,7 +341,7 @@ export default function Register() {
           </Link>
 
           <div className="rg-hero-body">
-            <PersonaCopy persona={persona} />
+            <PersonaCopy persona={persona} loc={selectedLoc} />
           </div>
 
           <div className="rg-trial">
@@ -341,8 +359,8 @@ export default function Register() {
                 <>
                   <div className="rg-trial-title">Start your 14-day free trial</div>
                   <div className="rg-trial-body">
-                    No card required. Full till, tax-authority fiscalisation and mobile money from day one. After the
-                    trial, one simple flat price from $10/month — pay by mobile money or card. Cancel anytime.
+                    No card required. Full till, {locAuthority} fiscalisation and {locMomo} from day one. After the
+                    trial, one simple flat monthly plan — pay by {locMomo} or card. Cancel anytime.
                   </div>
                 </>
               )}
@@ -470,12 +488,14 @@ export default function Register() {
                 <label className="rg-label">Currency</label>
                 <select className="rg-select" value={form.currency}
                   onChange={e => set('currency', e.target.value)}>
-                  <option value="USD">USD</option>
-                  <option value="ZWL">ZWL</option>
-                  <option value="ZAR">ZAR</option>
-                  <option value="KES">KES</option>
-                  <option value="NGN">NGN</option>
-                  <option value="GHS">GHS</option>
+                  {/* Options derived from the supported countries so the
+                      picked country's currency (e.g. ZMW) always appears and
+                      renders as the selected value. */}
+                  {Array.from(new Set(
+                    [form.currency, ...countries.map(c => c.currency), 'USD'].filter(Boolean)
+                  )).map(cur => (
+                    <option key={cur} value={cur}>{cur}</option>
+                  ))}
                 </select>
               </div>
             </div>
