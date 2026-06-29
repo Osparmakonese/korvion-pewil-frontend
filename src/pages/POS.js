@@ -25,6 +25,7 @@ import {
 import { promptWeight } from '../utils/weightPrompt';
 import { requireAgeVerification } from '../utils/ageVerify';
 import { chargeMobileMoney } from '../utils/mobileMoneyCharge';
+import getLocalization, { momoPrimary } from '../utils/localization';
 import { offerChangeOptions } from '../utils/changeOptions';
 import QuickTilesPanel from '../components/QuickTilesPanel';
 import ScannerLanePOS from '../components/ScannerLanePOS';
@@ -65,6 +66,8 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const money = (n) => '$' + (parseFloat(n) || 0).toFixed(2);
   const brand = (template && template.brand_color) || '#1a6b3a';
+  const LOC = getLocalization();           // country terms: ZRA vs ZIMRA, etc.
+  const FAUTH = LOC.authority_short || 'ZIMRA';
   const storeName = (template && template.store_name) || 'Your Store';
   const addr = template ? [template.address_line1, template.address_line2].filter(Boolean).join(', ') : '';
   const vatNo = (template && template.vat_number) || '';
@@ -107,23 +110,23 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
 
   const fiscalThermal = () => fiscalised
     ? '<div style="background:#0f172a;color:#e2e8f0;border-radius:10px;padding:14px;margin-top:14px;text-align:center">' +
-        '<div style="font-size:10px;font-weight:800;letter-spacing:.1em;color:#7ee2a8;margin-bottom:8px">● ZIMRA FISCALISED</div>' +
+        '<div style="font-size:10px;font-weight:800;letter-spacing:.1em;color:#7ee2a8;margin-bottom:8px">● ' + FAUTH + ' FISCALISED</div>' +
         '<div id="qr" style="display:flex;justify-content:center;background:#fff;padding:7px;border-radius:8px;width:fit-content;margin:0 auto 8px"></div>' +
         '<div style="font-size:9px;color:#94a3b8">Verification Code</div>' +
         '<div style="font-size:14px;font-weight:800;letter-spacing:.05em;color:#fff;margin:2px 0 6px">' + esc(vcode) + '</div>' +
         '<div style="font-size:9px;color:#94a3b8">Day ' + esc(fday) + ' · Global No ' + esc(gno) + (receipt.fiscal_receipt_number ? ' · #' + esc(receipt.fiscal_receipt_number) : '') + '</div>' +
         '<div style="font-size:8.5px;color:#94a3b8;margin-top:8px">Verify at <b style="color:#e2e8f0">fdms.zimra.co.zw</b></div></div>'
-    : '<div style="border:1px dashed #f59e0b;background:#fffbeb;color:#92400e;border-radius:10px;padding:10px;margin-top:14px;text-align:center;font-size:10px;font-weight:700">⏳ FISCAL PENDING — will sync to ZIMRA when the device is online</div>';
+    : '<div style="border:1px dashed #f59e0b;background:#fffbeb;color:#92400e;border-radius:10px;padding:10px;margin-top:14px;text-align:center;font-size:10px;font-weight:700">⏳ FISCAL PENDING — will sync to ' + FAUTH + ' when the device is online</div>';
 
   const fiscalInvoice = () => fiscalised
     ? '<div style="width:240px;border:1.5px solid #0f172a;border-radius:10px;padding:13px;text-align:center">' +
-        '<div style="font-size:10px;font-weight:800;letter-spacing:.09em;color:' + brand + '">● ZIMRA FISCALISED</div>' +
+        '<div style="font-size:10px;font-weight:800;letter-spacing:.09em;color:' + brand + '">● ' + FAUTH + ' FISCALISED</div>' +
         '<div id="qr" style="display:flex;justify-content:center;margin:9px 0"></div>' +
         '<div style="font-size:9px;color:#64748b">Verification Code</div>' +
         '<div style="font-size:14px;font-weight:800;color:#0f172a;margin:3px 0 6px">' + esc(vcode) + '</div>' +
         '<div style="font-size:9px;color:#64748b">Day ' + esc(fday) + ' · Global No ' + esc(gno) + '</div>' +
         '<div style="font-size:8.5px;color:#64748b;margin-top:6px">Verify at <b style="color:#0f172a">fdms.zimra.co.zw</b></div></div>'
-    : '<div style="width:240px;border:1px dashed #f59e0b;background:#fffbeb;color:#92400e;border-radius:10px;padding:13px;text-align:center;font-size:10px;font-weight:700">⏳ FISCAL PENDING — will sync to ZIMRA</div>';
+    : '<div style="width:240px;border:1px dashed #f59e0b;background:#fffbeb;color:#92400e;border-radius:10px;padding:13px;text-align:center;font-size:10px;font-weight:700">⏳ FISCAL PENDING — will sync to ' + FAUTH + '</div>';
 
   const itemRowsThermal = items.map((it) =>
     '<tr><td style="padding:7px 0;border-bottom:1px solid #eef0f3">' + esc(it.product_name || it.name || 'Item') +
@@ -285,7 +288,7 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
                 fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 999,
                 background: '#fef3c7', color: '#92400e', letterSpacing: '0.05em',
               }}>
-                {'\u23F3'} FISCAL: PENDING — WILL SYNC TO ZIMRA
+                {'\u23F3'} FISCAL: PENDING — WILL SYNC TO {getLocalization().authority_short}
               </span>
             )}
           </div>
@@ -391,7 +394,7 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
                   }}
                 >
                   <span style={{ textTransform: 'capitalize' }}>
-                    {leg.method === 'mobile_money' ? 'EcoCash' : leg.method}
+                    {leg.method === 'mobile_money' ? momoPrimary() : leg.method}
                     {leg.reference ? ` · ${leg.reference}` : ''}
                   </span>
                   <span>{fmt(parseFloat(leg.amount) || 0, 'zwd')}</span>
@@ -474,7 +477,7 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
               `• ${it.product_name || it.name || 'Item'} x${it.qty || it.quantity || 1} — $${Number(it.total || 0).toFixed(2)}`
             ).join('\n');
             const verify = receipt.fiscal_verification_code
-              ? `\nZIMRA verify: ${receipt.fiscal_verification_code}` : '';
+              ? `\n${getLocalization().authority_short} verify: ${receipt.fiscal_verification_code}` : '';
             const msg =
               `*${receipt.store_name || 'Your receipt'}*\n` +
               `Receipt ${receipt.receipt_number}\n` +
@@ -2222,7 +2225,7 @@ export default function POS() {
                     ...(!splitMode && paymentMethod === 'mobile_money' ? S.paymentBtnActive : {}),
                   }}
                 >
-                  📱 EcoCash
+                  📱 {momoPrimary()}
                 </button>
                 <button
                   onClick={() => { setSplitMode(false); setPaymentMethod('card'); }}

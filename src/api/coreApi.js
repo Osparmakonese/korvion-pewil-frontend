@@ -1,4 +1,5 @@
 import api from './axios';
+import { setLocalization } from '../utils/localization';
 
 // Platform (founder) analytics — super-admin only
 export const getPlatformAnalytics = () => api.get('/core/platform/').then(r => r.data);
@@ -11,7 +12,12 @@ export const assignTenantPartner = (tenant_id, partner_id) =>
   api.post('/core/partners/assign/', { tenant_id, partner_id }).then(r => r.data);
 
 // Tenant
-export const getMyTenant = () => api.get('/core/tenants/my-tenant/').then(r => r.data);
+export const getMyTenant = () => api.get('/core/tenants/my-tenant/').then(r => {
+  // Cache the country localisation block so the UI can render local terms
+  // (currency symbol, fiscal authority, mobile-money names) everywhere.
+  try { setLocalization(r.data && r.data.localization); } catch (e) { /* ignore */ }
+  return r.data;
+});
 export const updateMyTenant = (data) => api.patch('/core/tenants/my-tenant/update/', data).then(r => r.data);
 
 // Tenant switching
