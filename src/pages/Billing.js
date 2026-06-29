@@ -7,6 +7,7 @@ import {
   emailReceipt,
   getUsage,
   initializePayment,
+  verifyPayment,
   getBillingSummary,
   subscribeAddon,
   cancelAddon,
@@ -19,6 +20,11 @@ const pill = (bg, color) => ({ fontSize: 8, fontWeight: 700, padding: '2px 7px',
 const sLabel = { fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 };
 const btnS = (primary) => ({ padding: '6px 12px', borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: primary ? 'none' : '1px solid #1a6b3a', background: primary ? '#1a6b3a' : '#fff', color: primary ? '#fff' : '#1a6b3a', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'all 0.15s' });
 const thS = { textAlign: 'left', padding: '7px 8px', fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', background: '#f9fafb' };
+
+// Invoice amounts carry their own currency (USD for Zimbabwe / Pesepay, ZMW
+// for Zambia / Lenco), so render the right symbol rather than a hardcoded $.
+const CUR_SYM = { USD: '$', ZMW: 'K' };
+const invAmt = (inv) => `${CUR_SYM[inv && inv.currency] || (inv && inv.currency ? inv.currency + ' ' : '$')}${inv ? inv.amount : ''}`;
 
 // Fetch all active subscriptions (no module filter → backend returns { subscriptions: [...] })
 const fetchActiveSubs = async () => {
@@ -58,6 +64,11 @@ export default function Billing({ activeModule }) {
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [payStatus, setPayStatus] = useState(null);
   const [payMessage, setPayMessage] = useState('');
+  // Mobile-money (Zambia / Lenco) checkout: phone + the reference/provider we
+  // poll for confirmation. Empty/unused for the USD Pesepay redirect flow.
+  const [phone, setPhone] = useState('');
+  const [payRef, setPayRef] = useState(null);
+  const [payProvider, setPayProvider] = useState(null);
 
   const { data: activeSubs = {} } = useQuery({
     queryKey: ['currentPlanByModule'],
@@ -88,11 +99,57 @@ export default function Billing({ activeModule }) {
     setBillingCycle(cycle || 'monthly');
     setPayStatus(null);
     setPayMessage('');
+    setPhone('');
+    setPayRef(null);
+    setPayProvider(null);
     setShowPayModal(true);
   };
 
   const handlePay = async () => {
     if (!selectedPlan) return;
+
+    // ── Local mobile-money flow (Zambia / Lenco) ──
+    // Push-to-phone: we send a collection, the customer approves the prompt
+    // on their handset, and we poll verify_payment until it clears. No
+    // redirect — that's the USD Pesepay path below.
+    if (isLocal) {
+      const digits = (phone || '').replace(/\D/g, '');
+      if (digits.length < 9) {
+        setPayStatus('error');
+        setPayMessage('Enter your mobile money number to continue.');
+        return;
+      }
+      setPayStatus('loading');
+      setPayMessage('');
+      try {
+        const result = await initializePayment({
+          plan_slug: selectedPlan.slug,
+          payment_method: 'mobile_money',
+          billing_cycle: billingCycle,
+          phone_number: phone,
+        });
+        if (result.instructions) {
+          setPayRef(result.reference);
+          setPayProvider(result.provider || 'lenco');
+          setPayStatus('awaiting');
+          setPayMessage(result.instructions);
+          return;
+        }
+        if (result.redirect_url) {
+          window.location.href = result.redirect_url;
+          return;
+        }
+        setPayStatus('error');
+        setPayMessage('Unexpected response from payment provider.');
+      } catch (err) {
+        const msg = err?.response?.data?.detail || 'Payment failed. Please try again.';
+        setPayStatus('error');
+        setPayMessage(msg);
+      }
+      return;
+    }
+
+    // ── USD redirect flow (Pesepay) — unchanged ──
     setPayStatus('loading');
     setPayMessage('');
     try {
@@ -114,6 +171,33 @@ export default function Billing({ activeModule }) {
     }
   };
 
+  // Poll for mobile-money confirmation while we're awaiting the customer's
+  // approval on their phone. Stops on paid/failed or after ~2 minutes.
+  useEffect(() => {
+    if (payStatus !== 'awaiting' || !payRef) return;
+    let tries = 0;
+    const id = setInterval(async () => {
+      tries += 1;
+      try {
+        const r = await verifyPayment({ reference: payRef, provider: payProvider || 'lenco' });
+        const st = r && (r.status || r.payment_status);
+        if (st === 'paid') {
+          clearInterval(id);
+          setPayStatus('success');
+          setPayMessage('Payment confirmed! Your plan is now active.');
+          queryClient.invalidateQueries({ queryKey: ['currentPlanByModule'] });
+          queryClient.invalidateQueries({ queryKey: ['billingSummary'] });
+        } else if (st === 'failed' || st === 'cancelled') {
+          clearInterval(id);
+          setPayStatus('error');
+          setPayMessage('Payment was not completed. Please try again.');
+        }
+      } catch (e) { /* keep polling */ }
+      if (tries >= 24) clearInterval(id);
+    }, 5000);
+    return () => clearInterval(id);
+  }, [payStatus, payRef, payProvider, queryClient]);
+
   // ─── CHECK URL PARAMS (Pesepay redirect callback) ────────
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -131,17 +215,39 @@ export default function Billing({ activeModule }) {
     }
   }, [queryClient]);
 
+  // Local-currency checkout (Zambia → Kwacha via Lenco). The backend attaches
+  // a `local` block to each plan; when is_local is true we bill in that
+  // currency through the mobile-money rail. Otherwise it's the USD Pesepay
+  // flow, unchanged — so Zimbabwe and everyone else see exactly what they do
+  // today.
+  const loc = selectedPlan && selectedPlan.local;
+  // The checkout modal shows the currency it will ACTUALLY charge. We only
+  // switch to local currency + mobile money once the local rail is live
+  // (is_local && rail_live). Until Lenco credentials are set, a Zambian
+  // tenant checks out in USD through the existing gateway — so the modal
+  // shows USD too. No "shown ZMW, charged USD" mismatch. (The public
+  // /pricing page still previews Kwacha freely — that's marketing, not a
+  // live charge.)
+  const isLocal = !!(loc && loc.is_local && loc.rail_live);
+  const sym = isLocal ? (loc.currency_symbol || '') : '$';
+  const fmtAmt = (n) => Number(n).toLocaleString('en-US', { maximumFractionDigits: isLocal ? 0 : 2, minimumFractionDigits: isLocal ? 0 : 2 });
+
+  const _monthly = selectedPlan
+    ? (isLocal ? Number(loc.monthly || 0) : Number(selectedPlan.price_monthly || 0))
+    : 0;
+  const _yearly = selectedPlan
+    ? (isLocal
+        ? Number(loc.yearly || _monthly * 12)
+        : Number(selectedPlan.price_yearly || selectedPlan.price_monthly * 12))
+    : 0;
+
   // Display helpers
   const displayPrice = selectedPlan
-    ? (billingCycle === 'yearly'
-      ? (Number(selectedPlan.price_yearly || selectedPlan.price_monthly * 12) / 12).toFixed(2)
-      : Number(selectedPlan.price_monthly || 0).toFixed(2))
-    : '0.00';
+    ? (billingCycle === 'yearly' ? fmtAmt(_yearly / 12) : fmtAmt(_monthly))
+    : fmtAmt(0);
   const totalBilled = selectedPlan
-    ? (billingCycle === 'yearly'
-      ? Number(selectedPlan.price_yearly || selectedPlan.price_monthly * 12).toFixed(2)
-      : Number(selectedPlan.price_monthly || 0).toFixed(2))
-    : '0.00';
+    ? (billingCycle === 'yearly' ? fmtAmt(_yearly) : fmtAmt(_monthly))
+    : fmtAmt(0);
 
   return (
     <div>
@@ -196,7 +302,7 @@ export default function Billing({ activeModule }) {
                   {(invoices?.results || []).slice(0, 5).map((inv, i) => (
                     <tr key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
                       <td style={{ padding: '7px 8px', color: '#374151' }}>{inv.created_at ? new Date(inv.created_at).toLocaleDateString() : ''}</td>
-                      <td style={{ padding: '7px 8px', fontWeight: 600 }}>${inv.amount}</td>
+                      <td style={{ padding: '7px 8px', fontWeight: 600 }}>{invAmt(inv)}</td>
                       <td style={{ padding: '7px 8px' }}>
                         <span style={pill(
                           inv.status === 'paid' ? '#e8f5ee' : inv.status === 'pending' ? '#FEF3C7' : '#FEE2E2',
@@ -269,7 +375,7 @@ export default function Billing({ activeModule }) {
                 <tr key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
                   <td style={{ padding: '10px 14px', fontSize: 13 }}>{inv.created_at ? new Date(inv.created_at).toLocaleDateString() : ''}</td>
                   <td style={{ padding: '10px 14px', fontSize: 13 }}>{inv.description}</td>
-                  <td style={{ padding: '10px 14px', fontSize: 13, fontWeight: 600 }}>${inv.amount}</td>
+                  <td style={{ padding: '10px 14px', fontSize: 13, fontWeight: 600 }}>{invAmt(inv)}</td>
                   <td style={{ padding: '10px 14px', fontSize: 13 }}>
                     <span style={pill(inv.payment_method === 'card' ? '#EFF6FF' : '#FEF3C7', inv.payment_method === 'card' ? '#1d4ed8' : '#92400E')}>
                       {inv.payment_method || inv.payment_provider || 'N/A'}
@@ -371,15 +477,39 @@ export default function Billing({ activeModule }) {
             {/* Price */}
             <div style={{ textAlign: 'center', padding: '12px 0 20px', borderBottom: '1px solid #e5e7eb', marginBottom: 20 }}>
               <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 700, color: '#1a6b3a' }}>
-                ${displayPrice}<span style={{ fontSize: 14, fontWeight: 400, color: '#6b7280' }}>/month</span>
+                {sym}{displayPrice}<span style={{ fontSize: 14, fontWeight: 400, color: '#6b7280' }}>{selectedPlan.is_per_branch ? '/branch/mo' : '/month'}</span>
               </div>
               <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>
-                {billingCycle === 'yearly' ? `$${totalBilled} billed yearly` : 'Billed monthly'}
+                {billingCycle === 'yearly' ? `${sym}${totalBilled} billed yearly` : 'Billed monthly'}
               </div>
             </div>
 
+            {/* Mobile money (Lenco) — local markets only (e.g. Zambia) */}
+            {payStatus !== 'success' && payStatus !== 'awaiting' && isLocal && (
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>
+                  Mobile money number
+                </label>
+                <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 0971234567" style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 13 }} />
+                <div style={{ fontSize: 10, color: '#6b7280', marginTop: 6 }}>
+                  We{'’'}ll send a prompt to your phone (MTN, Airtel or Zamtel). Approve it to pay.
+                </div>
+              </div>
+            )}
+
+            {/* Awaiting mobile-money approval (push-to-phone) */}
+            {payStatus === 'awaiting' && (
+              <div style={{ background: '#FEF3C7', border: '1px solid #F59E0B', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+                <div style={{ fontWeight: 700, fontSize: 12, color: '#92400E', marginBottom: 4 }}>{'\u{1F4F1}'} Check your phone</div>
+                <div style={{ fontSize: 11, color: '#92400E' }}>{payMessage}</div>
+                <div style={{ fontSize: 10, color: '#92400E', marginTop: 6, opacity: 0.8 }}>
+                  Waiting for confirmation{'…'} this updates automatically.
+                </div>
+              </div>
+            )}
+
             {/* Payment info — Pesepay hosted checkout handles method selection */}
-            {payStatus !== 'success' && (
+            {payStatus !== 'success' && payStatus !== 'awaiting' && !isLocal && (
               <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
                 <div style={{ fontSize: 11, color: '#374151', fontWeight: 600, marginBottom: 4 }}>
                   You{'\u2019'}ll be redirected to Pesepay to complete payment.
@@ -404,21 +534,25 @@ export default function Billing({ activeModule }) {
 
             {/* Action buttons */}
             <div style={{ display: 'flex', gap: 10 }}>
-              {payStatus !== 'success' && (
+              {payStatus !== 'success' && payStatus !== 'awaiting' && (
                 <button
                   onClick={handlePay}
                   disabled={payStatus === 'loading'}
                   style={{ ...btnS(true), flex: 1, justifyContent: 'center', padding: '10px 16px', fontSize: 13, opacity: payStatus === 'loading' ? 0.6 : 1 }}
                 >
-                  {payStatus === 'loading' ? 'Redirecting...' : `Pay $${totalBilled} via Pesepay`}
+                  {payStatus === 'loading'
+                    ? (isLocal ? 'Sending prompt…' : 'Redirecting...')
+                    : (isLocal
+                        ? `Pay ${sym}${totalBilled} via mobile money`
+                        : `Pay ${sym}${totalBilled} via Pesepay`)}
                 </button>
               )}
               <button
                 onClick={() => setShowPayModal(false)}
                 disabled={payStatus === 'loading'}
-                style={{ ...btnS(false), flex: payStatus === 'success' ? 1 : 0, justifyContent: 'center', padding: '10px 16px', fontSize: 13 }}
+                style={{ ...btnS(false), flex: (payStatus === 'success' || payStatus === 'awaiting') ? 1 : 0, justifyContent: 'center', padding: '10px 16px', fontSize: 13 }}
               >
-                {payStatus === 'success' ? 'Done' : 'Cancel'}
+                {payStatus === 'success' ? 'Done' : payStatus === 'awaiting' ? 'Close' : 'Cancel'}
               </button>
             </div>
           </div>
