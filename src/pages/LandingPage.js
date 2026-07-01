@@ -377,7 +377,7 @@ const LandingPage = () => {
           <p className="pl-hero-sub">
             Pewil is the operating system for retail in Africa &mdash; from the tuckshop opening at six
             sharp to the supermarket group signing off the seventeenth branch, and the service station
-            ringing the first jerry can at sunrise. ZIMRA-ready, EcoCash-native, and ninety percent of
+            ringing the first jerry can at sunrise. Tax-authority ready, mobile-money native, and ninety percent of
             what enterprise POS does at a tenth of the cost.
           </p>
           <div className="pl-hero-actions">
@@ -646,7 +646,7 @@ const LandingPage = () => {
           <h2 className="pl-serif">Open the till tomorrow &mdash; <em>free</em> for 14 days, then from $10 a month.</h2>
           <p>
             Start with a 14-day free trial &mdash; no card required. After that, one simple flat price:
-            Starter $10/mo, Growth $25/mo, Enterprise $69/mo &mdash; with ZIMRA fiscalisation, EcoCash and
+            Starter $10/mo, Growth $25/mo, Enterprise $69/mo &mdash; with tax-authority fiscalisation, mobile money and
             the full till included in every plan. Pay yearly and get 2 months free. No per-receipt fees,
             no surprises. Cancel anytime, export everything &mdash; the data was always yours.
           </p>
@@ -670,7 +670,7 @@ const LandingPage = () => {
               <div className="pl-foot-brand">Pewil</div>
               <div className="pl-foot-brand-sub">Rooted in the work.</div>
               <p className="pl-foot-tag">
-                The operating system for African retail and agribusiness. Built in Harare. Shipped with love across borders.
+                The operating system for African retail and agribusiness. Built in Africa, shipped with love across borders &mdash; live in Zimbabwe, Zambia and beyond.
               </p>
             </div>
             <div className="pl-foot-col">

@@ -316,7 +316,7 @@ export default function MobileLandingPage() {
           <ThreadCard num="03" title="Lives where suppliers live — WhatsApp"
             text="Reorder POs go straight to suppliers via WhatsApp. Loyalty members get receipts on the same number they DM you on." />
           <ThreadCard num="04" title="Mobile money + card, not just card"
-            text="Subscription billing accepts EcoCash, M-Pesa, card and bank transfer through Pesepay and partners. We meet operators on the rails they already use." />
+            text="Subscription billing accepts mobile money (EcoCash, MTN, Airtel, M-Pesa), card and bank transfer through Pesepay, Lenco and partners. We meet operators on the rails they already use." />
         </div>
       </section>
 
@@ -372,10 +372,10 @@ export default function MobileLandingPage() {
           Run your shop or farm{' '}
           <em style={{ fontStyle: 'italic', color: '#ffd480' }}>from your pocket</em>.
         </h2>
-        <p style={finalCtaP}>14-day free trial, no card. Then one simple flat price from $10/month — pay by EcoCash, OneMoney or card.</p>
+        <p style={finalCtaP}>14-day free trial, no card. Then one simple flat price from $10/month — pay by mobile money or card.</p>
         <Link to="/register" style={finalCtaPrimary}>Start free</Link>
         <a href="#operators" style={finalCtaGhost}>▶ Watch the demo</a>
-        <div style={finalCtaMicro}>Made in Harare. Used wherever there's a phone signal.</div>
+        <div style={finalCtaMicro}>Made in Africa. Used wherever there's a phone signal.</div>
       </section></Reveal>
 
       {/* Footer */}
@@ -389,7 +389,7 @@ export default function MobileLandingPage() {
           <Link to="/privacy"  style={footLink}>Privacy</Link>
           <Link to="/refunds"  style={footLink}>Refund policy</Link>
         </div>
-        <div style={footBar}>© 2026 Pewil · Made in Harare</div>
+        <div style={footBar}>© 2026 Pewil · Made in Africa</div>
       </footer>
 
       {/* Sticky bottom CTA */}

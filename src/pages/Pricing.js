@@ -107,12 +107,12 @@ function priceFor(plan, currency) {
 }
 
 const FAQ = [
-  { q: 'How does the free trial work?', a: 'Every new shop gets a 14-day free trial on the Starter plan — no card required upfront. You get the full till, fiscal receipts and mobile money from day one. At the end of the trial you pick a plan and pay by EcoCash, OneMoney or card.' },
-  { q: 'Is ZIMRA fiscalisation included?', a: 'Yes — fiscalisation is built into every tier, including Starter. Every sale is reported to ZIMRA and the receipt carries the QR and verification code. There is no separate fiscalisation fee.' },
+  { q: 'How does the free trial work?', a: 'Every new shop gets a 14-day free trial on the Starter plan — no card required upfront. You get the full till, fiscal receipts and mobile money from day one. At the end of the trial you pick a plan and pay by mobile money or card.' },
+  { q: 'Is tax-authority fiscalisation included?', a: 'Yes — fiscalisation is built into every tier, including Starter. Every sale is reported to your national tax authority — ZIMRA in Zimbabwe, ZRA in Zambia, and more across Africa — and the receipt carries the QR and verification code. There is no separate fiscalisation fee.' },
   { q: 'Why a flat monthly price instead of per-receipt?', a: 'A flat price is simpler to budget and means you are never surprised by a bill. You pay for the system — the till, stock, reports and compliance — not for how many sales you ring. A quiet day costs the same as a busy one.' },
   { q: 'What if I have more than one branch or till?', a: 'Starter covers 1 branch and 1 till; Growth covers up to 2 branches and 3 tills; Enterprise is unlimited. Need an extra branch or two on Growth? Add-on branches are available from your Billing page.' },
   { q: 'Do you offer a yearly discount?', a: 'Yes — pay yearly and get 2 months free (about 17% off). Starter is $100/yr, Growth $250/yr, Enterprise $690/yr.' },
-  { q: 'What payment methods do you accept?', a: 'EcoCash and OneMoney via Paynow, plus Visa and Mastercard via Pesepay. You can pay your subscription with mobile money — no card required.' },
+  { q: 'What payment methods do you accept?', a: 'Mobile money — EcoCash/OneMoney in Zimbabwe and MTN/Airtel/Zamtel in Zambia — plus Visa and Mastercard, via Paynow, Pesepay and Lenco. You can pay your subscription with mobile money — no card required.' },
   { q: 'Why is farm priced differently?', a: 'Farm is a separate module with its own tools (fields, livestock, harvest). Its tiers (Starter $10, Growth $25, Enterprise $60) match the value a farm gets. Each tenant runs one module — farm OR retail.' },
   { q: 'Can I cancel anytime?', a: 'Yes. Cancel from your Billing page; your subscription stays active until the end of the current period — no immediate lockout.' },
   { q: 'Is my data safe?', a: 'HTTPS everywhere, JWT authentication, role-based access, full audit logs and automated backups. You can export your data anytime as Excel.' },
@@ -243,7 +243,7 @@ export default function Pricing() {
       </div>
 
       <div style={S.included}>
-        Every retail plan includes ZIMRA fiscalisation, EcoCash/OneMoney, card &amp; cash, offline selling, and email/WhatsApp receipts.
+        Every retail plan includes tax-authority fiscalisation, mobile money, card &amp; cash, offline selling, and email/WhatsApp receipts.
       </div>
 
       <div style={S.faqWrap}>
