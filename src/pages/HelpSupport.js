@@ -21,7 +21,7 @@ const S = {
 const CATS = [
   { id: 'all', label: 'All topics', color: '#f1f5f9', text: '#334155' },
   { id: 'start', label: 'Getting Started', color: '#e8f5ee', text: '#1a6b3a' },
-  { id: 'fiscal', label: 'ZIMRA Fiscalisation', color: '#eef2ff', text: '#4338ca' },
+  { id: 'fiscal', label: 'Tax & Fiscalisation', color: '#eef2ff', text: '#4338ca' },
   { id: 'payments', label: 'Payments & Wallets', color: '#fdf2f8', text: '#be185d' },
   { id: 'sales', label: 'Sales & Receipts', color: '#fffbeb', text: '#a16207' },
   { id: 'credit', label: 'Layby & Credit', color: '#f0fdfa', text: '#0f766e' },
@@ -40,7 +40,7 @@ const FAQ = [
   { cat: 'fiscal', q: 'A business customer needs an invoice with their VAT/TIN. How?', a: 'At the till capture the buyer’s name, TIN and VAT number on the sale, then print the A4 Fiscal Tax Invoice from the receipt screen. It includes the buyer details ZIMRA requires for B2B invoices (mandatory since 31 May 2025) so your customer can claim input VAT.' },
   { cat: 'fiscal', q: 'How are refunds handled for ZIMRA?', a: 'When you complete a return, Pewil automatically issues a fiscal Credit Note to ZIMRA that references the original receipt. You’ll see the credit-note number and verification code on the return.' },
 
-  { cat: 'payments', q: 'Which payment methods can I take?', a: 'Cash, card, and mobile wallets — EcoCash, OneMoney, InnBucks, O’mari and Zimswitch — via Paynow. You can also split a single sale across several methods (e.g. cash + EcoCash).' },
+  { cat: 'payments', q: 'Which payment methods can I take?', a: 'Cash, card, and mobile money. In Zimbabwe: EcoCash, OneMoney, InnBucks, O’mari and Zimswitch via Paynow. In Zambia: MTN, Airtel and Zamtel mobile money (plus card) via Lenco. You can also split a single sale across several methods (e.g. cash + mobile money).' },
   { cat: 'payments', q: 'How does EcoCash "push to phone" work at the till?', a: 'Choose EcoCash/Mobile Money as the tender. Pewil pushes a payment request to the customer’s phone; they approve it with their wallet PIN, and the sale only completes once Paynow confirms it as PAID. Connect your Paynow account under Payment Setup first.' },
   { cat: 'payments', q: 'Can I sell airtime, ZESA or water tokens?', a: 'Yes — open Vending. Once your Paynow BillPay float is connected (Vending Setup), you can sell airtime, ZESA electricity and Harare water tokens; the token/voucher prints on the receipt.' },
   { cat: 'payments', q: 'What about giving change as EcoCash, airtime or store credit?', a: 'At the change step you can keep change as store credit on the customer’s wallet, or send it as airtime/EcoCash/ZESA where those providers are connected.' },
@@ -57,7 +57,7 @@ const FAQ = [
   { cat: 'reports', q: 'How do I prepare my VAT return?', a: 'Financial Reports → VAT-7 Return shows output VAT (from sales) minus input VAT (from purchases) for the period, with the net payable to ZIMRA. Reconcile it against your fiscalised receipts before filing.' },
   { cat: 'reports', q: 'How do I export my data?', a: 'Use the Data Export page (or the Export buttons on reports and the Audit Log) to download CSV/JSON of your data at any time.' },
 
-  { cat: 'billing', q: 'Is there a free trial and how does pricing work?', a: 'Yes — every new shop gets a 14-day free trial, no card required. After that, one flat monthly price: Starter $10, Growth $25, Enterprise $69 (or pay yearly and get 2 months free). ZIMRA fiscalisation and mobile money are included in every plan. Farm has the same 14-day trial on its own tiers. Your data is always preserved.' },
+  { cat: 'billing', q: 'Is there a free trial and how does pricing work?', a: 'Yes — every new shop gets a 14-day free trial, no card required. After that, one flat monthly price: Starter $10, Growth $25, Enterprise $69 (or pay yearly and get 2 months free). Tax-authority fiscalisation and mobile money are included in every plan. Farm has the same 14-day trial on its own tiers. Your data is always preserved.' },
 
   { cat: 'security', q: 'How do I add team members and set what they can see?', a: 'Owners open Administration → Team & Access → Add User to create a username, role (manager/worker) and password. Use the Permissions tab to control what each person can view. Roles and every change are recorded in the Audit Trail.' },
   { cat: 'security', q: 'Can I set password rules for my team?', a: 'Yes — Administration → Password Policy (or Settings → Security) lets the owner set minimum length and complexity rules enforced on every password and reset.' },
@@ -80,7 +80,7 @@ export default function HelpSupport() {
     e.preventDefault();
     const labelMap = {
       general: 'General Question', billing: 'Billing & Payments', bug: 'Bug Report',
-      feature: 'Feature Request', account: 'Account & Security', fiscal: 'ZIMRA / Fiscalisation',
+      feature: 'Feature Request', account: 'Account & Security', fiscal: 'Tax & Fiscalisation',
     };
     const tag = labelMap[category] || 'General Question';
     const url = `mailto:support@pewil.org?subject=${encodeURIComponent(`[${tag}] ${subject}`.trim())}&body=${encodeURIComponent(message)}`;
@@ -145,7 +145,7 @@ export default function HelpSupport() {
           <label style={S.label}>Category</label>
           <select style={S.input} value={category} onChange={e => setCategory(e.target.value)}>
             <option value="general">General Question</option>
-            <option value="fiscal">ZIMRA / Fiscalisation</option>
+            <option value="fiscal">Tax & Fiscalisation</option>
             <option value="billing">Billing & Payments</option>
             <option value="bug">Bug Report</option>
             <option value="feature">Feature Request</option>
@@ -167,7 +167,7 @@ export default function HelpSupport() {
         <h3 style={S.title}>Other Ways to Reach Us</h3>
         <p style={S.p}>Email: support@pewil.org</p>
         <p style={S.p}>Response time: Within 24 hours on business days</p>
-        <p style={{ ...S.p, fontSize: 11, color: '#9ca3af' }}>Pewil is based in Zimbabwe. Business hours: Mon–Fri 8am–5pm CAT.</p>
+        <p style={{ ...S.p, fontSize: 11, color: '#9ca3af' }}>Pewil serves shops across Africa — Zimbabwe, Zambia and more. Support hours: Mon–Fri 8am–5pm CAT.</p>
       </div>
     </div>
   );
