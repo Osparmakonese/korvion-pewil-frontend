@@ -28,7 +28,7 @@ export default function MobilePOS({
   splitMode, setSplitMode, splitPayments, setSplitPayments,
   handleCompleteSale, handleSuspendSale, createSaleMutPending,
   offline, pendingCount, user,
-  onQuickAddProduct,
+  onQuickAddProduct, onExit,
 }) {
   const dark = theme === 'dark';
   const lane = theme === 'pnp';
@@ -135,7 +135,10 @@ export default function MobilePOS({
     return (
       <div style={{ position: 'fixed', inset: 0, zIndex: 30, background: '#eef1f5', color: '#0b1220', fontFamily: FONT, display: 'flex', flexDirection: 'column', paddingTop: M.safeTop }}>
         <div style={{ background: '#1f2937', color: '#fff', padding: '11px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontWeight: 800, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>🌱 {(user?.tenant_name || 'Pewil')} · Lane</div>
+          <div style={{ fontWeight: 800, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+            {onExit && <button type="button" onClick={onExit} aria-label="Back" style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 24, lineHeight: 1, cursor: 'pointer', padding: '0 4px 0 0', fontFamily: FONT }}>‹</button>}
+            🌱 {(user?.tenant_name || 'Pewil')} · Lane
+          </div>
           {statusPill}
         </div>
         <div style={{ padding: '10px 12px', background: '#f3f6fa', borderBottom: '1px solid #d7dde6', display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -183,6 +186,7 @@ export default function MobilePOS({
     <div style={{ position: 'fixed', inset: 0, zIndex: 30, background: T.surface, color: T.ink, fontFamily: FONT, display: 'flex', flexDirection: 'column', WebkitFontSmoothing: 'antialiased', paddingTop: M.safeTop }}>
       <div style={{ padding: '10px 16px 6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {onExit && <button type="button" onClick={onExit} aria-label="Back" style={{ width: 34, height: 34, borderRadius: '50%', border: `1px solid ${T.line}`, background: T.card, color: T.ink, fontSize: 22, lineHeight: 1, cursor: 'pointer', fontFamily: FONT, flex: '0 0 34px' }}>‹</button>}
           <div style={{ width: 34, height: 34, borderRadius: '50%', background: `linear-gradient(135deg, ${T.green2}, ${T.green})`, color: T.onGreen, fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{cashierInitial}</div>
           <div>
             <div style={{ fontSize: 10.5, color: T.ink3 }}>Till</div>

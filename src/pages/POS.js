@@ -1143,10 +1143,16 @@ export default function POS() {
   // force focus mode on whenever either is active — no cashier should see the
   // Pewil sidebar/topbar while they're ringing up sales at the lane.
   useEffect(() => {
-    if (focusMode) document.body.classList.add('pewil-pos-focus');
+    // The mobile POS is ALWAYS a full-screen takeover, so hide the app chrome on
+    // mobile too. Otherwise the fixed bottom nav (z-index 500) renders on top of
+    // MobilePOS (z-index 30) and covers the "View cart / Charge" control — the
+    // cashier can't see where to complete the sale. A back button in MobilePOS
+    // gives them a way out now that the nav is hidden.
+    const focus = focusMode || isMobile;
+    if (focus) document.body.classList.add('pewil-pos-focus');
     else document.body.classList.remove('pewil-pos-focus');
     return () => document.body.classList.remove('pewil-pos-focus');
-  }, [focusMode]);
+  }, [focusMode, isMobile]);
 
   // Track native fullscreen state so the button reflects reality if user hits ESC.
   useEffect(() => {
@@ -1948,6 +1954,7 @@ export default function POS() {
           pendingCount={pendingCount}
           user={user}
           onQuickAddProduct={handleQuickAddProduct}
+          onExit={() => window.history.back()}
         />
         {/* Quick-add product — same modal + handler as desktop. */}
         <QuickAddProductModal
