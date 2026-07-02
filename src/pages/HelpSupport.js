@@ -67,6 +67,14 @@ const FAQ = [
   { cat: 'security', q: 'Is my data secure?', a: 'Yes. Pewil uses HTTPS encryption, JWT authentication, role-based access, optional two-factor authentication, an audit log of every change, and regular backups. Your data is never shared with third parties.' },
 ];
 
+// Optional in-app WhatsApp support line — renders only when a support number is
+// configured. Set REACT_APP_SUPPORT_WHATSAPP to the number in E.164 (digits only,
+// e.g. 263771234567).
+const WA_NUMBER = (process.env.REACT_APP_SUPPORT_WHATSAPP || '').replace(/[^0-9]/g, '');
+const WA_HREF = WA_NUMBER
+  ? `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent('Hi Pewil support, I need help with my shop account.')}`
+  : null;
+
 export default function HelpSupport() {
   const [openFaq, setOpenFaq] = useState(null);
   const [filter, setFilter] = useState('all');
@@ -169,6 +177,14 @@ export default function HelpSupport() {
       <div style={S.card}>
         <h3 style={S.title}>Other Ways to Reach Us</h3>
         <p style={S.p}>Email: support@pewil.org</p>
+        {WA_HREF && (
+          <p style={S.p}>
+            WhatsApp:{' '}
+            <a href={WA_HREF} target="_blank" rel="noreferrer" style={{ color: '#0E7C66', fontWeight: 600, textDecoration: 'none' }}>
+              Chat with us on WhatsApp →
+            </a>
+          </p>
+        )}
         <p style={S.p}>Response time: Within 24 hours on business days</p>
         <p style={{ ...S.p, fontSize: 11, color: '#9ca3af' }}>Pewil serves shops across Africa — Zimbabwe, Zambia and more. Support hours: Mon–Fri 8am–5pm CAT.</p>
       </div>

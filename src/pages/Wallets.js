@@ -88,7 +88,7 @@ export default function Wallets() {
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr', gap: 6, marginTop: 10 }}>
               <button onClick={() => move(creditWallet)} disabled={busy} style={{ ...btn, fontSize: 11 }}>Keep change</button>
               <button onClick={() => move(topupWallet)} disabled={busy} style={{ ...btn, fontSize: 11, background: '#1d4ed8' }}>Top-up</button>
-              <button onClick={() => move(redeemWallet)} disabled={busy} style={{ ...btn, fontSize: 11, background: '#c97d1a' }}>Redeem</button>
+              <button onClick={() => { if (window.confirm(`Redeem ${amount || 0} ${selected.currency || ''} from this wallet? This spends the customer's balance and can't be undone.`)) move(redeemWallet); }} disabled={busy} style={{ ...btn, fontSize: 11, background: '#c97d1a' }}>Redeem</button>
             </div>
             {msg && <p style={{ fontSize: 11.5, color: '#c0392b', marginTop: 8 }}>{msg}</p>}
           </div>

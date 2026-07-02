@@ -30,6 +30,8 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "e2e": "npx playwright test",
+    "e2e:install": "npm install --no-save @playwright/test@1.49.0 && npx playwright install --with-deps chromium",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",

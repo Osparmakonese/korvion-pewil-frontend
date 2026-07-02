@@ -44,21 +44,33 @@ function MobileMoneyModal({ amount, currency, customerName, onPaid, onCancel }) 
   const [sending, setSending] = useState(false);
   const [err, setErr] = useState('');
   const pollRef = useRef(null);
+  const pollErrRef = useRef(0);
 
   const stop = () => { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; } };
   useEffect(() => () => stop(), []);
 
   const beginPolling = (id) => {
     stop();
+    pollErrRef.current = 0;
     pollRef.current = setInterval(async () => {
       try {
         const t = await getPaymentStatus(id);
+        pollErrRef.current = 0;
+        setErr('');
         setTxn(t);
         if (TERMINAL.includes(t.status)) {
           stop();
           if (t.status === 'paid') onPaid(t);
         }
-      } catch (_) { /* keep trying */ }
+      } catch (_) {
+        // Don't fail the sale on a transient blip — but don't fail SILENTLY
+        // either. After a few consecutive errors, tell the cashier the status
+        // can't be confirmed so they aren't left staring at a dead poll.
+        pollErrRef.current += 1;
+        if (pollErrRef.current >= 4) {
+          setErr('Can’t confirm the payment status — check your connection. Still trying…');
+        }
+      }
     }, 3500);
   };
 
