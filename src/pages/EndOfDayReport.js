@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import useIsMobile from '../hooks/useIsMobile';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { getEndOfDayReport, exportSalesExcel } from '../api/retailApi';
@@ -232,18 +233,7 @@ export default function EndOfDayReport({ onTabChange }) {
   const [reportDate, setReportDate] = useState(() => new Date().toISOString().split('T')[0]);
 
   // Mobile breakpoint — keep all hooks ABOVE the early return below.
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' && window.innerWidth <= 500
-  );
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth <= 500);
-    window.addEventListener('resize', onResize);
-    window.addEventListener('orientationchange', onResize);
-    return () => {
-      window.removeEventListener('resize', onResize);
-      window.removeEventListener('orientationchange', onResize);
-    };
-  }, []);
+  const isMobile = useIsMobile();
 
   // Fetch end of day report
   const { data: reportData, isLoading, refetch } = useQuery({

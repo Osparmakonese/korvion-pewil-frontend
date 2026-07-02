@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getWarranties, createWarranty, deleteWarranty, getProducts, getProductSerials } from '../api/retailApi';
+import useIsMobile from '../hooks/useIsMobile';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
 const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginBottom: 16 };
@@ -14,6 +15,7 @@ const SC = { active: { bg: '#e8f5ee', fg: '#1a6b3a' }, expired: { bg: '#fef3e2',
 const today = () => new Date().toISOString().slice(0, 10);
 
 export default function Warranties() {
+  const isMobile = useIsMobile();
   const qc = useQueryClient();
   const [q, setQ] = useState('');
   const { data } = useQuery({ queryKey: ['warranties', q], queryFn: () => getWarranties(q ? { q } : undefined) });
@@ -30,11 +32,11 @@ export default function Warranties() {
   const del = useMutation({ mutationFn: deleteWarranty, onSuccess: () => qc.invalidateQueries({ queryKey: ['warranties'] }) });
 
   return (
-    <div className="vtl-stack" style={{ maxWidth: 1050, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 340px', gap: 16 }}>
+    <div className="vtl-stack" style={{ maxWidth: 1050, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 340px', gap: 16 }}>
       <div style={card}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
           <h3 style={{ fontSize: 14, fontWeight: 700 }}>Warranties</h3>
-          <input style={{ ...input, width: 200 }} placeholder="Search customer / serial…" value={q} onChange={(e) => setQ(e.target.value)} />
+          <input style={{ ...input, width: isMobile ? '100%' : 200 }} placeholder="Search customer / serial…" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <p style={{ fontSize: 11.5, color: '#6b7280', marginBottom: 10 }}>Look up whether a unit is still covered. Expiry is worked out from the start date and warranty length.</p>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>

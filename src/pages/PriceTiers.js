@@ -47,7 +47,7 @@ export default function PriceTiers() {
               <tr key={t.id}>
                 <td style={td}>{idx === 0 ? (t.product_name || t.product) : ''}</td>
                 <td style={td}>{Number(t.min_qty)}</td>
-                <td style={{ ...td, fontWeight: 600 }}>{fmt(t.unit_price, 'zwd')}</td>
+                <td style={{ ...td, fontWeight: 600 }}>{fmt(t.unit_price)}</td>
                 <td style={td}>{t.label || '—'}</td>
                 <td style={td}><button onClick={() => del.mutate(t.id)} style={{ background: 'none', border: 'none', color: '#c0392b', cursor: 'pointer' }}>✕</button></td>
               </tr>

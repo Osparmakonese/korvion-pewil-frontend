@@ -8,6 +8,7 @@ import HapticsToggle from '../components/HapticsToggle';
 import WhatsAppAssistant from '../components/WhatsAppAssistant';
 import getLocalization from '../utils/localization';
 import api from '../api/axios';
+import useIsMobile from '../hooks/useIsMobile';
 
 /* ─── Design 3 — Living Africa tokens (shared with Landing/Login/Register/Settings) ─── */
 const C = {
@@ -167,6 +168,7 @@ const TABS = [
 /* ─── Main component ─── */
 export default function RetailSettings({ onTabChange }) {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const role = user?.role || 'owner';
   const [activeTab, setActiveTab] = useState('general');
 
@@ -432,13 +434,21 @@ export default function RetailSettings({ onTabChange }) {
         </p>
       </header>
 
-      <div className="set-2col" style={twoCol}>
-        {/* Left rail — tabs */}
-        <nav className="set-rail" style={leftRail} aria-label="Settings sections">
+      <div className="set-2col" style={isMobile ? { ...twoCol, gridTemplateColumns: '1fr' } : twoCol}>
+        {/* Left rail — tabs (horizontal scroll chips on mobile) */}
+        <nav
+          className="set-rail"
+          style={isMobile
+            ? { ...leftRail, flexDirection: 'row', overflowX: 'auto', WebkitOverflowScrolling: 'touch', whiteSpace: 'nowrap', position: 'static' }
+            : leftRail}
+          aria-label="Settings sections"
+        >
           {TABS.map((t) => (
             <button
               key={t.key}
-              style={tabButton(activeTab === t.key)}
+              style={isMobile
+                ? { ...tabButton(activeTab === t.key), whiteSpace: 'nowrap', flexShrink: 0 }
+                : tabButton(activeTab === t.key)}
               onClick={() => setActiveTab(t.key)}
             >
               {t.label}

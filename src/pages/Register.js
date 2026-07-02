@@ -320,7 +320,7 @@ export default function Register() {
     // mutated it.
     trimmed.module = persona;
     const ok = await register(trimmed);
-    if (ok) navigate('/app');
+    if (ok) navigate('/app', { replace: true });
   };
 
   const canSubmit = (

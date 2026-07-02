@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import useIsMobile from '../hooks/useIsMobile';
 import { useQuery } from '@tanstack/react-query';
 import {
   getRetailDashboard,
@@ -358,18 +358,7 @@ export default function RetailDashboard({ onTabChange }) {
   // across renders even if the viewport flips between mobile/desktop.
   // The actual return-MobileRetailDashboard happens AFTER useQuery so
   // we never break the hook ordering rule.
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' && window.innerWidth <= 500
-  );
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth <= 500);
-    window.addEventListener('resize', onResize);
-    window.addEventListener('orientationchange', onResize);
-    return () => {
-      window.removeEventListener('resize', onResize);
-      window.removeEventListener('orientationchange', onResize);
-    };
-  }, []);
+  const isMobile = useIsMobile();
 
   const { data: dashboard, isLoading: sumLoading, error: dashboardError } = useQuery({
     queryKey: ['retail-dashboard'],

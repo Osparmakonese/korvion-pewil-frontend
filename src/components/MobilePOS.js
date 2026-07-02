@@ -94,7 +94,9 @@ export default function MobilePOS({
       </BottomSheet>
 
       <BottomSheet open={sheet === 'pay'} onClose={() => setSheet(null)} title={`Charge ${money(grandTotal)}`}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 12 }}>
+        {/* 2x2 on phones — 4-across gave ~92px buttons at 390px, too small to
+            tap reliably at a busy till (2026-07-02). */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 12 }}>
           <Method t={T} icon="💵" label="Cash" active={!splitMode && paymentMethod === 'cash'} onClick={() => { haptics.tap(); setSplitMode(false); setPaymentMethod('cash'); }} />
           <Method t={T} icon="📱" label="EcoCash" active={!splitMode && paymentMethod === 'mobile_money'} onClick={() => { haptics.tap(); setSplitMode(false); setPaymentMethod('mobile_money'); }} />
           <Method t={T} icon="💳" label="Card" active={!splitMode && paymentMethod === 'card'} onClick={() => { haptics.tap(); setSplitMode(false); setPaymentMethod('card'); }} />

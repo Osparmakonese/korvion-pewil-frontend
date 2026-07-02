@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { collectPayment, getPaymentStatus, getPaymentTransactions } from '../api/retailApi';
 import { fmt } from '../utils/format';
+import useIsMobile from '../hooks/useIsMobile';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
 const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginBottom: 16 };
@@ -20,6 +21,7 @@ const SC = {
 const TERMINAL = ['paid', 'cancelled', 'failed'];
 
 export default function MobileMoney() {
+  const isMobile = useIsMobile();
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ['payment-transactions'], queryFn: () => getPaymentTransactions() });
   const txns = arr(data);
@@ -74,7 +76,7 @@ export default function MobileMoney() {
   const isPending = active && !TERMINAL.includes(active.status);
 
   return (
-    <div className="vtl-stack" style={{ maxWidth: 1080, margin: '0 auto', display: 'grid', gridTemplateColumns: '380px 1fr', gap: 16 }}>
+    <div className="vtl-stack" style={{ maxWidth: 1080, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '380px 1fr', gap: 16 }}>
       <div style={card}>
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Request a mobile money payment</h3>
         <p style={{ fontSize: 11.5, color: '#6b7280', marginBottom: 6 }}>The customer gets a prompt on their phone to approve with their EcoCash / OneMoney PIN.</p>
@@ -130,6 +132,7 @@ export default function MobileMoney() {
 
       <div style={card}>
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Recent mobile money</h3>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead><tr><th style={th}>When</th><th style={th}>Phone</th><th style={th}>Wallet</th><th style={th}>Amount</th><th style={th}>Status</th></tr></thead>
           <tbody>
@@ -145,6 +148,7 @@ export default function MobileMoney() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

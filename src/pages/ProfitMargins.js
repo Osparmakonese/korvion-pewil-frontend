@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { getProfitMargins } from '../api/retailApi';
 import AIInsightCard from '../components/AIInsightCard';
+import { fmt } from '../utils/format';
 
 export default function ProfitMargins({ onTabChange }) {
   const { user } = useAuth();
@@ -23,12 +24,12 @@ export default function ProfitMargins({ onTabChange }) {
     return {
       sku: product.sku,
       product: product.name,
-      cost: `$${cost.toFixed(2)}`,
-      sell: `$${sell.toFixed(2)}`,
-      margin: `$${marginAmt.toFixed(2)}`,
+      cost: fmt(cost),
+      sell: fmt(sell),
+      margin: fmt(marginAmt),
       marginPercent: product.margin_percent,
       unitsSold: stock,
-      totalProfit: `$${(marginAmt * stock).toFixed(2)}`,
+      totalProfit: fmt(marginAmt * stock),
       status: product.margin_percent > 50 ? 'Excellent' : 'Good'
     };
   }) || [];
@@ -102,7 +103,7 @@ export default function ProfitMargins({ onTabChange }) {
       </div>
 
       {/* Metric Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8, marginBottom: 24 }}>
         {/* Avg. Margin */}
         <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
@@ -228,7 +229,7 @@ export default function ProfitMargins({ onTabChange }) {
         {isLoading ? (
           <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af' }}>Loading margin data...</div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, minWidth: 800 }}>
               <thead>
                 <tr style={{ background: '#f9fafb' }}>

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import useIsMobile from '../hooks/useIsMobile';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getProducts,
@@ -689,18 +690,7 @@ export default function Products() {
   // existing "Add Product" modal stays mounted under the desktop view
   // so we render it under MobileProducts too; FAB / row taps drive the
   // same setShowModal / setEditingProduct state.
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' && window.innerWidth <= 500
-  );
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth <= 500);
-    window.addEventListener('resize', onResize);
-    window.addEventListener('orientationchange', onResize);
-    return () => {
-      window.removeEventListener('resize', onResize);
-      window.removeEventListener('orientationchange', onResize);
-    };
-  }, []);
+  const isMobile = useIsMobile();
 
   const isOwnerOrManager = user?.role === 'owner' || user?.role === 'manager';
   const isWorker = user?.role === 'worker';

@@ -12,6 +12,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { parseWhatsAppPO, getAIBudget } from '../api/aiApi';
 import { createPurchaseOrder } from '../api/retailApi';
+import useIsMobile from '../hooks/useIsMobile';
 
 /* tokens */
 const GREEN = '#1a6b3a';
@@ -68,6 +69,7 @@ const formatMoney = (n) => {
 };
 
 export default function WhatsAppPOParser({ onTabChange }) {
+  const isMobile = useIsMobile();
   const qc = useQueryClient();
   const [message, setMessage] = useState('');
   const [parsing, setParsing] = useState(false);
@@ -161,7 +163,7 @@ export default function WhatsAppPOParser({ onTabChange }) {
   const confStyle = CONFIDENCE_STYLES[conf] || CONFIDENCE_STYLES.medium;
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 18 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 360px', gap: 18 }}>
       {/* LEFT — input */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
         <div style={card}>

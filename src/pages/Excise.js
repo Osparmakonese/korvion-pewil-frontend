@@ -19,9 +19,12 @@ export default function Excise() {
   const returns = arr(data);
   const [period, setPeriod] = useState({ period_start: monthAgo(), period_end: today() });
   const [sel, setSel] = useState(null);
+  // Inline "mark submitted" flow — which return's row is collecting a reference, and the typed value.
+  const [submittingId, setSubmittingId] = useState(null);
+  const [refInput, setRefInput] = useState('');
 
   const gen = useMutation({ mutationFn: generateExciseReturn, onSuccess: (r) => { qc.invalidateQueries({ queryKey: ['excise-returns'] }); setSel(r); } });
-  const submit = useMutation({ mutationFn: ({ id, reference }) => markExciseSubmitted(id, { reference }), onSuccess: () => qc.invalidateQueries({ queryKey: ['excise-returns'] }) });
+  const submit = useMutation({ mutationFn: ({ id, reference }) => markExciseSubmitted(id, { reference }), onSuccess: () => { setSubmittingId(null); setRefInput(''); qc.invalidateQueries({ queryKey: ['excise-returns'] }); } });
 
   return (
     <div className="vtl-stack" style={{ maxWidth: 1050, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 320px', gap: 16 }}>
@@ -38,7 +41,23 @@ export default function Excise() {
                   <td style={td}>{r.period_start} – {r.period_end}</td>
                   <td style={{ ...td, fontWeight: 600 }}>{fmt(r.total_duty, 'zwd')}</td>
                   <td style={td}>{r.status}</td>
-                  <td style={td}>{r.status === 'draft' && <button onClick={(e) => { e.stopPropagation(); const ref = window.prompt('Submission reference (optional):') || ''; submit.mutate({ id: r.id, reference: ref }); }} style={{ background: '#EFF6FF', color: '#1d4ed8', border: 'none', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600, cursor: 'pointer' }}>Mark submitted</button>}</td>
+                  <td style={td} onClick={(e) => e.stopPropagation()}>
+                    {r.status === 'draft' && (submittingId === r.id ? (
+                      <span style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
+                        <input
+                          autoFocus
+                          value={refInput}
+                          onChange={(e) => setRefInput(e.target.value)}
+                          placeholder="Reference (optional)"
+                          style={{ padding: '3px 6px', border: '1px solid #e5e7eb', borderRadius: 4, fontSize: 10, width: 120 }}
+                        />
+                        <button onClick={() => submit.mutate({ id: r.id, reference: refInput })} disabled={submit.isPending} style={{ background: '#1a6b3a', color: '#fff', border: 'none', padding: '3px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600, cursor: 'pointer' }}>{submit.isPending ? '…' : 'Confirm'}</button>
+                        <button onClick={() => { setSubmittingId(null); setRefInput(''); }} style={{ background: '#f3f4f6', color: '#6b7280', border: 'none', padding: '3px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                      </span>
+                    ) : (
+                      <button onClick={() => { setSubmittingId(r.id); setRefInput(''); }} style={{ background: '#EFF6FF', color: '#1d4ed8', border: 'none', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600, cursor: 'pointer' }}>Mark submitted</button>
+                    ))}
+                  </td>
                 </tr>
               ))}
             </tbody>

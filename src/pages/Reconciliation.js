@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getPaymentReconciliation, getPaymentTransactions } from '../api/retailApi';
 import { fmt } from '../utils/format';
+import useIsMobile from '../hooks/useIsMobile';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
 
@@ -22,6 +23,7 @@ const MM_COLORS = {
 };
 
 export default function Reconciliation() {
+  const isMobile = useIsMobile();
   const [from, setFrom] = useState(today());
   const [to, setTo] = useState(today());
   const { data, isLoading } = useQuery({
@@ -69,7 +71,7 @@ export default function Reconciliation() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }} className="vtl-stack">
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }} className="vtl-stack">
         {/* Sales by payment method */}
         <div style={card}>
           <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Sales by payment method</h3>

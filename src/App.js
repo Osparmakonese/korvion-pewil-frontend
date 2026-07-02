@@ -1,7 +1,7 @@
 import OfflineBanner from './OfflineBanner';
 // v3 - V1 release with all pages, routes, security, onboarding
-import React, { Suspense, useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense, useEffect } from 'react';
+import { Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from './context/AuthContext';
 import { getDashboard, getLowStock } from './api/farmApi';
@@ -494,7 +494,27 @@ function FarmApp() {
   // the tenant's one module — no in-app switching. An account is either
   // farm or retail for its lifetime.
   const activeModule = (user?.modules && user.modules[0] === 'retail') ? 'retail' : 'farm';
-  const [activeTab, setActiveTab] = useState(activeModule === 'retail' ? 'Retail' : 'Dashboard');
+
+  // URL-SYNCED TABS (2026-07-02): the active tab now lives in the URL as
+  // /app?t=<TabName> instead of in-memory useState. Why this matters:
+  //   1. BACK BUTTON — previously every tab change happened at the same
+  //      /app URL, so pressing Back left the app entirely (often landing
+  //      on /register or /login). Now each tab change pushes a history
+  //      entry and Back/Forward move between tabs like a native app.
+  //   2. REFRESH — reloading no longer dumps the user back on the
+  //      dashboard; they stay on the page they were on.
+  //   3. DEEP LINKS — /app?t=POS can be bookmarked or shared.
+  // Unknown/missing ?t falls back to the module's home tab.
+  const defaultTab = activeModule === 'retail' ? 'Retail' : 'Dashboard';
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlTab = searchParams.get('t');
+  const activeTab = (urlTab && PAGES[urlTab]) ? urlTab : defaultTab;
+  const setActiveTab = (tab) => {
+    if (!PAGES[tab] || tab === activeTab) return;
+    setSearchParams({ t: tab }); // pushes a history entry (Back returns here)
+  };
+  // New page = start at the top, like a real navigation.
+  useEffect(() => { window.scrollTo(0, 0); }, [activeTab]);
 
   // 2026-04-30 — fix sidebar/topbar dashboard prop on retail tenants.
   // Previously this always called getDashboard() (the FARM endpoint)

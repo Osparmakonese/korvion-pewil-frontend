@@ -4,6 +4,7 @@ import {
   getModifierGroups, createModifierGroup, deleteModifierGroup,
   createModifierOption, deleteModifierOption,
 } from '../api/retailApi';
+import useIsMobile from '../hooks/useIsMobile';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
 const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginBottom: 16 };
@@ -12,6 +13,7 @@ const input = { width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb',
 const btn = { padding: '8px 14px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 10 };
 
 export default function Modifiers() {
+  const isMobile = useIsMobile();
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ['modifier-groups'], queryFn: getModifierGroups });
   const groups = arr(data);
@@ -24,7 +26,7 @@ export default function Modifiers() {
   const delOption = useMutation({ mutationFn: deleteModifierOption, onSuccess: () => qc.invalidateQueries({ queryKey: ['modifier-groups'] }) });
 
   return (
-    <div className="vtl-stack" style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 300px', gap: 16 }}>
+    <div className="vtl-stack" style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap: 16 }}>
       <div style={card}>
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Modifier groups</h3>
         {groups.length === 0 && <p style={{ fontSize: 12, color: '#6b7280' }}>No modifier groups yet.</p>}
@@ -45,7 +47,7 @@ export default function Modifiers() {
             <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
               <input style={{ ...input, marginTop: 0 }} placeholder="Option name" value={optDraft[g.id]?.name || ''} onChange={(e) => setOptDraft({ ...optDraft, [g.id]: { ...optDraft[g.id], name: e.target.value } })} />
               <input style={{ ...input, marginTop: 0, width: 90 }} type="number" step="0.01" placeholder="+price" value={optDraft[g.id]?.price_delta || ''} onChange={(e) => setOptDraft({ ...optDraft, [g.id]: { ...optDraft[g.id], price_delta: e.target.value } })} />
-              <button style={{ ...btn, marginTop: 0 }} onClick={() => { const d = optDraft[g.id]; if (d?.name) { addOption.mutate({ group: g.id, name: d.name, price_delta: d.price_delta || 0 }); setOptDraft({ ...optDraft, [g.id]: { name: '', price_delta: '' } }); } }}>Add</button>
+              <button style={{ ...btn, marginTop: 0, minHeight: 40 }} onClick={() => { const d = optDraft[g.id]; if (d?.name) { addOption.mutate({ group: g.id, name: d.name, price_delta: d.price_delta || 0 }); setOptDraft({ ...optDraft, [g.id]: { name: '', price_delta: '' } }); } }}>Add</button>
             </div>
           </div>
         ))}

@@ -4,9 +4,10 @@ import {
   getProfitLoss, getVatReturn, getBalanceSheet, getDebtorsCreditors, getStockValuation,
   exportFinancialsExcel,
 } from '../api/retailApi';
+import { fmt } from '../utils/format';
 
 const G = '#1a6b3a';
-const money = (n) => `$${Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const money = (n) => fmt(Number(n || 0));
 const TABS = [
   { id: 'pnl', label: 'Profit & Loss' },
   { id: 'vat', label: 'VAT-7 Return' },

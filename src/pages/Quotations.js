@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getQuotations, createQuotation, setQuotationStatus, deleteQuotation, getProducts } from '../api/retailApi';
 import { fmt } from '../utils/format';
+import useIsMobile from '../hooks/useIsMobile';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
 const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginBottom: 16 };
@@ -19,6 +20,7 @@ const STATUS_COLORS = {
 };
 
 export default function Quotations() {
+  const isMobile = useIsMobile();
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ['quotations'], queryFn: () => getQuotations() });
   const { data: prodData } = useQuery({ queryKey: ['products'], queryFn: getProducts });
@@ -28,6 +30,7 @@ export default function Quotations() {
   const empty = { customer_name: '', customer_phone: '', valid_until: '', notes: '', tax: '' };
   const [form, setForm] = useState(empty);
   const [lines, setLines] = useState([{ product: '', name: '', qty: 1, unit_price: '' }]);
+  const [formError, setFormError] = useState('');
 
   const create = useMutation({
     mutationFn: createQuotation,
@@ -37,6 +40,7 @@ export default function Quotations() {
   const del = useMutation({ mutationFn: deleteQuotation, onSuccess: () => qc.invalidateQueries({ queryKey: ['quotations'] }) });
 
   const setLine = (i, patch) => {
+    setFormError('');
     const next = lines.slice();
     next[i] = { ...next[i], ...patch };
     if (patch.product) { const p = products.find((x) => String(x.id) === String(patch.product)); if (p) { next[i].name = p.name; if (!next[i].unit_price) next[i].unit_price = p.selling_price; } }
@@ -50,12 +54,16 @@ export default function Quotations() {
       product: Number(l.product), name: l.name, qty: Number(l.qty),
       unit_price: Number(l.unit_price) || 0, total: (Number(l.qty) || 0) * (Number(l.unit_price) || 0),
     }));
-    if (!form.customer_name || items.length === 0) return;
+    if (!form.customer_name || items.length === 0) {
+      setFormError(items.length === 0 ? 'Add at least one line item.' : 'Enter a customer name.');
+      return;
+    }
+    setFormError('');
     create.mutate({ ...form, tax: Number(form.tax) || 0, items_data: items });
   };
 
   return (
-    <div className="vtl-stack" style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16 }}>
+    <div className="vtl-stack" style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 360px', gap: 16 }}>
       <div style={card}>
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Quotations</h3>
         <p style={{ fontSize: 11.5, color: '#6b7280', marginBottom: 10 }}>Quote a job, then mark it accepted or converted when the customer commits.</p>
@@ -95,7 +103,7 @@ export default function Quotations() {
           <input style={input} value={form.customer_phone} onChange={(e) => setForm({ ...form, customer_phone: e.target.value })} />
           <label style={label}>Line items</label>
           {lines.map((l, i) => (
-            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 46px 64px', gap: 4, marginBottom: 4 }}>
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 56px 72px' : '1fr 46px 64px', gap: 4, marginBottom: 4 }}>
               <select style={{ ...input, padding: '6px 6px' }} value={l.product} onChange={(e) => setLine(i, { product: e.target.value })}>
                 <option value="">Product…</option>
                 {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -110,6 +118,7 @@ export default function Quotations() {
           <label style={label}>Valid until</label>
           <input style={input} type="date" value={form.valid_until} onChange={(e) => setForm({ ...form, valid_until: e.target.value })} />
           <div style={{ marginTop: 8, fontSize: 12, fontWeight: 700 }}>Subtotal: {fmt(subtotal, 'zwd')}</div>
+          {formError && <div style={{ marginTop: 6, color: '#c0392b', fontSize: 12 }}>{formError}</div>}
           <button style={btn} disabled={create.isPending}>{create.isPending ? 'Saving…' : 'Create quote'}</button>
         </form>
       </div>

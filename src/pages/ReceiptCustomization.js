@@ -3,9 +3,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { getReceiptTemplates, createReceiptTemplate, updateReceiptTemplate } from '../api/retailApi';
 import getLocalization from '../utils/localization';
+import useIsMobile from '../hooks/useIsMobile';
 
 export default function ReceiptCustomization({ onTabChange }) {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const isOwner = user?.role === 'owner';
 
@@ -142,7 +144,7 @@ export default function ReceiptCustomization({ onTabChange }) {
       </div>
 
       {/* Main Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 24 }}>
         {/* Template Settings */}
         <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
           <h3 style={{ fontSize: 12, fontWeight: 700, margin: '0 0 16px 0', color: '#111827' }}>
@@ -449,7 +451,7 @@ export default function ReceiptCustomization({ onTabChange }) {
             const dual = currencyDisplay && currencyDisplay.indexOf('Dual') === 0;
             return (
               <div style={{
-                width: w, margin: '0 auto', background: '#fff', color: '#0f172a',
+                width: w, maxWidth: '100%', margin: '0 auto', background: '#fff', color: '#0f172a',
                 border: '1px solid #e6eaef', borderRadius: 10, padding: '16px 16px 18px',
                 fontFamily: 'Inter, system-ui, Arial, sans-serif', boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
               }}>

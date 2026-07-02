@@ -155,7 +155,7 @@ export default function Login() {
     e.preventDefault();
     const res = await login(username, password);
     if (res && res.ok) {
-      navigate('/app');
+      navigate('/app', { replace: true });
       return;
     }
     if (res && res.passwordExpired) {
@@ -176,7 +176,7 @@ export default function Login() {
     const cleaned = useRecovery ? code.trim().toUpperCase() : code.replace(/\D/g, '');
     const res = await loginWith2fa(pendingToken, cleaned);
     if (res.ok) {
-      navigate('/app');
+      navigate('/app', { replace: true });
       return;
     }
     if (res.expired) {

@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
+import useIsMobile from '../hooks/useIsMobile';
 import { useQuery } from '@tanstack/react-query';
 import { getSales, exportSalesExcel } from '../api/retailApi';
 import { fmt } from '../utils/format';
@@ -149,18 +150,7 @@ export default function SalesHistory() {
   };
 
   // Mobile breakpoint — keep all hooks ABOVE the early return.
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' && window.innerWidth <= 500
-  );
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth <= 500);
-    window.addEventListener('resize', onResize);
-    window.addEventListener('orientationchange', onResize);
-    return () => {
-      window.removeEventListener('resize', onResize);
-      window.removeEventListener('orientationchange', onResize);
-    };
-  }, []);
+  const isMobile = useIsMobile();
 
   const { data: sales = [], isLoading } = useQuery({
     queryKey: ['retail-sales-history'],

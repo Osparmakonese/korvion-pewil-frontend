@@ -4,6 +4,7 @@ import {
   getPaymentCredentials, createPaymentCredentials, updatePaymentCredentials,
   deletePaymentCredentials, getPaymentProviders,
 } from '../api/retailApi';
+import useIsMobile from '../hooks/useIsMobile';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
 const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginBottom: 16 };
@@ -20,6 +21,7 @@ const EMPTY = {
 };
 
 export default function PaymentSettings() {
+  const isMobile = useIsMobile();
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ['payment-credentials'], queryFn: getPaymentCredentials });
   const { data: provData } = useQuery({ queryKey: ['payment-providers'], queryFn: getPaymentProviders });
@@ -59,7 +61,7 @@ export default function PaymentSettings() {
   })();
 
   return (
-    <div className="vtl-stack" style={{ maxWidth: 1080, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 380px', gap: 16 }}>
+    <div className="vtl-stack" style={{ maxWidth: 1080, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 380px', gap: 16 }}>
       <div>
         <div style={card}>
           <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Your payment accounts</h3>
@@ -67,6 +69,7 @@ export default function PaymentSettings() {
             Money is collected straight into <b>your own</b> mobile money merchant account. Paste the Integration ID and Key
             you got from your provider. New Paynow integrations start in <b>test mode</b> — no real money moves until you switch them to live.
           </p>
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr><th style={th}>Account</th><th style={th}>Currency</th><th style={th}>Mode</th><th style={th}>Key</th><th style={th}>Status</th><th style={th}></th></tr></thead>
             <tbody>
@@ -86,6 +89,7 @@ export default function PaymentSettings() {
               ))}
             </tbody>
           </table>
+          </div>
           {creds.some((c) => c.last_error) && (
             <p style={{ fontSize: 11, color: '#c0392b', marginTop: 8 }}>
               Last error: {creds.find((c) => c.last_error)?.last_error}

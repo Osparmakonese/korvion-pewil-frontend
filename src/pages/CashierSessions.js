@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import useIsMobile from '../hooks/useIsMobile';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getCashierSessions, createCashierSession,
@@ -605,18 +606,7 @@ export default function CashierSessions() {
   // already render below at the bottom of the JSX tree, so we render them
   // inside the mobile branch's fragment too. Hooks declared before any
   // conditional return so React's hook order stays consistent.
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' && window.innerWidth <= 500
-  );
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth <= 500);
-    window.addEventListener('resize', onResize);
-    window.addEventListener('orientationchange', onResize);
-    return () => {
-      window.removeEventListener('resize', onResize);
-      window.removeEventListener('orientationchange', onResize);
-    };
-  }, []);
+  const isMobile = useIsMobile();
 
   const { data: sessions = [], isLoading } = useQuery({
     queryKey: ['retail-cashier-sessions-page'],

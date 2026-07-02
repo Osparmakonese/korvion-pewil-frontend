@@ -2,13 +2,14 @@ import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { getJournalEntries, createJournalEntry, getTrialBalance } from '../api/retailApi';
+import { fmt } from '../utils/format';
 
 const styles = {
   page: { maxWidth: 1200, margin: '0 auto', padding: 20 },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   title: { fontSize: 24, fontWeight: 700, color: '#111827', fontFamily: "'Playfair Display', serif", margin: 0 },
   addBtn: { padding: '10px 18px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' },
-  summaryRow: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 },
+  summaryRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 20 },
   summaryCard: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '14px 16px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' },
   summaryLabel: { fontSize: 9, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 },
   summaryValue: { fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700, color: '#1a6b3a' },
@@ -79,16 +80,16 @@ export default function JournalEntries({ onTabChange }) {
       date: entry.entry_date,
       ref: `JE-${String(entry.id).padStart(4, '0')}`,
       description: entry.description || entry.entry_type,
-      debit: `$${(entry.debit_amount || 0).toFixed(2)}`,
-      credit: `$${(entry.credit_amount || 0).toFixed(2)}`,
+      debit: fmt(entry.debit_amount || 0),
+      credit: fmt(entry.credit_amount || 0),
       status: entry.created_at ? 'Posted' : 'Draft'
     }))
   , [entries]);
 
   const totals = useMemo(() => ({
-    debits: `$${(trialBalance.total_debit || 0).toFixed(2)}`,
-    credits: `$${(trialBalance.total_credit || 0).toFixed(2)}`,
-    balance: `$${Math.abs((trialBalance.total_debit || 0) - (trialBalance.total_credit || 0)).toFixed(2)}`,
+    debits: fmt(trialBalance.total_debit || 0),
+    credits: fmt(trialBalance.total_credit || 0),
+    balance: fmt(Math.abs((trialBalance.total_debit || 0) - (trialBalance.total_credit || 0))),
     isBalanced: trialBalance.balanced === true
   }), [trialBalance]);
 

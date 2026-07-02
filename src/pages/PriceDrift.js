@@ -11,6 +11,8 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { scanPriceDrift, getAIBudget } from '../api/aiApi';
+import { fmt } from '../utils/format';
+import useIsMobile from '../hooks/useIsMobile';
 
 const GREEN = '#1a6b3a';
 const GREEN_TINT = '#e8f5ee';
@@ -44,7 +46,7 @@ const URGENCY_STYLE = {
 
 const fmtMoney = (n) => {
   const v = Number(n);
-  return Number.isFinite(v) ? `$${v.toFixed(2)}` : '—';
+  return Number.isFinite(v) ? fmt(v) : '—';
 };
 const fmtPct = (n) => {
   const v = Number(n);
@@ -54,6 +56,7 @@ const fmtPct = (n) => {
 };
 
 export default function PriceDrift({ onTabChange }) {
+  const isMobile = useIsMobile();
   const qc = useQueryClient();
   const [windowDays, setWindowDays] = useState(30);
   const [loading, setLoading] = useState(false);
@@ -106,7 +109,7 @@ export default function PriceDrift({ onTabChange }) {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap: 16 }}>
           {/* LEFT */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {/* Control */}

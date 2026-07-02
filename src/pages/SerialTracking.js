@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getProductSerials, createProductSerial, markSerialSold, deleteProductSerial, getProducts } from '../api/retailApi';
+import useIsMobile from '../hooks/useIsMobile';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
 const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginBottom: 16 };
@@ -13,6 +14,7 @@ const pill = (c) => ({ fontSize: 8, fontWeight: 700, padding: '2px 7px', borderR
 const SC = { in_stock: { bg: '#e8f5ee', fg: '#1a6b3a' }, sold: { bg: '#f3f4f6', fg: '#6b7280' }, returned: { bg: '#EFF6FF', fg: '#1d4ed8' }, faulty: { bg: '#fdecea', fg: '#c0392b' } };
 
 export default function SerialTracking() {
+  const isMobile = useIsMobile();
   const qc = useQueryClient();
   const [q, setQ] = useState('');
   const { data } = useQuery({ queryKey: ['product-serials', q], queryFn: () => getProductSerials(q ? { q } : undefined) });
@@ -28,11 +30,11 @@ export default function SerialTracking() {
   const del = useMutation({ mutationFn: deleteProductSerial, onSuccess: () => qc.invalidateQueries({ queryKey: ['product-serials'] }) });
 
   return (
-    <div className="vtl-stack" style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 320px', gap: 16 }}>
+    <div className="vtl-stack" style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap: 16 }}>
       <div style={card}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
           <h3 style={{ fontSize: 14, fontWeight: 700 }}>Serial / IMEI register</h3>
-          <input style={{ ...input, width: 180 }} placeholder="Search serial / IMEI…" value={q} onChange={(e) => setQ(e.target.value)} />
+          <input style={{ ...input, width: isMobile ? '100%' : 180 }} placeholder="Search serial / IMEI…" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <p style={{ fontSize: 11.5, color: '#6b7280', marginBottom: 10 }}>Every phone or device by its unique serial — receive it, then mark it sold so you never sell the same unit twice.</p>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>

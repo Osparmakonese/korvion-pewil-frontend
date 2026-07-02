@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getVendingCredentials, createVendingCredentials, updateVendingCredentials, deleteVendingCredentials,
 } from '../api/retailApi';
+import useIsMobile from '../hooks/useIsMobile';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
 const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginBottom: 16 };
@@ -14,6 +15,7 @@ const pill = (c) => ({ fontSize: 8, fontWeight: 700, padding: '2px 7px', borderR
 const EMPTY = { provider: 'paynow_billpay', environment: 'test', display_name: '', base_url: 'https://billpay.paynow.co.zw', auth_id: '', auth_key: '', is_enabled: true };
 
 export default function VendingSetup() {
+  const isMobile = useIsMobile();
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ['vending-credentials'], queryFn: getVendingCredentials });
   const creds = arr(data);
@@ -34,7 +36,7 @@ export default function VendingSetup() {
   const submit = (e) => { e.preventDefault(); const p = { ...form }; if (editId && !p.auth_key) delete p.auth_key; save.mutate(p); };
 
   return (
-    <div className="vtl-stack" style={{ maxWidth: 1040, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 380px', gap: 16 }}>
+    <div className="vtl-stack" style={{ maxWidth: 1040, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 380px', gap: 16 }}>
       <div style={card}>
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Your vending account</h3>
         <p style={{ fontSize: 11.5, color: '#6b7280', marginBottom: 10 }}>

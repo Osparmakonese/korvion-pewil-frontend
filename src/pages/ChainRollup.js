@@ -27,7 +27,8 @@
  * Click on a branch row to highlight it (placeholder until per-branch
  * detail pages land).
  */
-import React, { useState } from 'react';
+import { useState } from 'react';
+import useIsMobile from '../hooks/useIsMobile';
 import { useQuery } from '@tanstack/react-query';
 import { getChainRollup } from '../api/retailApi';
 import { fmt } from '../utils/format';
@@ -50,14 +51,7 @@ const T = {
 
 export default function ChainRollup() {
   const [selectedId, setSelectedId] = useState(null);
-  const [isMobile, setIsMobile] = React.useState(
-    typeof window !== 'undefined' && window.innerWidth <= 720
-  );
-  React.useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth <= 720);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
+  const isMobile = useIsMobile();
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['chain-rollup'],

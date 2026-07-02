@@ -72,6 +72,8 @@ export default function TeamManagement() {
   });
   const { data: policy } = useQuery({ queryKey: ['passwordPolicy'], queryFn: getPasswordPolicy, staleTime: 60000 });
   const [autoPassword, setAutoPassword] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordCopied, setPasswordCopied] = useState(false);
   const [inviteStatus, setInviteStatus] = useState(null); // null | 'loading' | 'success' | 'error'
   const [inviteMessage, setInviteMessage] = useState('');
   const [editUser, setEditUser] = useState(null);
@@ -139,6 +141,11 @@ export default function TeamManagement() {
       setInviteMessage('Email is required');
       return;
     }
+    if (!/^\S+@\S+\.\S+$/.test(formData.email.trim())) {
+      setInviteStatus('error');
+      setInviteMessage('Enter a valid email address (e.g. name@example.com)');
+      return;
+    }
     if (!formData.username.trim()) {
       setInviteStatus('error');
       setInviteMessage('Username is required');
@@ -155,7 +162,9 @@ export default function TeamManagement() {
       last_name: formData.last_name.trim(),
       email: formData.email.trim(),
       username: formData.username.trim(),
-      password: autoPassword ? strongPassword(policy) : formData.password,
+      // When auto-generating, send exactly the password shown in the field
+      // (so the owner can copy it), only generating fresh if it's blank.
+      password: autoPassword ? (formData.password || strongPassword(policy)) : formData.password,
       role: formData.role,
     };
 
@@ -165,13 +174,25 @@ export default function TeamManagement() {
 
   const generatePassword = () => {
     const newPass = strongPassword(policy);
-    setFormData({ ...formData, password: newPass });
+    setPasswordCopied(false);
+    setFormData(prev => ({ ...prev, password: newPass }));
+  };
+
+  const copyPassword = async () => {
+    try {
+      await navigator.clipboard.writeText(formData.password);
+      setPasswordCopied(true);
+      setTimeout(() => setPasswordCopied(false), 1500);
+    } catch (_) { /* clipboard unavailable */ }
   };
 
   const users = usersData?.results || [];
   const currentUserCount = users.length;
 
-  // Determine max seats based on plan
+  // Determine max seats based on plan.
+  // TODO: neither the user object (AuthContext/JWT claims) nor the billing API
+  // exposes a seat-limit field yet — when the backend adds one (e.g.
+  // user.max_seats or subscription.seats), prefer it over this hardcoded map.
   const maxSeats = {
     'starter': 3,
     'growth': 10,
@@ -193,7 +214,10 @@ export default function TeamManagement() {
           onClick={() => {
             setShowInviteModal(true);
             setInviteStatus(null);
-            setFormData({ first_name: '', last_name: '', email: '', username: '', password: '', role: 'worker' });
+            setShowPassword(false);
+            setPasswordCopied(false);
+            // Pre-generate so the auto password is visible + copyable before sending.
+            setFormData({ first_name: '', last_name: '', email: '', username: '', password: autoPassword ? strongPassword(policy) : '', role: 'worker' });
           }}
           style={{ ...btnS(true), fontSize: 12, padding: '8px 14px' }}
         >
@@ -493,8 +517,10 @@ export default function TeamManagement() {
                     </label>
                   </div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    {/* Auto-generated passwords are shown revealed so the owner can copy
+                        them; manual passwords are masked with an eye toggle. */}
                     <input
-                      type="text"
+                      type={autoPassword || showPassword ? 'text' : 'password'}
                       placeholder={autoPassword ? 'Will be generated' : 'Enter password'}
                       value={formData.password}
                       onChange={e => setFormData({ ...formData, password: e.target.value })}
@@ -510,25 +536,63 @@ export default function TeamManagement() {
                         background: autoPassword ? '#f9fafb' : '#fff',
                       }}
                     />
-                    {autoPassword && (
+                    {!autoPassword && (
                       <button
-                        onClick={generatePassword}
+                        type="button"
+                        onClick={() => setShowPassword(s => !s)}
+                        title={showPassword ? 'Hide password' : 'Show password'}
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
                         style={{
-                          padding: '8px 12px',
+                          padding: '8px 10px',
                           border: '1px solid #e5e7eb',
                           borderRadius: 8,
-                          fontSize: 11,
-                          fontWeight: 600,
+                          fontSize: 13,
                           background: '#fff',
-                          color: '#374151',
                           cursor: 'pointer',
-                          transition: 'all 0.15s',
                         }}
-                        onMouseEnter={e => { e.currentTarget.style.background = '#f9fafb'; e.currentTarget.style.borderColor = '#1a6b3a'; e.currentTarget.style.color = '#1a6b3a'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.color = '#374151'; }}
                       >
-                        Refresh
+                        {showPassword ? '\u{1F648}' : '\u{1F441}'}
                       </button>
+                    )}
+                    {autoPassword && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={copyPassword}
+                          style={{
+                            padding: '8px 12px',
+                            border: '1px solid ' + (passwordCopied ? '#1a6b3a' : '#e5e7eb'),
+                            borderRadius: 8,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            background: passwordCopied ? '#e8f5ee' : '#fff',
+                            color: passwordCopied ? '#1a6b3a' : '#374151',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s',
+                          }}
+                        >
+                          {passwordCopied ? 'Copied ✓' : 'Copy'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={generatePassword}
+                          style={{
+                            padding: '8px 12px',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: 8,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            background: '#fff',
+                            color: '#374151',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s',
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.background = '#f9fafb'; e.currentTarget.style.borderColor = '#1a6b3a'; e.currentTarget.style.color = '#1a6b3a'; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.color = '#374151'; }}
+                        >
+                          Refresh
+                        </button>
+                      </>
                     )}
                   </div>
                   <div style={{ fontSize: 9, color: '#9ca3af', marginTop: 4 }}>
@@ -565,20 +629,7 @@ export default function TeamManagement() {
                   </div>
                 </div>
 
-                {/* Module Access */}
-                <div style={{ marginBottom: 20 }}>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 8 }}>
-                    Module Access
-                  </label>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {['Farm Module', 'Retail Module'].map(m => (
-                      <label key={m} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                        <input type="checkbox" defaultChecked style={{ cursor: 'pointer' }} />
-                        <span style={{ fontSize: 12, color: '#374151' }}>{m}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
+                {/* Module-access checkboxes removed: the invite endpoint (/core/tenants/invite/) has no per-user module field in the API layer, so they were never saved. */}
               </>
             )}
 

@@ -88,6 +88,7 @@ function POModal({ open, onClose, onSubmit, suppliers, products, submitting }) {
     expected_date: nextWeek,
     items: [{ product: '', quantity: 1, unit_price: 0 }],
   });
+  const [formError, setFormError] = useState('');
 
   useEffect(() => {
     if (open) {
@@ -97,6 +98,7 @@ function POModal({ open, onClose, onSubmit, suppliers, products, submitting }) {
         expected_date: nextWeek,
         items: [{ product: products[0]?.id || '', quantity: 1, unit_price: Number(products[0]?.cost_price) || 0 }],
       });
+      setFormError('');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -106,6 +108,7 @@ function POModal({ open, onClose, onSubmit, suppliers, products, submitting }) {
   const total = form.items.reduce((s, it) => s + (Number(it.quantity) || 0) * (Number(it.unit_price) || 0), 0);
 
   const updateItem = (i, k, v) => {
+    setFormError('');
     const items = [...form.items];
     items[i] = { ...items[i], [k]: v };
     setForm({ ...form, items });
@@ -116,11 +119,12 @@ function POModal({ open, onClose, onSubmit, suppliers, products, submitting }) {
 
   const handle = (e) => {
     e.preventDefault();
-    if (!form.supplier) { alert('Select a supplier'); return; }
+    if (!form.supplier) { setFormError('Select a supplier.'); return; }
     const items_data = form.items
       .filter((it) => it.product && it.quantity > 0)
       .map((it) => ({ product: Number(it.product), quantity: Number(it.quantity), unit_price: Number(it.unit_price) }));
-    if (items_data.length === 0) { alert('Add at least one line item'); return; }
+    if (items_data.length === 0) { setFormError('Add at least one line item.'); return; }
+    setFormError('');
     onSubmit({
       supplier: Number(form.supplier),
       order_date: form.order_date,
@@ -138,7 +142,7 @@ function POModal({ open, onClose, onSubmit, suppliers, products, submitting }) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
           <div>
             <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Supplier *</label>
-            <select required value={form.supplier} onChange={(e) => setForm({ ...form, supplier: e.target.value })}
+            <select required value={form.supplier} onChange={(e) => { setFormError(''); setForm({ ...form, supplier: e.target.value }); }}
               style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #d1d5db', borderRadius: 6 }}>
               <option value="">-- Select --</option>
               {suppliers.map((s) => (<option key={s.id} value={s.id}>{s.name}</option>))}
@@ -182,6 +186,7 @@ function POModal({ open, onClose, onSubmit, suppliers, products, submitting }) {
           <span style={{ fontSize: 14, fontWeight: 700, color: '#1a6b3a' }}>${total.toFixed(2)}</span>
         </div>
 
+        {formError && <div style={{ marginTop: 10, color: '#c0392b', fontSize: 12 }}>{formError}</div>}
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 16 }}>
           <button type="button" onClick={onClose} style={{ padding: '8px 16px', background: '#fff', color: '#374151', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
           <button type="submit" disabled={submitting} style={{ padding: '8px 16px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.6 : 1 }}>

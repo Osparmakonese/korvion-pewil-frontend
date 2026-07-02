@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getPrescriptions, createPrescription, dispensePrescription } from '../api/retailApi';
+import useIsMobile from '../hooks/useIsMobile';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
 const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginBottom: 16 };
@@ -12,6 +13,7 @@ const pill = (s) => ({ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderR
   color: s === 'dispensed' ? '#1a6b3a' : s === 'cancelled' ? '#991b1b' : '#92400e' });
 
 export default function Prescriptions() {
+  const isMobile = useIsMobile();
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ['prescriptions'], queryFn: () => getPrescriptions() });
   const list = arr(data);
@@ -40,7 +42,7 @@ export default function Prescriptions() {
   };
 
   return (
-    <div className="vtl-stack" style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 320px', gap: 16 }}>
+    <div className="vtl-stack" style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap: 16 }}>
       <div style={card}>
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Prescriptions</h3>
         {list.length === 0 && <p style={{ fontSize: 12, color: '#6b7280' }}>No prescriptions yet.</p>}
@@ -54,7 +56,7 @@ export default function Prescriptions() {
               {(rx.items_data || []).map((it, i) => <div key={i} style={{ fontSize: 11, color: '#374151' }}>• {it.description || it.name}</div>)}
             </div>
             {rx.status !== 'dispensed' && (
-              <button onClick={() => dispense.mutate(rx.id)} style={{ ...btn, marginTop: 0, padding: '6px 12px' }}>Dispense</button>
+              <button onClick={() => dispense.mutate(rx.id)} style={{ ...btn, marginTop: 0, padding: '10px 14px', minHeight: 40 }}>Dispense</button>
             )}
           </div>
         ))}

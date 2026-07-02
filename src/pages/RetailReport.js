@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getRetailReport } from '../api/retailApi';
 import { useAuth } from '../context/AuthContext';
 import AIInsightCard from '../components/AIInsightCard';
+import useIsMobile from '../hooks/useIsMobile';
 
 /* ── Helpers ── */
 const fmt = (v) => {
@@ -77,7 +78,7 @@ const S = {
     display: 'flex', alignItems: 'center', gap: 5,
   }),
   /* Metrics row (matching HTML prototype) */
-  metrics: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 },
+  metrics: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 16 },
   met: {
     background: C.white, border: `1px solid ${C.border}`, borderRadius: 10, padding: '14px 16px',
   },
@@ -164,6 +165,7 @@ const S = {
 
 /* ──────────── COMPONENT ──────────── */
 export default function RetailReport() {
+  const isMobile = useIsMobile();
   const { user } = useAuth();
   const role = user?.role || 'worker';
 
@@ -294,7 +296,7 @@ export default function RetailReport() {
             </div>
           </div>
 
-          <div style={S.twoCol}>
+          <div style={{ ...S.twoCol, gridTemplateColumns: isMobile ? '1fr' : S.twoCol.gridTemplateColumns }}>
             {/* Left */}
             <div>
               {/* Revenue This Week chart (matching HTML prototype) */}
@@ -448,7 +450,7 @@ export default function RetailReport() {
 
       {/* ══════════════ P&L TAB ══════════════ */}
       {activeTab === 'pl' && (
-        <div style={S.twoCol}>
+        <div style={{ ...S.twoCol, gridTemplateColumns: isMobile ? '1fr' : S.twoCol.gridTemplateColumns }}>
           <div>
             {/* Full P&L Statement */}
             <div style={S.accentCard(C.green)}>
@@ -626,7 +628,7 @@ export default function RetailReport() {
             </div>
           </div>
 
-          <div style={S.twoCol}>
+          <div style={{ ...S.twoCol, gridTemplateColumns: isMobile ? '1fr' : S.twoCol.gridTemplateColumns }}>
             <div>
               {/* Inventory Detail */}
               <div style={S.accentCard(C.amber)}>
@@ -773,7 +775,7 @@ export default function RetailReport() {
             </div>
           </div>
 
-          <div style={S.twoCol}>
+          <div style={{ ...S.twoCol, gridTemplateColumns: isMobile ? '1fr' : S.twoCol.gridTemplateColumns }}>
             <div>
               {/* Daily trend */}
               {dailyTrend.length > 0 && (
@@ -918,7 +920,7 @@ export default function RetailReport() {
               <div style={{ fontSize: 12 }}>No closed cashier sessions found in this period.</div>
             </div>
           ) : (
-            <div style={S.twoCol}>
+            <div style={{ ...S.twoCol, gridTemplateColumns: isMobile ? '1fr' : S.twoCol.gridTemplateColumns }}>
               <div>
                 {/* Cashier Performance Table */}
                 <div style={S.card}>

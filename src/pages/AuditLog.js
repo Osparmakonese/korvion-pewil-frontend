@@ -7,7 +7,7 @@ const S = {
   table: { width: '100%', borderCollapse: 'collapse', fontSize: 12 },
   th: { textAlign: 'left', padding: '8px 10px', borderBottom: '2px solid #e5e7eb', fontWeight: 700, fontSize: 10, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' },
   td: { padding: '8px 10px', borderBottom: '1px solid #f3f4f6', color: '#374151', verticalAlign: 'top' },
-  badge: (color) => ({ display: 'inline-block', padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 600, background: color === 'green' ? '#e8f5ee' : color === 'amber' ? '#fffbeb' : color === 'red' ? '#fef2f2' : '#f3f4f6', color: color === 'green' ? '#1a6b3a' : color === 'amber' ? '#92400e' : color === 'red' ? '#991b1b' : '#374151' }),
+  badge: (color) => ({ display: 'inline-block', padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600, background: color === 'green' ? '#e8f5ee' : color === 'amber' ? '#fffbeb' : color === 'red' ? '#fef2f2' : '#f3f4f6', color: color === 'green' ? '#1a6b3a' : color === 'amber' ? '#92400e' : color === 'red' ? '#991b1b' : '#374151' }),
   filterBar: { display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' },
   select: { padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 11, color: '#374151', outline: 'none', background: '#fff' },
   btn: (active) => ({ padding: '6px 14px', border: active ? 'none' : '1px solid #e5e7eb', background: active ? '#1a6b3a' : '#fff', color: active ? '#fff' : '#374151', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer' }),

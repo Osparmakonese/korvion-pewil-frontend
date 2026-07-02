@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { getProducts } from '../api/retailApi';
+import useIsMobile from '../hooks/useIsMobile';
 
 export default function BarcodeGenerator({ onTabChange }) {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [selectedProduct, setSelectedProduct] = useState('');
   const [barcodeFormat, setBarcodeFormat] = useState('EAN-13');
   const [quantity, setQuantity] = useState(1);
@@ -104,7 +106,7 @@ export default function BarcodeGenerator({ onTabChange }) {
       </div>
 
       {/* Main Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 24 }}>
         {/* Generate Barcode */}
         <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
           <h3 style={{ fontSize: 12, fontWeight: 700, margin: '0 0 16px 0', color: '#111827' }}>
@@ -193,7 +195,6 @@ export default function BarcodeGenerator({ onTabChange }) {
 
           <button
             onClick={() => {
-              console.log('Generating barcode for:', selectedProduct || defaultSku);
               window.print();
             }}
             style={{
@@ -346,7 +347,6 @@ export default function BarcodeGenerator({ onTabChange }) {
                   <td style={{ padding: '7px 8px', borderBottom: '1px solid #f3f4f6', textAlign: 'center' }}>
                     <button
                       onClick={() => {
-                        console.log('Generating/printing barcode for:', product.sku);
                         window.print();
                       }}
                       style={{

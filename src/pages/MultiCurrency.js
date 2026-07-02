@@ -47,7 +47,7 @@ const S = {
   },
   currencyGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
     gap: 10,
     marginBottom: 20,
   },

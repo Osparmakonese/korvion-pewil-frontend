@@ -4,6 +4,7 @@ import {
   getWallets, lookupWallet, creditWallet, redeemWallet, topupWallet, getWalletStatement,
 } from '../api/retailApi';
 import { fmt } from '../utils/format';
+import useIsMobile from '../hooks/useIsMobile';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
 const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginBottom: 16 };
@@ -16,6 +17,7 @@ const td = { padding: '7px 8px', fontSize: 12, borderBottom: '1px solid #f3f4f6'
 const TYPE_LABEL = { change_credit: 'Change kept', redeem: 'Redeemed', topup: 'Top-up', adjustment: 'Adjustment' };
 
 export default function Wallets() {
+  const isMobile = useIsMobile();
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ['wallets'], queryFn: () => getWallets() });
   const wallets = arr(data);
@@ -57,7 +59,7 @@ export default function Wallets() {
   };
 
   return (
-    <div className="vtl-stack" style={{ maxWidth: 1080, margin: '0 auto', display: 'grid', gridTemplateColumns: '380px 1fr', gap: 16 }}>
+    <div className="vtl-stack" style={{ maxWidth: 1080, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '380px 1fr', gap: 16 }}>
       <div>
         <div style={card}>
           <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Customer wallet</h3>
@@ -83,7 +85,7 @@ export default function Wallets() {
             </div>
             <label style={label}>Amount</label>
             <input style={input} type="number" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginTop: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr', gap: 6, marginTop: 10 }}>
               <button onClick={() => move(creditWallet)} disabled={busy} style={{ ...btn, fontSize: 11 }}>Keep change</button>
               <button onClick={() => move(topupWallet)} disabled={busy} style={{ ...btn, fontSize: 11, background: '#1d4ed8' }}>Top-up</button>
               <button onClick={() => move(redeemWallet)} disabled={busy} style={{ ...btn, fontSize: 11, background: '#c97d1a' }}>Redeem</button>

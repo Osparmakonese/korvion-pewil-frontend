@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import useIsMobile from '../hooks/useIsMobile';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCustomers, getTopCustomers, createCustomer, deleteCustomer } from '../api/retailApi';
 import { useAuth } from '../context/AuthContext';
@@ -16,18 +17,7 @@ export default function Customers({ onTabChange }) {
   const [formData, setFormData] = useState({ name: '', phone: '', email: '' });
 
   // Mobile breakpoint — keep all hooks ABOVE the early return.
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' && window.innerWidth <= 500
-  );
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth <= 500);
-    window.addEventListener('resize', onResize);
-    window.addEventListener('orientationchange', onResize);
-    return () => {
-      window.removeEventListener('resize', onResize);
-      window.removeEventListener('orientationchange', onResize);
-    };
-  }, []);
+  const isMobile = useIsMobile();
 
   const isOwnerOrManager = user?.role === 'owner' || user?.role === 'manager';
 

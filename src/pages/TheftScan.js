@@ -11,6 +11,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { scanForTheft, getAIBudget } from '../api/aiApi';
+import useIsMobile from '../hooks/useIsMobile';
 
 const GREEN = '#1a6b3a';
 const GREEN_TINT = '#e8f5ee';
@@ -54,6 +55,7 @@ const BAND_STYLE = {
 const today = () => new Date().toISOString().slice(0, 10);
 
 export default function TheftScan({ onTabChange }) {
+  const isMobile = useIsMobile();
   const qc = useQueryClient();
   const [date, setDate] = useState(today());
   const [loading, setLoading] = useState(false);
@@ -101,7 +103,7 @@ export default function TheftScan({ onTabChange }) {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap: 16 }}>
           {/* LEFT — scan */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {/* Control bar */}

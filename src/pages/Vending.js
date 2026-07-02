@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getVendingBillers, vend, getVendStatus, getVendingTransactions } from '../api/retailApi';
 import { fmt } from '../utils/format';
+import useIsMobile from '../hooks/useIsMobile';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
 const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginBottom: 16 };
@@ -20,6 +21,7 @@ const SC = { paid: { bg: '#e8f5ee', fg: '#1a6b3a' }, pending: { bg: '#fef3e2', f
 const TERMINAL = ['paid', 'failed', 'reversed'];
 
 export default function Vending() {
+  const isMobile = useIsMobile();
   const qc = useQueryClient();
   const { data: billerData, isLoading, error } = useQuery({ queryKey: ['vending-billers'], queryFn: () => getVendingBillers(), retry: false });
   const { data: txData } = useQuery({ queryKey: ['vending-transactions'], queryFn: () => getVendingTransactions() });
@@ -80,7 +82,7 @@ export default function Vending() {
   }
 
   return (
-    <div className="vtl-stack" style={{ maxWidth: 1080, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 380px', gap: 16 }}>
+    <div className="vtl-stack" style={{ maxWidth: 1080, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 380px', gap: 16 }}>
       <div>
         {!result ? (
           <div style={card}>

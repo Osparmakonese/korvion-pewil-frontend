@@ -14,6 +14,7 @@ import {
 } from '../api/billingApi';
 import { useAuth } from '../context/AuthContext';
 import PlansTable from '../components/PlansTable';
+import { fmt } from '../utils/format';
 
 const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' };
 const pill = (bg, color) => ({ fontSize: 8, fontWeight: 700, padding: '2px 7px', borderRadius: 20, display: 'inline-block', letterSpacing: '0.02em', textTransform: 'uppercase', background: bg, color });
@@ -22,9 +23,10 @@ const btnS = (primary) => ({ padding: '6px 12px', borderRadius: 7, fontSize: 11,
 const thS = { textAlign: 'left', padding: '7px 8px', fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', background: '#f9fafb' };
 
 // Invoice amounts carry their own currency (USD for Zimbabwe / Pesepay, ZMW
-// for Zambia / Lenco), so render the right symbol rather than a hardcoded $.
-const CUR_SYM = { USD: '$', ZMW: 'K' };
-const invAmt = (inv) => `${CUR_SYM[inv && inv.currency] || (inv && inv.currency ? inv.currency + ' ' : '$')}${inv ? inv.amount : ''}`;
+// for Zambia / Lenco), so format with the invoice's currency. Explicit 'USD'
+// fallback — these are platform invoices, NOT tenant money, so we must not
+// fall back to the tenant's display currency from localStorage.
+const invAmt = (inv) => fmt(inv && inv.amount, (inv && inv.currency) || 'USD');
 
 // Fetch all active subscriptions (no module filter → backend returns { subscriptions: [...] })
 const fetchActiveSubs = async () => {

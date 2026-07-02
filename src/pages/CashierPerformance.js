@@ -38,7 +38,7 @@ const S = {
   }),
   metricsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(4, 1fr)',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
     gap: 8,
     marginBottom: 20,
   },
@@ -123,7 +123,7 @@ const S = {
   },
   statsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(5, 1fr)',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
     gap: 8,
     marginBottom: 12,
   },

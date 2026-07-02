@@ -64,7 +64,7 @@ export default function KitchenOrders() {
         </form>
       </div>
 
-      <div className="vtl-board" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+      <div className="vtl-board" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12 }}>
         {COLUMNS.map((col) => {
           const items = orders.filter((o) => o.status === col.key);
           return (
