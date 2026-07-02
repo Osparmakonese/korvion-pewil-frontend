@@ -28,6 +28,7 @@ export default function MobilePOS({
   splitMode, setSplitMode, splitPayments, setSplitPayments,
   handleCompleteSale, handleSuspendSale, createSaleMutPending,
   offline, pendingCount, user,
+  onQuickAddProduct,
 }) {
   const dark = theme === 'dark';
   const lane = theme === 'pnp';
@@ -209,6 +210,32 @@ export default function MobilePOS({
           <div style={{ textAlign: 'center', color: T.ink3, fontSize: 13, marginTop: 40 }}>
             <div style={{ fontSize: 34, marginBottom: 8 }}>🔍</div>
             {search ? 'No products match.' : 'Scan an item or search to start.'}
+            {/* Quick-add product on a search miss. Role/approval gating and
+                the modal itself live in POS.js (handleQuickAddProduct). */}
+            {search && onQuickAddProduct && (
+              <div style={{ marginTop: 14 }}>
+                <button
+                  type="button"
+                  disabled={offline}
+                  onClick={() => onQuickAddProduct(
+                    /^\d{4,}$/.test(search.trim())
+                      ? { barcode: search.trim() }
+                      : { name: search.trim() }
+                  )}
+                  style={{ minHeight: 46, padding: '0 22px', border: 'none', borderRadius: M.radius.lg,
+                           background: offline ? T.line : T.green, color: offline ? T.ink3 : T.onGreen,
+                           fontSize: 14, fontWeight: 700, fontFamily: 'inherit',
+                           cursor: offline ? 'default' : 'pointer' }}
+                >
+                  ＋ Add product
+                </button>
+                {offline && (
+                  <div style={{ fontSize: 11, color: T.ink3, marginTop: 6 }}>
+                    Connect to add new products
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>

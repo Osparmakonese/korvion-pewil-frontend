@@ -24,7 +24,10 @@ const ACTION_LABELS = {
 };
 
 export function requireManagerApproval(action, opts = {}) {
-  const { resourceType = '', resourceId = '', notes = '' } = opts;
+  // `label` overrides the modal heading for generic actions (the backend
+  // only accepts a fixed action list, so e.g. quick-add-product is logged
+  // as 'other' but should still read clearly to the manager).
+  const { resourceType = '', resourceId = '', notes = '', label = '' } = opts;
 
   return new Promise((resolve, reject) => {
     const host = document.createElement('div');
@@ -40,6 +43,7 @@ export function requireManagerApproval(action, opts = {}) {
     root.render(
       <ManagerApprovalModal
         action={action}
+        label={label}
         resourceType={resourceType}
         resourceId={resourceId}
         notes={notes}
@@ -50,7 +54,7 @@ export function requireManagerApproval(action, opts = {}) {
   });
 }
 
-function ManagerApprovalModal({ action, resourceType, resourceId, notes, onApproved, onCancel }) {
+function ManagerApprovalModal({ action, label, resourceType, resourceId, notes, onApproved, onCancel }) {
   const [caps, setCaps] = useState(null);
   const [tab, setTab] = useState('password'); // 'password' | 'pin' | 'webauthn'
   const [username, setUsername] = useState('');
@@ -138,7 +142,7 @@ function ManagerApprovalModal({ action, resourceType, resourceId, notes, onAppro
             Manager Approval Required
           </div>
           <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginTop: 4 }}>
-            {ACTION_LABELS[action] || action}
+            {label || ACTION_LABELS[action] || action}
           </div>
           {resourceId && (
             <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>

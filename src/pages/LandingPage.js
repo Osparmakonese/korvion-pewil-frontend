@@ -646,7 +646,7 @@ const LandingPage = () => {
           <h2 className="pl-serif">Open the till tomorrow &mdash; <em>free</em> for 14 days, then from $10 a month.</h2>
           <p>
             Start with a 14-day free trial &mdash; no card required. After that, one simple flat price:
-            Starter $10/mo, Growth $25/mo, Enterprise $69/mo &mdash; with tax-authority fiscalisation, mobile money and
+            Starter $10/mo, Growth $25/mo, Enterprise $45/branch/mo &mdash; with tax-authority fiscalisation, mobile money and
             the full till included in every plan. Pay yearly and get 2 months free. No per-receipt fees,
             no surprises. Cancel anytime, export everything &mdash; the data was always yours.
           </p>

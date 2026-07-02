@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getProducts,
+  createProduct,
+  getCategories,
   barcodeLookup,
   getCashierSessions,
   getPOSSettings,
@@ -526,6 +528,192 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
   );
 }
 
+/* ─── Quick-Add Product Modal ───
+   Owner-requested: when a scan or search misses at the till, an Owner or
+   Manager (or a cashier with manager approval — see handleQuickAddProduct)
+   can create the product on the spot and ring it straight into the cart.
+   Online-only: product creation is never queued offline. */
+function QuickAddProductModal({ isOpen, prefill, onClose, onCreated }) {
+  const [name, setName] = useState('');
+  const [price, setPrice] = useState('');
+  const [barcode, setBarcode] = useState('');
+  const [qty, setQty] = useState('1');
+  const [category, setCategory] = useState('');
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  // Categories aren't loaded anywhere else in POS, so fetch lazily (same
+  // query key as Products.js — shares the cache). The select only renders
+  // when the list actually has entries.
+  const { data: categories = [] } = useQuery({
+    queryKey: ['retail-categories'],
+    queryFn: getCategories,
+    staleTime: 300000,
+    retry: false,
+    enabled: isOpen,
+  });
+
+  // Re-seed the form each time the modal opens with a fresh prefill
+  // (missed barcode / search term).
+  useEffect(() => {
+    if (isOpen) {
+      setName(prefill?.name || '');
+      setPrice('');
+      setBarcode(prefill?.barcode || '');
+      setQty('1');
+      setCategory('');
+      setError('');
+      setSaving(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const save = async () => {
+    const cleanName = name.trim();
+    const cleanBarcode = barcode.trim();
+    const priceNum = parseFloat(price);
+    const qtyNum = parseInt(qty, 10);
+    if (!cleanName) { setError('Product name is required.'); return; }
+    if (!Number.isFinite(priceNum) || priceNum <= 0) {
+      setError('Enter a selling price greater than zero.');
+      return;
+    }
+    setError('');
+    setSaving(true);
+    const payload = {
+      name: cleanName,
+      // SKU is required by the API but the cashier has no SKU scheme at the
+      // till — derive one from the barcode (or a timestamp) so the owner can
+      // tidy it up later in Products.
+      sku: cleanBarcode || `QA-${Date.now().toString(36).toUpperCase()}`,
+      selling_price: priceNum.toFixed(2),
+      cost_price: '0.00', // unknown at the till — owner fills it in later
+      quantity_in_stock: Number.isFinite(qtyNum) && qtyNum >= 0 ? qtyNum : 1,
+      unit: 'piece',
+    };
+    if (cleanBarcode) payload.barcode = cleanBarcode;
+    if (category) payload.category = parseInt(category, 10);
+    try {
+      const created = await createProduct(payload);
+      onCreated(created);
+    } catch (err) {
+      // Pretty-print backend validation errors inline (never alert).
+      const data = err?.response?.data;
+      let msg = 'Could not create product.';
+      if (typeof data === 'string') msg = data;
+      else if (data?.detail) msg = data.detail;
+      else if (data && typeof data === 'object') {
+        const lines = Object.entries(data).map(([k, v]) =>
+          `${k}: ${Array.isArray(v) ? v.join(', ') : v}`);
+        if (lines.length) msg = lines.join(' · ');
+      } else if (err?.message) msg = err.message;
+      setError(msg);
+      setSaving(false);
+    }
+  };
+
+  const onKey = (e) => {
+    if (e.key === 'Enter' && !saving) { e.preventDefault(); save(); }
+    if (e.key === 'Escape') onClose();
+  };
+
+  // Big touch targets — cashiers use fingers, not mice.
+  const qaLabel = {
+    display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280',
+    marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em',
+  };
+  const qaInput = {
+    width: '100%', minHeight: 44, padding: '10px 12px', fontSize: 15,
+    border: '1px solid #d1d5db', borderRadius: 8, outline: 'none',
+    boxSizing: 'border-box',
+  };
+
+  return (
+    <div
+      onClick={onClose}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)',
+               display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={onKey}
+        style={{ background: '#fff', borderRadius: 12, width: '92%', maxWidth: 420,
+                 maxHeight: '90vh', overflowY: 'auto', padding: 20, boxSizing: 'border-box',
+                 boxShadow: '0 24px 60px rgba(0,0,0,0.3)' }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ fontSize: 17, fontWeight: 700, color: '#0f172a' }}>➕ Quick-Add Product</div>
+          <button
+            type="button" onClick={onClose}
+            style={{ border: 'none', background: 'transparent', fontSize: 22, cursor: 'pointer', color: '#9ca3af' }}
+          >×</button>
+        </div>
+        <div style={{ fontSize: 12, color: '#6b7280', margin: '4px 0 14px' }}>
+          Creates the product in your catalog and rings it into this sale.
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div>
+            <label style={qaLabel}>Product name *</label>
+            <input autoFocus type="text" value={name}
+              onChange={(e) => setName(e.target.value)} style={qaInput} />
+          </div>
+          <div>
+            <label style={qaLabel}>Selling price *</label>
+            <input type="number" inputMode="decimal" min="0" step="0.01" value={price}
+              onChange={(e) => setPrice(e.target.value)} placeholder="0.00" style={qaInput} />
+          </div>
+          <div>
+            <label style={qaLabel}>Barcode</label>
+            <input type="text" value={barcode}
+              onChange={(e) => setBarcode(e.target.value)}
+              placeholder="Scan or type (optional)" style={qaInput} />
+          </div>
+          {categories.length > 0 && (
+            <div>
+              <label style={qaLabel}>Category</label>
+              <select value={category} onChange={(e) => setCategory(e.target.value)} style={qaInput}>
+                <option value="">— No category —</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div>
+            <label style={qaLabel}>Opening stock qty</label>
+            <input type="number" inputMode="numeric" min="0" step="1" value={qty}
+              onChange={(e) => setQty(e.target.value)} style={qaInput} />
+          </div>
+        </div>
+
+        {error && (
+          <div style={{ marginTop: 12, padding: '8px 10px', background: '#fef2f2',
+                        color: '#b91c1c', borderRadius: 6, fontSize: 12, whiteSpace: 'pre-wrap' }}>
+            {error}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+          <button
+            type="button" onClick={onClose}
+            style={{ flex: 1, minHeight: 46, borderRadius: 8, border: '1px solid #e2e8f0',
+                     background: '#fff', color: '#334155', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+          >Cancel</button>
+          <button
+            type="button" onClick={save} disabled={saving}
+            style={{ flex: 2, minHeight: 46, borderRadius: 8, border: 'none',
+                     background: '#1a6b3a', color: '#fff', fontSize: 14, fontWeight: 700,
+                     cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.6 : 1 }}
+          >{saving ? 'Saving…' : 'Save & add to cart'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Helper: Get emoji icon by category ─── */
 const getCategoryEmoji = (category) => {
   const emojiMap = {
@@ -923,6 +1111,12 @@ export default function POS() {
   const [showHotkeys, setShowHotkeys] = useState(false);
   const [lastReceiptId, setLastReceiptId] = useState(null);
 
+  // Quick-add product at the till (owner-requested). `quickAdd` holds the
+  // modal prefill ({ name?, barcode? }) or null when closed. `scanMiss`
+  // surfaces a barcode-lookup miss inline so the lane isn't stuck.
+  const [quickAdd, setQuickAdd] = useState(null);
+  const [scanMiss, setScanMiss] = useState(null); // { code, notFound, ts }
+
   // Batch 2a: tab-level session lock
   const sessionLockRef = useRef(null);
   const [isLockOwner, setIsLockOwner] = useState(true);
@@ -1133,6 +1327,7 @@ export default function POS() {
     mutationFn: barcodeLookup,
     onSuccess: (data) => {
       if (!data) return;
+      setScanMiss(null);
       if (priceCheckMode) {
         setLastPriceCheck({
           name: data.name, price: data.selling_price,
@@ -1141,6 +1336,18 @@ export default function POS() {
       } else {
         addToCart(data);
       }
+      setBarcode('');
+      barcodeInputRef.current?.focus();
+    },
+    onError: (err, code) => {
+      // Scan miss — used to fail silently, which left the lane stuck.
+      // Surface an inline notice with a quick-add path instead.
+      // 404 = genuinely not in the catalog; anything else is likely network.
+      setScanMiss({
+        code: String(code || '').trim(),
+        notFound: err?.response?.status === 404,
+        ts: Date.now(),
+      });
       setBarcode('');
       barcodeInputRef.current?.focus();
     },
@@ -1384,6 +1591,44 @@ export default function POS() {
       setShowReceipt(true);
     } catch (_) { /* cancelled */ }
   };
+
+  // Quick-add product at the till. Owner/Manager open the modal directly;
+  // everyone else (cashier/worker) goes through the same manager-approval
+  // flow as price_override. The backend's ManagerApproval.action is a fixed
+  // choice list ('quick_add_product' would be rejected), so the approval is
+  // logged under 'other' with descriptive notes + a clear modal label.
+  const handleQuickAddProduct = async (prefill = {}) => {
+    if (offline) return; // product creation is never queued offline
+    const isOwnerOrManager = user?.role === 'owner' || user?.role === 'manager';
+    if (!isOwnerOrManager) {
+      try {
+        await requireManagerApproval('other', {
+          resourceType: 'product',
+          notes: `Quick-add product at till${prefill.barcode
+            ? ` — barcode ${prefill.barcode}`
+            : prefill.name ? ` — "${prefill.name}"` : ''}`,
+          label: 'Add new product at till',
+        });
+      } catch (_) { return; /* cashier cancelled / manager declined */ }
+    }
+    setScanMiss(null);
+    setQuickAdd(prefill);
+  };
+
+  const handleQuickAddCreated = (product) => {
+    setQuickAdd(null);
+    setScanMiss(null);
+    setSearch('');
+    // Predicate-based invalidation — refreshes retail-products-pos (this
+    // grid), Products page, quick tiles, low-stock, etc. Same helper as
+    // Products.js so the "added but not in POS" bug can't recur.
+    invalidateProductCaches(qc);
+    if (product) addToCart(product); // qty 1 straight into the ticket
+    barcodeInputRef.current?.focus();
+  };
+
+  // Search terms that look like scanned codes prefill Barcode, not Name.
+  const looksLikeBarcode = (s) => /^\d{4,}$/.test(s);
 
   const handleCashDrop = async () => {
     if (!isLockOwner) {
@@ -1702,6 +1947,14 @@ export default function POS() {
           offline={offline}
           pendingCount={pendingCount}
           user={user}
+          onQuickAddProduct={handleQuickAddProduct}
+        />
+        {/* Quick-add product — same modal + handler as desktop. */}
+        <QuickAddProductModal
+          isOpen={!!quickAdd}
+          prefill={quickAdd || {}}
+          onClose={() => setQuickAdd(null)}
+          onCreated={handleQuickAddCreated}
         />
         {/* Frame 5 — fullscreen sale-complete confirmation. Replaces the
             centered ReceiptModal at mobile widths so the cashier sees a
@@ -2022,6 +2275,47 @@ export default function POS() {
               background: priceCheckMode ? '#fffbeb' : '#fff',
             }}
           />
+          {scanMiss && !priceCheckMode && (
+            <div style={{ marginTop: 6, padding: 10, background: '#fef2f2',
+                          border: '1px solid #fecaca', borderRadius: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#b91c1c' }}>
+                {scanMiss.notFound
+                  ? <>“{scanMiss.code}” is not in your catalog.</>
+                  : <>Lookup failed for “{scanMiss.code}”{offline ? ' — you are offline.' : '.'}</>}
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center' }}>
+                <button
+                  type="button"
+                  disabled={offline}
+                  onClick={() => handleQuickAddProduct(
+                    looksLikeBarcode(scanMiss.code)
+                      ? { barcode: scanMiss.code }
+                      : { name: scanMiss.code }
+                  )}
+                  style={{ minHeight: 44, padding: '10px 16px', border: 'none', borderRadius: 8,
+                           background: offline ? '#9ca3af' : '#1a6b3a', color: '#fff',
+                           fontSize: 13, fontWeight: 700,
+                           cursor: offline ? 'not-allowed' : 'pointer' }}
+                >
+                  ➕ Add product
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScanMiss(null)}
+                  style={{ minHeight: 44, padding: '10px 14px', border: '1px solid #e5e7eb',
+                           borderRadius: 8, background: '#fff', color: '#374151',
+                           fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                >
+                  Dismiss
+                </button>
+              </div>
+              {offline && (
+                <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 6 }}>
+                  Connect to add new products
+                </div>
+              )}
+            </div>
+          )}
           {priceCheckMode && lastPriceCheck && (
             <div style={{ marginTop: 6, padding: 10, background: '#fffbeb',
                           border: '1px solid #fde68a', borderRadius: 8 }}>
@@ -2112,7 +2406,29 @@ export default function POS() {
             })
           ) : (
             <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '20px', color: '#9ca3af' }}>
-              No products available
+              {search.trim() ? <>No products match “{search.trim()}”.</> : 'No products available'}
+              <div style={{ marginTop: 10 }}>
+                <button
+                  type="button"
+                  disabled={offline}
+                  onClick={() => handleQuickAddProduct(
+                    looksLikeBarcode(search.trim())
+                      ? { barcode: search.trim() }
+                      : { name: search.trim() }
+                  )}
+                  style={{ minHeight: 44, padding: '10px 20px', border: 'none', borderRadius: 8,
+                           background: offline ? '#9ca3af' : '#1a6b3a', color: '#fff',
+                           fontSize: 13, fontWeight: 700,
+                           cursor: offline ? 'not-allowed' : 'pointer' }}
+                >
+                  ➕ Add product
+                </button>
+                {offline && (
+                  <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 6 }}>
+                    Connect to add new products
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -2678,6 +2994,14 @@ export default function POS() {
           </div>
         </div>
       )}
+
+      {/* Quick-add product (scan/search miss) */}
+      <QuickAddProductModal
+        isOpen={!!quickAdd}
+        prefill={quickAdd || {}}
+        onClose={() => setQuickAdd(null)}
+        onCreated={handleQuickAddCreated}
+      />
 
       {/* Receipt Modal */}
       <ReceiptModal

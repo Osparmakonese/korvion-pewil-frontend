@@ -182,7 +182,7 @@ export default function Contact() {
                   onChange={e => set('branches', e.target.value)}
                   onFocus={fx} onBlur={fb} placeholder="e.g. 12" />
                 <p style={{ marginTop: 6, fontSize: 12.5, color: C.muted }}>
-                  Enterprise $69/mo · unlimited users, tills &amp; branches · 2 months free yearly
+                  Enterprise $45/branch/mo · unlimited users &amp; tills per branch · 2 months free yearly
                 </p>
               </div>
             )}
