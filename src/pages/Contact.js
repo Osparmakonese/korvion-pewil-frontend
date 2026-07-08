@@ -19,7 +19,8 @@ const C = {
 const SERIF = "'Fraunces', Georgia, serif";
 const SANS = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
 
-const SALES_EMAIL = 'sales@pewil.org';
+// Support isn't a department yet — all contact/sales mail goes to the founder.
+const SALES_EMAIL = 'osy@pewil.org';
 
 export default function Contact() {
   const [searchParams] = useSearchParams();

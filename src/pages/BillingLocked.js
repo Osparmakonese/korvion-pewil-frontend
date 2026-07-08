@@ -154,8 +154,8 @@ export default function BillingLocked({ subscription, reason }) {
             Sign out
           </button>
           <span style={styles.dotSep}>·</span>
-          <a href="mailto:billing@pewil.org?subject=Billing%20help" style={styles.link}>
-            Email billing@pewil.org
+          <a href="mailto:osy@pewil.org?subject=Billing%20help" style={styles.link}>
+            Email osy@pewil.org
           </a>
         </div>
       </div>

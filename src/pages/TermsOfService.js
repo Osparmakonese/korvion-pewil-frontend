@@ -59,7 +59,7 @@ export default function TermsOfService() {
         <p style={S.p}>These terms are governed by the laws of Zimbabwe. Any disputes arising from these terms shall be resolved in the courts of Harare, Zimbabwe.</p>
 
         <h2 style={S.h2}>13. Contact</h2>
-        <p style={S.p}>If you have questions about these Terms of Service, please contact us at support@pewil.org. The Service is operated by Korvion Solution (Pvt) Ltd, registered in Zimbabwe, with its principal office in Harare.</p>
+        <p style={S.p}>If you have questions about these Terms of Service, please contact us at osy@pewil.org. The Service is operated by Korvion Solution (Pvt) Ltd, registered in Zimbabwe, with its principal office in Harare.</p>
       </div>
     </div>
   );

@@ -874,8 +874,8 @@ export default function Settings({ onTabChange }) {
                   <div style={{ color: C.muted }}>
                     Programmatic access for bookkeeping, WhatsApp bots, and third-party integrations is on the roadmap.
                     If you need early access, email{' '}
-                    <a href="mailto:support@pewil.org" style={{ color: C.forest, textDecoration: 'underline' }}>
-                      support@pewil.org
+                    <a href="mailto:osy@pewil.org" style={{ color: C.forest, textDecoration: 'underline' }}>
+                      osy@pewil.org
                     </a>
                     {' '}and tell us what you want to integrate.
                   </div>

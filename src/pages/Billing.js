@@ -914,7 +914,7 @@ function AddonsSection({ addons }) {
                     {busy === a.slug ? 'Starting…' : `Add ${a.name} — $${Number(a.price_monthly).toFixed(0)}/mo`}
                   </button>
                 ) : (
-                  <a href="mailto:hello@pewil.org?subject=Pewil%20Enterprise" style={{ ...btnS(false), textDecoration: 'none' }}>
+                  <a href="mailto:osy@pewil.org?subject=Pewil%20Enterprise" style={{ ...btnS(false), textDecoration: 'none' }}>
                     Talk to us
                   </a>
                 )}

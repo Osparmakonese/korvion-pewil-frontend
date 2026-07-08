@@ -54,7 +54,7 @@ export default function PrivacyPolicy() {
         <p style={S.p}>We may update this Privacy Policy from time to time. We will notify you of any material changes via email or in-app notification at least 14 days before they take effect. The "Last updated" date at the top of this page indicates when the policy was last revised.</p>
 
         <h2 style={S.h2}>11. Contact Us</h2>
-        <p style={S.p}>If you have questions or concerns about this Privacy Policy or how we handle your data, please contact us at privacy@pewil.org or support@pewil.org.</p>
+        <p style={S.p}>If you have questions or concerns about this Privacy Policy or how we handle your data, please contact us at osy@pewil.org.</p>
       </div>
     </div>
   );

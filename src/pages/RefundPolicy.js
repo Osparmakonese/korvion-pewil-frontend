@@ -33,7 +33,7 @@ export default function RefundPolicy() {
         <p style={S.p}>Monthly subscription fees are charged in advance and are generally non-refundable. Once a billing cycle has started, we do not pro-rate or refund unused days if you cancel mid-cycle. Your subscription will remain active through the end of the billing period you have already paid for, and will not renew thereafter.</p>
 
         <h2 style={S.h2}>4. Duplicate or Accidental Charges</h2>
-        <p style={S.p}>If you are charged more than once for the same billing cycle, or if a charge is processed in error on our side, we will refund the duplicate or erroneous amount in full. Please contact support@pewil.org within 60 days of the charge with your account email and the Pesepay reference number so we can investigate and process the refund.</p>
+        <p style={S.p}>If you are charged more than once for the same billing cycle, or if a charge is processed in error on our side, we will refund the duplicate or erroneous amount in full. Please contact osy@pewil.org within 60 days of the charge with your account email and the Pesepay reference number so we can investigate and process the refund.</p>
 
         <h2 style={S.h2}>5. Failed Payment Handling</h2>
         <p style={S.p}>If a payment attempt fails at the Pesepay gateway but your subscription is still extended in error, the failed amount will not be captured. No refund is required because no money left your account. If you see a pending authorisation that is not captured within 7 business days, it will be automatically released by your card issuer or mobile money provider.</p>
@@ -48,13 +48,13 @@ export default function RefundPolicy() {
         <p style={S.p}>You may cancel your subscription at any time through the Billing page inside the app. Cancellation stops future renewals and takes effect at the end of your current paid billing period. You retain full access until that date, and your data remains available for export for 30 days after your final billing period ends.</p>
 
         <h2 style={S.h2}>9. How to Request a Refund</h2>
-        <p style={S.p}>If you believe you qualify for a refund under this policy, email support@pewil.org from the email address associated with your account. Include the date of the charge, the amount, the payment method (Visa, Mastercard, EcoCash, or OneMoney), and the Pesepay reference number from your receipt. We will respond within 2 business days.</p>
+        <p style={S.p}>If you believe you qualify for a refund under this policy, email osy@pewil.org from the email address associated with your account. Include the date of the charge, the amount, the payment method (Visa, Mastercard, EcoCash, or OneMoney), and the Pesepay reference number from your receipt. We will respond within 2 business days.</p>
 
         <h2 style={S.h2}>10. Refund Processing Time</h2>
         <p style={S.p}>Approved refunds are processed through the same payment method used for the original charge. Card refunds typically appear within 5 to 10 business days, depending on your issuing bank. EcoCash and OneMoney refunds are typically processed within 2 to 5 business days. We cannot accelerate processing times on the payment provider's side.</p>
 
         <h2 style={S.h2}>11. Chargebacks</h2>
-        <p style={S.p}>Before filing a chargeback with your bank or mobile money provider, please contact us first at support@pewil.org. Most billing questions can be resolved directly and faster than the chargeback process. Accounts that initiate chargebacks without first contacting support may be suspended pending investigation.</p>
+        <p style={S.p}>Before filing a chargeback with your bank or mobile money provider, please contact us first at osy@pewil.org. Most billing questions can be resolved directly and faster than the chargeback process. Accounts that initiate chargebacks without first contacting support may be suspended pending investigation.</p>
 
         <h2 style={S.h2}>12. Statutory Rights</h2>
         <p style={S.p}>Nothing in this policy limits your rights under the Consumer Protection Act of Zimbabwe or any other applicable law. Where local law grants you a refund right that is more generous than this policy, that law takes precedence.</p>
@@ -63,7 +63,7 @@ export default function RefundPolicy() {
         <p style={S.p}>We may update this Refund Policy from time to time. We will notify you of material changes via email or in-app notification at least 14 days before they take effect. The "Last updated" date at the top of this page shows the most recent revision.</p>
 
         <h2 style={S.h2}>14. Contact</h2>
-        <p style={S.p}>For all refund requests or questions about this policy, contact support@pewil.org. Please include your account email and relevant transaction details so we can respond quickly.</p>
+        <p style={S.p}>For all refund requests or questions about this policy, contact osy@pewil.org. Please include your account email and relevant transaction details so we can respond quickly.</p>
       </div>
     </div>
   );

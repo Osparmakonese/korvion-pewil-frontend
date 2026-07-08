@@ -94,7 +94,7 @@ export default function HelpSupport() {
       feature: 'Feature Request', account: 'Account & Security', fiscal: 'Tax & Fiscalisation',
     };
     const tag = labelMap[category] || 'General Question';
-    const url = `mailto:support@pewil.org?subject=${encodeURIComponent(`[${tag}] ${subject}`.trim())}&body=${encodeURIComponent(message)}`;
+    const url = `mailto:osy@pewil.org?subject=${encodeURIComponent(`[${tag}] ${subject}`.trim())}&body=${encodeURIComponent(message)}`;
     window.location.href = url;
     setSent(true);
     setTimeout(() => setSent(false), 5000);
@@ -148,7 +148,7 @@ export default function HelpSupport() {
 
         {sent && (
           <div style={{ background: '#e8f5ee', color: '#1a6b3a', padding: '10px 14px', borderRadius: 7, fontSize: 12, marginBottom: 12, fontWeight: 600 }}>
-            Opening your email app — send the draft to support@pewil.org and we'll respond within 24 hours.
+            Opening your email app — send the draft to osy@pewil.org and we'll respond within 24 hours.
           </div>
         )}
 
@@ -176,7 +176,7 @@ export default function HelpSupport() {
       {/* Contact info */}
       <div style={S.card}>
         <h3 style={S.title}>Other Ways to Reach Us</h3>
-        <p style={S.p}>Email: support@pewil.org</p>
+        <p style={S.p}>Email: osy@pewil.org</p>
         {WA_HREF && (
           <p style={S.p}>
             WhatsApp:{' '}
