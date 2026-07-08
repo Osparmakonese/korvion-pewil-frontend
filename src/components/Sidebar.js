@@ -419,8 +419,8 @@ export default function Sidebar({ activeTab, onTabChange, user, onLogout, lowSto
 
       {/* Tenant brand — single-module, no switcher */}
       <div style={{ ...S.tsw, cursor: 'default' }}>
-        <div style={S.tswName}>{tenantName}</div>
-        <div style={S.tswPlan}>{brandModuleLabel} {'\u2022'} {planLabel}</div>
+        <div style={S.tswName}>{isSuperAdmin ? 'Pewil' : tenantName}</div>
+        <div style={S.tswPlan}>{isSuperAdmin ? 'Platform \u2022 Super admin' : `${brandModuleLabel} \u2022 ${planLabel}`}</div>
       </div>
 
       {/* Navigation */}
@@ -428,6 +428,11 @@ export default function Sidebar({ activeTab, onTabChange, user, onLogout, lowSto
         {NAV_ITEMS.map((section, idx) => {
           if (section.ownerOnly && role !== 'owner') return null;
           if (section.superOnly && !isSuperAdmin) return null;
+          // SUPER-ADMIN-ONLY SHELL (2026-07-02): the platform admin account
+          // sees ONLY the super-admin surface — no tenant (farm/retail)
+          // sections. Requested by Osy: "osy admin should only see the
+          // super admin pages".
+          if (isSuperAdmin && !(section.superOnly || section.section === 'ADMINISTRATION')) return null;
           if (!shouldShowSection(section)) return null;
           // Filter items by ownerOnly + item-level showWhen so the
           // section knows its real visible count for the badge.

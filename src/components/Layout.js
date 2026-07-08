@@ -169,6 +169,9 @@ export default function Layout({
     .filter((s) => {
       if (s.ownerOnly && role !== 'owner') return false;
       if (s.superOnly && !isSuperAdmin) return false;
+      // Super-admin-only shell: hide all tenant sections for the platform
+      // admin account (mirrors Sidebar.js, 2026-07-02).
+      if (isSuperAdmin && !(s.superOnly || s.section === 'ADMINISTRATION')) return false;
       if (s.module === 'retail' && !hasRetail) return false;
       if (s.module === 'farm' && !hasFarm) return false;
       if (s.module && s.module !== 'any' && s.module !== 'retail' && s.module !== 'farm') return false;
@@ -245,7 +248,22 @@ export default function Layout({
 
       {/* Bottom nav — Hick's Law: only 5 primary choices */}
       <div className="bottom-nav" style={{ '--bn-active': moduleAccent }}>
-        {activeModule === 'farm' ? (
+        {isSuperAdmin ? (
+          <>
+            <button className={`bn-tab${activeTab === 'Platform' ? ' active' : ''}`} onClick={() => goTab('Platform')}>
+              <span className="bn-icon">{'\u{1F4C8}'}</span>
+              <span className="bn-label">Platform</span>
+            </button>
+            <button className={`bn-tab${activeTab === 'Partners' ? ' active' : ''}`} onClick={() => goTab('Partners')}>
+              <span className="bn-icon">{'\u{1F91D}'}</span>
+              <span className="bn-label">Partners</span>
+            </button>
+            <button className={`bn-tab${activeTab === 'Admin Panel' ? ' active' : ''}`} onClick={() => goTab('Admin Panel')}>
+              <span className="bn-icon">{'\u{1F6E1}'}</span>
+              <span className="bn-label">Admin</span>
+            </button>
+          </>
+        ) : activeModule === 'farm' ? (
           <>
             <button className={`bn-tab${activeTab === 'Dashboard' ? ' active' : ''}`} onClick={() => goTab('Dashboard')}>
               <span className="bn-icon">{'\u{1F3E0}'}</span>

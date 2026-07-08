@@ -505,7 +505,10 @@ function FarmApp() {
   //      dashboard; they stay on the page they were on.
   //   3. DEEP LINKS — /app?t=POS can be bookmarked or shared.
   // Unknown/missing ?t falls back to the module's home tab.
-  const defaultTab = activeModule === 'retail' ? 'Retail' : 'Dashboard';
+  // Super admins land on the platform control room, not a tenant dashboard.
+  const defaultTab = user?.is_super_admin
+    ? 'Platform'
+    : (activeModule === 'retail' ? 'Retail' : 'Dashboard');
   const [searchParams, setSearchParams] = useSearchParams();
   const urlTab = searchParams.get('t');
   const activeTab = (urlTab && PAGES[urlTab]) ? urlTab : defaultTab;

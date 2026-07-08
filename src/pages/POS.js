@@ -146,17 +146,20 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
         '<div style="font-size:11px;color:#64748b;margin-top:3px">' + esc(addr) + (phone ? ' · ' + esc(phone) : '') + '</div>' +
         ((vatNo || tinNo) ? '<div style="display:inline-block;margin-top:6px;font-size:10px;font-weight:700;color:' + brand + ';background:#eef7f1;border-radius:20px;padding:3px 10px">' + (vatNo ? 'VAT ' + esc(vatNo) : '') + (vatNo && tinNo ? ' · ' : '') + (tinNo ? 'TIN ' + esc(tinNo) : '') + '</div>' : '') +
       '</div>' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="font-size:11px;font-weight:800;letter-spacing:.13em">FISCAL TAX INVOICE</span><span style="font-size:9px;font-weight:800;color:#fff;background:#0f172a;padding:3px 8px;border-radius:6px">USD</span></div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="font-size:11px;font-weight:800;letter-spacing:.13em">' + (Number(receipt.tax) > 0 ? 'FISCAL TAX INVOICE' : 'RECEIPT') + '</span><span style="font-size:9px;font-weight:800;color:#fff;background:#0f172a;padding:3px 8px;border-radius:6px">USD</span></div>' +
       '<div style="font-size:11px;color:#64748b;margin-bottom:12px">Invoice <b style="color:#0f172a">' + esc(receipt.receipt_number) + '</b> · ' + esc(new Date().toLocaleString()) + (receipt.customer_name ? '<br>Customer: ' + esc(receipt.customer_name) : '') + '</div>' +
       '<table style="width:100%;border-collapse:collapse;font-size:12px">' + itemRowsThermal + '</table>' +
       '<div style="font-size:12px;margin-top:12px">' +
-        '<div style="display:flex;justify-content:space-between;color:#64748b;padding:3px 0"><span>Subtotal (excl VAT)</span><b style="color:#0f172a">' + money(receipt.subtotal) + '</b></div>' +
+        /* VAT lines only render for VAT-charging shops (2026-07-08): shops
+           that are not VAT-registered run at vat_rate 0 and get a plain
+           receipt with no VAT wording at all. */
+        (Number(receipt.tax) > 0 ? '<div style="display:flex;justify-content:space-between;color:#64748b;padding:3px 0"><span>Subtotal (excl VAT)</span><b style="color:#0f172a">' + money(receipt.subtotal) + '</b></div>' : '') +
         (receipt.discount > 0 ? '<div style="display:flex;justify-content:space-between;color:#64748b;padding:3px 0"><span>Discount</span><b style="color:#0f172a">-' + money(receipt.discount) + '</b></div>' : '') +
-        '<div style="display:flex;justify-content:space-between;color:#64748b;padding:3px 0"><span>VAT 15% (A)</span><b style="color:#0f172a">' + money(receipt.tax) + '</b></div>' +
+        (Number(receipt.tax) > 0 ? '<div style="display:flex;justify-content:space-between;color:#64748b;padding:3px 0"><span>VAT ' + esc(String(localStorage.getItem('vat_rate') || '15')) + '% (A)</span><b style="color:#0f172a">' + money(receipt.tax) + '</b></div>' : '') +
       '</div>' +
       '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;padding-top:10px;border-top:2px solid #0f172a"><span style="font-size:13px;font-weight:800">TOTAL</span><span style="font-size:22px;font-weight:800;color:' + brand + '">' + money(receipt.total) + '</span></div>' +
       '<div style="font-size:11px;color:#64748b;margin-top:6px">Paid: ' + esc(payLabel()) + '</div>' +
-      '<div style="font-size:9px;color:#94a3b8;text-align:center;margin-top:8px">A = 15% Standard · B = 0% Zero-rated · C = Exempt</div>' +
+      (Number(receipt.tax) > 0 ? '<div style="font-size:9px;color:#94a3b8;text-align:center;margin-top:8px">A = ' + esc(String(localStorage.getItem('vat_rate') || '15')) + '% Standard · B = 0% Zero-rated · C = Exempt</div>' : '') +
       fiscalThermal() +
       '<div style="text-align:center;font-size:11px;font-weight:700;margin-top:14px">' + esc(footerMsg) + '</div>' +
       '<div style="text-align:center;font-size:8px;color:#cbd5e1;margin-top:6px">Powered by Pewil</div>' +
@@ -197,10 +200,11 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
           '<th style="text-align:left;padding:9px 10px">Description</th><th style="text-align:center;padding:9px 10px">Tax</th><th style="text-align:right;padding:9px 10px">Qty</th><th style="text-align:right;padding:9px 10px">Unit</th><th style="text-align:right;padding:9px 10px">Amount</th>' +
         '</tr></thead><tbody>' + itemRowsInvoice + '</tbody></table>' +
         '<div style="display:flex;justify-content:space-between;gap:20px;margin-top:18px">' +
-          '<div style="flex:1;font-size:9.5px;color:#94a3b8">A = 15% Standard · B = 0% Zero-rated · C = Exempt</div>' +
+          /* VAT wording hidden entirely for non-VAT shops (2026-07-08). */
+          (Number(receipt.tax) > 0 ? '<div style="flex:1;font-size:9.5px;color:#94a3b8">A = ' + esc(String(localStorage.getItem('vat_rate') || '15')) + '% Standard · B = 0% Zero-rated · C = Exempt</div>' : '<div style="flex:1"></div>') +
           '<div style="width:250px">' +
-            '<div style="display:flex;justify-content:space-between;font-size:12px;color:#64748b;padding:6px 0"><span>Subtotal (excl VAT)</span><b style="color:#0f172a">' + money(receipt.subtotal) + '</b></div>' +
-            '<div style="display:flex;justify-content:space-between;font-size:12px;color:#64748b;padding:6px 0"><span>VAT 15%</span><b style="color:#0f172a">' + money(receipt.tax) + '</b></div>' +
+            (Number(receipt.tax) > 0 ? '<div style="display:flex;justify-content:space-between;font-size:12px;color:#64748b;padding:6px 0"><span>Subtotal (excl VAT)</span><b style="color:#0f172a">' + money(receipt.subtotal) + '</b></div>' : '') +
+            (Number(receipt.tax) > 0 ? '<div style="display:flex;justify-content:space-between;font-size:12px;color:#64748b;padding:6px 0"><span>VAT ' + esc(String(localStorage.getItem('vat_rate') || '15')) + '%</span><b style="color:#0f172a">' + money(receipt.tax) + '</b></div>' : '') +
             '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:6px;padding:12px 14px;background:' + brand + ';color:#fff;border-radius:9px"><span style="font-size:12px;font-weight:800">TOTAL DUE</span><span style="font-size:22px;font-weight:800">' + money(receipt.total) + '</span></div>' +
           '</div>' +
         '</div>' +

@@ -733,6 +733,15 @@ export default function RetailSettings({ onTabChange }) {
                   </div>
                 </div>
                 <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {/* Non-VAT-registered shops (below the registration threshold)
+                      legally charge no VAT: this zeroes the rate and removes all
+                      VAT wording from receipts (2026-07-08). */}
+                  <ToggleItem
+                    label="This business charges VAT"
+                    desc="Turn OFF if your business is not VAT-registered — no VAT is added at the till and receipts show no VAT lines. Turn ON only if you are VAT-registered."
+                    on={Number(vatRate) > 0}
+                    onToggle={() => setVatRate(Number(vatRate) > 0 ? '0' : '15')}
+                  />
                   <ToggleItem label="Auto-submit fiscal receipts" desc={`Every POS sale is transmitted to the ${LOC.fiscal_system} within 5 seconds.`} on={autoFiscal} onToggle={() => setAutoFiscal(!autoFiscal)} />
                 </div>
                 <div style={{ marginTop: 18 }}>
