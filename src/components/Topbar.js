@@ -5,6 +5,7 @@ import { getDailySummary } from '../api/farmApi';
 import { listBranches, getCashierSessions } from '../api/retailApi';
 import NotificationBell from './NotificationBell';
 import OfflineIndicator from './OfflineIndicator';
+import { subscribe, promptInstall, isStandalone } from '../utils/pwaInstall';
 
 /* ─── Design 3 — Living Africa tokens ─── */
 const TOKENS = {
@@ -30,6 +31,11 @@ const S = {
   },
   sub: { fontSize: 12, color: TOKENS.muted, marginTop: 2 },
   right: { display: 'flex', alignItems: 'center', gap: 8 },
+  installBtn: {
+    background: 'transparent', fontSize: 11, padding: '6px 12px', borderRadius: 999,
+    color: TOKENS.forest, fontWeight: 700, border: `1px solid ${TOKENS.forest}`,
+    cursor: 'pointer', fontFamily: 'inherit',
+  },
   dateChip: {
     background: TOKENS.sand, fontSize: 11, padding: '6px 12px', borderRadius: 999,
     color: TOKENS.forest, fontWeight: 600, border: `1px solid ${TOKENS.line}`,
@@ -136,8 +142,23 @@ const WaIcon = () => (
   </svg>
 );
 
-export default function Topbar({ pageTitle, pageSub, primaryAction, onPrimaryAction, onWhatsApp, dashboardData, activeModule }) {
+export default function Topbar({ pageTitle, pageSub, primaryAction, onPrimaryAction, onWhatsApp, dashboardData, activeModule, activeTab }) {
   const [waBtnText, setWaBtnText] = useState('Send Update');
+  const [installAvailable, setInstallAvailable] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = subscribe(({ available, installed }) => {
+      setInstallAvailable(available && !installed && !isStandalone());
+    });
+    return unsubscribe;
+  }, []);
+
+  const showInstallBtn = installAvailable && activeTab !== 'POS';
+
+  async function handleInstallClick() {
+    await promptInstall();
+    setInstallAvailable(false);
+  }
 
   async function buildWhatsAppMessage() {
     const today = new Date();
@@ -250,6 +271,9 @@ export default function Topbar({ pageTitle, pageSub, primaryAction, onPrimaryAct
       <div style={S.right}>
         <OfflineIndicator />
         <BranchChip activeModule={activeModule} />
+        {showInstallBtn && (
+          <button style={S.installBtn} onClick={handleInstallClick}>Install App</button>
+        )}
         <span style={S.dateChip}>{formatDate()}</span>
         <NotificationBell />
         <button
