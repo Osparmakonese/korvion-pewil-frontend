@@ -1,4 +1,5 @@
-﻿import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { subscribe, promptInstall, isStandalone } from '../utils/pwaInstall';
 import { useQuery } from '@tanstack/react-query';
 import Sidebar, { NAV_ITEMS } from './Sidebar';
 import Topbar from './Topbar';
@@ -135,6 +136,21 @@ export default function Layout({
   activeModule, onModuleChange,
 }) {
   const [showMobileMore, setShowMobileMore] = useState(false);
+  const [installAvailable, setInstallAvailable] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = subscribe(({ available, installed }) => {
+      setInstallAvailable(available && !installed && !isStandalone());
+    });
+    return unsubscribe;
+  }, []);
+
+  const showMobileInstallBtn = installAvailable && activeTab !== 'POS';
+
+  async function handleMobileInstallClick() {
+    await promptInstall();
+    setInstallAvailable(false);
+  }
   const role = user?.role || 'worker';
   const ac = avatarColor(user?.username || '');
   // Business-type feature gating for the mobile nav (mirrors Sidebar.js). When
@@ -223,6 +239,14 @@ export default function Layout({
             <Logo size={30} />
           </div>
           <div className="mh-right">
+            {showMobileInstallBtn && (
+              <button
+                onClick={handleMobileInstallClick}
+                style={{ background: 'transparent', border: '1px solid #1a6b3a', color: '#1a6b3a', borderRadius: 20, padding: '6px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                Install App
+              </button>
+            )}
             <button className="mobile-wa-btn" onClick={() => window.open('https://wa.me/', '_blank')}>
               {'\u{1F4F1}'} WhatsApp
             </button>
