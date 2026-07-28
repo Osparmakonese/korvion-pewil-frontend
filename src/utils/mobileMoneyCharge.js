@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { collectPayment, getPaymentStatus } from '../api/retailApi';
+import { isOffline } from './offlinePOS';
 import { fmt } from './format';
 
 const TERMINAL = ['paid', 'cancelled', 'failed'];
@@ -53,6 +54,12 @@ function MobileMoneyModal({ amount, currency, customerName, onPaid, onCancel }) 
     stop();
     pollErrRef.current = 0;
     pollRef.current = setInterval(async () => {
+      // If connectivity drops mid-poll, say so immediately instead of
+      // waiting for several failed poll attempts to surface anything.
+      if (isOffline()) {
+        setErr('Connection lost. Waiting to reconnect to confirm the payment.');
+        return;
+      }
       try {
         const t = await getPaymentStatus(id);
         pollErrRef.current = 0;
@@ -78,6 +85,14 @@ function MobileMoneyModal({ amount, currency, customerName, onPaid, onCancel }) 
     e?.preventDefault?.();
     setErr('');
     if (!phone.trim()) { setErr('Enter the customer’s phone number.'); return; }
+    // Added 2026-07-28: mobile money cannot work offline (no internet to
+    // push a payment prompt to the customer's phone). Without this check
+    // the request would hang with no timeout, looking like a frozen POS,
+    // instead of telling the cashier clearly and immediately.
+    if (isOffline()) {
+      setErr('No internet connection. Mobile money needs a live connection - use cash, card, or on-account instead.');
+      return;
+    }
     setSending(true);
     try {
       const t = await collectPayment({
