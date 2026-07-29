@@ -51,31 +51,111 @@ const queryClient = new QueryClient({
 
 // Sentry error boundary fallback
 function SentryFallback({ error, resetError }) {
+  // Independent of React context on purpose: if the crash happened inside
+  // AuthProvider itself, hooks like useAuth() would not be safely usable
+  // here (this fallback replaces that entire subtree). So this reads the
+  // token straight from localStorage and talks to the API with plain
+  // fetch, not the shared axios instance or any app context.
+  const [payBusy, setPayBusy] = React.useState(false);
+  const [payError, setPayError] = React.useState(null);
+
+  const goToPayment = async () => {
+    setPayBusy(true);
+    setPayError(null);
+    try {
+      const token = localStorage.getItem('access_token');
+      const baseURL = `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/api`;
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      let module = 'retail';
+      try {
+        const cachedUser = JSON.parse(localStorage.getItem('user') || 'null');
+        if (cachedUser && cachedUser.modules && cachedUser.modules[0]) {
+          module = cachedUser.modules[0];
+        }
+      } catch (_) { /* best-effort */ }
+
+      const plansRes = await fetch(`${baseURL}/billing/plans/?module=${module}`, { headers });
+      const plansData = await plansRes.json();
+      const plans = plansData.results || plansData || [];
+      const sorted = [...plans].sort(
+        (a, b) => Number(a.price_monthly || 0) - Number(b.price_monthly || 0)
+      );
+      const slug = sorted[0] && sorted[0].slug;
+      if (!slug) {
+        setPayError('No plan available - please contact support.');
+        setPayBusy(false);
+        return;
+      }
+
+      const payRes = await fetch(`${baseURL}/billing/billing/initialize_payment/`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ plan_slug: slug, billing_cycle: 'monthly', payment_method: 'card' }),
+      });
+      const payData = await payRes.json();
+      const url = payData.redirect_url || payData.checkout_url;
+      if (url) {
+        window.location.href = url;
+      } else {
+        setPayError('Could not start payment - please try again or contact support.');
+        setPayBusy(false);
+      }
+    } catch (e) {
+      setPayError('Could not start payment - please try again or contact support.');
+      setPayBusy(false);
+    }
+  };
+
   return (
     <div style={{
       padding: 40, fontFamily: 'Inter, sans-serif', maxWidth: 520, margin: '80px auto',
       background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, textAlign: 'center',
     }}>
-      <div style={{ fontSize: 36 }}>⚠️</div>
+      <div style={{ fontSize: 36 }}>!</div>
       <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, color: '#111827', marginTop: 8 }}>
         Something went wrong
       </h1>
       <p style={{ color: '#6b7280', fontSize: 13, marginTop: 6 }}>
-        The error has been reported. You can try reloading this page.
+        The error has been reported. If this happened because your subscription needs attention, you can go straight to payment below.
       </p>
-      <button
-        onClick={resetError}
-        style={{
-          marginTop: 16, padding: '10px 20px', background: '#1a6b3a', color: '#fff',
-          border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-        }}
-      >
-        Try again
-      </button>
+      {payError && (
+        <div style={{ background: '#fff1f1', border: '1px solid #fecaca', color: '#991b1b', padding: '8px 12px', borderRadius: 8, fontSize: 12.5, marginTop: 10 }}>
+          {payError}
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 16, flexWrap: 'wrap' }}>
+        <button
+          onClick={resetError}
+          style={{
+            padding: '10px 20px', background: '#fff', color: '#374151',
+            border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+          }}
+        >
+          Try again
+        </button>
+        <button
+          onClick={goToPayment}
+          disabled={payBusy}
+          style={{
+            padding: '10px 20px', background: payBusy ? '#3d8a5b' : '#1a6b3a', color: '#fff',
+            border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600,
+            cursor: payBusy ? 'wait' : 'pointer',
+          }}
+        >
+          {payBusy ? 'Starting payment...' : 'Go to payment'}
+        </button>
+      </div>
+      <p style={{ fontSize: 11.5, color: '#9ca3af', marginTop: 16 }}>
+        Still stuck? Email{' '}
+        <a href="mailto:osy@pewil.org?subject=App%20error" style={{ color: '#1a6b3a' }}>
+          osy@pewil.org
+        </a>
+      </p>
     </div>
   );
 }
-
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <Sentry.ErrorBoundary fallback={SentryFallback}>
