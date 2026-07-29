@@ -55,5 +55,24 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
+    <script>
+      (function () {
+        setTimeout(function () {
+          var rootEl = document.getElementById('root');
+          if (rootEl && rootEl.children.length === 0) {
+            rootEl.innerHTML =
+              '<div style="max-width:480px;margin:80px auto;padding:32px;' +
+              'font-family:sans-serif;text-align:center;color:#111827;">' +
+              '<div style="font-size:36px;margin-bottom:12px;">!</div>' +
+              '<h1 style="font-size:20px;margin:0 0 10px;">Your browser is out of date</h1>' +
+              '<p style="font-size:14px;color:#555555;line-height:1.6;">' +
+              'Pewil needs a newer browser to run properly. Please update Chrome ' +
+              'from the Play Store, or try opening this page on a different device.' +
+              '</p>' +
+              '</div>';
+          }
+        }, 10000);
+      })();
+    </script>
   </body>
 </html>

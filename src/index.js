@@ -1,3 +1,10 @@
+// Extra safety net for very old browsers/tablets: guarantee Promise,
+// Symbol, modern array/object methods etc. exist even beyond what the
+// build's automatic per-file polyfilling covers. Must be the very first
+// thing imported, before anything else touches these APIs.
+import 'core-js/stable';
+import 'regenerator-runtime/runtime';
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
