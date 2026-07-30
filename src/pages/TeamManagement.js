@@ -189,18 +189,9 @@ export default function TeamManagement() {
   const users = usersData?.results || [];
   const currentUserCount = users.length;
 
-  // Determine max seats based on plan.
-  // TODO: neither the user object (AuthContext/JWT claims) nor the billing API
-  // exposes a seat-limit field yet — when the backend adds one (e.g.
-  // user.max_seats or subscription.seats), prefer it over this hardcoded map.
-  const maxSeats = {
-    'starter': 3,
-    'growth': 10,
-    'enterprise': 999,
-  }[user?.plan] || 3;
-
-  const remainingSeats = maxSeats - currentUserCount;
-  const seatUsagePercent = (currentUserCount / maxSeats) * 100;
+  // 2026-07-30: seat-limit/pricing removed. Team size is not capped by
+  // plan and is not billed per-seat -- only certain features are
+  // plan-gated, not headcount.
 
   return (
     <div>
@@ -223,25 +214,6 @@ export default function TeamManagement() {
         >
           {'\u002B'} Invite User
         </button>
-      </div>
-
-      {/* Seat usage bar */}
-      <div style={{ ...card, marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>Seat Usage</span>
-          <span style={{ fontSize: 11, color: '#6b7280' }}>
-            {currentUserCount} of {maxSeats} seats used · {remainingSeats} remaining · Extra seats: $5/user/month
-          </span>
-        </div>
-        <div style={{ height: 8, background: '#f3f4f6', borderRadius: 4, overflow: 'hidden' }}>
-          <div style={{
-            height: 8,
-            borderRadius: 4,
-            width: Math.min(seatUsagePercent, 100) + '%',
-            background: '#1a6b3a',
-            transition: 'width 0.3s ease',
-          }} />
-        </div>
       </div>
 
       {/* Users table */}
