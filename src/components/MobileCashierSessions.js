@@ -135,8 +135,8 @@ export default function MobileCashierSessions({ onOpenSession, onCloseSession, o
 function SessionCard({ session, status, onCloseSession, onViewSession }) {
   const cashier = session.cashier_name || session.cashier_username || `Cashier #${session.cashier || '—'}`;
   const isOpen = status === 'open';
-  const total = parseFloat(session.total_sales || 0);
-  const txCount = session.transaction_count || 0;
+  const total = parseFloat(session.sales_total || 0);
+  const txCount = session.sales_count || 0;
   const variance = session.variance != null ? parseFloat(session.variance) : null;
   const varianceTone = variance == null
     ? null

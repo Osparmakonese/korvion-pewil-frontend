@@ -372,7 +372,7 @@ const DENOMS = [
   { value: 0.05,label: '5c'   },
 ];
 
-function CloseSessionModal({ isOpen, onClose, onSubmit, session, loading, blindClose, varianceThreshold }) {
+function CloseSessionModal({ isOpen, onClose, onSubmit, session, loading, blindClose, varianceThreshold, isMobile }) {
   const [counts, setCounts] = useState({});   // { '100': 3, '20': 5, ... }
   const [submitted, setSubmitted] = useState(false);
   const [varianceReason, setVarianceReason] = useState('');
@@ -475,7 +475,7 @@ function CloseSessionModal({ isOpen, onClose, onSubmit, session, loading, blindC
           <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase' }}>
             Denomination count
           </label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 8, marginBottom: 14 }}>
             {DENOMS.map(d => {
               const c = counts[d.value] || '';
               const sub = (parseInt(c || 0, 10) || 0) * d.value;
@@ -704,6 +704,7 @@ export default function CashierSessions() {
           loading={closeMut.isPending}
           blindClose={blindClose}
           varianceThreshold={varianceThreshold}
+          isMobile={isMobile}
         />
         <XReportModal
           isOpen={!!xReportSession}
@@ -841,6 +842,7 @@ export default function CashierSessions() {
         loading={closeMut.isPending}
         blindClose={blindClose}
         varianceThreshold={varianceThreshold}
+        isMobile={isMobile}
       />
       <CashDropModal
         isOpen={!!dropSession}
