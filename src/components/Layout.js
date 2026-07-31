@@ -147,6 +147,19 @@ export default function Layout({
 
   const showMobileInstallBtn = installAvailable && activeTab !== 'POS';
 
+  // Lock body scroll while the mobile "More" sheet is open. Without this,
+  // a touch-scroll gesture near the bottom of the sheet can bleed through
+  // to the page behind it instead of scrolling the sheet's own content,
+  // which made it feel impossible to reach the last few rows (e.g. Help &
+  // Support) on some phones.
+  useEffect(() => {
+    if (showMobileMore) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = prevOverflow; };
+    }
+  }, [showMobileMore]);
+
   async function handleMobileInstallClick() {
     await promptInstall();
     setInstallAvailable(false);
