@@ -1235,7 +1235,7 @@ export default function POS() {
   // running POS for the same session, this tab flips to read-only so we can't
   // double-ring sales or race stock deductions.
   useEffect(() => {
-    const active = sessions.find((s) => !s.closed_at);
+    const active = sessions.find((s) => !s.closed_at && s.cashier_username === user?.username);
     const sid = active?.id || null;
     if (sid === activeSessionId) return;
 
@@ -1645,7 +1645,7 @@ export default function POS() {
       alert('This tab is read-only — POS is already active in another tab. Cash drop not allowed here.');
       return;
     }
-    const activeSessions = sessions.filter((s) => !s.closed_at && s.cashier_username === user.username);
+    const activeSessions = sessions.filter((s) => !s.closed_at && s.cashier_username === user?.username);
     if (activeSessions.length === 0) {
       alert("You don't have an open cashier session. Please open one before continuing.");
       return;
@@ -1668,7 +1668,7 @@ export default function POS() {
       alert('This tab is read-only — POS is already active in another tab. Complete the sale there, or close the other tab and retry.');
       return;
     }
-    const activeSessions = sessions.filter((s) => !s.closed_at && s.cashier_username === user.username);
+    const activeSessions = sessions.filter((s) => !s.closed_at && s.cashier_username === user?.username);
     if (activeSessions.length === 0) {
       alert("You don't have an open cashier session. Please open one before continuing.");
       return;
@@ -1988,8 +1988,8 @@ export default function POS() {
   // Reuses the same cart state and handlers as the default view.
   // ──────────────────────────────────────────────────────────────────
   if (settings.theme === 'pnp') {
-    const laneLabel = sessions.find((s) => !s.closed_at)
-      ? `Lane #${sessions.find((s) => !s.closed_at).id}`
+    const laneLabel = sessions.find((s) => !s.closed_at && s.cashier_username === user?.username)
+      ? `Lane #${sessions.find((s) => !s.closed_at && s.cashier_username === user?.username).id}`
       : 'No session';
     return (
       <div
@@ -2061,8 +2061,8 @@ export default function POS() {
   // Selected when the manager picks "Dark supermarket" in POS Settings.
   // ──────────────────────────────────────────────────────────────────
   if (settings.theme === 'dark') {
-    const laneLabel = sessions.find((s) => !s.closed_at)
-      ? `Lane #${sessions.find((s) => !s.closed_at).id}`
+    const laneLabel = sessions.find((s) => !s.closed_at && s.cashier_username === user?.username)
+      ? `Lane #${sessions.find((s) => !s.closed_at && s.cashier_username === user?.username).id}`
       : 'No session';
     return (
       <div
