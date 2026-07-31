@@ -69,6 +69,7 @@ function withinFilter(sale, filter) {
 
 export default function MobileSalesHistory() {
   const [filter, setFilter] = useState('today');
+  const [selectedSale, setSelectedSale] = useState(null);
 
   const { data: sales = [], isLoading } = useQuery({
     queryKey: ['sales-history-mobile'],
@@ -174,9 +175,12 @@ export default function MobileSalesHistory() {
         ) : filtered.map((sale, idx) => {
           const pill = methodPillStyle(sale.payment_method);
           return (
-            <div key={sale.id || idx} style={{
+            <div
+              key={sale.id || idx}
+              onClick={() => setSelectedSale(sale)}
+              style={{
               display: 'flex', alignItems: 'center', gap: 12,
-              padding: '14px 16px',
+              padding: '14px 16px', cursor: 'pointer',
               borderBottom: idx < filtered.length - 1 ? `1px solid ${T.surface}` : 'none',
             }}>
               <div style={{
@@ -230,6 +234,116 @@ export default function MobileSalesHistory() {
       </div>
 
       <div style={{ height: 24 }} />
+
+      {/* Receipt sheet — slides up when a sale row is tapped */}
+      {selectedSale && (
+        <div
+          onClick={() => setSelectedSale(null)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)',
+            zIndex: 9000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#fff', width: '100%', maxWidth: 480,
+              borderRadius: '20px 20px 0 0', maxHeight: '85vh', overflowY: 'auto',
+              padding: '10px 20px calc(20px + env(safe-area-inset-bottom, 0px))',
+              boxShadow: '0 -10px 40px rgba(0,0,0,0.25)',
+            }}
+          >
+            <div style={{ width: 40, height: 4, background: T.line, borderRadius: 999, margin: '6px auto 16px' }} />
+
+            <div style={{ textAlign: 'center', marginBottom: 16, paddingBottom: 14, borderBottom: `1px dashed ${T.line}` }}>
+              <div style={{ fontSize: 22, marginBottom: 4 }}>{'\u{1F9FE}'}</div>
+              <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 17, fontWeight: 700, color: T.ink }}>
+                Receipt #{selectedSale.receipt_number || selectedSale.id}
+              </div>
+              <div style={{ fontSize: 11, color: T.muted, marginTop: 3 }}>
+                {selectedSale.created_at && new Date(selectedSale.created_at).toLocaleString(undefined, {
+                  month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit',
+                })}
+              </div>
+              {selectedSale.customer_name && (
+                <div style={{ fontSize: 11, color: T.muted, marginTop: 2 }}>{selectedSale.customer_name}</div>
+              )}
+            </div>
+
+            <div style={{ marginBottom: 14 }}>
+              {(selectedSale.items_data || []).map((it, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: i < (selectedSale.items_data.length - 1) ? `1px solid ${T.surface}` : 'none' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: T.ink }}>{it.product_name || it.name || 'Item'}</div>
+                    <div style={{ fontSize: 11, color: T.muted, marginTop: 1 }}>
+                      {(it.qty || it.quantity || 1)} &times; {fmt(parseFloat(it.unit_price) || 0, 'zwd')}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: T.ink, flexShrink: 0, marginLeft: 10 }}>
+                    {fmt(parseFloat(it.total) || 0, 'zwd')}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ borderTop: `1px dashed ${T.line}`, paddingTop: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: T.muted, padding: '3px 0' }}>
+                <span>Subtotal</span><span>{fmt(parseFloat(selectedSale.subtotal) || 0, 'zwd')}</span>
+              </div>
+              {parseFloat(selectedSale.discount) > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: T.amber, padding: '3px 0' }}>
+                  <span>Discount</span><span>-{fmt(parseFloat(selectedSale.discount), 'zwd')}</span>
+                </div>
+              )}
+              {parseFloat(selectedSale.tax) > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: T.muted, padding: '3px 0' }}>
+                  <span>Tax</span><span>{fmt(parseFloat(selectedSale.tax), 'zwd')}</span>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 8, paddingTop: 8, borderTop: `2px solid ${T.ink}` }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: T.ink }}>Total</span>
+                <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 700, color: T.green }}>
+                  {fmt(parseFloat(selectedSale.total) || 0, 'zwd')}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 14, padding: '10px 12px', background: T.surface, borderRadius: 10 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.muted, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>
+                Payment
+              </div>
+              {selectedSale.payment_method === 'mixed' && Array.isArray(selectedSale.payments_data) && selectedSale.payments_data.length > 0 ? (
+                selectedSale.payments_data.map((leg, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: T.inkSoft, padding: '2px 0' }}>
+                    <span>{prettyMethod(leg.method)}{leg.reference ? ` \u00b7 ${leg.reference}` : ''}</span>
+                    <span>{fmt(parseFloat(leg.amount) || 0, 'zwd')}</span>
+                  </div>
+                ))
+              ) : (
+                <div style={{ fontSize: 13, fontWeight: 600, color: T.ink }}>{prettyMethod(selectedSale.payment_method)}</div>
+              )}
+              {parseFloat(selectedSale.amount_tendered) > parseFloat(selectedSale.total) && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: T.green, marginTop: 4, fontWeight: 600 }}>
+                  <span>Change given</span>
+                  <span>{fmt(parseFloat(selectedSale.amount_tendered) - parseFloat(selectedSale.total), 'zwd')}</span>
+                </div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSelectedSale(null)}
+              style={{
+                width: '100%', marginTop: 16, padding: 12,
+                background: T.ink, color: '#fff', border: 'none', borderRadius: 10,
+                fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
