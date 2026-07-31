@@ -1645,9 +1645,9 @@ export default function POS() {
       alert('This tab is read-only — POS is already active in another tab. Cash drop not allowed here.');
       return;
     }
-    const activeSessions = sessions.filter((s) => !s.closed_at);
+    const activeSessions = sessions.filter((s) => !s.closed_at && s.cashier_username === user.username);
     if (activeSessions.length === 0) {
-      alert('No active cashier session.');
+      alert("You don't have an open cashier session. Please open one before continuing.");
       return;
     }
     const sessionId = activeSessions[0].id;
@@ -1668,9 +1668,9 @@ export default function POS() {
       alert('This tab is read-only — POS is already active in another tab. Complete the sale there, or close the other tab and retry.');
       return;
     }
-    const activeSessions = sessions.filter((s) => !s.closed_at);
+    const activeSessions = sessions.filter((s) => !s.closed_at && s.cashier_username === user.username);
     if (activeSessions.length === 0) {
-      alert('No active cashier session. Please open a session first.');
+      alert("You don't have an open cashier session. Please open one before continuing.");
       return;
     }
 
