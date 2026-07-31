@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { subscribe, promptInstall, isStandalone } from '../utils/pwaInstall';
-import { useQuery } from '@tanstack/react-query';
+import { invalidateSaleCaches } from '../utils/queryCache';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Sidebar, { NAV_ITEMS } from './Sidebar';
 import Topbar from './Topbar';
 import Logo from './Logo';
@@ -144,6 +145,21 @@ export default function Layout({
     });
     return unsubscribe;
   }, []);
+
+  // 2026-07-31: re-invalidate sale-related caches when the instant-queue's
+  // background confirm actually lands on the server. The cashier already
+  // saw "Sale Complete" optimistically before this fires (see
+  // offlinePOS.js submitSaleOnline), so without this the dashboard would
+  // sit on stale pre-sale numbers until the next 30s stale-time refetch.
+  // Lives here (not POS.js) because Layout stays mounted across
+  // navigation -- POS.js may have already unmounted by the time this
+  // event fires if the cashier moved to another tab quickly.
+  const qc = useQueryClient();
+  useEffect(() => {
+    const onSaleSynced = () => invalidateSaleCaches(qc);
+    window.addEventListener('pewil:sale-synced', onSaleSynced);
+    return () => window.removeEventListener('pewil:sale-synced', onSaleSynced);
+  }, [qc]);
 
   const showMobileInstallBtn = installAvailable && activeTab !== 'POS';
 

@@ -185,7 +185,15 @@ export async function submitSaleOnline(api, saleData) {
   // retries it automatically -- nothing is lost either way.
   if (!isOffline()) {
     api.post('/retail/sales/', payload)
-      .then(() => { removePendingSale(payload.client_receipt_number); })
+      .then(() => {
+        removePendingSale(payload.client_receipt_number);
+        // 2026-07-31: the cashier already saw "Sale Complete" optimistically
+        // before this resolved (that's the whole point of the instant-queue
+        // change). Without this signal, dashboards/lists would sit on
+        // stale pre-sale numbers until the next 30s stale-time refetch --
+        // exactly the "false sales, slow to update" bug reported in prod.
+        try { window.dispatchEvent(new CustomEvent('pewil:sale-synced')); } catch (_) {}
+      })
       .catch(() => { /* leave it queued -- the normal drain will retry it */ });
   }
 
