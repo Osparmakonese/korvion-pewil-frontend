@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import PasswordChecklist from '../components/PasswordChecklist';
 import { DEFAULT_POLICY, allSatisfied } from '../utils/passwordPolicy';
+import PasswordInput from '../components/PasswordInput';
 
 /**
  * Register.js — Pewil signup, persona-aware.
@@ -449,7 +450,7 @@ export default function Register() {
 
             <div className="rg-field">
               <label className="rg-label">Password</label>
-              <input className="rg-input" type="password" placeholder="At least 8 characters"
+              <PasswordInput className="rg-input" placeholder="At least 8 characters"
                 value={form.password} onChange={e => set('password', e.target.value)}
                 autoComplete="new-password" required minLength={8} />
               {form.password && (

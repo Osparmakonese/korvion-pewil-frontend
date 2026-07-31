@@ -4,6 +4,7 @@ import {
   getVendingCredentials, createVendingCredentials, updateVendingCredentials, deleteVendingCredentials,
 } from '../api/retailApi';
 import useIsMobile from '../hooks/useIsMobile';
+import PasswordInput from '../components/PasswordInput';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
 const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginBottom: 16 };
@@ -82,7 +83,7 @@ export default function VendingSetup() {
           <label style={label}>API username (BillPay user)</label>
           <input style={input} value={form.auth_id} onChange={(e) => setForm({ ...form, auth_id: e.target.value })} required />
           <label style={label}>API password {editId && <span style={{ color: '#9ca3af' }}>(blank = keep)</span>}</label>
-          <input style={input} type="password" autoComplete="off" placeholder={editId ? '•••• keep current' : 'Paste your BillPay API password'} value={form.auth_key} onChange={(e) => setForm({ ...form, auth_key: e.target.value })} required={!editId} />
+          <PasswordInput style={input} autoComplete="off" placeholder={editId ? '•••• keep current' : 'Paste your BillPay API password'} value={form.auth_key} onChange={(e) => setForm({ ...form, auth_key: e.target.value })} required={!editId} />
           <label style={label}>Base URL</label>
           <input style={input} value={form.base_url} onChange={(e) => setForm({ ...form, base_url: e.target.value })} />
           <label style={{ ...label, display: 'flex', alignItems: 'center', gap: 6, marginTop: 10 }}>

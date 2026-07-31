@@ -3,6 +3,7 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { confirmPasswordReset } from '../api/authApi';
 import PasswordChecklist from '../components/PasswordChecklist';
 import { DEFAULT_POLICY, allSatisfied, backendPasswordError } from '../utils/passwordPolicy';
+import PasswordInput from '../components/PasswordInput';
 
 const S = {
   wrapper: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9fafb', padding: 20 },
@@ -69,10 +70,10 @@ export default function ResetPassword() {
         ) : (
           <form onSubmit={handleSubmit}>
             <label style={S.label}>New password</label>
-            <input style={S.input} type="password" value={pw} onChange={e => setPw(e.target.value)} placeholder={`At least ${DEFAULT_POLICY.min_length} characters`} required />
+            <PasswordInput style={S.input} value={pw} onChange={e => setPw(e.target.value)} placeholder={`At least ${DEFAULT_POLICY.min_length} characters`} required />
             <PasswordChecklist value={pw} policy={DEFAULT_POLICY} />
             <label style={S.label}>Confirm password</label>
-            <input style={S.input} type="password" value={pw2} onChange={e => setPw2(e.target.value)} placeholder="Repeat password" required />
+            <PasswordInput style={S.input} value={pw2} onChange={e => setPw2(e.target.value)} placeholder="Repeat password" required />
             <button style={S.btn} disabled={loading}>{loading ? 'Resetting...' : 'Reset password'}</button>
           </form>
         )}

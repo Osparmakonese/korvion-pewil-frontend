@@ -7,6 +7,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { initials, avatarColor } from '../utils/format';
 import PasswordPolicyPanel from '../components/PasswordPolicyPanel';
+import PasswordInput from '../components/PasswordInput';
 
 const TABS = ['Users', 'Permissions', 'Audit Trail', 'Password Policy'];
 const ROLES = ['owner', 'manager', 'worker'];
@@ -392,7 +393,7 @@ export default function AdminPanel() {
                     </div>
                     <div>
                       <label style={S.label}>Password</label>
-                      <input style={S.input} type="password" value={newUser.password} onChange={e => setNewUser(p => ({ ...p, password: e.target.value }))} required minLength={6} />
+                      <PasswordInput style={S.input} value={newUser.password} onChange={e => setNewUser(p => ({ ...p, password: e.target.value }))} required minLength={6} />
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 8, marginTop: 16, justifyContent: 'flex-end' }}>

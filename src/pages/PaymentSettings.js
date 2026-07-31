@@ -5,6 +5,7 @@ import {
   deletePaymentCredentials, getPaymentProviders,
 } from '../api/retailApi';
 import useIsMobile from '../hooks/useIsMobile';
+import PasswordInput from '../components/PasswordInput';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
 const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginBottom: 16 };
@@ -131,7 +132,7 @@ export default function PaymentSettings() {
           <input style={input} value={form.integration_id} onChange={(e) => setForm({ ...form, integration_id: e.target.value })} required />
 
           <label style={label}>Integration Key {editId && <span style={{ color: '#9ca3af' }}>(leave blank to keep current)</span>}</label>
-          <input style={input} type="password" autoComplete="off" placeholder={editId ? '•••• keep current' : 'Paste your secret key'} value={form.integration_key} onChange={(e) => setForm({ ...form, integration_key: e.target.value })} required={!editId} />
+          <PasswordInput style={input} autoComplete="off" placeholder={editId ? '•••• keep current' : 'Paste your secret key'} value={form.integration_key} onChange={(e) => setForm({ ...form, integration_key: e.target.value })} required={!editId} />
 
           <label style={label}>Paynow account email</label>
           <input style={input} type="email" placeholder="A login email of your Paynow account" value={form.account_email} onChange={(e) => setForm({ ...form, account_email: e.target.value })} />

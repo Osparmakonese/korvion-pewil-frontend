@@ -3,6 +3,7 @@ import { totpSetup, totpConfirm, totpDisable, totpStatus, changePassword, sendVe
 import { useAuth } from '../context/AuthContext';
 import PasswordChecklist from './PasswordChecklist';
 import PasswordPolicyPanel from './PasswordPolicyPanel';
+import PasswordInput from './PasswordInput';
 import { DEFAULT_POLICY, allSatisfied, backendPasswordError } from '../utils/passwordPolicy';
 
 const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '18px 20px', marginBottom: 16 };
@@ -175,12 +176,12 @@ export default function SecuritySettings() {
         {pwMsg.text && <div style={msg(pwMsg.ok)}>{pwMsg.text}</div>}
         <form onSubmit={handleChangePassword}>
           <label style={fl}>Current password</label>
-          <input style={fi} type="password" value={oldPw} onChange={e => setOldPw(e.target.value)} required />
+          <PasswordInput style={fi} value={oldPw} onChange={e => setOldPw(e.target.value)} required />
           <label style={fl}>New password</label>
-          <input style={fi} type="password" value={newPw} onChange={e => setNewPw(e.target.value)} placeholder={`At least ${policy.min_length} characters`} required />
+          <PasswordInput style={fi} value={newPw} onChange={e => setNewPw(e.target.value)} placeholder={`At least ${policy.min_length} characters`} required />
           <PasswordChecklist value={newPw} policy={policy} />
           <label style={fl}>Confirm new password</label>
-          <input style={fi} type="password" value={newPw2} onChange={e => setNewPw2(e.target.value)} required />
+          <PasswordInput style={fi} value={newPw2} onChange={e => setNewPw2(e.target.value)} required />
           <button style={btnP} disabled={pwLoading}>{pwLoading ? 'Changing...' : 'Change Password'}</button>
         </form>
       </div>
