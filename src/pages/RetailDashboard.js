@@ -376,9 +376,17 @@ export default function RetailDashboard({ onTabChange }) {
   } : {};
 
   const productCount = dashboard?.products_count || 0;
-  const lowStock = dashboard?.low_stock_alerts || [];
-  const recentActivityData = dashboard?.recent_activity || [];
-  const revenueTrend = dashboard?.revenue_trend || [];
+  // 2026-07-31: was `dashboard?.low_stock_alerts || []` -- that only
+  // falls back to [] when the value is falsy. If the backend ever
+  // returns a non-array truthy shape here (seen in production: crashed
+  // a manager-role account with a permission-scoped response shape,
+  // while the owner account on the same tenant was fine), .slice()
+  // below would throw "x.slice is not a function" and crash the whole
+  // page via the error boundary. Array.isArray() guards against any
+  // shape the API returns, regardless of account/role/permissions.
+  const lowStock = Array.isArray(dashboard?.low_stock_alerts) ? dashboard.low_stock_alerts : [];
+  const recentActivityData = Array.isArray(dashboard?.recent_activity) ? dashboard.recent_activity : [];
+  const revenueTrend = Array.isArray(dashboard?.revenue_trend) ? dashboard.revenue_trend : [];
 
   const username = user?.first_name || user?.username || 'User';
 
