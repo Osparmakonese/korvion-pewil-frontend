@@ -8,7 +8,7 @@ import api from '../api/axios';
 
 /* --- Add Adjustment Modal --- */
 function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
-  const [form, setForm] = useState({ product: '', adjustment_type: 'damaged', quantity: '', notes: '', cost_price: '' });
+  const [form, setForm] = useState({ product: '', adjustment_type: 'damaged', quantity: '', notes: '', cost_price: '', selling_price: '' });
   const [productSearch, setProductSearch] = useState('');
   const [showProductList, setShowProductList] = useState(false);
 
@@ -38,8 +38,11 @@ function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
     if (form.adjustment_type !== 'restock' || !form.cost_price) {
       delete payload.cost_price;
     }
+    if (form.adjustment_type !== 'restock' || !form.selling_price) {
+      delete payload.selling_price;
+    }
     onSubmit(payload);
-    setForm({ product: '', adjustment_type: 'damaged', quantity: '', notes: '', cost_price: '' });
+    setForm({ product: '', adjustment_type: 'damaged', quantity: '', notes: '', cost_price: '', selling_price: '' });
     setProductSearch('');
     setShowProductList(false);
   };
@@ -121,21 +124,40 @@ function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
           </div>
           {form.adjustment_type === 'restock' && (
             <div style={{ marginBottom: 14 }}>
-              <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>
-                New cost price (optional)
-              </label>
-              <input
-                type="number"
-                name="cost_price"
-                value={form.cost_price}
-                onChange={handleChange}
-                min="0"
-                step="0.01"
-                placeholder={selectedProduct ? `Current: ${selectedProduct.cost_price ?? '0.00'}` : '0.00'}
-                style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
-              />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>
+                    New cost price (optional)
+                  </label>
+                  <input
+                    type="number"
+                    name="cost_price"
+                    value={form.cost_price}
+                    onChange={handleChange}
+                    min="0"
+                    step="0.01"
+                    placeholder={selectedProduct ? `Current: ${selectedProduct.cost_price ?? '0.00'}` : '0.00'}
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>
+                    New selling price (optional)
+                  </label>
+                  <input
+                    type="number"
+                    name="selling_price"
+                    value={form.selling_price}
+                    onChange={handleChange}
+                    min="0"
+                    step="0.01"
+                    placeholder={selectedProduct ? `Current: ${selectedProduct.selling_price ?? '0.00'}` : '0.00'}
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+              </div>
               <p style={{ fontSize: 10, color: '#9ca3af', margin: '4px 0 0' }}>
-                Leave blank to keep the current cost price unchanged. Only fill this in if the new stock came in at a different price.
+                Leave either blank to keep the current price unchanged. Only fill these in if the new stock came in at a different price.
               </p>
             </div>
           )}
