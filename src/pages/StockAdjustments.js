@@ -8,7 +8,21 @@ import api from '../api/axios';
 
 /* --- Add Adjustment Modal --- */
 function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
-  const [form, setForm] = useState({ product: '', adjustment_type: 'damaged', quantity: '', notes: '' });
+  const [form, setForm] = useState({ product: '', adjustment_type: 'damaged', quantity: '', notes: '', cost_price: '' });
+  const [productSearch, setProductSearch] = useState('');
+  const [showProductList, setShowProductList] = useState(false);
+
+  const selectedProduct = useMemo(() => products.find(p => String(p.id) === String(form.product)) || null, [products, form.product]);
+
+  const filteredProducts = useMemo(() => {
+    const q = productSearch.trim().toLowerCase();
+    if (!q) return [];
+    return products.filter(p =>
+      (p.name || '').toLowerCase().includes(q) ||
+      (p.sku || '').toLowerCase().includes(q) ||
+      (p.barcode || '').toLowerCase().includes(q)
+    ).slice(0, 50);
+  }, [products, productSearch]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -17,8 +31,17 @@ function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({ ...form, quantity: parseInt(form.quantity) || 0 });
-    setForm({ product: '', adjustment_type: 'damaged', quantity: '', notes: '' });
+    const payload = { ...form, quantity: parseInt(form.quantity) || 0 };
+    // Cost price is optional and only relevant for restocks. Omit it
+    // entirely unless the owner actually typed a new price -- nothing
+    // on the product changes unless they explicitly choose to update it.
+    if (form.adjustment_type !== 'restock' || !form.cost_price) {
+      delete payload.cost_price;
+    }
+    onSubmit(payload);
+    setForm({ product: '', adjustment_type: 'damaged', quantity: '', notes: '', cost_price: '' });
+    setProductSearch('');
+    setShowProductList(false);
   };
 
   if (!isOpen) return null;
@@ -33,14 +56,50 @@ function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#9ca3af' }}>{'\u00D7'}</button>
         </div>
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 14 }}>
+          <div style={{ marginBottom: 14, position: 'relative' }}>
             <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>Product</label>
-            <select name="product" value={form.product} onChange={handleChange} required style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box' }}>
-              <option value="">Select a product</option>
-              {products.map(p => (
-                <option key={p.id} value={p.id}>{p.name} ({p.sku}) - Stock: {p.quantity_in_stock}</option>
-              ))}
-            </select>
+            {selectedProduct ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', border: '1px solid #1a6b3a', background: '#f0fdf4', borderRadius: 7 }}>
+                <span style={{ fontSize: 12, color: '#0f172a' }}>
+                  <strong>{selectedProduct.name}</strong> ({selectedProduct.sku}) &mdash; Stock: {selectedProduct.quantity_in_stock}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => { setForm(prev => ({ ...prev, product: '' })); setProductSearch(''); }}
+                  style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: 16, cursor: 'pointer', padding: '0 4px' }}
+                >&times;</button>
+              </div>
+            ) : (
+              <>
+                <input
+                  type="text"
+                  value={productSearch}
+                  onChange={(e) => { setProductSearch(e.target.value); setShowProductList(true); }}
+                  onFocus={() => setShowProductList(true)}
+                  placeholder="Type product name, SKU, or barcode..."
+                  autoComplete="off"
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
+                />
+                {showProductList && productSearch.trim() && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 7, marginTop: 4, maxHeight: 240, overflowY: 'auto', boxShadow: '0 8px 20px rgba(0,0,0,0.12)' }}>
+                    {filteredProducts.length > 0 ? filteredProducts.map(p => (
+                      <div
+                        key={p.id}
+                        onClick={() => { setForm(prev => ({ ...prev, product: p.id })); setProductSearch(''); setShowProductList(false); }}
+                        style={{ padding: '9px 12px', fontSize: 12, cursor: 'pointer', borderBottom: '1px solid #f3f4f6' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = '#f9fafb')}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = '#fff')}
+                      >
+                        <strong>{p.name}</strong> <span style={{ color: '#9ca3af' }}>({p.sku})</span>
+                        <span style={{ float: 'right', color: '#6b7280' }}>Stock: {p.quantity_in_stock}</span>
+                      </div>
+                    )) : (
+                      <div style={{ padding: '10px 12px', fontSize: 12, color: '#9ca3af' }}>No products match &ldquo;{productSearch}&rdquo;</div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
             <div>
@@ -60,6 +119,26 @@ function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
               <input type="number" name="quantity" value={form.quantity} onChange={handleChange} required min="1" placeholder="0" style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box' }} />
             </div>
           </div>
+          {form.adjustment_type === 'restock' && (
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>
+                New cost price (optional)
+              </label>
+              <input
+                type="number"
+                name="cost_price"
+                value={form.cost_price}
+                onChange={handleChange}
+                min="0"
+                step="0.01"
+                placeholder={selectedProduct ? `Current: ${selectedProduct.cost_price ?? '0.00'}` : '0.00'}
+                style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
+              />
+              <p style={{ fontSize: 10, color: '#9ca3af', margin: '4px 0 0' }}>
+                Leave blank to keep the current cost price unchanged. Only fill this in if the new stock came in at a different price.
+              </p>
+            </div>
+          )}
           <div style={{ marginBottom: 20 }}>
             <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>Notes (optional)</label>
             <textarea name="notes" value={form.notes} onChange={handleChange} rows={3} placeholder="Reason for adjustment..." style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box', fontFamily: 'Inter, sans-serif' }} />
