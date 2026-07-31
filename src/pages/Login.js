@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import PasswordInput from '../components/PasswordInput';
 
 /**
  * Login.js — Pewil sign-in, two-step (creds → 2FA when enabled).
@@ -267,10 +268,9 @@ export default function Login() {
                   <label className="lg-label" htmlFor="password">Password</label>
                   <Link to="/forgot-password" className="lg-forgot">Forgot?</Link>
                 </div>
-                <input
+                <PasswordInput
                   id="password"
                   className="lg-input"
-                  type="password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   autoComplete="current-password"
