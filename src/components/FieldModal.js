@@ -109,7 +109,7 @@ export default function FieldModal({ field, isOpen, onClose }) {
   const costs = (field.total_costs || 0) + (field.total_labour || 0);
   const totalCosts = report?.field?.total_costs || costs;
   const net = rev - totalCosts;
-  const expenses = report?.expenses || [];
+  const expenses = Array.isArray(report?.expenses) ? report.expenses : [];
   const grouped = expenses.reduce((acc, e) => {
     const cat = e.category || 'Other';
     if (!acc[cat]) acc[cat] = [];

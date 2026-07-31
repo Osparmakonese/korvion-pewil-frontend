@@ -108,9 +108,9 @@ export default function Import() {
     }
   }
 
-  const created = results?.created || [];
-  const skipped = results?.skipped || [];
-  const errors = results?.errors || [];
+  const created = Array.isArray(results?.created) ? results.created : [];
+  const skipped = Array.isArray(results?.skipped) ? results.skipped : [];
+  const errors = Array.isArray(results?.errors) ? results.errors : [];
 
   return (
     <div style={S.page}>

@@ -127,7 +127,7 @@ export default function Forecourt({ onTabChange }) {
     staleTime: 60_000,
   });
 
-  const tanks = dash?.tanks || [];
+  const tanks = Array.isArray(dash?.tanks) ? dash.tanks : [];
   const recentDeliveries = (deliveries || []).slice(0, 6);
   const flaggedDips = (variance?.rows || []).filter(r => r.flagged).slice(0, 10);
 

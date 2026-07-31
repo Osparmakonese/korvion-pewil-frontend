@@ -186,7 +186,7 @@ export default function TeamManagement() {
     } catch (_) { /* clipboard unavailable */ }
   };
 
-  const users = usersData?.results || [];
+  const users = Array.isArray(usersData?.results) ? usersData.results : [];
   const currentUserCount = users.length;
 
   // 2026-07-30: seat-limit/pricing removed. Team size is not capped by

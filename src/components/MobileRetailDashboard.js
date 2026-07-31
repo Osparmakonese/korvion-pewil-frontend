@@ -70,7 +70,7 @@ export default function MobileRetailDashboard() {
   const productCount = dashboard?.products_count || 0;
   const activeSessions = dashboard?.active_sessions || 0;
   const lowStock = (dashboard?.low_stock_alerts || []).length;
-  const recentActivity = dashboard?.recent_activity || [];
+  const recentActivity = Array.isArray(dashboard?.recent_activity) ? dashboard.recent_activity : [];
 
   return (
     <div style={mobilePage}>

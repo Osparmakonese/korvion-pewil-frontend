@@ -60,7 +60,7 @@ export default function ChainRollup() {
   });
 
   const totals = data?.totals || {};
-  const branches = data?.branches || [];
+  const branches = Array.isArray(data?.branches) ? data.branches : [];
   const branchCount = branches.length;
 
   return (

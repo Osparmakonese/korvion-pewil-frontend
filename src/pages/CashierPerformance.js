@@ -208,7 +208,7 @@ export default function CashierPerformance({ onTabChange }) {
   });
 
   // Transform API data to component format
-  const leaderboard = performanceData?.leaderboard || [];
+  const leaderboard = Array.isArray(performanceData?.leaderboard) ? performanceData.leaderboard : [];
 
   // Get badge colors for ranks
   const rankColors = ['#c97d1a', '#9ca3af', '#b45309'];

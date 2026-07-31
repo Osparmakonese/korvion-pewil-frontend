@@ -93,7 +93,7 @@ export default function FiscalSettings() {
     return m;
   }, [credList]);
 
-  const adapters = adapterList?.adapters || [];
+  const adapters = Array.isArray(adapterList?.adapters) ? adapterList.adapters : [];
   const myAdapter = adapters.find(a => a.is_my_country);
   const otherAdapters = adapters.filter(a => !a.is_my_country);
 

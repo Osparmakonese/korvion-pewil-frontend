@@ -94,7 +94,7 @@ export default function PriceDrift({ onTabChange }) {
   };
 
   const parsed = result?.parsed || null;
-  const flagged = parsed?.flagged || [];
+  const flagged = Array.isArray(parsed?.flagged) ? parsed.flagged : [];
 
   return (
     <div style={{ padding: 24, background: SURFACE, minHeight: '100%' }}>

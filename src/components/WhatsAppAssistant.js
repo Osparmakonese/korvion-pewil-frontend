@@ -97,7 +97,7 @@ export default function WhatsAppAssistant() {
   };
 
   const configured = status?.configured;
-  const bindings = status?.bindings || [];
+  const bindings = Array.isArray(status?.bindings) ? status.bindings : [];
 
   // While Pewil's own WhatsApp Business number is still being verified by Meta,
   // the assistant is dormant. Show an honest "coming soon" state rather than a
