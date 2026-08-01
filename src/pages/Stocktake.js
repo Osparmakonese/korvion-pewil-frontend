@@ -42,7 +42,7 @@ export default function Stocktake() {
         </button>
       </div>
       <div style={S.card}>
-        <table style={S.table}>
+        <div style={{ overflowX: 'auto' }}><table style={S.table}>
           <thead><tr><th style={S.th}>Reference</th><th style={S.th}>Started</th><th style={S.th}>Status</th><th style={S.th}>Counted</th><th style={S.th}></th></tr></thead>
           <tbody>
             {list.length === 0 && <tr><td style={S.td} colSpan={5}>No stocktakes yet — start one to begin counting.</td></tr>}
@@ -56,7 +56,7 @@ export default function Stocktake() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   );
@@ -110,7 +110,7 @@ function CountScreen({ id, onBack }) {
         style={{ width: '100%', maxWidth: 320, padding: '9px 11px', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13, marginBottom: 12, boxSizing: 'border-box' }} />
 
       <div style={S.card}>
-        <table style={S.table}>
+        <div style={{ overflowX: 'auto' }}><table style={S.table}>
           <thead><tr><th style={S.th}>Product</th><th style={S.th}>SKU</th><th style={S.th}>System</th><th style={S.th}>Counted</th><th style={S.th}>Variance</th></tr></thead>
           <tbody>
             {lines.map((l) => {
@@ -133,7 +133,7 @@ function CountScreen({ id, onBack }) {
               );
             })}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   );

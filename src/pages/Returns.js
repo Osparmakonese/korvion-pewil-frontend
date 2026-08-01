@@ -462,7 +462,7 @@ export default function Returns({ onTabChange }) {
 
       {/* Returns Table Card */}
       <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16, marginBottom: 16 }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+        <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
           <thead>
             <tr style={{ background: '#f9fafb' }}>
               <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Return #</th>
@@ -534,7 +534,7 @@ export default function Returns({ onTabChange }) {
               );
             })}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       {/* Return Policy Info Card */}

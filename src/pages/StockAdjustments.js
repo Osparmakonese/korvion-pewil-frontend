@@ -311,7 +311,7 @@ export default function StockAdjustments() {
         {isLoading ? (
           <div style={S.emptyState}>Loading adjustments...</div>
         ) : filtered.length > 0 ? (
-          <table style={S.table}>
+          <div style={{ overflowX: 'auto' }}><table style={S.table}>
             <thead>
               <tr>
                 <th style={S.th}>Date</th>
@@ -338,7 +338,7 @@ export default function StockAdjustments() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         ) : (
           <div style={S.emptyState}>
             <div style={{ fontSize: 48, marginBottom: 10 }}>{'\u{1F4E6}'}</div>
