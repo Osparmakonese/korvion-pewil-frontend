@@ -39,7 +39,7 @@ export default function Warranties() {
           <input style={{ ...input, width: isMobile ? '100%' : 200 }} placeholder="Search customer / serial…" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <p style={{ fontSize: 11.5, color: '#6b7280', marginBottom: 10 }}>Look up whether a unit is still covered. Expiry is worked out from the start date and warranty length.</p>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead><tr><th style={th}>Product</th><th style={th}>Serial</th><th style={th}>Customer</th><th style={th}>Expires</th><th style={th}>Status</th><th style={th}></th></tr></thead>
           <tbody>
             {warranties.length === 0 && <tr><td style={td} colSpan={6}>No warranties yet.</td></tr>}
@@ -54,7 +54,7 @@ export default function Warranties() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       <div style={card}>

@@ -170,7 +170,7 @@ function BranchTable({ branches, selectedId, onSelect }) {
       marginTop: 22, background: '#fff', border: `1px solid ${T.line}`,
       borderRadius: 12, overflow: 'hidden',
     }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+      <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
         <thead style={{ background: T.surface }}>
           <tr>
             <Th>Branch</Th>
@@ -237,7 +237,7 @@ function BranchTable({ branches, selectedId, onSelect }) {
             );
           })}
         </tbody>
-      </table>
+      </table></div>
     </div>
   );
 }

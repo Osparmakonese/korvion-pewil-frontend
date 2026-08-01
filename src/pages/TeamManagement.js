@@ -235,7 +235,7 @@ export default function TeamManagement() {
               </button>
             </div>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
                   <th style={thS}>User</th>
@@ -325,7 +325,7 @@ export default function TeamManagement() {
                   );
                 })}
               </tbody>
-            </table>
+            </table></div>
           )}
         </div>
       )}

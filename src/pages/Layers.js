@@ -349,7 +349,7 @@ export default function Layers() {
                 <p style={{ fontSize: 11, color: '#9ca3af' }}>No egg collections logged yet.</p>
               ) : (
                 <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-                  <table style={S.table}>
+                  <div style={{ overflowX: 'auto' }}><table style={S.table}>
                     <thead>
                       <tr>
                         <th style={S.th}>Flock</th>
@@ -377,7 +377,7 @@ export default function Layers() {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </table></div>
                 </div>
               )}
               <div style={S.total}>Total Eggs Collected: {totalEggs}</div>
@@ -423,7 +423,7 @@ export default function Layers() {
                 <p style={{ fontSize: 11, color: '#9ca3af' }}>No expenses logged yet.</p>
               ) : (
                 <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-                  <table style={S.table}>
+                  <div style={{ overflowX: 'auto' }}><table style={S.table}>
                     <thead>
                       <tr>
                         <th style={S.th}>Flock</th>
@@ -453,7 +453,7 @@ export default function Layers() {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </table></div>
                 </div>
               )}
               <div style={S.total}>Total Expenses: {fmt(totalExpenses)}</div>
@@ -497,7 +497,7 @@ export default function Layers() {
                 <p style={{ fontSize: 11, color: '#9ca3af' }}>No sales logged yet.</p>
               ) : (
                 <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-                  <table style={S.table}>
+                  <div style={{ overflowX: 'auto' }}><table style={S.table}>
                     <thead>
                       <tr>
                         <th style={S.th}>Quantity</th>
@@ -527,7 +527,7 @@ export default function Layers() {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </table></div>
                 </div>
               )}
             </div>

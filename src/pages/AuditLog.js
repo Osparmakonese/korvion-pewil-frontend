@@ -81,7 +81,7 @@ export default function AuditLog() {
         ) : (
           <>
             <div style={{ overflowX: 'auto' }}>
-              <table style={S.table}>
+              <div style={{ overflowX: 'auto' }}><table style={S.table}>
                 <thead>
                   <tr>
                     <th style={S.th}>Date</th>
@@ -110,7 +110,7 @@ export default function AuditLog() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             </div>
 
             {/* Pagination */}

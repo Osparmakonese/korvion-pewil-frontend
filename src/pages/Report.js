@@ -236,7 +236,7 @@ export default function Report() {
             <div style={S.overheadCard}>
               <div style={{ ...S.sectionTitle, marginBottom: 10, color: '#c97d1a' }}>Farm Overhead - Asset Depreciation</div>
               <div style={S.infoBox}>These costs are shared across the whole farm, not charged to any single field.</div>
-              <table style={S.table}>
+              <div style={{ overflowX: 'auto' }}><table style={S.table}>
                 <thead><tr>
                   <th style={S.th}>Asset</th>
                   <th style={S.th}>Cost</th>
@@ -261,7 +261,7 @@ export default function Report() {
                     <td style={{ ...S.td, color: '#c97d1a', fontWeight: 700 }}>{fmt(totalDepreciation)}</td>
                   </tr>
                 </tbody>
-              </table>
+              </table></div>
             </div>
           )}
 
@@ -271,7 +271,7 @@ export default function Report() {
               <div style={{ ...S.sectionTitle, marginBottom: 10, color: '#6c5ce7' }}>Livestock P&L</div>
               <div style={S.infoBox}>Revenue from livestock sales vs health, feed, and medication costs.</div>
               {Object.keys(livestockSalesByType).length > 0 && (
-                <table style={S.table}>
+                <div style={{ overflowX: 'auto' }}><table style={S.table}>
                   <thead><tr>
                     <th style={S.th}>Animal</th>
                     <th style={S.th}>Qty Sold</th>
@@ -290,7 +290,7 @@ export default function Report() {
                       <td style={{ ...S.td, color: '#1a6b3a', fontWeight: 700 }}>{fmt(livestockSalesRev)}</td>
                     </tr>
                   </tbody>
-                </table>
+                </table></div>
               )}
               <div style={{ marginTop: 10 }}>
                 <div style={S.row}><span style={S.rowLabel}>Total Livestock Costs</span><span style={S.rowVal('#c0392b')}>{fmt(livestockHealthCosts)}</span></div>
@@ -305,7 +305,7 @@ export default function Report() {
           {/* Per-field */}
           <div style={S.sectionTitle}>Per-Field Performance</div>
           <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', overflow: 'hidden', marginBottom: 14 }}>
-            <table style={S.table}>
+            <div style={{ overflowX: 'auto' }}><table style={S.table}>
               <thead><tr>
                 <th style={S.th}>Field</th><th style={S.th}>Crop</th><th style={S.th}>Revenue</th>
                 <th style={S.th}>Costs</th><th style={S.th}>Labour</th><th style={S.th}>Net</th>
@@ -326,7 +326,7 @@ export default function Report() {
                 })}
                 {fields.length === 0 && <tr><td style={S.td} colSpan={6}>No fields.</td></tr>}
               </tbody>
-            </table>
+            </table></div>
           </div>
         </div>
 

@@ -367,7 +367,7 @@ export default function CashierPerformance({ onTabChange }) {
                 Sessions Data
               </h4>
               {sessionsData.length > 0 ? (
-                <table style={S.table}>
+                <div style={{ overflowX: 'auto' }}><table style={S.table}>
                   <thead>
                     <tr>
                       <th style={S.th}>Cashier</th>
@@ -393,7 +393,7 @@ export default function CashierPerformance({ onTabChange }) {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </table></div>
               ) : (
                 <div style={{ color: '#6b7280', fontSize: 11 }}>No session data available</div>
               )}

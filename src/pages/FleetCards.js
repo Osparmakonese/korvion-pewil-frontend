@@ -80,7 +80,7 @@ function ProvidersTab() {
         </button>
       </div>
       <div style={card}>
-        <table style={tbl}>
+        <div style={{ overflowX: 'auto' }}><table style={tbl}>
           <thead style={{ background: T.surface }}>
             <tr><th style={th}>Name</th><th style={th}>Code</th><th style={th}>Settlement (days)</th><th style={th}>Discount %</th><th style={th}>Email</th><th style={th}></th></tr>
           </thead>
@@ -104,7 +104,7 @@ function ProvidersTab() {
                 </tr>
               ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
       {editing && (
         <ModalEditor title={editing.id ? `Edit ${editing.name}` : 'Add provider'}
@@ -159,7 +159,7 @@ function AccountsTab() {
         </div>
       )}
       <div style={card}>
-        <table style={tbl}>
+        <div style={{ overflowX: 'auto' }}><table style={tbl}>
           <thead style={{ background: T.surface }}>
             <tr><th style={th}>Provider</th><th style={th}>Company</th><th style={th}>Card</th><th style={th}>Vehicle</th><th style={th}>Limit</th><th style={th}>Balance</th><th style={th}></th></tr>
           </thead>
@@ -186,7 +186,7 @@ function AccountsTab() {
                 </tr>
               ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
       {editing && (
         <ModalEditor title={editing.id ? `Edit account` : 'Add fleet account'}
@@ -234,7 +234,7 @@ function TransactionsTab() {
         ))}
       </div>
       <div style={card}>
-        <table style={tbl}>
+        <div style={{ overflowX: 'auto' }}><table style={tbl}>
           <thead style={{ background: T.surface }}>
             <tr><th style={th}>When</th><th style={th}>Company</th><th style={th}>Card</th><th style={th}>Grade</th><th style={th}>Litres</th><th style={th}>Amount</th><th style={th}>Receipt</th><th style={th}></th></tr>
           </thead>
@@ -258,7 +258,7 @@ function TransactionsTab() {
                 </tr>
               ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
       {settling && (
         <div style={modalOverlay}>

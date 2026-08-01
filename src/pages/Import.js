@@ -232,7 +232,7 @@ export default function Import() {
       <div style={S.card}>
         <div style={S.cardTitle}>📋 Excel Template Structure</div>
         <div style={S.cardText}>Your Excel file should have these sheets with the following columns:</div>
-        <table style={S.table}>
+        <div style={{ overflowX: 'auto' }}><table style={S.table}>
           <thead>
             <tr>
               <th style={S.th}>Sheet Name</th>
@@ -249,7 +249,7 @@ export default function Import() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   );

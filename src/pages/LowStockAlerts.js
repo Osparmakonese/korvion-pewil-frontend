@@ -261,7 +261,7 @@ export default function LowStockAlerts({ onTabChange }) {
           <div style={{ padding: 20, textAlign: 'center', color: '#6b7280' }}>No low stock products</div>
         ) : (
           <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          <table style={S.table}>
+          <div style={{ overflowX: 'auto' }}><table style={S.table}>
             <thead>
               <tr>
                 <th style={S.th}>SKU</th>
@@ -297,7 +297,7 @@ export default function LowStockAlerts({ onTabChange }) {
                 );
               })}
             </tbody>
-          </table>
+          </table></div>
           </div>
         )}
       </div>

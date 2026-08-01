@@ -37,7 +37,7 @@ export default function SerialTracking() {
           <input style={{ ...input, width: isMobile ? '100%' : 180 }} placeholder="Search serial / IMEI…" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <p style={{ fontSize: 11.5, color: '#6b7280', marginBottom: 10 }}>Every phone or device by its unique serial — receive it, then mark it sold so you never sell the same unit twice.</p>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead><tr><th style={th}>Serial / IMEI</th><th style={th}>Product</th><th style={th}>Status</th><th style={th}></th></tr></thead>
           <tbody>
             {serials.length === 0 && <tr><td style={td} colSpan={4}>No units recorded.</td></tr>}
@@ -53,7 +53,7 @@ export default function SerialTracking() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       <div style={card}>

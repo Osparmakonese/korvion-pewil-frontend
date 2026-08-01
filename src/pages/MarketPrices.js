@@ -245,7 +245,7 @@ export default function MarketPrices({ onTabChange }) {
           <p style={S.emptyState}>Loading...</p>
         ) : (
           <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-            <table style={S.table}>
+            <div style={{ overflowX: 'auto' }}><table style={S.table}>
               <thead>
                 <tr>
                   <th style={S.th}>Date</th>
@@ -286,7 +286,7 @@ export default function MarketPrices({ onTabChange }) {
                   ))
                 )}
               </tbody>
-            </table>
+            </table></div>
           </div>
         )}
       </div>

@@ -569,7 +569,7 @@ export default function Sales() {
               {(Array.isArray(incomes) ? incomes : []).length === 0 ? (
                 <p style={{ fontSize: 11, color: '#9ca3af' }}>No income logged.</p>
               ) : (
-                <table style={S.table}>
+                <div style={{ overflowX: 'auto' }}><table style={S.table}>
                   <thead><tr><th style={S.th}>Description</th><th style={S.th}>Date</th><th style={S.th}>Amount</th></tr></thead>
                   <tbody>{(Array.isArray(incomes) ? incomes : []).slice(0, 10).map((inc, i) => (
                     <tr key={inc.id || i}>
@@ -578,7 +578,7 @@ export default function Sales() {
                       <td style={{ ...S.td, fontWeight: 700, color: '#1a6b3a' }}>{fmt(inc.amount)}</td>
                     </tr>
                   ))}</tbody>
-                </table>
+                </table></div>
               )}
             </div>
           </div>

@@ -121,7 +121,7 @@ export default function Economics({ onTabChange }) {
         {/* Profitability table */}
         <div style={S.card}>
           {sortedFields.length > 0 ? (
-            <table style={S.table}>
+            <div style={{ overflowX: 'auto' }}><table style={S.table}>
               <thead>
                 <tr>
                   <th style={S.th}>Field</th>
@@ -156,7 +156,7 @@ export default function Economics({ onTabChange }) {
                   );
                 })}
               </tbody>
-            </table>
+            </table></div>
           ) : (
             <div style={S.emptyState}>No field profitability data available yet.</div>
           )}

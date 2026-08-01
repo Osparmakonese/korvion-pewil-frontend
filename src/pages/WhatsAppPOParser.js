@@ -306,7 +306,7 @@ export default function WhatsAppPOParser({ onTabChange }) {
 
             <div style={label}>Items</div>
             <div style={{ border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
                   <tr style={{ background: SURFACE }}>
                     <th style={thStyle}>Product</th>
@@ -355,7 +355,7 @@ export default function WhatsAppPOParser({ onTabChange }) {
                     <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: GREEN }}>{formatMoney(p.total)}</td>
                   </tr>
                 </tfoot>
-              </table>
+              </table></div>
             </div>
 
             {p.warnings && p.warnings.length > 0 && (

@@ -195,7 +195,7 @@ export default function PlatformAnalytics() {
           />
         </div>
         <div style={S.tableWrap}>
-          <table style={S.table}>
+          <div style={{ overflowX: 'auto' }}><table style={S.table}>
             <thead><tr>
               <th style={S.th}>Tenant</th><th style={S.th}>Owner email</th><th style={S.th}>Country</th>
               <th style={S.th}>Module</th><th style={S.th}>Plan</th><th style={S.th}>Status</th>
@@ -220,7 +220,7 @@ export default function PlatformAnalytics() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
       </div>
 
@@ -234,7 +234,7 @@ export default function PlatformAnalytics() {
             )}
           </h3>
           <div style={S.tableWrap}>
-            <table style={{ ...S.table, minWidth: 420 }}>
+            <div style={{ overflowX: 'auto' }}><table style={{ ...S.table, minWidth: 420 }}>
               <thead><tr>
                 <th style={S.th}>Email</th><th style={S.th}>Tenant</th>
                 <th style={S.th}>Requested</th><th style={S.th}>Status</th>
@@ -252,7 +252,7 @@ export default function PlatformAnalytics() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           </div>
         </div>
 

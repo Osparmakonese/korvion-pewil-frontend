@@ -374,7 +374,7 @@ export default function Suppliers({ onTabChange }) {
           ) : suppliers.length === 0 ? (
             <div style={{ padding: 20, textAlign: 'center', color: '#6b7280' }}>No suppliers found. Click "+ Add Supplier" to create one.</div>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+            <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
               <thead>
                 <tr style={{ background: '#f9fafb' }}>
                   {['ID', 'Name', 'Contact', 'Phone', 'Email', 'Terms', 'Actions'].map((h) => (
@@ -405,7 +405,7 @@ export default function Suppliers({ onTabChange }) {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           )}
         </div>
       )}
@@ -419,7 +419,7 @@ export default function Suppliers({ onTabChange }) {
             ) : purchaseOrders.length === 0 ? (
               <div style={{ padding: 20, textAlign: 'center', color: '#6b7280' }}>No purchase orders found. Click "+ New Purchase Order" to create one.</div>
             ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+              <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
                 <thead>
                   <tr style={{ background: '#f9fafb' }}>
                     {['ID', 'Order Date', 'Supplier', 'Total', 'Expected', 'Status', 'Action'].map((h, i) => (
@@ -453,7 +453,7 @@ export default function Suppliers({ onTabChange }) {
                     );
                   })}
                 </tbody>
-              </table>
+              </table></div>
             )}
           </div>
 

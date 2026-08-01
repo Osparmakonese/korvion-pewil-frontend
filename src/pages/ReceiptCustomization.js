@@ -489,7 +489,7 @@ export default function ReceiptCustomization({ onTabChange }) {
                 </div>
 
                 {/* items */}
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 * fs }}>
+                <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 * fs }}>
                   <tbody>
                     {sampleItems.map((it, i) => (
                       <tr key={i}>
@@ -502,7 +502,7 @@ export default function ReceiptCustomization({ onTabChange }) {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </table></div>
 
                 {/* totals */}
                 <div style={{ fontSize: 11 * fs, marginTop: 10 }}>

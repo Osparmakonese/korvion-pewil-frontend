@@ -495,7 +495,7 @@ export default function Dashboard({ activeModule = 'farm' }) {
           </div>
           {trips.length > 0 ? (
             <div style={{ background: '#fff', borderRadius: 10, border: `1px solid ${TOKENS.line}`, overflow: 'hidden', marginBottom: 12 }}>
-              <table style={S.table}>
+              <div style={{ overflowX: 'auto' }}><table style={S.table}>
                 <thead><tr>
                   <th style={S.th}>Market</th><th style={S.th}>Date</th><th style={S.th}>Fields</th>
                   <th style={S.th}>Crates</th><th style={S.th}>Revenue</th><th style={S.th}>Status</th>
@@ -512,7 +512,7 @@ export default function Dashboard({ activeModule = 'farm' }) {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             </div>
           ) : <p style={{ fontSize: 11, color: TOKENS.muted, marginBottom: 12, fontFamily: SANS }}>No trips recorded yet.</p>}
         </div>

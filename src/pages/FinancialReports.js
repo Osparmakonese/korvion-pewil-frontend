@@ -150,13 +150,13 @@ export default function FinancialReports() {
               <Stat label="We owe (creditors)" value={ar.data.total_we_owe} />
             </div>
             <h3 style={{ fontSize: 13, margin: '6px 0' }}>Debtors</h3>
-            <table style={S.table}><thead><tr><th style={S.th}>Customer</th><th style={S.th}>Balance</th><th style={S.th}>Age</th><th style={S.th}>Bucket</th></tr></thead>
+            <div style={{ overflowX: 'auto' }}><table style={S.table}><thead><tr><th style={S.th}>Customer</th><th style={S.th}>Balance</th><th style={S.th}>Age</th><th style={S.th}>Bucket</th></tr></thead>
               <tbody>{(ar.data.debtors || []).map((d) => <tr key={d.id}><td style={S.td}>{d.name}</td><td style={S.td}>{money(d.balance)}</td><td style={S.td}>{d.days_since_last_activity}d</td><td style={S.td}><span style={S.pill(d.bucket === '0-30' ? '#e8f5ee' : '#fef3e2', d.bucket === '0-30' ? G : '#b45309')}>{d.bucket}</span></td></tr>)}
-                {(!ar.data.debtors || !ar.data.debtors.length) && <tr><td style={S.td} colSpan={4}>No outstanding debtors.</td></tr>}</tbody></table>
+                {(!ar.data.debtors || !ar.data.debtors.length) && <tr><td style={S.td} colSpan={4}>No outstanding debtors.</td></tr>}</tbody></table></div>
             <h3 style={{ fontSize: 13, margin: '14px 0 6px' }}>Creditors</h3>
-            <table style={S.table}><thead><tr><th style={S.th}>Supplier</th><th style={S.th}>Amount</th><th style={S.th}>Order date</th><th style={S.th}>Status</th></tr></thead>
+            <div style={{ overflowX: 'auto' }}><table style={S.table}><thead><tr><th style={S.th}>Supplier</th><th style={S.th}>Amount</th><th style={S.th}>Order date</th><th style={S.th}>Status</th></tr></thead>
               <tbody>{(ar.data.creditors || []).map((c) => <tr key={c.id}><td style={S.td}>{c.supplier}</td><td style={S.td}>{money(c.amount)}</td><td style={S.td}>{c.order_date}</td><td style={S.td}>{c.status}</td></tr>)}
-                {(!ar.data.creditors || !ar.data.creditors.length) && <tr><td style={S.td} colSpan={4}>No open purchase orders.</td></tr>}</tbody></table>
+                {(!ar.data.creditors || !ar.data.creditors.length) && <tr><td style={S.td} colSpan={4}>No open purchase orders.</td></tr>}</tbody></table></div>
           </>)}
         </div>
       )}
@@ -170,8 +170,8 @@ export default function FinancialReports() {
               <Stat label="Potential margin" value={stock.data.potential_margin} />
               <Stat label="SKUs in stock" value={stock.data.sku_count} raw />
             </div>
-            <table style={S.table}><thead><tr><th style={S.th}>Product</th><th style={S.th}>Cat</th><th style={S.th}>Qty</th><th style={S.th}>Cost val</th><th style={S.th}>Retail val</th></tr></thead>
-              <tbody>{(stock.data.items || []).slice(0, 200).map((p) => <tr key={p.id}><td style={S.td}>{p.name}</td><td style={S.td}>{p.category}</td><td style={S.td}>{p.quantity}</td><td style={S.td}>{money(p.cost_value)}</td><td style={S.td}>{money(p.retail_value)}</td></tr>)}</tbody></table>
+            <div style={{ overflowX: 'auto' }}><table style={S.table}><thead><tr><th style={S.th}>Product</th><th style={S.th}>Cat</th><th style={S.th}>Qty</th><th style={S.th}>Cost val</th><th style={S.th}>Retail val</th></tr></thead>
+              <tbody>{(stock.data.items || []).slice(0, 200).map((p) => <tr key={p.id}><td style={S.td}>{p.name}</td><td style={S.td}>{p.category}</td><td style={S.td}>{p.quantity}</td><td style={S.td}>{money(p.cost_value)}</td><td style={S.td}>{money(p.retail_value)}</td></tr>)}</tbody></table></div>
           </>)}
         </div>
       )}

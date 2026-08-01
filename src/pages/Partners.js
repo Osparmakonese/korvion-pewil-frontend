@@ -87,7 +87,7 @@ export default function Partners() {
           </div>
         )}
 
-        <table style={S.table}>
+        <div style={{ overflowX: 'auto' }}><table style={S.table}>
           <thead><tr>
             <th style={S.th}>Partner</th><th style={S.th}>Type</th><th style={S.th}>Contact</th>
             <th style={S.th}>Comm %</th><th style={S.th}>Signups</th><th style={S.th}>Paying</th>
@@ -109,14 +109,14 @@ export default function Partners() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       {/* Attribute shops to partners */}
       <div style={S.card}>
         <h3 style={S.cardH}>Attribute shops to a partner</h3>
         <p style={{ fontSize: 12, color: '#64748b', marginTop: -6, marginBottom: 12 }}>Pick which partner brought each shop. This drives the signup counts and commission above.</p>
-        <table style={S.table}>
+        <div style={{ overflowX: 'auto' }}><table style={S.table}>
           <thead><tr><th style={S.th}>Shop</th><th style={S.th}>Brought by</th></tr></thead>
           <tbody>
             {tenants.map((t) => (
@@ -131,7 +131,7 @@ export default function Partners() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   );

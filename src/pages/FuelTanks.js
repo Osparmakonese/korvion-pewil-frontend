@@ -90,7 +90,7 @@ export default function FuelTanks({ onTabChange }) {
       )}
 
       <div style={{ background: '#fff', border: `1px solid ${T.line}`, borderRadius: 14, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead style={{ background: T.surface }}>
             <tr>
               <th style={th}>Branch</th>
@@ -129,7 +129,7 @@ export default function FuelTanks({ onTabChange }) {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       {editing && (

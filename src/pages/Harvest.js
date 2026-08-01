@@ -223,7 +223,7 @@ export default function Harvest({ onTabChange }) {
           <div style={S.emptyState}>No harvest data yet. Log a harvest to see field yield statistics.</div>
         ) : (
           <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-            <table style={S.table}>
+            <div style={{ overflowX: 'auto' }}><table style={S.table}>
               <thead>
                 <tr>
                   <th style={S.th}>Field Name</th>
@@ -249,7 +249,7 @@ export default function Harvest({ onTabChange }) {
                   );
                 })}
               </tbody>
-            </table>
+            </table></div>
           </div>
         )}
       </div>

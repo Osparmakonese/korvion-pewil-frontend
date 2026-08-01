@@ -330,7 +330,7 @@ export default function RetailReport() {
               {topProducts.length > 0 && (
                 <div style={S.card}>
                   <div style={S.st}>{'\u{1F3C6}'} Top Products by Revenue</div>
-                  <table style={S.table}>
+                  <div style={{ overflowX: 'auto' }}><table style={S.table}>
                     <thead><tr>
                       <th style={S.th}>#</th><th style={S.th}>Product</th>
                       <th style={{ ...S.th, textAlign: 'right' }}>Qty</th>
@@ -350,7 +350,7 @@ export default function RetailReport() {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </table></div>
                 </div>
               )}
 
@@ -358,7 +358,7 @@ export default function RetailReport() {
               {categoryBreakdown.length > 0 && (
                 <div style={S.card}>
                   <div style={S.st}>{'\u{1F5C2}'} Sales by Category</div>
-                  <table style={S.table}>
+                  <div style={{ overflowX: 'auto' }}><table style={S.table}>
                     <thead><tr>
                       <th style={S.th}>Category</th>
                       <th style={{ ...S.th, textAlign: 'right' }}>Items</th>
@@ -377,7 +377,7 @@ export default function RetailReport() {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </table></div>
                 </div>
               )}
             </div>
@@ -556,7 +556,7 @@ export default function RetailReport() {
             {lossByType.length > 0 && (
               <div style={S.card}>
                 <div style={S.st}>{'\u{1F50D}'} Loss Breakdown by Type</div>
-                <table style={S.table}>
+                <div style={{ overflowX: 'auto' }}><table style={S.table}>
                   <thead><tr>
                     <th style={S.th}>Type</th>
                     <th style={{ ...S.th, textAlign: 'right' }}>Units</th>
@@ -578,7 +578,7 @@ export default function RetailReport() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </table></div>
               </div>
             )}
 
@@ -844,7 +844,7 @@ export default function RetailReport() {
               {topProducts.length > 0 && (
                 <div style={S.card}>
                   <div style={S.st}>{'\u{1F3C6}'} Top Products</div>
-                  <table style={S.table}>
+                  <div style={{ overflowX: 'auto' }}><table style={S.table}>
                     <thead><tr>
                       <th style={S.th}>#</th><th style={S.th}>Product</th>
                       <th style={{ ...S.th, textAlign: 'right' }}>Qty</th>
@@ -864,7 +864,7 @@ export default function RetailReport() {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </table></div>
                 </div>
               )}
             </div>
@@ -925,7 +925,7 @@ export default function RetailReport() {
                 {/* Cashier Performance Table */}
                 <div style={S.card}>
                   <div style={S.st}>{'\u{1F9D1}'} Cashier Performance</div>
-                  <table style={S.table}>
+                  <div style={{ overflowX: 'auto' }}><table style={S.table}>
                     <thead><tr>
                       <th style={S.th}>Cashier</th>
                       <th style={{ ...S.th, textAlign: 'right' }}>Sessions</th>
@@ -956,7 +956,7 @@ export default function RetailReport() {
                         );
                       })}
                     </tbody>
-                  </table>
+                  </table></div>
                 </div>
 
                 {/* Cashier detail cards */}

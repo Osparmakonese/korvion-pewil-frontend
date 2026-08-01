@@ -98,7 +98,7 @@ export default function Wallets() {
       <div style={card}>
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>{selected ? 'Wallet history' : 'All wallets'}</h3>
         {selected ? (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr><th style={th}>When</th><th style={th}>Type</th><th style={th}>Amount</th><th style={th}>Balance</th></tr></thead>
             <tbody>
               {statement.length === 0 && <tr><td style={td} colSpan={4}>No movements yet.</td></tr>}
@@ -111,9 +111,9 @@ export default function Wallets() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr><th style={th}>Phone</th><th style={th}>Name</th><th style={th}>Currency</th><th style={th}>Balance</th><th style={th}></th></tr></thead>
             <tbody>
               {wallets.length === 0 && <tr><td style={td} colSpan={5}>No wallets yet.</td></tr>}
@@ -127,7 +127,7 @@ export default function Wallets() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
     </div>

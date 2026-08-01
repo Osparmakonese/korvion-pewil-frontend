@@ -88,7 +88,7 @@ export default function FuelGrades({ onTabChange }) {
       </div>
 
       <div style={{ background: '#fff', border: `1px solid ${T.line}`, borderRadius: 14, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead style={{ background: T.surface }}>
             <tr>
               <th style={th}>Name</th>
@@ -128,7 +128,7 @@ export default function FuelGrades({ onTabChange }) {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       <p style={{ marginTop: 16, color: T.muted, fontSize: 13.5, lineHeight: 1.5 }}>

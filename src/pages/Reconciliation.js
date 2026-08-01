@@ -75,7 +75,7 @@ export default function Reconciliation() {
         {/* Sales by payment method */}
         <div style={card}>
           <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Sales by payment method</h3>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr><th style={th}>Method</th><th style={th}>Sales</th><th style={th}>Total</th></tr></thead>
             <tbody>
               {Object.keys(byMethod).length === 0 && <tr><td style={td} colSpan={3}>No sales.</td></tr>}
@@ -87,7 +87,7 @@ export default function Reconciliation() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
 
         {/* Mobile money settlement */}
@@ -97,7 +97,7 @@ export default function Reconciliation() {
             <div style={{ fontSize: 12 }}>Paid: <b style={{ color: '#1a6b3a' }}>{fmt(r.mobile_money_paid_total || 0, 'zwd')}</b></div>
           </div>
           <p style={{ fontSize: 11.5, color: '#6b7280', marginBottom: 8 }}>EcoCash / OneMoney prompts and how they ended — reconcile "Paid" against what your provider settled.</p>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr><th style={th}>Status</th><th style={th}>Count</th><th style={th}>Amount</th></tr></thead>
             <tbody>
               {Object.keys(mm).length === 0 && <tr><td style={td} colSpan={3}>No mobile money attempts.</td></tr>}
@@ -109,7 +109,7 @@ export default function Reconciliation() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
       </div>
 
@@ -120,7 +120,7 @@ export default function Reconciliation() {
             <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Vending (airtime / ZESA / water)</h3>
             <div style={{ fontSize: 12 }}>Sold: <b style={{ color: '#1a6b3a' }}>{fmt(r.vending_paid_total || 0, 'zwd')}</b></div>
           </div>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr><th style={th}>Service</th><th style={th}>Vends</th><th style={th}>Paid</th><th style={th}>Sold</th></tr></thead>
             <tbody>
               {vendKeys.map((k) => (
@@ -132,14 +132,14 @@ export default function Reconciliation() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
       )}
 
       {/* Per-transaction settlement list */}
       <div style={card}>
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Mobile money transactions</h3>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead><tr>
             <th style={th}>When</th><th style={th}>Phone</th><th style={th}>Wallet</th>
             <th style={th}>Amount</th><th style={th}>Status</th><th style={th}>Sale</th>
@@ -157,7 +157,7 @@ export default function Reconciliation() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   );

@@ -384,7 +384,7 @@ export default function Budget({ onTabChange }) {
           </p>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={S.table}>
+            <div style={{ overflowX: 'auto' }}><table style={S.table}>
               <thead>
                 <tr>
                   <th style={S.th}>Category</th>
@@ -532,7 +532,7 @@ export default function Budget({ onTabChange }) {
                   <td style={S.td}></td>
                 </tr>
               </tbody>
-            </table>
+            </table></div>
           </div>
         )}
       </div>

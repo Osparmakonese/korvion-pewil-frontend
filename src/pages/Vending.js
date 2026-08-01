@@ -148,7 +148,7 @@ export default function Vending() {
 
       <div style={card}>
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Recent vends</h3>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead><tr><th style={th}>When</th><th style={th}>Service</th><th style={th}>Amount</th><th style={th}>Status</th></tr></thead>
           <tbody>
             {txns.length === 0 && <tr><td style={td} colSpan={4}>No vends yet.</td></tr>}
@@ -161,7 +161,7 @@ export default function Vending() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   );

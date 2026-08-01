@@ -47,7 +47,7 @@ export default function ControlledRegister() {
         <p style={{ fontSize: 11.5, color: '#6b7280', marginBottom: 10 }}>
           Append-only record of every controlled/scheduled drug dispensed, for audit and reconciliation.
         </p>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead><tr><th style={th}>When</th><th style={th}>Drug</th><th style={th}>Qty</th><th style={th}>Balance</th><th style={th}>Patient</th><th style={th}>Prescriber</th></tr></thead>
           <tbody>
             {entries.length === 0 && <tr><td style={td} colSpan={6}>No entries yet.</td></tr>}
@@ -62,7 +62,7 @@ export default function ControlledRegister() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       <div style={card}>

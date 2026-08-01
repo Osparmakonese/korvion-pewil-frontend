@@ -50,7 +50,7 @@ function BandEditor({ title, bands, onChange, disabled }) {
           <button style={s.btnGhost} onClick={add}>+ Add band</button>
         )}
       </h2>
-      <table style={s.table}>
+      <div style={{ overflowX: 'auto' }}><table style={s.table}>
         <thead>
           <tr>
             <th style={s.th}>Threshold (monthly)</th>
@@ -90,7 +90,7 @@ function BandEditor({ title, bands, onChange, disabled }) {
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
       <div style={{ marginTop: 8, fontSize: 11, color: '#6b7280' }}>
         PAYE owed = <code>gross × rate − deduct</code> for the highest band whose threshold ≤ gross.
       </div>

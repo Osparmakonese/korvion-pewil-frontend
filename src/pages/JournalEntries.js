@@ -315,7 +315,7 @@ export default function JournalEntries({ onTabChange }) {
         ) : formattedEntries.length === 0 ? (
           <div style={{ padding: 20, textAlign: 'center', color: '#6b7280' }}>No journal entries found</div>
         ) : (
-          <table style={styles.table}>
+          <div style={{ overflowX: 'auto' }}><table style={styles.table}>
             <thead>
               <tr style={{ background: '#f9fafb' }}>
                 <th style={styles.th}>Date</th>
@@ -347,7 +347,7 @@ export default function JournalEntries({ onTabChange }) {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
     </div>

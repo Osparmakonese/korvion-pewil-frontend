@@ -69,7 +69,7 @@ export default function Layby() {
       </div>
 
       <div style={S.card}>
-        <table style={S.table}>
+        <div style={{ overflowX: 'auto' }}><table style={S.table}>
           <thead><tr>
             <th style={S.th}>Customer</th><th style={S.th}>Total</th><th style={S.th}>Paid</th>
             <th style={S.th}>Balance</th><th style={S.th}>Due</th><th style={S.th}>Status</th><th style={S.th}></th>
@@ -97,7 +97,7 @@ export default function Layby() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       {showNew && <NewLaybyModal onClose={() => setShowNew(false)} onSaved={() => { setShowNew(false); refresh(); }} />}

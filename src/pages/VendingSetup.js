@@ -44,7 +44,7 @@ export default function VendingSetup() {
           Selling airtime, ZESA and water tokens draws from <b>your own</b> prefunded Paynow BillPay float. Open a BillPay
           Vendor account with Paynow, load your float, and paste the API user details here. Until then, vending stays off.
         </p>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead><tr>
             <th style={{ textAlign: 'left', fontSize: 9, color: '#9ca3af', padding: '6px 8px' }}>ACCOUNT</th>
             <th style={{ textAlign: 'left', fontSize: 9, color: '#9ca3af', padding: '6px 8px' }}>MODE</th>
@@ -67,7 +67,7 @@ export default function VendingSetup() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
         {creds.some((c) => c.last_error) && <p style={{ fontSize: 11, color: '#c0392b', marginTop: 8 }}>Last error: {creds.find((c) => c.last_error)?.last_error}</p>}
       </div>
 

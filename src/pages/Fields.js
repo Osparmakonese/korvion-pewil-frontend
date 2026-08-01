@@ -186,7 +186,7 @@ export default function Fields() {
             <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16, marginBottom: 16 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 10 }}>All Fields P&L Comparison</div>
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                   <thead>
                     <tr style={{ background: '#f9fafb', textAlign: 'left' }}>
                       <th style={{ padding: '8px 10px', borderBottom: '1px solid #e5e7eb' }}>Field</th>
@@ -221,7 +221,7 @@ export default function Fields() {
                       <td style={{ padding: '10px', borderTop: '2px solid #1a6b3a' }}></td>
                     </tr>
                   </tbody>
-                </table>
+                </table></div>
               </div>
               {(!pnlData.fields || pnlData.fields.length === 0) && (
                 <div style={{ padding: 20, fontSize: 12, color: '#9ca3af', textAlign: 'center' }}>No fields to compare yet.</div>

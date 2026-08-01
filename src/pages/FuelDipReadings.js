@@ -78,7 +78,7 @@ export default function FuelDipReadings({ onTabChange }) {
 
       {view === 'log' && (
         <div style={{ background: '#fff', border: `1px solid ${T.line}`, borderRadius: 14, overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ background: T.surface }}>
               <tr>
                 <th style={th}>When</th>
@@ -117,7 +117,7 @@ export default function FuelDipReadings({ onTabChange }) {
                 );
               })}
             </tbody>
-          </table>
+          </table></div>
         </div>
       )}
 
@@ -128,7 +128,7 @@ export default function FuelDipReadings({ onTabChange }) {
             Typical sources: temperature, evaporation, meter calibration, theft.
           </p>
           <div style={{ background: '#fff', border: `1px solid ${T.line}`, borderRadius: 14, overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead style={{ background: T.surface }}>
                 <tr>
                   <th style={th}>Date</th>
@@ -159,7 +159,7 @@ export default function FuelDipReadings({ onTabChange }) {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           </div>
         </div>
       )}

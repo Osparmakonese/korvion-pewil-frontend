@@ -309,7 +309,7 @@ export default function MultiCurrency({ onTabChange }) {
         {historyLoading ? (
           <div style={{ padding: 16, textAlign: 'center', color: '#6b7280' }}>Loading history...</div>
         ) : (
-          <table style={S.table}>
+          <div style={{ overflowX: 'auto' }}><table style={S.table}>
             <thead>
               <tr>
                 <th style={S.th}>Date</th>
@@ -330,7 +330,7 @@ export default function MultiCurrency({ onTabChange }) {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
 

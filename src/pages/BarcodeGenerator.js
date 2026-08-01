@@ -303,7 +303,7 @@ export default function BarcodeGenerator({ onTabChange }) {
         {isLoading ? (
           <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af' }}>Loading products...</div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+          <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
             <thead>
               <tr style={{ background: '#f9fafb' }}>
                 <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>SKU</th>
@@ -366,7 +366,7 @@ export default function BarcodeGenerator({ onTabChange }) {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
     </div>

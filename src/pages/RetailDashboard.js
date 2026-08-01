@@ -721,7 +721,7 @@ export default function RetailDashboard({ onTabChange }) {
       {/* Recent Transactions */}
       <div style={S.card}>
         <h3 style={S.sectionTitle}>Recent Transactions</h3>
-        <table style={S.table}>
+        <div style={{ overflowX: 'auto' }}><table style={S.table}>
           <thead>
             <tr>
               <th style={S.th}>Transaction ID</th>
@@ -753,7 +753,7 @@ export default function RetailDashboard({ onTabChange }) {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       {/* AI Dashboard Summary */}

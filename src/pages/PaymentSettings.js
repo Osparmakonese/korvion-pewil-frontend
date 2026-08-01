@@ -71,7 +71,7 @@ export default function PaymentSettings() {
             you got from your provider. New Paynow integrations start in <b>test mode</b> — no real money moves until you switch them to live.
           </p>
           <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr><th style={th}>Account</th><th style={th}>Currency</th><th style={th}>Mode</th><th style={th}>Key</th><th style={th}>Status</th><th style={th}></th></tr></thead>
             <tbody>
               {creds.length === 0 && <tr><td style={td} colSpan={6}>No accounts yet. Add your Paynow details on the right.</td></tr>}
@@ -89,7 +89,7 @@ export default function PaymentSettings() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
           </div>
           {creds.some((c) => c.last_error) && (
             <p style={{ fontSize: 11, color: '#c0392b', marginTop: 8 }}>

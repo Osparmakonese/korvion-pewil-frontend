@@ -35,7 +35,7 @@ export default function CreditAccounts() {
         <div style={card}>
           <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Customer credit accounts</h3>
           <p style={{ fontSize: 11.5, color: '#6b7280', marginBottom: 10 }}>Customers who buy on credit. Charges increase what they owe; payments clear it.</p>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr><th style={th}>Account</th><th style={th}>Limit</th><th style={th}>Owes</th><th style={th}>Available</th></tr></thead>
             <tbody>
               {accounts.length === 0 && <tr><td style={td} colSpan={4}>No accounts yet.</td></tr>}
@@ -48,13 +48,13 @@ export default function CreditAccounts() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
 
         {sel && (
           <div style={card}>
             <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>{sel.account_name} — statement</h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead><tr><th style={th}>When</th><th style={th}>Type</th><th style={th}>Amount</th><th style={th}>Balance</th><th style={th}>Ref</th></tr></thead>
               <tbody>
                 {arr(stmt?.transactions).length === 0 && <tr><td style={td} colSpan={5}>No transactions yet.</td></tr>}
@@ -68,7 +68,7 @@ export default function CreditAccounts() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           </div>
         )}
       </div>

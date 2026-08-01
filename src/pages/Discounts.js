@@ -444,7 +444,7 @@ export default function Discounts({ onTabChange }) {
         {pastPromotions.length === 0 ? (
           <div style={{ padding: 20, textAlign: 'center', color: '#6b7280' }}>No past promotions</div>
         ) : (
-          <table style={S.table}>
+          <div style={{ overflowX: 'auto' }}><table style={S.table}>
             <thead>
               <tr>
                 <th style={S.th}>Name</th>
@@ -510,7 +510,7 @@ export default function Discounts({ onTabChange }) {
                 );
               })}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
     </div>

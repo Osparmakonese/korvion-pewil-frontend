@@ -67,7 +67,7 @@ export default function Quotations() {
       <div style={card}>
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Quotations</h3>
         <p style={{ fontSize: 11.5, color: '#6b7280', marginBottom: 10 }}>Quote a job, then mark it accepted or converted when the customer commits.</p>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead><tr><th style={th}>Quote #</th><th style={th}>Customer</th><th style={th}>Total</th><th style={th}>Valid</th><th style={th}>Status</th><th style={th}></th></tr></thead>
           <tbody>
             {quotes.length === 0 && <tr><td style={td} colSpan={6}>No quotes yet.</td></tr>}
@@ -91,7 +91,7 @@ export default function Quotations() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       <div style={card}>

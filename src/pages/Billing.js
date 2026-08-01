@@ -296,7 +296,7 @@ export default function Billing({ activeModule }) {
           <div>
             <div style={card}>
               <div style={sLabel}>Recent Invoices</div>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+              <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
                 <thead><tr style={{ borderBottom: '1px solid #e5e7eb' }}>
                   {['Date', 'Amount', 'Status'].map(h => <th key={h} style={thS}>{h}</th>)}
                 </tr></thead>
@@ -317,7 +317,7 @@ export default function Billing({ activeModule }) {
                     <tr><td colSpan={3} style={{ padding: '12px 8px', color: '#9ca3af', fontSize: 11, textAlign: 'center' }}>No invoices yet.</td></tr>
                   )}
                 </tbody>
-              </table>
+              </table></div>
             </div>
             <div style={{ ...card, marginTop: 10 }}>
               <div style={sLabel}>Account</div>
@@ -368,7 +368,7 @@ export default function Billing({ activeModule }) {
       {tab === 'invoices' && (
         <div style={card}>
           <div style={sLabel}>Invoice History</div>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr style={{ borderBottom: '2px solid #e5e7eb' }}>
               {['Date', 'Description', 'Amount', 'Method', 'Status', 'Receipt'].map(h => <th key={h} style={{ textAlign: 'left', padding: '10px 14px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#6b7280' }}>{h}</th>)}
             </tr></thead>
@@ -431,7 +431,7 @@ export default function Billing({ activeModule }) {
                 <tr><td colSpan={6} style={{ padding: '40px 14px', fontSize: 13, textAlign: 'center', color: '#9ca3af' }}>No invoices yet.</td></tr>
               )}
             </tbody>
-          </table>
+          </table></div>
           <div style={{ marginTop: 24, padding: 16, background: '#f9fafb', borderRadius: 10, fontSize: 13, color: '#6b7280' }}>
             Payments are processed securely via <strong style={{ color: '#111827' }}>Pesepay</strong> — Visa, Mastercard, EcoCash, OneMoney and Zimswitch all in one hosted checkout. Card details are never stored on our servers.
           </div>
@@ -777,7 +777,7 @@ function HowBilledCard({ pricing }) {
   return (
     <div style={{ ...card, marginTop: 12 }}>
       <div style={sLabel}>How you're billed</div>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+      <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
         <tbody>
           {pricing.tiers.map((t, i) => (
             <tr key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
@@ -788,7 +788,7 @@ function HowBilledCard({ pricing }) {
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
       <div style={{ marginTop: 8, fontSize: 11, color: '#6b7280', lineHeight: 1.5 }}>
         Capped at <strong>${pricing.cap}/month</strong> — you'll never pay more, whatever
         your volume. Voided sales and returns aren't counted.

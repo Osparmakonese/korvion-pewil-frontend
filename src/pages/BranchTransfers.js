@@ -214,7 +214,7 @@ export default function BranchTransfers() {
             background: '#fff', border: `1px solid ${T.line}`, borderRadius: 12,
             overflow: 'hidden',
           }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead style={{ background: T.surface }}>
                 <tr>
                   <Th>Reference</Th>
@@ -280,7 +280,7 @@ export default function BranchTransfers() {
                   );
                 })}
               </tbody>
-            </table>
+            </table></div>
           </div>
         )}
 

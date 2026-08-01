@@ -269,7 +269,7 @@ export default function AdminPanel() {
           {isLoading && <p style={{ fontSize: 11, color: '#9ca3af' }}>Loading users…</p>}
 
           <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-            <table style={S.table}>
+            <div style={{ overflowX: 'auto' }}><table style={S.table}>
               <thead>
                 <tr>
                   <th style={S.th}>Name</th>
@@ -355,7 +355,7 @@ export default function AdminPanel() {
                   <tr><td style={S.td} colSpan={7}>No users found.</td></tr>
                 )}
               </tbody>
-            </table>
+            </table></div>
           </div>
 
           {/* Add User Modal */}
@@ -464,7 +464,7 @@ export default function AdminPanel() {
           </div>
 
           <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-            <table style={S.table}>
+            <div style={{ overflowX: 'auto' }}><table style={S.table}>
               <thead>
                 <tr>
                   <th style={{ ...S.th, width: 28 }}></th>
@@ -513,7 +513,7 @@ export default function AdminPanel() {
                         <tr>
                           <td colSpan={7} style={{ padding: 0, borderBottom: '1px solid #f3f4f6', background: '#fafafa' }}>
                             <div style={{ padding: '10px 16px 12px' }}>
-                              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+                              <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
                                 <thead>
                                   <tr>
                                     <th style={{ ...S.th, background: 'transparent', width: '28%' }}>Field</th>
@@ -530,7 +530,7 @@ export default function AdminPanel() {
                                     </tr>
                                   ))}
                                 </tbody>
-                              </table>
+                              </table></div>
                             </div>
                           </td>
                         </tr>
@@ -542,7 +542,7 @@ export default function AdminPanel() {
                   <tr><td style={S.td} colSpan={7}>No audit entries found.</td></tr>
                 )}
               </tbody>
-            </table>
+            </table></div>
           </div>
         </div>
       )}

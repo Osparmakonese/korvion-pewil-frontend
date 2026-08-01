@@ -42,13 +42,13 @@ export default function BulkUnits() {
           Set how a product is bought versus sold — e.g. buy a <strong>box of 100</strong> screws, sell them as singles.
           When you receive a purchase order in boxes, the stock is expanded to singles automatically.
         </p>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead><tr><th style={th}>Product</th><th style={th}>Purchase unit</th><th style={th}>Units per pack</th><th style={th}>Meaning</th><th style={th}></th></tr></thead>
           <tbody>
             {filtered.length === 0 && <tr><td style={td} colSpan={5}>No products.</td></tr>}
             {filtered.slice(0, 200).map((p) => <Row key={p.id} p={p} />)}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   );

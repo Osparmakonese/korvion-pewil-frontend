@@ -39,7 +39,7 @@ export default function PriceTiers() {
       <div style={card}>
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Volume pricing tiers</h3>
         <p style={{ fontSize: 11.5, color: '#6b7280', marginBottom: 10 }}>Buy more, pay less per unit. The till charges the best tier a quantity qualifies for.</p>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead><tr><th style={th}>Product</th><th style={th}>Buy ≥</th><th style={th}>Price each</th><th style={th}>Label</th><th style={th}></th></tr></thead>
           <tbody>
             {tiers.length === 0 && <tr><td style={td} colSpan={5}>No tiers yet.</td></tr>}
@@ -53,7 +53,7 @@ export default function PriceTiers() {
               </tr>
             )))}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       <div style={card}>

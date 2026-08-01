@@ -20,7 +20,7 @@ export default function GoodsReceived() {
       <h1 style={S.h1}>Goods-Received Vouchers</h1>
       <p style={S.sub}>A GRV is raised automatically each time a purchase order is received, recording exactly what came in.</p>
       <div style={S.card}>
-        <table style={S.table}>
+        <div style={{ overflowX: 'auto' }}><table style={S.table}>
           <thead><tr><th style={S.th}>GRV #</th><th style={S.th}>Supplier</th><th style={S.th}>Date</th><th style={S.th}>Lines</th><th style={S.th}>Total</th><th style={S.th}>Delivery note</th></tr></thead>
           <tbody>
             {rows.length === 0 && <tr><td style={S.td} colSpan={6}>No GRVs yet — receive a purchase order to raise one.</td></tr>}
@@ -35,7 +35,7 @@ export default function GoodsReceived() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   );

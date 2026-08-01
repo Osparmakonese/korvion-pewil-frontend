@@ -729,7 +729,7 @@ export default function CashierSessions() {
         {isLoading ? (
           <div style={S.emptyState}>Loading sessions...</div>
         ) : allSessions.length > 0 ? (
-          <table style={S.table}>
+          <div style={{ overflowX: 'auto' }}><table style={S.table}>
             <thead style={S.tableHead}>
               <tr style={S.tableRow}>
                 <th style={S.tableHeaderCell}>Session</th>
@@ -818,7 +818,7 @@ export default function CashierSessions() {
                 );
               })}
             </tbody>
-          </table>
+          </table></div>
         ) : (
           <div style={{ ...S.emptyState, padding: '60px 20px' }}>
             <div style={{ fontSize: 48, marginBottom: 10 }}>💳</div>

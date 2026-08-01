@@ -888,7 +888,7 @@ export default function Products() {
 
       <div style={S.card}>
         {filtered.length > 0 ? (
-          <table style={S.table}>
+          <div style={{ overflowX: 'auto' }}><table style={S.table}>
             <thead>
               <tr>
                 <th style={S.th}>SKU</th>
@@ -995,7 +995,7 @@ export default function Products() {
                 );
               })}
             </tbody>
-          </table>
+          </table></div>
         ) : (
           <div style={S.emptyState}>
             <div style={{ fontSize: 48, marginBottom: 10 }}>
@@ -1021,7 +1021,7 @@ export default function Products() {
 
           <div style={S.card}>
             {stockAdjustments.length > 0 ? (
-              <table style={S.table}>
+              <div style={{ overflowX: 'auto' }}><table style={S.table}>
                 <thead>
                   <tr>
                     <th style={S.th}>Date</th>
@@ -1085,7 +1085,7 @@ export default function Products() {
                     );
                   })}
                 </tbody>
-              </table>
+              </table></div>
             ) : (
               <div style={S.emptyState}>
                 <div style={{ fontSize: 48, marginBottom: 10 }}>

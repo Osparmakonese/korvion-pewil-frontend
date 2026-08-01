@@ -40,7 +40,7 @@ export default function RecurringInvoices() {
         <button style={S.btn} onClick={() => setShowNew(true)}>+ New schedule</button>
       </div>
       <div style={S.card}>
-        <table style={S.table}>
+        <div style={{ overflowX: 'auto' }}><table style={S.table}>
           <thead><tr><th style={S.th}>Title</th><th style={S.th}>Customer</th><th style={S.th}>Amount</th><th style={S.th}>Frequency</th><th style={S.th}>Next run</th><th style={S.th}>Done</th><th style={S.th}></th></tr></thead>
           <tbody>
             {rows.length === 0 && <tr><td style={S.td} colSpan={7}>No recurring invoices.</td></tr>}
@@ -56,7 +56,7 @@ export default function RecurringInvoices() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
       {showNew && <NewModal onClose={() => setShowNew(false)} onSaved={() => { setShowNew(false); refresh(); }} />}
     </div>

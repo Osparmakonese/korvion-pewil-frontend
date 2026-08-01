@@ -137,7 +137,7 @@ export default function Costs({ onTabChange }) {
           <div style={S.sectionTitle}>Expense Log</div>
           {isLoading ? <p style={{ fontSize:11, color:'#9ca3af' }}>Loading...</p> : (
             <div style={{ background:'#fff', borderRadius:10, border:'1px solid #e5e7eb', overflow:'hidden' }}>
-              <table style={S.table}>
+              <div style={{ overflowX: 'auto' }}><table style={S.table}>
                 <thead><tr><th style={S.th}>Description</th><th style={S.th}>Category</th><th style={S.th}>Field</th><th style={S.th}>Date</th><th style={S.th}>Amount</th><th style={S.th}></th></tr></thead>
                 <tbody>
                   {(Array.isArray(expenses) ? expenses : []).map((ex, i) => (
@@ -161,7 +161,7 @@ export default function Costs({ onTabChange }) {
                   ))}
                   {(Array.isArray(expenses) ? expenses : []).length === 0 && <tr><td style={S.td} colSpan={6}>No expenses logged yet.</td></tr>}
                 </tbody>
-              </table>
+              </table></div>
             </div>
           )}
         </div>

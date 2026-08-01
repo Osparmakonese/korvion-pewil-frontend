@@ -96,7 +96,7 @@ export default function RegulatorReturns({ onTabChange }) {
       </div>
 
       <div style={card}>
-        <table style={tbl}>
+        <div style={{ overflowX: 'auto' }}><table style={tbl}>
           <thead style={{ background: T.surface }}>
             <tr><th style={th}>Regulator</th><th style={th}>Period</th><th style={th}>Status</th><th style={th}>Generated</th><th style={th}></th></tr>
           </thead>
@@ -115,7 +115,7 @@ export default function RegulatorReturns({ onTabChange }) {
                 </tr>
               ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       <p style={{ marginTop: 16, color: T.muted, fontSize: 13, lineHeight: 1.55, maxWidth: 720 }}>
@@ -264,7 +264,7 @@ function ViewReturnModal({ ret, onClose, onSubmit }) {
             <div key={i} style={{ marginBottom: 18 }}>
               <div style={{ fontWeight: 700, color: T.ink, marginBottom: 6 }}>{br.branch_name} ({br.branch_code})</div>
               <div style={card}>
-                <table style={tbl}>
+                <div style={{ overflowX: 'auto' }}><table style={tbl}>
                   <thead style={{ background: T.surface }}>
                     <tr>
                       <th style={th}>Grade</th><th style={th}>Reg code</th>
@@ -292,7 +292,7 @@ function ViewReturnModal({ ret, onClose, onSubmit }) {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </table></div>
               </div>
             </div>
           ))}

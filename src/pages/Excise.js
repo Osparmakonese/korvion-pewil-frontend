@@ -32,7 +32,7 @@ export default function Excise() {
         <div style={card}>
           <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Excise duty returns</h3>
           <p style={{ fontSize: 11.5, color: '#6b7280', marginBottom: 10 }}>Roll up the excise duty owed on alcohol sold over a period. Set each product&apos;s duty per unit on the product (Excise rate).</p>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr><th style={th}>Period</th><th style={th}>Duty</th><th style={th}>Status</th><th style={th}></th></tr></thead>
             <tbody>
               {returns.length === 0 && <tr><td style={td} colSpan={4}>No returns generated yet.</td></tr>}
@@ -61,13 +61,13 @@ export default function Excise() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
 
         {sel && (
           <div style={card}>
             <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Return detail — {sel.period_start} to {sel.period_end}</h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead><tr><th style={th}>Product</th><th style={th}>Units</th><th style={th}>Rate</th><th style={th}>Duty</th></tr></thead>
               <tbody>
                 {arr(sel.summary).length === 0 && <tr><td style={td} colSpan={4}>No dutiable sales in this period.</td></tr>}
@@ -76,7 +76,7 @@ export default function Excise() {
                 ))}
               </tbody>
               <tfoot><tr><td style={{ ...td, fontWeight: 700 }} colSpan={3}>Total duty</td><td style={{ ...td, fontWeight: 700, color: '#1a6b3a' }}>{fmt(sel.total_duty, 'zwd')}</td></tr></tfoot>
-            </table>
+            </table></div>
           </div>
         )}
       </div>

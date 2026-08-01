@@ -48,7 +48,7 @@ export default function ProductBatches() {
     <div className="vtl-stack" style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 320px', gap: 16 }}>
       <div style={card}>
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Batches & expiry</h3>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead><tr><th style={th}>Product</th><th style={th}>Batch</th><th style={th}>Expiry</th><th style={th}>Qty left</th><th style={th}></th></tr></thead>
           <tbody>
             {batches.length === 0 && <tr><td style={td} colSpan={5}>No batches yet. Add one on the right.</td></tr>}
@@ -68,7 +68,7 @@ export default function ProductBatches() {
               );
             })}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       <div style={card}>

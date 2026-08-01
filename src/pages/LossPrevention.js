@@ -306,7 +306,7 @@ function EventsTab() {
       </div>
 
       <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
               <th style={thSty}>When</th>
@@ -358,7 +358,7 @@ function EventsTab() {
               })
             )}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   );
@@ -404,7 +404,7 @@ function FlagsTab() {
       </div>
 
       <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
               <th style={thSty}>Cashier</th>
@@ -459,7 +459,7 @@ function FlagsTab() {
               ))
             )}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   );
@@ -541,7 +541,7 @@ function TrustTab({ isOwner }) {
 
       {/* Full table */}
       <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
               <th style={thSty}>Cashier</th>
@@ -572,7 +572,7 @@ function TrustTab({ isOwner }) {
               ))
             )}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   );
@@ -647,7 +647,7 @@ function ShrinkageTab() {
 
       <div style={{ display: 'grid', gridTemplateColumns: selectedId ? '1fr 1.5fr' : '1fr', gap: 12 }}>
         <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
                 <th style={thSty}>Count</th>
@@ -678,7 +678,7 @@ function ShrinkageTab() {
                 ))
               )}
             </tbody>
-          </table>
+          </table></div>
         </div>
 
         {selectedId && detail && (
@@ -697,7 +697,7 @@ function ShrinkageTab() {
               />
             )}
 
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12 }}>
+            <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12 }}>
               <thead>
                 <tr>
                   <th style={thSty}>Product</th>
@@ -721,7 +721,7 @@ function ShrinkageTab() {
                   <tr><td style={tdSty} colSpan={4}>No lines yet.</td></tr>
                 )}
               </tbody>
-            </table>
+            </table></div>
 
             {detail.status !== 'finalized' && (
               <div style={{ marginTop: 12 }}>
@@ -822,7 +822,7 @@ function AlertsTab() {
         <div style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}` }}>
           <div style={sectionLabel}>After-hours access</div>
         </div>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
               <th style={thSty}>When</th>
@@ -857,14 +857,14 @@ function AlertsTab() {
               ))
             )}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
         <div style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}` }}>
           <div style={sectionLabel}>Till-tamper events</div>
         </div>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
               <th style={thSty}>When</th>
@@ -907,7 +907,7 @@ function AlertsTab() {
               ))
             )}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   );

@@ -242,7 +242,7 @@ export default function ZimraFiscal() {
             <button style={{ ...S.btn, ...S.btnGhost }} disabled={zMut.isPending}
               onClick={() => zMut.mutate()}>{zMut.isPending ? '…' : 'Generate today'}</button>
           </div>
-          <table style={S.table}>
+          <div style={{ overflowX: 'auto' }}><table style={S.table}>
             <thead>
               <tr><th style={S.th}>Date</th><th style={S.th}>Txns</th><th style={S.th}>Gross</th><th style={S.th}>VAT</th><th style={S.th}>Status</th></tr>
             </thead>
@@ -264,7 +264,7 @@ export default function ZimraFiscal() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
       </div>
 

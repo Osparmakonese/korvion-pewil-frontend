@@ -244,7 +244,7 @@ export default function Water({ onTabChange }) {
           <p style={{ fontSize: 11, color: '#9ca3af' }}>No fields available.</p>
         ) : (
           <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-            <table style={S.table}>
+            <div style={{ overflowX: 'auto' }}><table style={S.table}>
               <thead>
                 <tr>
                   <th style={S.th}>Field</th>
@@ -267,7 +267,7 @@ export default function Water({ onTabChange }) {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           </div>
         )}
       </div>
