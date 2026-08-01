@@ -17,7 +17,18 @@ export default function ReceiptCustomization({ onTabChange }) {
     staleTime: 30000
   });
 
-  const template = templates?.[0];
+  // 2026-07-31: /retail/receipt-templates/ can return DRF's paginated
+  // shape ({ count, next, previous, results: [...] }) rather than a plain
+  // array -- POS.js's ReceiptModal already guards for this on the same
+  // endpoint. Without the same guard here, templates?.[0] was always
+  // undefined whenever the backend paginated, which meant the form never
+  // pre-filled AND every Save silently tried to create a duplicate
+  // template instead of updating the existing one (no onError handler
+  // meant that failure was invisible to the user).
+  const templateList = Array.isArray(templates)
+    ? templates
+    : (templates && templates.results) || [];
+  const template = templateList[0];
 
   const [businessName, setBusinessName] = useState('');
   const [address, setAddress] = useState('');
@@ -55,6 +66,8 @@ export default function ReceiptCustomization({ onTabChange }) {
     }
   }, [template]);
 
+  const [saveMsg, setSaveMsg] = useState(null); // { ok: bool, text: string }
+
   const saveMutation = useMutation({
     mutationFn: async (data) => {
       if (template) {
@@ -65,6 +78,22 @@ export default function ReceiptCustomization({ onTabChange }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['retail-receipt-templates'] });
+      setSaveMsg({ ok: true, text: 'Saved. Your receipts will use these details from now on.' });
+      setTimeout(() => setSaveMsg(null), 4000);
+    },
+    onError: (err) => {
+      // 2026-07-31: this used to fail completely silently -- the owner
+      // would click Save, nothing would visibly happen, and the branding
+      // never actually updated with no indication why.
+      const data = err?.response?.data;
+      let msg = 'Could not save. Please try again.';
+      if (typeof data === 'string') msg = data;
+      else if (data?.detail) msg = data.detail;
+      else if (data && typeof data === 'object') {
+        const lines = Object.entries(data).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`);
+        if (lines.length) msg = lines.join(' \u00b7 ');
+      } else if (err?.message) msg = err.message;
+      setSaveMsg({ ok: false, text: msg });
     }
   });
 
@@ -142,6 +171,17 @@ export default function ReceiptCustomization({ onTabChange }) {
           </button>
         )}
       </div>
+
+      {saveMsg && (
+        <div style={{
+          padding: '10px 14px', borderRadius: 8, marginBottom: 16, fontSize: 13, fontWeight: 600,
+          background: saveMsg.ok ? '#f0fdf4' : '#fef2f2',
+          color: saveMsg.ok ? '#166534' : '#b91c1c',
+          border: saveMsg.ok ? '1px solid #bbf7d0' : '1px solid #fecaca',
+        }}>
+          {saveMsg.text}
+        </div>
+      )}
 
       {/* Main Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 24 }}>
