@@ -32,17 +32,17 @@ const sLabel = { fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform:
 const btnS = (primary) => ({ padding: '6px 12px', borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: primary ? 'none' : '1px solid #1a6b3a', background: primary ? '#1a6b3a' : '#fff', color: primary ? '#fff' : '#1a6b3a', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'all 0.15s' });
 const thS = { textAlign: 'left', padding: '7px 8px', fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', background: '#f9fafb' };
 
+// Keyed by the stored role value. There is no 'cashier' role — retail simply
+// labels 'worker' as "Cashier" (see roleLabel below).
 const roleColors = {
   'owner': '#1a6b3a',
   'manager': '#2563eb',
-  'cashier': '#c97d1a',
   'worker': '#9ca3af',
 };
 
 const roleBadgeBg = {
   'owner': '#e8f5ee',
   'manager': '#EFF6FF',
-  'cashier': '#FEF3C7',
   'worker': '#F3F4F6',
 };
 
@@ -54,13 +54,27 @@ function inviteUser(data) {
   return api.post('/core/tenants/invite/', data).then(res => res.data);
 }
 
+// The backend exposes user updates at .../users/<id>/permissions/ — there is no
+// PATCH .../users/<id>/ route, so the previous path 404'd on every edit and the
+// Edit User modal could never save anything.
 function updateUser(id, data) {
-  return api.patch(`/core/tenants/users/${id}/`, data).then(res => res.data);
+  return api.patch(`/core/tenants/users/${id}/permissions/`, data).then(res => res.data);
 }
 
 export default function TeamManagement() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  // Retail calls a 'worker' a "Cashier"; farm calls them a "Worker". This is a
+  // LABEL only — the stored role value is 'worker' in both cases. There is no
+  // 'cashier' role in the database and adding one would mean migrating live
+  // staff accounts that already have open cashier sessions.
+  const isRetail = !!(user?.modules && user.modules[0] === 'retail');
+  const roleLabel = (role) => {
+    if (role === 'worker') return isRetail ? 'Cashier' : 'Worker';
+    if (role === 'manager') return 'Manager';
+    if (role === 'owner') return 'Owner';
+    return role;
+  };
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [formData, setFormData] = useState({
     first_name: '',
@@ -79,6 +93,7 @@ export default function TeamManagement() {
   const [editUser, setEditUser] = useState(null);
   const [editForm, setEditForm] = useState({ first_name: '', last_name: '', role: 'worker' });
   const [editStatus, setEditStatus] = useState(null);
+  const [editMessage, setEditMessage] = useState('');
 
   const { data: usersData = { count: 0, results: [] }, isLoading } = useQuery({
     queryKey: ['users'],
@@ -116,11 +131,24 @@ export default function TeamManagement() {
     mutationFn: ({ id, data }) => updateUser(id, data),
     onSuccess: () => {
       setEditStatus('success');
+      setEditMessage('');
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setTimeout(() => { setEditUser(null); setEditStatus(null); }, 1500);
     },
     onError: (err) => {
-      const msg = err?.response?.data?.detail || 'Failed to update user.';
+      // DRF returns either {detail: "..."} or a field map like {role: "..."}.
+      // The message was previously computed and then thrown away, so every
+      // failure looked identical to the owner.
+      const data = err?.response?.data;
+      let msg = 'Failed to update user. Please try again.';
+      if (typeof data?.detail === 'string') {
+        msg = data.detail;
+      } else if (data && typeof data === 'object') {
+        const first = Object.values(data)[0];
+        if (typeof first === 'string') msg = first;
+        else if (Array.isArray(first) && typeof first[0] === 'string') msg = first[0];
+      }
+      setEditMessage(msg);
       setEditStatus('error');
     },
   });
@@ -284,7 +312,7 @@ export default function TeamManagement() {
                       </td>
                       <td style={{ padding: '12px 8px' }}>
                         <span style={pill(roleBadgeBg[u.role] || '#f3f4f6', roleColors[u.role] || '#6b7280')}>
-                          {u.role}
+                          {roleLabel(u.role)}
                         </span>
                       </td>
                       <td style={{ padding: '12px 8px', fontSize: 11, color: '#374151' }}>Farm, Retail</td>
@@ -592,12 +620,11 @@ export default function TeamManagement() {
                       cursor: 'pointer',
                     }}
                   >
-                    <option value="worker">Worker</option>
-                    <option value="cashier">Cashier</option>
+                    <option value="worker">{roleLabel('worker')}</option>
                     <option value="manager">Manager</option>
                   </select>
                   <div style={{ fontSize: 9, color: '#9ca3af', marginTop: 4 }}>
-                    Worker: Basic access · Cashier: Transactions · Manager: Team management
+                    {roleLabel('worker')}: Tills &amp; day-to-day work · Manager: Team management
                   </div>
                 </div>
 
@@ -672,11 +699,10 @@ export default function TeamManagement() {
                   <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Role</label>
                   <select value={editForm.role} onChange={e => setEditForm({ ...editForm, role: e.target.value })} style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 14, background: '#fff', boxSizing: 'border-box' }}>
                     <option value="manager">Manager</option>
-                    <option value="worker">Worker</option>
-                    <option value="cashier">Cashier</option>
+                    <option value="worker">{roleLabel('worker')}</option>
                   </select>
                 </div>
-                {editStatus === 'error' && <div style={{ color: '#c0392b', fontSize: 12, marginBottom: 12 }}>Failed to update user. Please try again.</div>}
+                {editStatus === 'error' && <div style={{ color: '#c0392b', fontSize: 12, marginBottom: 12 }}>{editMessage || 'Failed to update user. Please try again.'}</div>}
                 <div style={{ display: 'flex', gap: 10 }}>
                   <button onClick={handleEditSubmit} disabled={updateUserMut.isPending} style={{ ...btnS(true), flex: 1, justifyContent: 'center', padding: '10px 16px', fontSize: 13 }}>
                     {updateUserMut.isPending ? 'Saving...' : 'Save Changes'}
