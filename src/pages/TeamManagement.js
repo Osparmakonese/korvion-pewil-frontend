@@ -69,6 +69,11 @@ export default function TeamManagement() {
   // 'cashier' role in the database and adding one would mean migrating live
   // staff accounts that already have open cashier sessions.
   const isRetail = !!(user?.modules && user.modules[0] === 'retail');
+  // A tenant runs exactly ONE module, and there is no per-user module field in
+  // the API (the dead module-access checkboxes were removed for that reason).
+  // This column used to be hardcoded "Farm, Retail" for every row, which told
+  // owners something untrue — it now shows the tenant's actual module.
+  const moduleLabel = isRetail ? 'Retail' : 'Farm';
   const roleLabel = (role) => {
     if (role === 'worker') return isRetail ? 'Cashier' : 'Worker';
     if (role === 'manager') return 'Manager';
@@ -268,7 +273,7 @@ export default function TeamManagement() {
                 <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
                   <th style={thS}>User</th>
                   <th style={thS}>Role</th>
-                  <th style={thS}>Module Access</th>
+                  <th style={thS}>Module</th>
                   <th style={thS}>Status</th>
                   <th style={thS}>Last Active</th>
                   <th style={thS}>Actions</th>
@@ -315,7 +320,7 @@ export default function TeamManagement() {
                           {roleLabel(u.role)}
                         </span>
                       </td>
-                      <td style={{ padding: '12px 8px', fontSize: 11, color: '#374151' }}>Farm, Retail</td>
+                      <td style={{ padding: '12px 8px', fontSize: 11, color: '#374151' }}>{moduleLabel}</td>
                       <td style={{ padding: '12px 8px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <div style={{
