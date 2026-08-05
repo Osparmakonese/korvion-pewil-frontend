@@ -1182,7 +1182,12 @@ export default function POS() {
   // can still ring items mid-outage. On a successful live fetch
   // we re-sync the cache so a refresh after the network drops still
   // sees a fresh catalog. See `utils/productCatalogCache.js`.
-  const { data: products = [] } = useQuery({
+  const {
+    data: products = [],
+    isError: productsFailed,
+    isFetching: productsFetching,
+    refetch: refetchProducts,
+  } = useQuery({
     queryKey: ['retail-products-pos'],
     queryFn: async () => {
       try {
@@ -2416,6 +2421,35 @@ export default function POS() {
               );
             })
           ) : (
+            productsFailed ? (
+            /* The catalogue FAILED to load — it is not empty. Without this the
+               query's `data = []` default rendered "No products available",
+               so a cashier whose first fetch failed (slow link, token refresh
+               race, brief API blip) saw an empty shop with no explanation and
+               no way to recover except a hard refresh. */
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '24px' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#7f1d1d', marginBottom: 6 }}>
+                Couldn{'’'}t load your products
+              </div>
+              <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 12 }}>
+                Your products are safe {'—'} the till just couldn{'’'}t reach them.
+                Check your connection and try again.
+              </div>
+              <button
+                type="button"
+                onClick={() => refetchProducts()}
+                disabled={productsFetching}
+                style={{
+                  background: '#1a6b3a', color: '#fff', border: 'none',
+                  padding: '9px 18px', borderRadius: 8, fontSize: 12,
+                  fontWeight: 600, cursor: productsFetching ? 'not-allowed' : 'pointer',
+                  opacity: productsFetching ? 0.7 : 1,
+                }}
+              >
+                {productsFetching ? 'Retrying…' : 'Try again'}
+              </button>
+            </div>
+            ) : (
             <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '20px', color: '#9ca3af' }}>
               {search.trim() ? <>No products match “{search.trim()}”.</> : 'No products available'}
               <div style={{ marginTop: 10 }}>
@@ -2441,6 +2475,7 @@ export default function POS() {
                 )}
               </div>
             </div>
+            )
           )}
         </div>
         )}
