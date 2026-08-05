@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import FieldModal from '../components/FieldModal';
 import AIInsightCard from '../components/AIInsightCard';
 import MobileFarmDashboard from '../components/MobileFarmDashboard';
+import usePrimaryAction, { focusFirstForm } from '../hooks/usePrimaryAction';
 
 /* ─── Design 3 — Living Africa tokens ─── */
 const TOKENS = {
@@ -126,6 +127,10 @@ const S = {
 };
 
 export default function Dashboard({ activeModule = 'farm' }) {
+  // Top-bar primary action. Farm pages use an inline form rather than a
+  // modal, so jump to it — see hooks/usePrimaryAction.js.
+  usePrimaryAction(focusFirstForm);
+
   const { user } = useAuth();
   const [selectedField, setSelectedField] = useState(null);
 

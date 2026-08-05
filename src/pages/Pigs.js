@@ -5,6 +5,7 @@ import { today, fmt, qty, IMAGES } from '../utils/format';
 import ConfirmModal from '../components/ConfirmModal';
 import LivestockEditModal from '../components/LivestockEditModal';
 import HealthRecordEditModal from '../components/HealthRecordEditModal';
+import usePrimaryAction, { focusFirstForm } from '../hooks/usePrimaryAction';
 
 const SEX_OPTIONS = [['boar', 'Boar'], ['sow', 'Sow'], ['piglet', 'Piglet']];
 const HEALTH_TYPES = [['illness', 'Illness'], ['injury', 'Injury'], ['vaccination', 'Vaccination'], ['checkup', 'Checkup'], ['treatment', 'Treatment']];
@@ -49,6 +50,10 @@ const S = {
 };
 
 export default function Pigs() {
+  // Top-bar primary action. Farm pages use an inline form rather than a
+  // modal, so jump to it — see hooks/usePrimaryAction.js.
+  usePrimaryAction(focusFirstForm);
+
   const qc = useQueryClient();
   const [pigForm, setPigForm] = useState(emptyPig);
   const [healthForm, setHealthForm] = useState(emptyHealth);

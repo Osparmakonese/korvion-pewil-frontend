@@ -5,6 +5,7 @@ import { today, fmt, qty, IMAGES } from '../utils/format';
 import ConfirmModal from '../components/ConfirmModal';
 import LivestockEditModal from '../components/LivestockEditModal';
 import HealthRecordEditModal from '../components/HealthRecordEditModal';
+import usePrimaryAction, { focusFirstForm } from '../hooks/usePrimaryAction';
 
 const emptyGoat = { tag_number: '', name: '', breed: '', sex: 'buck', date_of_birth: '', date_acquired: today(), purchase_price: '', weight_kg: '', status: 'active', cause_of_death: '', date_of_death: '', mother: '', notes: '' };
 const emptyHealth = { goat: '', record_type: '', description: '', record_date: today(), cost: '', vet_name: '', next_due: '', notes: '' };
@@ -43,6 +44,10 @@ const S = {
 };
 
 export default function Goats() {
+  // Top-bar primary action. Farm pages use an inline form rather than a
+  // modal, so jump to it — see hooks/usePrimaryAction.js.
+  usePrimaryAction(focusFirstForm);
+
   const qc = useQueryClient();
   const [goatForm, setGoatForm] = useState(emptyGoat);
   const [healthForm, setHealthForm] = useState(emptyHealth);

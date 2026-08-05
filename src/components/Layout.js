@@ -292,6 +292,7 @@ export default function Layout({
             onPrimaryAction={onPrimaryAction}
             dashboardData={dashboardData}
             activeModule={activeModule}
+            onTabChange={onTabChange}
           />
         </div>
         <main className="page-content-mobile" style={{ flex: 1, padding: '20px 24px', background: '#fffcf7' }}>

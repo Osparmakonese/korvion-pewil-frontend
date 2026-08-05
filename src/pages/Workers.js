@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getWorkers, createWorker, deleteWorker } from '../api/farmApi';
 import { fmt, initials, avatarColor, IMAGES } from '../utils/format';
 import ConfirmModal from '../components/ConfirmModal';
+import usePrimaryAction, { focusFirstForm } from '../hooks/usePrimaryAction';
 
 const ROLES = [['field_worker','General Worker'],['supervisor','Supervisor'],['driver','Driver'],['irrigation_worker','Irrigator'],['market_seller','Market Seller'],['other','Other']];
 const WORKER_TYPES = [['monthly','Permanent (Monthly Salary)'],['daily','Part-time (Daily Rate)'],['hourly','Part-time (Hourly Rate)']];
@@ -25,6 +26,10 @@ const S = {
   info: { background:'#EFF6FF', border:'1px solid #BFDBFE', borderRadius:8, padding:'10px 14px', fontSize:11, color:'#1d4ed8', marginTop:8 },
 };
 export default function Workers() {
+  // Top-bar primary action. Farm pages use an inline form rather than a
+  // modal, so jump to it — see hooks/usePrimaryAction.js.
+  usePrimaryAction(focusFirstForm);
+
   const qc = useQueryClient();
   const [form, setForm] = useState(empty);
   const [confirmOpen, setConfirmOpen] = useState(false);

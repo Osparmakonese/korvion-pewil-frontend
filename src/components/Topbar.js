@@ -142,7 +142,7 @@ const WaIcon = () => (
   </svg>
 );
 
-export default function Topbar({ pageTitle, pageSub, primaryAction, onPrimaryAction, onWhatsApp, dashboardData, activeModule, activeTab }) {
+export default function Topbar({ pageTitle, pageSub, primaryAction, onPrimaryAction, onWhatsApp, dashboardData, activeModule, activeTab, onTabChange }) {
   const [waBtnText, setWaBtnText] = useState('Send Update');
   const [installAvailable, setInstallAvailable] = useState(false);
 
@@ -275,7 +275,9 @@ export default function Topbar({ pageTitle, pageSub, primaryAction, onPrimaryAct
           <button style={S.installBtn} onClick={handleInstallClick}>Install App</button>
         )}
         <span style={S.dateChip}>{formatDate()}</span>
-        <NotificationBell />
+        {/* Without onNavigate the bell's click handler short-circuits and every
+            notification click went nowhere — it only marked the item read. */}
+        <NotificationBell onNavigate={onTabChange} />
         <button
           style={S.waBtn}
           onClick={sendWhatsApp}

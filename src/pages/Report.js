@@ -4,6 +4,7 @@ import { getDashboard, getFields, getWagesSummary, getFarmAssets, getLivestockSa
 import { analyzeFarmReport } from '../api/aiApi';
 import { fmt, IMAGES } from '../utils/format';
 import { useAuth } from '../context/AuthContext';
+import usePrimaryAction, { focusFirstForm } from '../hooks/usePrimaryAction';
 
 const LIFESPAN_YEARS = { season: 1, short: 2, long: 10 };
 
@@ -48,6 +49,10 @@ const S = {
 };
 
 export default function Report() {
+  // Top-bar primary action. Farm pages use an inline form rather than a
+  // modal, so jump to it — see hooks/usePrimaryAction.js.
+  usePrimaryAction(focusFirstForm);
+
   const { user } = useAuth();
   const role = user?.role || 'worker';
   const [analysis, setAnalysis] = useState('');

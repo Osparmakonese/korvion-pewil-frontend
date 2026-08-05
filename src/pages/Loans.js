@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getLoans, createLoan, createLoanRepayment, updateLoan } from '../api/farmApi';
 import { fmt, today } from '../utils/format';
 import ConfirmModal from '../components/ConfirmModal';
+import usePrimaryAction, { focusFirstForm } from '../hooks/usePrimaryAction';
 
 const emptyForm = {
   lender_name: '',
@@ -56,6 +57,10 @@ const S = {
 };
 
 export default function Loans({ onTabChange }) {
+  // Top-bar primary action. Farm pages use an inline form rather than a
+  // modal, so jump to it — see hooks/usePrimaryAction.js.
+  usePrimaryAction(focusFirstForm);
+
   const qc = useQueryClient();
   const [form, setForm] = useState(emptyForm);
   const [confirmOpen, setConfirmOpen] = useState(false);

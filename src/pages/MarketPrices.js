@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getMarketPrices, createMarketPrice, deleteMarketPrice } from '../api/farmApi';
 import { fmt, today, IMAGES } from '../utils/format';
 import ConfirmModal from '../components/ConfirmModal';
+import usePrimaryAction, { focusFirstForm } from '../hooks/usePrimaryAction';
 
 const COMMODITIES = [
   'maize', 'tobacco', 'tomatoes', 'soybeans', 'wheat', 'sunflower',
@@ -70,6 +71,10 @@ const S = {
 };
 
 export default function MarketPrices({ onTabChange }) {
+  // Top-bar primary action. Farm pages use an inline form rather than a
+  // modal, so jump to it — see hooks/usePrimaryAction.js.
+  usePrimaryAction(focusFirstForm);
+
   const qc = useQueryClient();
   const [form, setForm] = useState(empty);
   const [confirmOpen, setConfirmOpen] = useState(false);

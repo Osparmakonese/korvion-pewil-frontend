@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getStock, createStockItem, logStockUsage, getStockUsage, getFields, deleteStockItem, getCattle, getGoats, getSheep, getPigs, getBroilerBatches, getLayerFlocks } from '../api/farmApi';
 import { fmt, qty, today, IMAGES } from '../utils/format';
+import usePrimaryAction, { focusFirstForm } from '../hooks/usePrimaryAction';
 
 const CATEGORIES = [['chemical','Chemical'],['fertilizer','Fertiliser'],['seed','Seed'],['fuel','Fuel'],['equipment','Equipment'],['other','Other']];
 const UNITS = [['litres','L'],['kg','kg'],['bags','bags'],['units','units'],['litres','bottles'],['units','packs']];
@@ -33,6 +34,10 @@ const S = {
 };
 
 export default function Stock() {
+  // Top-bar primary action. Farm pages use an inline form rather than a
+  // modal, so jump to it — see hooks/usePrimaryAction.js.
+  usePrimaryAction(focusFirstForm);
+
   const qc = useQueryClient();
   const [itemForm, setItemForm] = useState(emptyItem);
   const [usageForm, setUsageForm] = useState(emptyUsage);

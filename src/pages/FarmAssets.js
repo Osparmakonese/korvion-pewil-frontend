@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getFarmAssets, createFarmAsset, deleteFarmAsset } from '../api/farmApi';
 import { fmt, today } from '../utils/format';
 import ConfirmModal from '../components/ConfirmModal';
+import usePrimaryAction, { focusFirstForm } from '../hooks/usePrimaryAction';
 
 const LIFESPANS = [
   ['season', 'This season only', 'Seeds bought in bulk, short-use items'],
@@ -30,6 +31,10 @@ function calcDep(cost, lifespan) {
 }
 
 export default function FarmAssets() {
+  // Top-bar primary action. Farm pages use an inline form rather than a
+  // modal, so jump to it — see hooks/usePrimaryAction.js.
+  usePrimaryAction(focusFirstForm);
+
   const qc = useQueryClient();
   const [form, setForm] = useState(empty);
   const [confirmOpen, setConfirmOpen] = useState(false);

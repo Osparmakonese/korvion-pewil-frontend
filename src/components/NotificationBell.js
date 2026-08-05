@@ -147,9 +147,34 @@ export default function NotificationBell({ onNavigate }) {
   const unreadCount = unread?.unread_count ?? unread?.count ?? 0;
   const list = Array.isArray(notifs) ? notifs : (notifs?.results || []);
 
+  // Where a notification should take you.
+  //
+  // The Notification model has a `url` field, but NOTHING in the backend ever
+  // populates it — so `n.url` is always empty and, before this, every click
+  // just marked the item read and closed the panel. Nothing navigated
+  // anywhere. Map the notification KIND to a tab so a click always lands
+  // somewhere useful, and keep honouring `url` if it ever starts being set.
+  const KIND_TAB = {
+    low_stock:        'Low Stock Alerts',
+    new_sale:         'Sales History',
+    wages_owed:       'Retail Payroll',
+    overdue_task:     'Dashboard',
+    livestock_health: 'Cattle',
+    loan_due:         'Loans',
+    water_needed:     'Water',
+    budget_alert:     'Budget',
+  };
+
   const handleItemClick = (n) => {
     if (!n.read_at) markOne.mutate(n.id);
-    if (n.url && onNavigate) onNavigate(n.url);
+    if (onNavigate) {
+      // A populated url wins; otherwise fall back to the kind.
+      const fromUrl = n.url && /[?&]t=([^&]+)/.exec(n.url);
+      const target = fromUrl
+        ? decodeURIComponent(fromUrl[1].replace(/\+/g, ' '))
+        : KIND_TAB[n.kind];
+      if (target) onNavigate(target);
+    }
     setOpen(false);
   };
 

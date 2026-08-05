@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getWorkers, getFields, getAttendance, createAttendance, markPaid } from '../api/farmApi';
 import { fmt, qty, today, initials, avatarColor, IMAGES } from '../utils/format';
+import usePrimaryAction, { focusFirstForm } from '../hooks/usePrimaryAction';
 
 const empty = { worker: '', field: '', date: today(), hours: '', adjustment: '', adj_reason: '', notes: '' };
 
@@ -31,6 +32,10 @@ const S = {
 };
 
 export default function Hours() {
+  // Top-bar primary action. Farm pages use an inline form rather than a
+  // modal, so jump to it — see hooks/usePrimaryAction.js.
+  usePrimaryAction(focusFirstForm);
+
   const qc = useQueryClient();
   const [form, setForm] = useState(empty);
 

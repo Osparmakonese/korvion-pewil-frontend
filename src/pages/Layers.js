@@ -8,6 +8,7 @@ import {
 } from '../api/farmApi';
 import { fmt, today, IMAGES } from '../utils/format';
 import ConfirmModal from '../components/ConfirmModal';
+import usePrimaryAction, { focusFirstForm } from '../hooks/usePrimaryAction';
 
 const EXPENSE_CATS = [
   ['feed', 'Feed'],
@@ -59,6 +60,10 @@ const S = {
 };
 
 export default function Layers() {
+  // Top-bar primary action. Farm pages use an inline form rather than a
+  // modal, so jump to it — see hooks/usePrimaryAction.js.
+  usePrimaryAction(focusFirstForm);
+
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState('flocks');
   const [formFlock, setFormFlock] = useState({ flock_name: '', quantity: '', date_acquired: today(), purchase_price: '', notes: '' });

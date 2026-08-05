@@ -7,6 +7,7 @@ import {
 } from '../api/farmApi';
 import { today, fmt, qty, IMAGES } from '../utils/format';
 import ConfirmModal from '../components/ConfirmModal';
+import usePrimaryAction, { focusFirstForm } from '../hooks/usePrimaryAction';
 
 const EXPENSE_CATEGORIES = [['feed', 'Feed'], ['medication', 'Medication'], ['vaccination', 'Vaccination'], ['equipment', 'Equipment'], ['other', 'Other']];
 
@@ -51,6 +52,10 @@ const S = {
 };
 
 export default function Broilers() {
+  // Top-bar primary action. Farm pages use an inline form rather than a
+  // modal, so jump to it — see hooks/usePrimaryAction.js.
+  usePrimaryAction(focusFirstForm);
+
   const qc = useQueryClient();
   const [batchForm, setBatchForm] = useState(emptyBatch);
   const [expenseForm, setExpenseForm] = useState(emptyExpense);

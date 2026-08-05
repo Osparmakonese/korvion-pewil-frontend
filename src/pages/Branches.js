@@ -45,6 +45,19 @@ const T = {
 // Legacy 'starter' / 'growth' / 'enterprise' tier names still appear on
 // Subscription.plan rows from before the pricing revolution — those map
 // to Infinity now because they're billed via pricing_mode='usage'.
+// Client-side shop caps are DELIBERATELY not enforced here.
+//
+// This table used to read { starter: 1, growth: 3, enterprise: Infinity } and
+// then drifted to Infinity for every tier, which meant `atCap` was permanently
+// false: the "+ Add Branch" button was never disabled, the cap notice never
+// appeared, and the owner only discovered the limit after filling in the whole
+// form — as a browser alert() carrying the backend's 403, with no way to act
+// on it.
+//
+// Duplicating the rule client-side is what let it drift. The backend
+// (retail/views.py::_enforce_branch_cap) is the single source of truth and its
+// refusal is caught in createMut.onError, which opens AddShopModal. Leave these
+// at Infinity: the UI stays permissive and the server decides.
 const PLAN_CAPS = {
   starter:    Infinity,
   growth:     Infinity,

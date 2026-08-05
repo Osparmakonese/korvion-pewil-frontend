@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getFields, getTrips, createIncome, getIncome, createDeparture, updateTripEntry, createGiveaway, createSpecialSale, settleTrip } from '../api/farmApi';
 import { fmt, today, IMAGES } from '../utils/format';
+import usePrimaryAction, { focusFirstForm } from '../hooks/usePrimaryAction';
 
 /* ── helpers ── */
 const emptyDepEntry = { field: '', large_sent: '', medium_sent: '', small_sent: '' };
@@ -49,6 +50,10 @@ const S = {
 };
 
 export default function Sales() {
+  // Top-bar primary action. Farm pages use an inline form rather than a
+  // modal, so jump to it — see hooks/usePrimaryAction.js.
+  usePrimaryAction(focusFirstForm);
+
   const qc = useQueryClient();
   const [mainTab, setMainTab] = useState('trip'); // 'trip' | 'income'
   const [subMode, setSubMode] = useState('departure'); // 'departure' | 'settle'
