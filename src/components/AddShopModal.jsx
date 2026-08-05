@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { subscribeAddon, initializePayment, getBillingSummary } from '../api/billingApi';
+import { subscribeAddon, initializePayment, getBillingSummary, getCurrentPlan } from '../api/billingApi';
 
 /**
  * AddShopModal — buy one extra shop and pay for it in a single action.
@@ -37,18 +37,39 @@ export default function AddShopModal({ open, onClose, currentShops, module = 're
     enabled: open,
   });
 
+  const { data: currentPlan } = useQuery({
+    queryKey: ['currentPlanForAddon'],
+    queryFn: getCurrentPlan,
+    staleTime: 60000,
+    enabled: open,
+  });
+
   if (!open) return null;
 
+  // Shapes below were read off the live API, not assumed:
+  //   summary  → { module, billing_model, subscription, addons }
+  //              NOTE: no `plan` and no `currency_symbol` at the top level, and
+  //              `subscription` is null while a tenant is still trialing.
+  //   addon    → { slug, name, price_monthly: "8.00", local: { currency_symbol } }
+  //   plan     → current_plan → subscriptions[].plan_details.price_monthly ("25.00")
+  // Prices arrive as STRINGS, hence Number() on each.
   const addons = summary?.addons || {};
   const catalogue = addons.available || [];
   const shopAddon = catalogue.find((a) => (a.slug || a.addon?.slug) === SHOP_ADDON_SLUG) || null;
 
-  // Fall back to the seeded price if the catalogue hasn't loaded — better a
-  // correct-looking number than a blank while the request is in flight.
   const addonPrice = Number(shopAddon?.price_monthly ?? 8);
-  const planPrice = Number(summary?.plan?.price_monthly ?? 0);
-  const currency = summary?.currency_symbol || '$';
+  const currency = shopAddon?.local?.currency_symbol || '$';
   const money = (n) => `${currency}${Number(n || 0).toFixed(2)}`;
+
+  // The plan price is NOT on the summary. Pull it from current_plan and match
+  // the module. If we can't determine it we must not invent a total — telling
+  // an owner their "new monthly bill" is $8 when they're on a $25 plan would be
+  // a false statement about money.
+  const subs = currentPlan?.subscriptions || [];
+  const mySub = subs.find((s) => s.module === module) || null;
+  const planPrice = Number(mySub?.plan_details?.price_monthly ?? 0);
+  const planName = mySub?.plan_details?.name || mySub?.plan_name || null;
+  const knowsPlanPrice = planPrice > 0;
 
   const newBill = planPrice + addonPrice;
   const shopsNow = Number(currentShops || 0);
@@ -119,9 +140,9 @@ export default function AddShopModal({ open, onClose, currentShops, module = 're
             <span style={S.muted}>Shops</span>
             <span>{shopsNow} &rarr; <strong>{shopsNow + 1}</strong></span>
           </div>
-          {planPrice > 0 && (
+          {knowsPlanPrice && (
             <div style={S.row}>
-              <span style={S.muted}>{summary?.plan?.name || 'Current plan'}</span>
+              <span style={S.muted}>{planName || 'Current plan'}</span>
               <span>{money(planPrice)}</span>
             </div>
           )}
@@ -129,18 +150,27 @@ export default function AddShopModal({ open, onClose, currentShops, module = 're
             <span style={S.muted}>Extra shop &times; 1</span>
             <span>{money(addonPrice)}</span>
           </div>
-          <div style={{
-            ...S.row, borderTop: '1px solid #e5e7eb', marginTop: 7,
-            paddingTop: 9, fontSize: 14, fontWeight: 700,
-          }}>
-            <span>New monthly bill</span>
-            <span>{money(newBill)}</span>
-          </div>
+          {knowsPlanPrice && (
+            <div style={{
+              ...S.row, borderTop: '1px solid #e5e7eb', marginTop: 7,
+              paddingTop: 9, fontSize: 14, fontWeight: 700,
+            }}>
+              <span>New monthly bill</span>
+              <span>{money(newBill)}</span>
+            </div>
+          )}
         </div>
 
         <p style={{ fontSize: 12, color: '#4b5563', margin: '0 0 14px', lineHeight: 1.5 }}>
-          You{'’'}ll pay {money(addonPrice)} now to activate it. Your shop limit rises as
-          soon as the payment clears.
+          {knowsPlanPrice
+            ? <>You{'’'}ll pay {money(addonPrice)} now to activate it. Your shop limit rises as
+               soon as the payment clears.</>
+            /* No plan price available (e.g. still on trial — the summary's
+               `subscription` is null then). Say what we actually know rather
+               than inventing a total. */
+            : <>You{'’'}ll pay {money(addonPrice)} now to activate it, then {money(addonPrice)} a
+               month on top of your plan. Your shop limit rises as soon as the
+               payment clears.</>}
         </p>
 
         {error && (
