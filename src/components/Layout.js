@@ -377,7 +377,14 @@ export default function Layout({
             position: 'fixed', bottom: 0, left: 0, right: 0,
             background: '#faf6ef',
             borderRadius: '28px 28px 0 0',
-            padding: '12px 20px calc(28px + env(safe-area-inset-bottom, 0px))',
+            // Bottom padding MUST clear the bottom nav. The nav is z-index 500
+            // and this sheet is 450, so the nav paints OVER the sheet and hides
+            // a strip exactly its own height (76px). With only 28px of padding
+            // the last rows — Team access, Help & Support — stayed underneath
+            // the nav even when scrolled fully to the end: measured live, the
+            // final row settled at y=529 against a nav top edge of y=482.
+            // 76 (nav) + 20 (breathing room) + the safe-area inset.
+            padding: '12px 20px calc(96px + env(safe-area-inset-bottom, 0px))',
             // max-height lives in index.css (.mobile-more-sheet) so it can use
             // dvh with a vh fallback — inline styles can't hold both. `85vh`
             // alone measures the LARGE viewport and ignores the phone's address
