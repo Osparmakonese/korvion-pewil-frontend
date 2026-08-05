@@ -48,6 +48,9 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
   });
   const [emailTo, setEmailTo] = useState('');
   const [emailState, setEmailState] = useState(null); // 'sending' | 'sent' | 'error'
+  // The email field is revealed on demand rather than sitting open on every
+  // completed sale — most cashiers never use it.
+  const [emailOpen, setEmailOpen] = useState(false);
   if (!isOpen || !receipt) return null;
 
   const sendEmail = async () => {
@@ -345,17 +348,26 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
             <strong>{fmt(receipt.tax, 'zwd')}</strong>
           </div>
 
+          {/* The total is the number the cashier reads out and the customer
+              checks, so it is the hero of this screen rather than another row
+              the same size as the tax line. */}
           <div
             style={{
               display: 'flex',
               justifyContent: 'space-between',
-              fontSize: 14,
-              fontWeight: 700,
+              alignItems: 'baseline',
               color: '#1a6b3a',
             }}
           >
-            <span>Total:</span>
-            <strong>{fmt(receipt.total, 'zwd')}</strong>
+            <span style={{ fontSize: 13, fontWeight: 600 }}>Total</span>
+            <strong style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontSize: 34,
+              lineHeight: 1,
+              fontWeight: 700,
+            }}>
+              {fmt(receipt.total, 'zwd')}
+            </strong>
           </div>
         </div>
 
@@ -438,8 +450,13 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
               cursor: 'pointer',
             }}
           >
-            {'\u{1F5A8}'} Print Receipt
+            {'\u{1F5A8}'} Print receipt
           </button>
+          {/* A4 invoice is the default deliverable for on-account (B2B/credit)
+              sales, so it stays a primary button THERE. On an ordinary cash
+              sale it drops to the quiet share row below — nobody hands a
+              walk-in customer an A4 tax invoice. */}
+          {receipt.payment_method === 'on_account' && (
           <button
             onClick={printInvoice}
             title="Print a full A4 fiscal tax invoice (for business / account customers)"
@@ -450,15 +467,12 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
               fontSize: 12,
               fontWeight: 600,
               cursor: 'pointer',
-              // For on-account (B2B / credit) sales the A4 fiscal invoice is the
-              // default deliverable, so it becomes the highlighted primary action.
-              ...(receipt.payment_method === 'on_account'
-                ? { background: '#1a6b3a', color: '#fff', border: '1px solid #1a6b3a' }
-                : { background: '#fff', color: '#334155', border: '1px solid #cbd5e1' }),
+              background: '#1a6b3a', color: '#fff', border: '1px solid #1a6b3a',
             }}
           >
             {'\u{1F4C4}'} Invoice (A4)
           </button>
+          )}
           <button
             onClick={onClose}
             style={{
@@ -473,9 +487,13 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
               cursor: 'pointer',
             }}
           >
-            New Sale
+            New sale
           </button>
         </div>
+        <div style={{
+          display: 'flex', justifyContent: 'center', alignItems: 'center',
+          gap: 18, marginTop: 12, flexWrap: 'wrap',
+        }}>
         <button
           onClick={() => {
             const items = receipt.items || receipt.items_data || [];
@@ -493,16 +511,18 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
             const phone = String(receipt.customer_phone || '').replace(/\D/g, '');
             window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
           }}
-          style={{
-            width: '100%', marginTop: 10, padding: '10px', background: '#25D366',
-            color: '#fff', border: 'none', borderRadius: 7, fontSize: 12,
-            fontWeight: 700, cursor: 'pointer',
-          }}
+          style={S.shareLinkBtn}
         >
-          {'\u{1F4AC}'} Send receipt via WhatsApp
+          {'\u{1F4AC}'} WhatsApp
         </button>
 
-        {/* Email the receipt — sent by Pewil from no-reply@pewil.org */}
+        {/* Email + A4 sit beside WhatsApp as quiet links. Previously this was a
+            full-width green bar, an always-open email input and a third
+            button — three controls competing with Print and New sale, on a
+            screen where the cashier's only questions are "did it go through"
+            and "how much change". Sending is still one click; the email field
+            just waits until asked for. */}
+        {emailOpen ? (
         <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
           <input
             type="email"
@@ -521,8 +541,22 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
               cursor: emailState === 'sending' ? 'default' : 'pointer', whiteSpace: 'nowrap',
             }}
           >
-            {emailState === 'sending' ? 'Sending…' : '✉ Email'}
+            {emailState === 'sending' ? 'Sending…' : '✉ Send'}
           </button>
+        </div>
+        ) : (
+          <>
+            <button type="button" onClick={() => setEmailOpen(true)} style={S.shareLinkBtn}>
+              {'✉'} Email
+            </button>
+            {receipt.payment_method !== 'on_account' && (
+              <button type="button" onClick={printInvoice} style={S.shareLinkBtn}
+                title="Print a full A4 fiscal tax invoice">
+                {'\u{1F4C4}'} A4
+              </button>
+            )}
+          </>
+        )}
         </div>
         {emailState === 'sent' && <div style={{ fontSize: 11, color: '#1a6b3a', marginTop: 4, fontWeight: 600 }}>✓ Receipt emailed to {emailTo}.</div>}
         {emailState === 'invalid' && <div style={{ fontSize: 11, color: '#b91c1c', marginTop: 4 }}>Enter a valid email address.</div>}
@@ -897,15 +931,44 @@ const S = {
     flexDirection: 'column',
     gap: '8px',
   },
+  // Compact single-row line. Was a bordered, filled card at 8px padding with
+  // an 8px gap between each — roughly 62px per item, which is why only one
+  // and a half items were visible before the list ran out of room. A hairline
+  // rule instead of a card gets this to ~44px and lets ~6 items show.
   cartItem: {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    padding: '8px',
-    background: '#f9fafb',
-    borderRadius: '6px',
+    alignItems: 'center',
+    padding: '8px 2px',
+    background: 'transparent',
+    borderRadius: 0,
     fontSize: '11px',
-    border: '1px solid #e5e7eb',
+    border: 'none',
+    borderBottom: '1px solid #f1f5f9',
+  },
+  // Quiet text-style control for the receipt's sharing actions (WhatsApp,
+  // Email, A4). Demoted from full-width coloured buttons — still one click,
+  // no longer competing with Print receipt and New sale.
+  shareLinkBtn: {
+    background: 'none',
+    border: 'none',
+    padding: '6px 4px',
+    fontSize: '12px',
+    fontWeight: 600,
+    color: '#4b5563',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  },
+  // Quiet text-style control for the secondary cart actions.
+  cartLinkBtn: {
+    background: 'none',
+    border: 'none',
+    padding: '4px 2px',
+    fontSize: '11px',
+    fontWeight: 600,
+    color: '#4b5563',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
   },
   cartItemLeft: {
     flex: 1,
@@ -961,8 +1024,12 @@ const S = {
     fontWeight: '600',
     color: '#111827',
   },
+  // The total is what the cashier reads out to the customer, so it gets to be
+  // the biggest thing in the panel rather than matching the tax line.
   totalAmount: {
-    fontSize: '18px',
+    fontFamily: "'Playfair Display', Georgia, serif",
+    fontSize: '28px',
+    lineHeight: 1,
     fontWeight: '700',
     color: '#1a6b3a',
   },
@@ -2849,16 +2916,25 @@ export default function POS() {
                   })()}
                 </div>
               ) : (
-                /* Amount Tendered (single-method mode only) */
+                /* Amount tendered (single-method mode only). Label sits BESIDE
+                   the field rather than stacked above it — one row instead of
+                   two, which is space the cart list gets back. */
                 <div style={S.section}>
-                  <div style={S.sectionLabel}>Amount Tendered</div>
-                  <input
-                    type="number"
-                    placeholder="0"
-                    value={amountTendered}
-                    onChange={(e) => setAmountTendered(e.target.value)}
-                    style={S.input}
-                  />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{
+                      fontSize: 12, color: '#6b7280', fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                    }}>
+                      Tendered
+                    </span>
+                    <input
+                      type="number"
+                      placeholder="0.00"
+                      value={amountTendered}
+                      onChange={(e) => setAmountTendered(e.target.value)}
+                      style={{ ...S.input, flex: 1, textAlign: 'right' }}
+                    />
+                  </div>
                   {change > 0 && (
                     <div style={S.changeDisplay}>
                       Change: {fmt(change, 'zwd')}
@@ -2867,10 +2943,14 @@ export default function POS() {
                 </div>
               )}
 
-              {/* Discount — reason required, manager-gated */}
+              {/* Discount — reason required, manager-gated.
+                  Only takes space once a discount EXISTS. Adding one now lives
+                  in the compact action row under Complete sale, so the till
+                  isn't carrying an empty dashed box on every sale. */}
+              {discountAmount > 0 && (
               <div style={S.section}>
                 <div style={S.sectionLabel}>Discount</div>
-                {discountAmount > 0 ? (
+                {(
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8,
                                 padding: '8px 10px', background: '#fffbeb',
                                 border: '1px solid #fde68a', borderRadius: 8 }}>
@@ -2888,64 +2968,15 @@ export default function POS() {
                       Clear
                     </button>
                   </div>
-                ) : (
-                  <button type="button" onClick={openDiscountDialog}
-                    style={{ width: '100%', padding: '10px', background: '#fff',
-                             border: '1px dashed #d1d5db', borderRadius: 8, color: '#4b5563',
-                             fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                    + Add discount (manager)
-                  </button>
                 )}
               </div>
+              )}
 
-              {/* Tax */}
-              <div style={S.section}>
-                <div style={S.sectionLabel}>Tax</div>
-                <input
-                  type="number"
-                  placeholder="0"
-                  value={tax}
-                  onChange={(e) => setTax(e.target.value)}
-                  style={S.input}
-                />
-              </div>
-
-              {/* Suspend sale */}
-              <button
-                onClick={handleSuspendSale}
-                style={{
-                  width: '100%', padding: '10px', marginBottom: '8px',
-                  background: '#fff', color: '#1f2937',
-                  border: '1px solid #e5e7eb', borderRadius: '8px',
-                  fontSize: '12px', fontWeight: 700, cursor: 'pointer',
-                  textTransform: 'uppercase', letterSpacing: '0.04em',
-                }}
-                title="Park this sale (F6) — come back to it later"
-              >
-                ⏸ Suspend Sale
-              </button>
-
-              {/* Void Cart (manager approval) */}
-              <button
-                onClick={handleVoidCart}
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  marginBottom: '8px',
-                  background: '#fff',
-                  color: '#dc2626',
-                  border: '1px solid #fecaca',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.04em',
-                }}
-                title="Requires manager approval"
-              >
-                ✕ Void Sale (Manager)
-              </button>
+              {/* The per-sale Tax input was removed on 5 Aug. VAT is configured
+                  once in settings and applied automatically; a free-text tax
+                  box on every sale was a way for a cashier to put the wrong
+                  figure on a fiscal receipt. It also cost a label + input of
+                  vertical space on every single sale. */}
 
               {/* Complete Sale Button */}
               <button
@@ -2966,6 +2997,38 @@ export default function POS() {
               >
                 {createSaleMut.isPending ? 'Processing...' : 'Complete Sale'}
               </button>
+
+              {/* Secondary actions. These were three full-width buttons that
+                  cost ~90px of the panel for things used on maybe one sale in
+                  fifty — which is what squeezed the cart list down to a single
+                  visible row. Same clicks, same manager gating, no longer
+                  competing with Complete sale. */}
+              <div style={{
+                display: 'flex', justifyContent: 'space-between',
+                alignItems: 'center', gap: 6, marginTop: 10,
+              }}>
+                {discountAmount > 0 ? (
+                  <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>
+                    Discount applied
+                  </span>
+                ) : (
+                  <button type="button" onClick={openDiscountDialog}
+                    title="Add a discount (manager approval)"
+                    style={S.cartLinkBtn}>
+                    Discount
+                  </button>
+                )}
+                <button type="button" onClick={handleSuspendSale}
+                  title="Park this sale (F6) — come back to it later"
+                  style={S.cartLinkBtn}>
+                  Suspend
+                </button>
+                <button type="button" onClick={handleVoidCart}
+                  title="Void this sale — requires manager approval"
+                  style={{ ...S.cartLinkBtn, color: '#dc2626' }}>
+                  Void
+                </button>
+              </div>
             </>
           ) : (
             <div style={S.emptyCart}>
