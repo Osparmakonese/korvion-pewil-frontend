@@ -140,17 +140,57 @@ function SentryFallback({ error, resetError }) {
     }
   };
 
+  // Not every error reaching this boundary is a bug, and "Something went
+  // wrong" is the wrong thing to tell a shopkeeper who is merely offline or
+  // who happens to have the app open while a deploy lands.
+  //
+  // STALE BUNDLE is the big one. Pewil is a PWA, so a phone can sit on an old
+  // bundle for days. Every deploy renames the lazy-loaded chunks, so the old
+  // bundle then asks for a filename that no longer exists on Vercel and React
+  // throws ChunkLoadError the moment a route is opened. It looks exactly like
+  // "sometimes when I open it, it says something went wrong" — and it has
+  // nothing to do with payment. The cure is simply to load the new bundle, so
+  // do that automatically, once, guarded against a reload loop.
+  const msg = String(error?.name || '') + ' ' + String(error?.message || '');
+  const isStaleBundle = /ChunkLoadError|Loading chunk|Loading CSS chunk|dynamically imported module|Importing a module script failed/i.test(msg);
+  const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+  const isNetwork = !isOffline && /NetworkError|Failed to fetch|Load failed/i.test(msg);
+
+  React.useEffect(() => {
+    if (!isStaleBundle) return;
+    const KEY = 'pewil_chunk_reload_at';
+    const last = Number(sessionStorage.getItem(KEY) || 0);
+    // Only auto-reload if we haven't just tried — otherwise a genuinely broken
+    // deploy would put the app in an endless refresh.
+    if (Date.now() - last < 20000) return;
+    sessionStorage.setItem(KEY, String(Date.now()));
+    window.location.reload();
+  }, [isStaleBundle]);
+
+  const heading = isStaleBundle ? 'Updating Pewil…'
+    : isOffline ? 'You’re offline'
+    : isNetwork ? 'Can’t reach Pewil'
+    : 'Something went wrong';
+
+  const detail = isStaleBundle
+    ? 'A new version was just released. Loading it now — this takes a second.'
+    : isOffline
+      ? 'Your device has no connection. Sales you have already rung up are saved on this device and will sync when you’re back online.'
+      : isNetwork
+        ? 'We couldn’t reach the server. Check your connection and try again — nothing has been lost.'
+        : 'The error has been reported. If this happened because your subscription needs attention, you can go straight to payment below.';
+
   return (
     <div style={{
       padding: 40, fontFamily: 'Inter, sans-serif', maxWidth: 520, margin: '80px auto',
       background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, textAlign: 'center',
     }}>
-      <div style={{ fontSize: 36 }}>!</div>
+      <div style={{ fontSize: 36 }}>{isStaleBundle ? '↻' : isOffline || isNetwork ? '⚠' : '!'}</div>
       <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, color: '#111827', marginTop: 8 }}>
-        Something went wrong
+        {heading}
       </h1>
       <p style={{ color: '#6b7280', fontSize: 13, marginTop: 6 }}>
-        The error has been reported. If this happened because your subscription needs attention, you can go straight to payment below.
+        {detail}
       </p>
       {payError && (
         <div style={{ background: '#fff1f1', border: '1px solid #fecaca', color: '#991b1b', padding: '8px 12px', borderRadius: 8, fontSize: 12.5, marginTop: 10 }}>
@@ -167,6 +207,10 @@ function SentryFallback({ error, resetError }) {
         >
           Try again
         </button>
+        {/* Only offer payment when the cause could plausibly BE payment.
+            Showing "Go to payment" to someone who is simply offline suggests
+            they owe money, which is both alarming and wrong. */}
+        {!isStaleBundle && !isOffline && !isNetwork && (
         <button
           onClick={goToPayment}
           disabled={payBusy}
@@ -178,6 +222,7 @@ function SentryFallback({ error, resetError }) {
         >
           {payBusy ? 'Starting payment...' : 'Go to payment'}
         </button>
+        )}
       </div>
       <p style={{ fontSize: 11.5, color: '#9ca3af', marginTop: 16 }}>
         Still stuck? Email{' '}
