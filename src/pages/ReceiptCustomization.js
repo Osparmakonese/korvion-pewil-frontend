@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { getReceiptTemplates, createReceiptTemplate, updateReceiptTemplate } from '../api/retailApi';
 import getLocalization from '../utils/localization';
 import useIsMobile from '../hooks/useIsMobile';
+import usePrimaryAction from '../hooks/usePrimaryAction';
 
 // Receipt font-size label <-> points. The model stores an integer (default 12);
 // the UI offers three named sizes. Keep these two helpers as the only place the
@@ -114,6 +115,28 @@ export default function ReceiptCustomization({ onTabChange }) {
     }
   });
 
+  // One save path shared by the in-page button and the top-bar primary action,
+  // so the two can never drift apart (the header button used to do nothing).
+  const handleSave = () => saveMutation.mutate({
+    store_name: businessName,
+    address_line1: address.split('\n')[0],
+    address_line2: address.split('\n')[1],
+    phone: phone,
+    vat_number: vatNumber,
+    tin: tinNumber,
+    header_message: '',
+    footer_message: footerMessage,
+    show_logo: showLogo,
+    show_barcode: showBarcodeOnReceipt,
+    paper_width: paperWidth,
+    font_size: FONT_PT[fontSize] ?? 12,
+    logo_url: logoUrl,
+    brand_color: brandColor,
+    bank_details: bankDetails,
+  });
+
+  usePrimaryAction(handleSave);
+
   const Toggle = ({ checked, onChange }) => (
     <button
       onClick={() => onChange(!checked)}
@@ -154,23 +177,7 @@ export default function ReceiptCustomization({ onTabChange }) {
         </h1>
         {isOwner && (
           <button
-            onClick={() => saveMutation.mutate({
-              store_name: businessName,
-              address_line1: address.split('\n')[0],
-              address_line2: address.split('\n')[1],
-              phone: phone,
-              vat_number: vatNumber,
-              tin: tinNumber,
-              header_message: '',
-              footer_message: footerMessage,
-              show_logo: showLogo,
-              show_barcode: showBarcodeOnReceipt,
-              paper_width: paperWidth,
-              font_size: FONT_PT[fontSize] ?? 12,
-              logo_url: logoUrl,
-              brand_color: brandColor,
-              bank_details: bankDetails
-            })}
+            onClick={handleSave}
             disabled={saveMutation.isPending}
             style={{
               background: '#1a6b3a',
