@@ -106,8 +106,13 @@ const OPERATORS = [
     tier: 'Enterprise',
     accent: T.ink,
     gradient: 'linear-gradient(135deg, #111827, #374151)',
-    cta: 'Talk to sales →',
-    demoModule: null,
+    // The retail demo tenant runs on the ENTERPRISE plan, so it already shows
+    // the chain rollup, multi-branch and AI screens this card is selling. It
+    // was set to demoModule:null, which meant the one card a chain prospect
+    // clicks was the only card that couldn't show them anything.
+    cta: 'Open live demo →',
+    demoModule: 'retail',
+    secondaryCta: { label: 'Talk to sales', to: '/contact?type=enterprise' },
   },
 ];
 
@@ -464,6 +469,20 @@ export default function MobileLandingPage() {
                     ) : (
                       <Link to="/contact" style={{ ...S.opCta, background: o.accent }}>{o.cta}</Link>
                     )}
+                    {/* Chains still need a way to reach a human — but after
+                        they've seen it working, not instead of. */}
+                    {o.secondaryCta && (
+                      <Link
+                        to={o.secondaryCta.to}
+                        style={{
+                          display: 'block', textAlign: 'center', marginTop: 10,
+                          fontSize: 12.5, fontWeight: 700, color: T.muted,
+                          textDecoration: 'none',
+                        }}
+                      >
+                        {o.secondaryCta.label}
+                      </Link>
+                    )}
                   </div>
                 </article>
               </div>
@@ -562,7 +581,19 @@ export default function MobileLandingPage() {
         </Reveal>
         <Reveal><p style={S.finalP}>14-day free trial, no card. Then one simple flat price from $10/month — pay by mobile money or card.</p></Reveal>
         <Reveal><Link to="/register" style={S.finalPrimary} onClick={() => haptics.tap()}>Start free</Link></Reveal>
-        <Reveal><a href="#operators" style={S.finalGhost}>▶ See it in action</a></Reveal>
+        {/* "See it in action" used to be an anchor that merely scrolled back
+            up to the operator cards. On the marketing moment that matters most
+            it should actually open the product. */}
+        <Reveal>
+          <button
+            type="button"
+            onClick={() => enterDemo('retail')}
+            disabled={!!busy}
+            style={{ ...S.finalGhost, border: 0, cursor: busy ? 'wait' : 'pointer', fontFamily: 'inherit' }}
+          >
+            {busy === 'retail' ? 'Opening demo…' : '▶ See it in action'}
+          </button>
+        </Reveal>
         <div style={S.finalMicro}>Made in Africa. Used wherever there's a phone signal.</div>
       </section>
 
