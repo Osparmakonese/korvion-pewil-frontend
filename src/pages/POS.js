@@ -1083,6 +1083,29 @@ export default function POS() {
   ]);
   const [receipt, setReceipt] = useState(null);
   const [showReceipt, setShowReceipt] = useState(false);
+
+  // Every sale is queued first and shown optimistically with a placeholder
+  // number (OFF-<uuid>), then synced in the background. When the server
+  // confirms, swap in the REAL sale so the slip on screen — and anything the
+  // cashier prints or sends to the customer's WhatsApp — carries the receipt
+  // number that actually exists in Sales History (e.g. HQ01-000002), and the
+  // "OFFLINE — WILL SYNC ON RECONNECT" pill clears.
+  useEffect(() => {
+    const onSynced = (e) => {
+      const confirmed = e?.detail?.sale;
+      const crn = e?.detail?.client_receipt_number;
+      if (!confirmed || !crn) return;
+      setReceipt((cur) => {
+        if (!cur) return cur;
+        const curCrn = cur.client_receipt_number || cur.receipt_number;
+        if (curCrn !== crn) return cur;   // a later sale is on screen — leave it
+        return { ...cur, ...confirmed, _offline_pending: false };
+      });
+      setLastReceiptId((cur) => cur || confirmed.id || null);
+    };
+    window.addEventListener('pewil:sale-synced', onSynced);
+    return () => window.removeEventListener('pewil:sale-synced', onSynced);
+  }, []);
   const [focusMode, setFocusMode] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
