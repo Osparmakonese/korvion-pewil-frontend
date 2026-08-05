@@ -507,19 +507,19 @@ const LandingPage = () => {
                 </ul>
                 <div className="pl-op-price-ent">
                   <div className="pl-op-price-ent-head">
-                    <span className="amt">$45</span>
-                    <span className="per">/branch/mo · unlimited tills &amp; users</span>
+                    <span className="amt">$15</span>
+                    <span className="per">/shop/mo · unlimited tills &amp; users</span>
                   </div>
                   <div className="pl-op-price-ent-note">
-                    Enterprise is priced per branch, so you only pay for the size you are &mdash; unlimited tills
-                    and users in each branch, multi-branch rollup, fuel forecourt and white-label branding.
-                    $450/branch/year with 2 months free. 20+ branches: contact us for volume pricing.
+                    Enterprise is priced per shop, so you only pay for the size you are &mdash; unlimited tills
+                    and users in every shop, multi-shop rollup, fuel forecourt and white-label branding.
+                    $150/shop/year with 2 months free. Billed from a minimum of 6 shops.
                   </div>
                   <div className="pl-op-price-ent-scale">
                     <div><span className="br">Starter — single shop</span><span className="pr">$10/mo</span></div>
-                    <div><span className="br">Growth — busy / multi-till</span><span className="pr">$25/mo</span></div>
-                    <div><span className="br">5-branch chain</span><span className="pr">$225/mo</span></div>
-                    <div><span className="br">10-branch chain</span><span className="pr">$450/mo</span></div>
+                    <div><span className="br">Growth — 2 shops, +$8 each to 6</span><span className="pr">$25/mo</span></div>
+                    <div><span className="br">6-shop chain on Growth</span><span className="pr">$57/mo</span></div>
+                    <div><span className="br">10-shop chain on Enterprise</span><span className="pr">$150/mo</span></div>
                   </div>
                 </div>
                 <Link to="/contact?type=enterprise" className="pl-op-btn">Talk to us about your chain &rarr;</Link>
@@ -646,7 +646,7 @@ const LandingPage = () => {
           <h2 className="pl-serif">Open the till tomorrow &mdash; <em>free</em> for 14 days, then from $10 a month.</h2>
           <p>
             Start with a 14-day free trial &mdash; no card required. After that, one simple flat price:
-            Starter $10/mo, Growth $25/mo, Enterprise $45/branch/mo &mdash; with tax-authority fiscalisation, mobile money and
+            Starter $10/mo, Growth $25/mo (add shops for $8 each, up to 6), Enterprise $15/shop/mo &mdash; with tax-authority fiscalisation, mobile money and
             the full till included in every plan. Pay yearly and get 2 months free. No per-receipt fees,
             no surprises. Cancel anytime, export everything &mdash; the data was always yours.
           </p>

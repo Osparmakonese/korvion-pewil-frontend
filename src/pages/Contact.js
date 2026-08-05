@@ -125,7 +125,7 @@ export default function Contact() {
         </h1>
         <p style={{ marginTop: 16, color: C.muted, fontSize: 17, lineHeight: 1.55, maxWidth: '56ch' }}>
           {isEnterprise
-            ? 'The Enterprise plan is priced per branch — $45/branch/month ($450/branch/year, 2 months free) — with unlimited tills and users per branch, multi-branch rollup, fuel forecourt and white-label branding. For 20+ branches we offer volume pricing. Tell us about your operation and we\'ll set up a personalised quote and onboarding — usually within two business days.'
+            ? 'The Enterprise plan is priced per shop — $15/shop/month ($150/shop/year, 2 months free), billed from a minimum of 6 shops — with unlimited tills and users, multi-shop rollup, fuel forecourt and white-label branding. Running fewer than 6 shops? Growth covers up to 6 for $25/month plus $8 per extra shop. Tell us about your operation and we\'ll set up a personalised quote and onboarding — usually within two business days.'
             : 'Send us a note and someone from our team will reply within one business day.'}
         </p>
 
@@ -183,7 +183,7 @@ export default function Contact() {
                   onChange={e => set('branches', e.target.value)}
                   onFocus={fx} onBlur={fb} placeholder="e.g. 12" />
                 <p style={{ marginTop: 6, fontSize: 12.5, color: C.muted }}>
-                  Enterprise $45/branch/mo · unlimited users &amp; tills per branch · 2 months free yearly
+                  Enterprise $15/shop/mo from 6 shops · unlimited users &amp; tills · 2 months free yearly
                 </p>
               </div>
             )}
