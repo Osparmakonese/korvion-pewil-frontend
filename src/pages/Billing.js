@@ -51,8 +51,35 @@ export default function Billing({ activeModule }) {
   // Top-bar primary action — see hooks/usePrimaryAction.js.
   usePrimaryAction(() => setTab('plans'));
 
+  const [payOutcome, setPayOutcome] = useState(null);
+
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  // Payment providers return the customer here with ?payment=success|cancelled.
+  // They used to be sent to "/billing", which is not a route, so someone who
+  // had just paid landed on a dead URL and saw no acknowledgement at all.
+  // Read the outcome, say so plainly, then strip the params so a refresh
+  // doesn't re-announce it.
+  useEffect(() => {
+    let params;
+    try { params = new URLSearchParams(window.location.search); } catch (_) { return; }
+    const outcome = params.get('payment');
+    if (outcome !== 'success' && outcome !== 'cancelled') return;
+    setPayOutcome(outcome);
+    if (outcome === 'success') {
+      // The webhook activates the subscription / add-on, so refetch rather
+      // than leaving the page showing the pre-payment state.
+      ['currentPlanByModule', 'invoices', 'usage', 'billingSummary'].forEach((k) =>
+        queryClient.invalidateQueries({ queryKey: [k] })
+      );
+    }
+    params.delete('payment');
+    params.delete('ref');
+    const qs = params.toString();
+    window.history.replaceState({}, '', window.location.pathname + (qs ? `?${qs}` : ''));
+  }, [queryClient]);
+
   const [tab, setTab] = useState('overview');
 
   // SINGLE-MODULE RULE (April 2026) — a tenant runs exactly one module, so
@@ -273,6 +300,20 @@ export default function Billing({ activeModule }) {
         </div>
         <div style={{ fontSize: 48, opacity: 0.2 }}>{'\u{1F4B3}'}</div>
       </div>
+
+      {/* Returned from the payment provider. Without this the customer paid,
+          got redirected back, and saw nothing at all confirming it worked. */}
+      {payOutcome === 'success' && (
+        <div style={{ background: '#e8f5ee', border: '1px solid #1a6b3a', borderRadius: 10, padding: '12px 16px', marginBottom: 14, fontSize: 12.5, color: '#1a6b3a', fontWeight: 600 }}>
+          {'\u2705'} Payment received. Your plan is being activated {'\u2014'} this page
+          updates within a minute. You can keep working in the meantime.
+        </div>
+      )}
+      {payOutcome === 'cancelled' && (
+        <div style={{ background: '#fffbeb', border: '1px solid #f59e0b', borderRadius: 10, padding: '12px 16px', marginBottom: 14, fontSize: 12.5, color: '#92400e', fontWeight: 600 }}>
+          Payment cancelled {'\u2014'} nothing was charged. Pick a plan below when you{'\u2019'}re ready.
+        </div>
+      )}
 
       {payStatus === 'success' && (
         <div style={{ background: '#e8f5ee', border: '1px solid #1a6b3a', borderRadius: 10, padding: '10px 16px', marginBottom: 14, fontSize: 12, color: '#1a6b3a', fontWeight: 600 }}>

@@ -196,8 +196,12 @@ export default function TrialNotification() {
             : 'Pick a plan anytime — Pewil keeps every record you\'ve added so far.'}
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'center' }}>
+          {/* The app has ONE authenticated route (/app) with the active page in
+              a ?t= query param. "/app/billing" is not a route, so this link
+              silently landed the owner on the Dashboard — the single most
+              important call to action in the product went nowhere. */}
           <Link
-            to="/app/billing"
+            to="/app?t=Billing"
             onClick={() => {
               sessionStorage.setItem(DISMISSED_KEY, '1');
               setDismissed(true);
