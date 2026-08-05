@@ -24,6 +24,7 @@ import { confirm } from '../utils/confirm';
 import { invalidateBranchCaches } from '../utils/queryCache';
 import BackLink from '../components/BackLink';
 import usePrimaryAction from '../hooks/usePrimaryAction';
+import AddShopModal from '../components/AddShopModal';
 
 const T = {
   green:   '#1a6b3a',
@@ -71,6 +72,7 @@ export default function Branches() {
   const isOwner = user?.role === 'owner';
 
   const [editing, setEditing] = useState(null); // null = closed, {} = new, {...} = edit
+  const [showAddShop, setShowAddShop] = useState(false);
 
   const { data: branches = [], isLoading } = useQuery({
     queryKey: ['retail-branches'],
@@ -79,7 +81,11 @@ export default function Branches() {
   });
 
   // Determine plan cap. Cap is "soft" client-side — backend enforces hard.
+  // NOTE: `user.plan` holds the plan SLUG ('retail-growth'), not the bare tier,
+  // so match on the suffix rather than an exact key — the same slug-vs-tier
+  // mismatch that was silently giving every paying tenant free-tier AI credits.
   const plan = (user?.plan || 'starter').toLowerCase();
+  const isGrowth = /(^|-)growth$/.test(plan);
   const cap = PLAN_CAPS[plan] ?? 1;
   const atCap = branches.length >= cap;
   const capTooltip = atCap
@@ -89,7 +95,21 @@ export default function Branches() {
   const createMut = useMutation({
     mutationFn: createBranch,
     onSuccess: () => { invalidateBranchCaches(qc); setEditing(null); },
-    onError: (err) => alert('Could not save branch:\n\n' + formatApiError(err)),
+    onError: (err) => {
+      // The backend is the authority on the shop cap (client-side PLAN_CAPS
+      // was Infinity for every tier, so nothing was ever caught here). When it
+      // refuses because the plan is full, don't dead-end the owner in an
+      // alert() — close the form and offer the thing that actually solves it.
+      const status = err?.response?.status;
+      const msg = formatApiError(err) || '';
+      const isCap = status === 403 && /limit|shop|branch|upgrade|add-on|add on/i.test(msg);
+      if (isCap) {
+        setEditing(null);
+        setShowAddShop(true);
+        return;
+      }
+      alert('Could not save branch:\n\n' + msg);
+    },
   });
   const updateMut = useMutation({
     mutationFn: ({ id, data }) => updateBranch(id, data),
@@ -174,15 +194,34 @@ export default function Branches() {
           )}
         </div>
 
-        {/* Plan cap notice */}
-        {isOwner && atCap && cap !== Infinity && (
+        {/* Growth shop ladder.
+            This used to be a dead-end amber notice reading "Upgrade to
+            Enterprise to run an unlimited chain" — written before the $8 Extra
+            Shop add-on existed, so it sent someone who needed one more shop to
+            a plan with a 6-shop, $90 minimum. And it was only a paragraph: no
+            link, nothing to press. Now it's the actual action. */}
+        {isOwner && isGrowth && branches.length >= 2 && branches.length < 6 && (
           <div style={{
-            background: T.amberT, border: `1px solid ${T.amber}`,
-            color: '#7c2d12', padding: '10px 14px', borderRadius: 8,
-            fontSize: 12, marginBottom: 16,
+            background: '#eff6ff', border: '1px solid #bfdbfe',
+            borderRadius: 10, padding: '13px 15px', marginBottom: 16,
           }}>
-            You're using {branches.length} of {cap} branches on the {plan.charAt(0).toUpperCase() + plan.slice(1)} plan.
-            Upgrade to Enterprise to run an unlimited chain.
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: '#1e40af', marginBottom: 3 }}>
+              Need another shop?
+            </div>
+            <div style={{ fontSize: 12, color: '#1e40af', opacity: 0.9, marginBottom: 11, lineHeight: 1.5 }}>
+              Growth includes 2. Add more for $8 a month each, up to 6 shops.
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowAddShop(true)}
+              style={{
+                background: T.green, color: '#fff', border: 'none',
+                borderRadius: 8, padding: '9px 14px', fontSize: 12.5,
+                fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              Add a shop — $8/month
+            </button>
           </div>
         )}
 
@@ -233,6 +272,12 @@ export default function Branches() {
             saving={createMut.isPending || updateMut.isPending}
           />
         )}
+
+        <AddShopModal
+          open={showAddShop}
+          onClose={() => setShowAddShop(false)}
+          currentShops={branches.length}
+        />
       </div>
     </div>
   );
