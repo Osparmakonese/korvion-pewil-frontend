@@ -5,6 +5,18 @@ import { getReceiptTemplates, createReceiptTemplate, updateReceiptTemplate } fro
 import getLocalization from '../utils/localization';
 import useIsMobile from '../hooks/useIsMobile';
 
+// Receipt font-size label <-> points. The model stores an integer (default 12);
+// the UI offers three named sizes. Keep these two helpers as the only place the
+// mapping lives so the picker and the payload can never drift apart again.
+const FONT_PT = { Small: 10, Medium: 12, Large: 14 };
+const ptToLabel = (pt) => {
+  const n = Number(pt);
+  if (!Number.isFinite(n)) return 'Medium';
+  if (n <= 10) return 'Small';
+  if (n >= 14) return 'Large';
+  return 'Medium';
+};
+
 export default function ReceiptCustomization({ onTabChange }) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
@@ -40,12 +52,11 @@ export default function ReceiptCustomization({ onTabChange }) {
   const [showSocialMedia, setShowSocialMedia] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [paperWidth, setPaperWidth] = useState('80mm');
-  // NOTE: there is deliberately no `fontSize` state any more. It was
-  // initialised to the string 'Medium' and posted as `font_size`, but the
-  // model field is an IntegerField — so DRF rejected EVERY save with
-  // {"font_size": ["A valid integer is required."]}. There is no font-size
-  // control on this page, so the field is simply not sent and the stored
-  // value is left untouched. Re-add it only alongside a real numeric input.
+  // The Small/Medium/Large picker is a LABEL; `ReceiptTemplate.font_size` is an
+  // IntegerField (points). Posting the raw label made DRF reject every single
+  // save with {"font_size": ["A valid integer is required."]} — which is why
+  // "Save Template" never worked. Translate in both directions.
+  const [fontSize, setFontSize] = useState('Medium');
   const [showBarcodeOnReceipt, setShowBarcodeOnReceipt] = useState(true);
   const [showQRCode, setShowQRCode] = useState(true);
   const [currencyDisplay, setCurrencyDisplay] = useState('Dual (USD + ZiG)');
@@ -65,6 +76,7 @@ export default function ReceiptCustomization({ onTabChange }) {
       setFooterMessage(template.footer_message || '');
       setShowBarcodeOnReceipt(template.show_barcode ?? true);
       setPaperWidth(template.paper_width || '80mm');
+      setFontSize(ptToLabel(template.font_size));
       setLogoUrl(template.logo_url || '');
       setBrandColor(template.brand_color || '#1a6b3a');
       setBankDetails(template.bank_details || '');
@@ -154,6 +166,7 @@ export default function ReceiptCustomization({ onTabChange }) {
               show_logo: showLogo,
               show_barcode: showBarcodeOnReceipt,
               paper_width: paperWidth,
+              font_size: FONT_PT[fontSize] ?? 12,
               logo_url: logoUrl,
               brand_color: brandColor,
               bank_details: bankDetails
