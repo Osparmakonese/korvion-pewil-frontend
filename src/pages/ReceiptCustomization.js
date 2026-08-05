@@ -40,7 +40,12 @@ export default function ReceiptCustomization({ onTabChange }) {
   const [showSocialMedia, setShowSocialMedia] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [paperWidth, setPaperWidth] = useState('80mm');
-  const [fontSize, setFontSize] = useState('Medium');
+  // NOTE: there is deliberately no `fontSize` state any more. It was
+  // initialised to the string 'Medium' and posted as `font_size`, but the
+  // model field is an IntegerField — so DRF rejected EVERY save with
+  // {"font_size": ["A valid integer is required."]}. There is no font-size
+  // control on this page, so the field is simply not sent and the stored
+  // value is left untouched. Re-add it only alongside a real numeric input.
   const [showBarcodeOnReceipt, setShowBarcodeOnReceipt] = useState(true);
   const [showQRCode, setShowQRCode] = useState(true);
   const [currencyDisplay, setCurrencyDisplay] = useState('Dual (USD + ZiG)');
@@ -149,7 +154,6 @@ export default function ReceiptCustomization({ onTabChange }) {
               show_logo: showLogo,
               show_barcode: showBarcodeOnReceipt,
               paper_width: paperWidth,
-              font_size: fontSize,
               logo_url: logoUrl,
               brand_color: brandColor,
               bank_details: bankDetails

@@ -11,6 +11,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as Sentry from '@sentry/react';
 import { AuthProvider } from './context/AuthContext';
+import { toast, errorMessage } from './utils/toast';
 import App from './App';
 import './index.css';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
@@ -53,6 +54,30 @@ if (SENTRY_DSN) {
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { retry: 1, staleTime: 30000 },
+    // Safety net for write failures.
+    //
+    // An audit on 5 Aug found 135 of 155 write mutations had no onError of
+    // their own: when a save failed the user saw absolutely nothing — the
+    // button stopped spinning and the change simply never happened. That is
+    // what "it refuses but I think it works" looks like from the shop floor.
+    //
+    // react-query uses this only as a DEFAULT: any mutation that declares its
+    // own onError overrides it, so pages with bespoke inline error UI
+    // (ReceiptCustomization, TeamManagement, Billing…) are untouched and
+    // nothing double-reports.
+    mutations: {
+      onError: (err) => {
+        // 401 is handled by the axios interceptor (redirects to login) and
+        // 402 flips the billing gate — don't shout over either of those.
+        const status = err?.response?.status;
+        if (status === 401) return;
+        try {
+          toast({ message: errorMessage(err), kind: 'error' });
+        } catch (_) {
+          /* never let error reporting throw */
+        }
+      },
+    },
   },
 });
 

@@ -221,10 +221,23 @@ export default function ZimraFiscal() {
           </div>
           <div style={S.btnRow}>
             <button style={{ ...S.btn, ...S.btnSolid, flex: 1 }} disabled={!canEdit || saveMut.isPending}
-              onClick={() => saveMut.mutate({
-                ...form,
-                device_id: form.device_id ? parseInt(form.device_id, 10) : null,
-              })}>
+              onClick={() => {
+                const payload = {
+                  ...form,
+                  device_id: form.device_id ? parseInt(form.device_id, 10) : null,
+                };
+                // The load effect only repopulates a SUBSET of the form from
+                // the saved device — activation_key and fdms_url are never
+                // restored. Spreading the form therefore posted '' for both
+                // and wiped the stored FDMS activation key on every save of an
+                // existing device. Never send them blank on an update.
+                // (Same guard VendingSetup already uses for its auth_key.)
+                if (device?.id) {
+                  if (!payload.activation_key) delete payload.activation_key;
+                  if (!payload.fdms_url) delete payload.fdms_url;
+                }
+                saveMut.mutate(payload);
+              }}>
               {saveMut.isPending ? 'Saving…' : (device ? 'Save changes' : 'Add device')}
             </button>
           </div>

@@ -74,7 +74,15 @@ export default function CustomerLoyalty({ onTabChange }) {
     };
   };
 
-  const recentActivity = transactionsData ? transactionsData.map(formatTransactionRow) : [];
+  // DRF can return either a plain array or the paginated {count, results}
+  // shape on the same endpoint depending on page size. Calling .map() on the
+  // paginated object throws "transactionsData.map is not a function" and takes
+  // the whole page down — the same fault that has already hit POS, the Retail
+  // Dashboard and Receipt Customization. Guard both shapes.
+  const transactionList = Array.isArray(transactionsData)
+    ? transactionsData
+    : (transactionsData && transactionsData.results) || [];
+  const recentActivity = transactionList.map(formatTransactionRow);
 
   return (
     <div style={{ padding: 24, fontFamily: "'Inter', sans-serif", backgroundColor: '#f9fafb', minHeight: '100vh' }}>
