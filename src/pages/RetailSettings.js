@@ -9,6 +9,7 @@ import WhatsAppAssistant from '../components/WhatsAppAssistant';
 import getLocalization from '../utils/localization';
 import api from '../api/axios';
 import useIsMobile from '../hooks/useIsMobile';
+import usePrimaryAction from '../hooks/usePrimaryAction';
 
 /* ─── Design 3 — Living Africa tokens (shared with Landing/Login/Register/Settings) ─── */
 const C = {
@@ -167,6 +168,9 @@ const TABS = [
 
 /* ─── Main component ─── */
 export default function RetailSettings({ onTabChange }) {
+  // Top-bar primary action — see hooks/usePrimaryAction.js.
+  usePrimaryAction(() => saveTenant());
+
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const role = user?.role || 'owner';

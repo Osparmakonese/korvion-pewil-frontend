@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { getJournalEntries, createJournalEntry, getTrialBalance } from '../api/retailApi';
 import { fmt } from '../utils/format';
+import usePrimaryAction from '../hooks/usePrimaryAction';
 
 const styles = {
   page: { maxWidth: 1200, margin: '0 auto', padding: 20 },
@@ -34,6 +35,9 @@ const styles = {
 };
 
 export default function JournalEntries({ onTabChange }) {
+  // Top-bar primary action — see hooks/usePrimaryAction.js.
+  usePrimaryAction(() => setShowModal(true));
+
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const canCreate = user?.role === 'owner' || user?.role === 'manager';

@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { getEndOfDayReport, exportSalesExcel } from '../api/retailApi';
 import AIInsightCard from '../components/AIInsightCard';
 import MobileEndOfDay from '../components/MobileEndOfDay';
+import usePrimaryAction from '../hooks/usePrimaryAction';
 
 /* ─── Styles ─── */
 const S = {
@@ -229,6 +230,9 @@ const S = {
 };
 
 export default function EndOfDayReport({ onTabChange }) {
+  // Top-bar primary action — see hooks/usePrimaryAction.js.
+  usePrimaryAction(() => refetch());
+
   useAuth();
   const [reportDate, setReportDate] = useState(() => new Date().toISOString().split('T')[0]);
 

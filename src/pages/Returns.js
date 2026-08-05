@@ -7,8 +7,12 @@ import { confirm } from '../utils/confirm';
 import { invalidateProductCaches, invalidateSaleCaches } from '../utils/queryCache';
 import { isOffline, submitWithQueue } from '../utils/offlinePOS';
 import api from '../api/axios';
+import usePrimaryAction from '../hooks/usePrimaryAction';
 
 export default function Returns({ onTabChange }) {
+  // Top-bar primary action — see hooks/usePrimaryAction.js.
+  usePrimaryAction(() => setShowAddForm(true));
+
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showAddForm, setShowAddForm] = useState(false);

@@ -8,6 +8,7 @@ import TwoFactorPanel from '../components/TwoFactorPanel';
 import PasswordPolicyPanel from '../components/PasswordPolicyPanel';
 import BusinessTypePanel from '../components/BusinessTypePanel';
 import HapticsToggle from '../components/HapticsToggle';
+import usePrimaryAction from '../hooks/usePrimaryAction';
 
 /* ─── Design 3 — Living Africa tokens (shared with Landing/Login/Register) ─── */
 const C = {
@@ -172,6 +173,9 @@ function buildTabs({ farmOn }) {
 
 /* ─── Main component ─── */
 export default function Settings({ onTabChange }) {
+  // Top-bar primary action — see hooks/usePrimaryAction.js.
+  usePrimaryAction(() => saveTenant());
+
   const { user } = useAuth();
   const role = user?.role || 'owner';
   const [activeTab, setActiveTab] = useState('general');

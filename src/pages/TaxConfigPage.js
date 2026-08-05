@@ -9,6 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { getTaxConfig, updateTaxConfig } from '../api/retailApi';
+import usePrimaryAction from '../hooks/usePrimaryAction';
 
 const MANAGER_ROLES = new Set(['owner', 'manager']);
 
@@ -99,6 +100,9 @@ function BandEditor({ title, bands, onChange, disabled }) {
 }
 
 export default function TaxConfigPage() {
+  // Top-bar primary action — see hooks/usePrimaryAction.js.
+  usePrimaryAction(() => mut.mutate(form));
+
   const { user } = useAuth();
   const canManage = MANAGER_ROLES.has(user?.role);
   const qc = useQueryClient();

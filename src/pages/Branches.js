@@ -23,6 +23,7 @@ import { useAuth } from '../context/AuthContext';
 import { confirm } from '../utils/confirm';
 import { invalidateBranchCaches } from '../utils/queryCache';
 import BackLink from '../components/BackLink';
+import usePrimaryAction from '../hooks/usePrimaryAction';
 
 const T = {
   green:   '#1a6b3a',
@@ -62,6 +63,9 @@ const formatApiError = (err, fallback = 'Save failed') => {
 };
 
 export default function Branches() {
+  // Top-bar primary action — see hooks/usePrimaryAction.js.
+  usePrimaryAction(() => setEditing({}));
+
   const { user } = useAuth() || {};
   const qc = useQueryClient();
   const isOwner = user?.role === 'owner';

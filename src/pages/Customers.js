@@ -8,8 +8,12 @@ import { confirm } from '../utils/confirm';
 import AIInsightCard from '../components/AIInsightCard';
 import MobileCustomers from '../components/MobileCustomers';
 import { invalidateCustomerCaches } from '../utils/queryCache';
+import usePrimaryAction from '../hooks/usePrimaryAction';
 
 export default function Customers({ onTabChange }) {
+  // Top-bar primary action — see hooks/usePrimaryAction.js.
+  usePrimaryAction(() => setShowAddForm(true));
+
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');

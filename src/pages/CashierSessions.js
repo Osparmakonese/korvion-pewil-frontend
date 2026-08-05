@@ -12,6 +12,7 @@ import { fmt } from '../utils/format';
 import AIInsightCard from '../components/AIInsightCard';
 import MobileCashierSessions from '../components/MobileCashierSessions';
 import { invalidateSessionCaches } from '../utils/queryCache';
+import usePrimaryAction from '../hooks/usePrimaryAction';
 
 /* --- Open Session Modal ---
  *
@@ -598,6 +599,9 @@ const S = {
 };
 
 export default function CashierSessions() {
+  // Top-bar primary action — see hooks/usePrimaryAction.js.
+  usePrimaryAction(() => setShowOpenModal(true));
+
   const qc = useQueryClient();
   const [showOpenModal, setShowOpenModal] = useState(false);
   const [closingSession, setClosingSession] = useState(null);

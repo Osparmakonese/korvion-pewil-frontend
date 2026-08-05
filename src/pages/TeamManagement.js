@@ -4,6 +4,7 @@ import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { getPasswordPolicy } from '../api/authApi';
 import { initials, avatarColor } from '../utils/format';
+import usePrimaryAction from '../hooks/usePrimaryAction';
 
 // Generate a password that satisfies any tenant policy: always one of each
 // character class, length meets the policy minimum. Excludes look-alike
@@ -62,6 +63,9 @@ function updateUser(id, data) {
 }
 
 export default function TeamManagement() {
+  // Top-bar primary action — see hooks/usePrimaryAction.js.
+  usePrimaryAction(() => setShowInviteModal(true));
+
   const { user } = useAuth();
   const queryClient = useQueryClient();
   // Retail calls a 'worker' a "Cashier"; farm calls them a "Worker". This is a

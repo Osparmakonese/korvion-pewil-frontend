@@ -12,6 +12,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
+import usePrimaryAction from '../hooks/usePrimaryAction';
 import {
   getPayrollRuns, getPayrollRun, createPayrollRun, deletePayrollRun,
   generatePayrollLines, recalculatePayrollRun,
@@ -419,6 +420,9 @@ function RunDrawer({ runId, onClose, canManage }) {
 
 // ─── Main page ─────────────────────────────────────────────
 export default function RetailPayroll() {
+  // Top-bar primary action — see hooks/usePrimaryAction.js.
+  usePrimaryAction(() => setShowNew(true));
+
   const { user } = useAuth();
   const canManage = MANAGER_ROLES.has(user?.role);
 

@@ -6,8 +6,12 @@ import {
   getPrintBridgeStatus, getZimraDevices, getFiscalQueueStats,
 } from '../api/retailApi';
 import AIInsightCard from '../components/AIInsightCard';
+import usePrimaryAction from '../hooks/usePrimaryAction';
 
 export default function DeviceConfiguration({ onTabChange }) {
+  // Top-bar primary action — see hooks/usePrimaryAction.js.
+  usePrimaryAction(() => openAdd());
+
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState('devices');
   const [showAddModal, setShowAddModal] = useState(false);

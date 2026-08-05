@@ -3,8 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { getProducts } from '../api/retailApi';
 import useIsMobile from '../hooks/useIsMobile';
+import usePrimaryAction from '../hooks/usePrimaryAction';
 
 export default function BarcodeGenerator({ onTabChange }) {
+  // Top-bar primary action — see hooks/usePrimaryAction.js.
+  usePrimaryAction(() => window.print());
+
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const [selectedProduct, setSelectedProduct] = useState('');

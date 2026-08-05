@@ -15,6 +15,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import PlansTable from '../components/PlansTable';
 import { fmt } from '../utils/format';
+import usePrimaryAction from '../hooks/usePrimaryAction';
 
 const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' };
 const pill = (bg, color) => ({ fontSize: 8, fontWeight: 700, padding: '2px 7px', borderRadius: 20, display: 'inline-block', letterSpacing: '0.02em', textTransform: 'uppercase', background: bg, color });
@@ -47,6 +48,9 @@ const fetchActiveSubs = async () => {
 };
 
 export default function Billing({ activeModule }) {
+  // Top-bar primary action — see hooks/usePrimaryAction.js.
+  usePrimaryAction(() => setTab('plans'));
+
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState('overview');

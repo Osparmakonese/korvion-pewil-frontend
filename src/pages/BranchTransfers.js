@@ -28,6 +28,7 @@ import { confirm } from '../utils/confirm';
 import { requireManagerApproval } from '../utils/managerApproval';
 import { invalidateBranchCaches, invalidateProductCaches } from '../utils/queryCache';
 import BackLink from '../components/BackLink';
+import usePrimaryAction from '../hooks/usePrimaryAction';
 
 const T = {
   green:   '#1a6b3a',
@@ -63,6 +64,9 @@ const formatApiError = (err, fallback = 'Save failed') => {
 };
 
 export default function BranchTransfers() {
+  // Top-bar primary action — see hooks/usePrimaryAction.js.
+  usePrimaryAction(() => setShowNew(true));
+
   const { user } = useAuth() || {};
   const qc = useQueryClient();
   const canManage = user?.role === 'owner' || user?.role === 'manager';

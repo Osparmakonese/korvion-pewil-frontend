@@ -435,7 +435,11 @@ const PRIMARY_ACTIONS = {
   'Low Stock Alerts': null,
   'ZIMRA Fiscal': null,
   'Tax Compliance': null,
-  'Multi-Currency': 'Update Rates',
+  // No in-page equivalent exists for these two, so there is nothing to wire a
+  // header button to. Leaving a label here would render a button that silently
+  // does nothing — which is exactly the fault being fixed. Re-add the label at
+  // the same time as the feature, together with usePrimaryAction() on the page.
+  'Multi-Currency': null,
   'End of Day': 'Generate Report',
   'Cashier Performance': null,
   'Customer Loyalty': null,
@@ -443,7 +447,7 @@ const PRIMARY_ACTIONS = {
   'Receipt Setup': 'Save Template',
   'POS Settings': null,
   'Manager PIN': null,
-  'Profit Margins': 'Export CSV',
+  'Profit Margins': null,   // in-page "Export CSV" button has no onClick either
   'Device Config': '+ Add Device',
   'Tax Config': 'Save tax configuration',
   'Billing': 'Change Plan',

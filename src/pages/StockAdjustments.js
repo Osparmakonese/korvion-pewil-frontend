@@ -5,6 +5,7 @@ import { invalidateProductCaches } from '../utils/queryCache';
 import { submitWithQueue } from '../utils/offlinePOS';
 import { confirm } from '../utils/confirm';
 import api from '../api/axios';
+import usePrimaryAction from '../hooks/usePrimaryAction';
 
 /* --- Add Adjustment Modal --- */
 function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
@@ -207,6 +208,9 @@ const S = {
 };
 
 export default function StockAdjustments() {
+  // Top-bar primary action — see hooks/usePrimaryAction.js.
+  usePrimaryAction(() => setShowModal(true));
+
   const qc = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [search, setSearch] = useState('');

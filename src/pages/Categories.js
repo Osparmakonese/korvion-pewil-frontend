@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCategories, createCategory, updateCategory, deleteCategory, getProducts } from '../api/retailApi';
 import { confirm } from '../utils/confirm';
 import { invalidateCategoryCaches } from '../utils/queryCache';
+import usePrimaryAction from '../hooks/usePrimaryAction';
 
 /* --- Category Modal --- */
 function CategoryModal({ isOpen, onClose, onSubmit, loading, editCategory }) {
@@ -76,6 +77,9 @@ const S = {
 };
 
 export default function Categories() {
+  // Top-bar primary action — see hooks/usePrimaryAction.js.
+  usePrimaryAction(() => { setEditCategory(null); setShowModal(true); });
+
   const qc = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [editCategory, setEditCategory] = useState(null);

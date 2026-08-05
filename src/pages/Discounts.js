@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { getDiscounts, createDiscount, updateDiscount, deleteDiscount } from '../api/retailApi';
 import { confirm } from '../utils/confirm';
+import usePrimaryAction from '../hooks/usePrimaryAction';
 
 const S = {
   page: { maxWidth: 1200, margin: '0 auto', padding: 20 },
@@ -32,6 +33,9 @@ const S = {
 };
 
 export default function Discounts({ onTabChange }) {
+  // Top-bar primary action — see hooks/usePrimaryAction.js.
+  usePrimaryAction(() => handleOpenModal());
+
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const isOwnerOrManager = user?.role === 'owner' || user?.role === 'manager';
