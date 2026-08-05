@@ -231,6 +231,14 @@ export default function Billing({ activeModule }) {
   // /pricing page still previews Kwacha freely — that's marketing, not a
   // live charge.)
   const isLocal = !!(loc && loc.is_local && loc.rail_live);
+  // Local price exists but the automated rail is NOT live yet (Zambia before
+  // Lenco). The backend attaches a `manual_payment` block when a collection
+  // number is configured — "pay to this number and we'll activate you". Until
+  // this was surfaced the block was computed and thrown away, so a Zambian
+  // shop had no way to pay in Kwacha at all and was pushed to a USD card
+  // gateway many of them can't use.
+  const manualPay = (!isLocal && loc && loc.is_local && loc.manual_payment) || null;
+  const manualSym = manualPay ? (loc.currency_symbol || '') : '$';
   const sym = isLocal ? (loc.currency_symbol || '') : '$';
   const fmtAmt = (n) => Number(n).toLocaleString('en-US', { maximumFractionDigits: isLocal ? 0 : 2, minimumFractionDigits: isLocal ? 0 : 2 });
 
@@ -499,6 +507,28 @@ export default function Billing({ activeModule }) {
               </div>
             )}
 
+            {/* Manual collection — local price is set but the automated rail
+                isn't live yet (e.g. Zambia before Lenco). Shows the number to
+                pay into, in the shop's own currency. */}
+            {payStatus !== 'success' && payStatus !== 'awaiting' && manualPay && (
+              <div style={{ background: '#f0f9f4', border: '1px solid #1a6b3a', borderRadius: 10, padding: '14px 16px', marginBottom: 16 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#1a6b3a', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                  Pay by mobile money
+                </div>
+                <div style={{ fontSize: 13, color: '#374151', marginBottom: 10 }}>
+                  Send <strong>{manualSym}{loc.monthly && billingCycle === 'monthly' ? Number(loc.monthly).toLocaleString('en-US', { maximumFractionDigits: 0 }) : Number(loc.yearly || loc.monthly || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}</strong> to:
+                </div>
+                <div style={{ background: '#fff', border: '1px solid #d1fae5', borderRadius: 8, padding: '10px 12px', marginBottom: 10 }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: '#111827', letterSpacing: '0.02em' }}>{manualPay.number}</div>
+                  <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{manualPay.name}</div>
+                </div>
+                <div style={{ fontSize: 11, color: '#374151', lineHeight: 1.5 }}>{manualPay.note}</div>
+                <div style={{ fontSize: 10, color: '#6b7280', lineHeight: 1.5, marginTop: 8, paddingTop: 8, borderTop: '1px solid #d1fae5' }}>
+                  Prefer to pay by card? Press the button below to check out in USD instead.
+                </div>
+              </div>
+            )}
+
             {/* Awaiting mobile-money approval (push-to-phone) */}
             {payStatus === 'awaiting' && (
               <div style={{ background: '#FEF3C7', border: '1px solid #F59E0B', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
@@ -511,7 +541,7 @@ export default function Billing({ activeModule }) {
             )}
 
             {/* Payment info — Pesepay hosted checkout handles method selection */}
-            {payStatus !== 'success' && payStatus !== 'awaiting' && !isLocal && (
+            {payStatus !== 'success' && payStatus !== 'awaiting' && !isLocal && !manualPay && (
               <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
                 <div style={{ fontSize: 11, color: '#374151', fontWeight: 600, marginBottom: 4 }}>
                   You{'\u2019'}ll be redirected to Pesepay to complete payment.
