@@ -373,12 +373,21 @@ export default function Layout({
             style={{ position: 'fixed', inset: 0, background: 'rgba(20,16,8,0.55)', zIndex: 400 }}
             onClick={() => setShowMobileMore(false)}
           />
-          <div style={{
+          <div className="mobile-more-sheet" style={{
             position: 'fixed', bottom: 0, left: 0, right: 0,
             background: '#faf6ef',
             borderRadius: '28px 28px 0 0',
             padding: '12px 20px calc(28px + env(safe-area-inset-bottom, 0px))',
-            maxHeight: '85vh', overflowY: 'auto', zIndex: 450,
+            // max-height lives in index.css (.mobile-more-sheet) so it can use
+            // dvh with a vh fallback — inline styles can't hold both. `85vh`
+            // alone measures the LARGE viewport and ignores the phone's address
+            // bar, so the sheet thought it fitted, never scrolled, and the last
+            // sections (Team access, Help & Support) sat under the browser
+            // chrome unreachable.
+            overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain',
+            zIndex: 450,
             boxShadow: '0 -10px 40px rgba(0,0,0,0.25)',
             fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
           }}>

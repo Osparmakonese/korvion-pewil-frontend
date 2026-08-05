@@ -137,6 +137,40 @@ export default function ReceiptCustomization({ onTabChange }) {
 
   usePrimaryAction(handleSave);
 
+  // Mobile sticky save bar.
+  //
+  // On a phone the desktop Topbar is hidden (.topbar-desktop is display:none),
+  // so its "Save Template" button does not exist. The only remaining save sat
+  // at the TOP of a long form — you fill the fields, scroll to the bottom, and
+  // there is nothing there. Owners reasonably reported this page as having no
+  // save button at all. This pins one to the bottom of the screen on mobile,
+  // above the bottom nav, where a thumb already is.
+  const MobileSaveBar = () => (
+    <div style={{
+      position: 'fixed',
+      left: 0, right: 0,
+      bottom: 'calc(76px + env(safe-area-inset-bottom, 0px))',
+      padding: '10px 12px',
+      background: 'rgba(249,250,251,0.96)',
+      borderTop: '1px solid #e5e7eb',
+      zIndex: 60,
+    }}>
+      <button
+        onClick={handleSave}
+        disabled={saveMutation.isPending}
+        style={{
+          width: '100%', padding: '14px', borderRadius: 10, border: 'none',
+          background: '#1a6b3a', color: '#fff', fontSize: 15, fontWeight: 700,
+          fontFamily: 'inherit',
+          cursor: saveMutation.isPending ? 'not-allowed' : 'pointer',
+          opacity: saveMutation.isPending ? 0.7 : 1,
+        }}
+      >
+        {saveMutation.isPending ? 'Saving…' : 'Save template'}
+      </button>
+    </div>
+  );
+
   const Toggle = ({ checked, onChange }) => (
     <button
       onClick={() => onChange(!checked)}
@@ -633,6 +667,10 @@ export default function ReceiptCustomization({ onTabChange }) {
       >
         Receipt format is compatible with 58mm and 80mm thermal printers. Digital receipts can be sent via WhatsApp after each sale.
       </div>
+
+      {/* Extra clearance so the last card isn't hidden behind the sticky bar. */}
+      {isMobile && isOwner && <div style={{ height: 76 }} />}
+      {isMobile && isOwner && <MobileSaveBar />}
     </div>
   );
 }

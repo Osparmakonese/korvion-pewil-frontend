@@ -576,3 +576,15 @@ body.pewil-pos-focus main.page-content-mobile {
   main.page-content-mobile pre,
   main.page-content-mobile code { overflow-x: auto; max-width: 100%; }
 }
+
+/* Mobile "More" drawer height.
+   `vh` on phones measures the LARGE viewport — it does not shrink for the
+   browser address bar. A sheet capped at 85vh therefore believed it fitted,
+   never enabled its own scrolling, and its last rows (Team access, Help &
+   Support) sat underneath the browser chrome with no way to reach them.
+   `dvh` tracks the viewport that is actually visible right now. The plain
+   `vh` rule stays first as the fallback for older Android WebViews. */
+.mobile-more-sheet { max-height: 85vh; }
+@supports (height: 100dvh) {
+  .mobile-more-sheet { max-height: 85dvh; }
+}
