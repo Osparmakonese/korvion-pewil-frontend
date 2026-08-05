@@ -752,6 +752,13 @@ const S = {
     height: 'calc(100vh - 110px)',
     background: '#f9fafb',
     padding: '12px',
+    // The POS control bar (Focus Mode / Price Check / Loyalty / Parked /
+    // Reprint / Cash Drop / Fullscreen) is absolutely positioned at top:8
+    // right:8 relative to THIS element, so it used to sit on top of the panel
+    // headers — the right panel's "Current Sale" title was rendered half
+    // behind it. Reserve a band at the top so the bar has its own space and
+    // never covers content.
+    paddingTop: '52px',
     boxSizing: 'border-box',
     position: 'relative',
   },
