@@ -13,7 +13,10 @@ function ReceiptDetailModal({ isOpen, onClose, sale }) {
   const handlePrint = () => {
     const printWin = window.open('', '_blank', 'width=400,height=600');
     const rows = items.map(i =>
-      `<tr><td style="padding:4px 0;font-size:11px">${i.product_name || 'Item'} x${i.qty || 0}</td><td style="text-align:right;padding:4px 0;font-size:11px">$${(i.total || 0).toFixed(2)}</td></tr>`
+      // Line totals are serializer decimals, i.e. strings — the sibling
+      // subtotal/tax lines below already use parseFloat for this reason.
+      // Without it, reprinting a receipt throws "toFixed is not a function".
+      `<tr><td style="padding:4px 0;font-size:11px">${i.product_name || 'Item'} x${i.qty || 0}</td><td style="text-align:right;padding:4px 0;font-size:11px">$${(Number(i.total) || 0).toFixed(2)}</td></tr>`
     ).join('');
     printWin.document.write(`<html><head><title>Receipt</title></head><body style="font-family:monospace;max-width:300px;margin:0 auto;padding:20px">
       <h2 style="text-align:center;margin:0 0 4px">PEWIL</h2>

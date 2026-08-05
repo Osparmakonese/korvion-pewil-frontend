@@ -115,15 +115,28 @@ export default function Discounts({ onTabChange }) {
       name: d.name,
       type: d.discount_type,
       period: d.start_date && d.end_date ? `${d.start_date} – ${d.end_date}` : 'N/A',
-      timesUsed: d.times_used || 0,
-      discounted: `$${(d.value || 0).toFixed(2)}`,
-      impact: `${d.times_used > 0 ? '+' : ''}${(d.value * d.times_used).toFixed(2)}`
+      timesUsed: Number(d.times_used) || 0,
+      // Discount.value is a serializer DecimalField, so DRF sends it as the
+      // STRING "10.00" (COERCE_DECIMAL_TO_STRING is on by default). A string
+      // is truthy, so `(d.value || 0)` kept the string and `.toFixed` blew up
+      // with "is not a function", taking the whole Discounts page down.
+      // Coerce every API decimal before doing maths on it.
+      discounted: `$${(Number(d.value) || 0).toFixed(2)}`,
+      impact: `${Number(d.times_used) > 0 ? '+' : ''}${((Number(d.value) || 0) * (Number(d.times_used) || 0)).toFixed(2)}`
     }))
   , [allDiscounts]);
 
-  const totalDiscounted = allDiscounts.reduce((sum, d) => sum + (d.times_used * d.value || 0), 0);
+  // `value` arrives as a STRING from DRF. Multiplication coerces it, so the
+  // total happened to work — but `sum + d.value` CONCATENATES: 0 + "10.00"
+  // gives "010.00", then + "20.00" gives "010.0020.00", which divides to NaN.
+  // The average discount rate was rendering as "NaN%" rather than crashing,
+  // which is the quieter and more dangerous half of this bug.
+  const totalDiscounted = allDiscounts.reduce(
+    (sum, d) => sum + ((Number(d.times_used) || 0) * (Number(d.value) || 0)), 0);
   const avgRate = allDiscounts.length > 0
-    ? (allDiscounts.reduce((sum, d) => sum + (d.discount_type === 'percentage' ? d.value : 0), 0) / allDiscounts.length)
+    ? (allDiscounts.reduce(
+        (sum, d) => sum + (d.discount_type === 'percentage' ? (Number(d.value) || 0) : 0),
+        0) / allDiscounts.length)
     : 0;
 
   useEffect(() => {

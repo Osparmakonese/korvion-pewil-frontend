@@ -390,7 +390,7 @@ export default function EndOfDayReport({ onTabChange }) {
                         <span style={S.paymentMethodLabel}>{method.method}</span>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                           <span style={S.paymentMethodAmount}>
-                            ${(method.total || 0).toFixed(2)}
+                            ${(Number(method.total) || 0).toFixed(2)}
                           </span>
                           <span style={S.paymentMethodPercent}>({Math.round(percent)}%)</span>
                         </div>
