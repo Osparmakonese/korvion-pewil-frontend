@@ -587,7 +587,12 @@ export default function ReceiptCustomization({ onTabChange }) {
                 </div>
 
                 {/* items */}
-                <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 * fs }}>
+                {/* minWidth:0 opts this table OUT of the global mobile
+                    `min-width:max-content` table rule in index.css — inline
+                    style beats the stylesheet. This is a 58mm receipt
+                    preview: it must wrap to the paper width, not widen to
+                    fit its longest item name. */}
+                <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', minWidth: 0, borderCollapse: 'collapse', fontSize: 11 * fs }}>
                   <tbody>
                     {sampleItems.map((it, i) => (
                       <tr key={i}>

@@ -15,7 +15,10 @@ const S = {
   table: { width: '100%', borderCollapse: 'collapse', fontSize: 12 },
   th: { fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', textAlign: 'left', padding: '9px 10px', borderBottom: '1px solid #e5e7eb', background: '#f8fafc' },
   td: { padding: '8px 10px', borderBottom: '1px solid #f1f5f9', color: '#334155' },
-  input: { width: 80, padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 13, textAlign: 'right' },
+  // 96px, not 80: on mobile index.css forces inputs to 16px font with
+  // 12px/14px padding, which left an 80px box showing barely two digits —
+  // you could not read a count of 145 while typing it.
+  input: { width: 96, minWidth: 96, padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 13, textAlign: 'right' },
   pill: (bg, fg) => ({ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: bg, color: fg }),
 };
 

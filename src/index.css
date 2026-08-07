@@ -166,19 +166,46 @@ input, select, textarea, button {
     overflow-wrap: break-word;
   }
 
-  /* 2. Every raw <table> inside main becomes independently scrollable. */
+  /* 2. Horizontal table scrolling on phones.
+     ────────────────────────────────────────────────────────────────
+     DO NOT put `display:block` on the table and `display:table` on
+     thead/tbody. That is what used to be here, and it makes the head
+     and the body two INDEPENDENT tables whose columns are measured
+     separately — so the values stop lining up under their own
+     headings. Measured on the Stocktake count screen at 360px on
+     2026-08-07: the body columns sat up to 75px away from their
+     headers ("SKU" was nowhere near the sku).
+
+     A table is left as a real table so one column algorithm sizes
+     head and body together. `min-width: max-content` stops the
+     columns being crushed (a `width:100%` table shrinks to its
+     container and can never overflow, so there is nothing to swipe),
+     and the wrapping <div style={{overflowX:'auto'}}> does the
+     scrolling. Both are required — either alone does nothing. */
   main.page-content-mobile table {
-    display: block;
-    max-width: 100%;
+    min-width: max-content;
+  }
+  main.page-content-mobile [style*="overflow-x: auto"] {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
   }
-  main.page-content-mobile table > thead,
-  main.page-content-mobile table > tbody,
-  main.page-content-mobile table > tfoot {
-    display: table;
-    width: max-content;
-    min-width: 100%;
+
+  /* Pin the first column — the name you are reading the row by —
+     so it stays put while the rest of the row scrolls sideways.
+     Skipped where the row or the cell paints its own background, so
+     status-tinted rows keep their colour. */
+  main.page-content-mobile table > thead > tr > th:first-child,
+  main.page-content-mobile table > tbody > tr:not([style*="background"]) > td:first-child:not([style*="background"]) {
+    position: sticky;
+    left: 0;
+    background: #fff;
+    box-shadow: 1px 0 0 0 #e5e7eb;
+    z-index: 1;
+  }
+  main.page-content-mobile table > thead > tr > th:first-child {
+    background: #f9fafb;
+    z-index: 2;
   }
 
   /* 3. Bump tiny inline table text up to legible mobile sizes */
@@ -411,12 +438,20 @@ input, select, textarea, button {
   .mobile-header .mh-brand,
   .mobile-header .mh-right { color: #111827; }
 
-  /* Tables on mobile — desktop palette. */
+  /* Tables on mobile — desktop palette.
+     `overflow: hidden` MUST NOT come back here. This block sits after
+     the scrolling rules above, so a shorthand `overflow` here resets
+     overflow-x and silently kills horizontal scrolling on every table
+     in the app — the reason nothing could be swiped before 2026-08-07.
+     It was only ever here to clip the rounded corners; the corners are
+     now rounded on the scroll wrapper instead. */
   main.page-content-mobile table {
     background: #fff;
     border: 1px solid #e5e7eb;
+    overflow: visible;
+  }
+  main.page-content-mobile [style*="overflow-x: auto"] {
     border-radius: 14px;
-    overflow: hidden;
   }
   main.page-content-mobile table th,
   main.page-content-mobile table td {

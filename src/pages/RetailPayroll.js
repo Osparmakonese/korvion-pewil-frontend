@@ -354,7 +354,7 @@ function RunDrawer({ runId, onClose, canManage }) {
 
             {/* Lines table */}
             <div style={styles.card}>
-              <table style={styles.table}>
+              <div style={{ overflowX: 'auto' }}><table style={styles.table}>
                 <thead>
                   <tr>
                     <th style={styles.th}>Employee</th>
@@ -375,7 +375,7 @@ function RunDrawer({ runId, onClose, canManage }) {
                     <LineRow key={l.id} line={l} runStatus={run.status} runId={run.id} />
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             </div>
 
             {/* Lifecycle actions */}
@@ -460,7 +460,7 @@ export default function RetailPayroll() {
             </div>
           </div>
         ) : (
-          <table style={styles.table}>
+          <div style={{ overflowX: 'auto' }}><table style={styles.table}>
             <thead>
               <tr>
                 <th style={styles.th}>Run #</th>
@@ -494,7 +494,7 @@ export default function RetailPayroll() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
 
