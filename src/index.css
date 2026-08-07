@@ -115,6 +115,11 @@ input, select, textarea, button {
   background: #9ca3af;
 }
 
+/* ── Stocktake: hide native number spinners (our own +/- buttons do it) ── */
+.stk-qty::-webkit-outer-spin-button,
+.stk-qty::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.stk-qty { -moz-appearance: textfield; appearance: textfield; }
+
 /* ── Skeleton animation ── */
 @keyframes skeleton-pulse {
   0% { opacity: 0.6; }
@@ -213,6 +218,24 @@ input, select, textarea, button {
   main.page-content-mobile table td {
     font-size: 12px !important;
     padding: 8px 10px !important;
+  }
+
+  /* Stocktake count field. Sized to be read and tapped one-handed while
+     the other hand is holding stock, so it has to beat the generic
+     mobile input rules below (16px / 12px padding). */
+  main.page-content-mobile input.stk-qty {
+    font-size: 24px !important;
+    font-weight: 800 !important;
+    text-align: center !important;
+    padding: 11px 4px !important;
+    border-radius: 15px !important;
+    border: 2px solid #e2e8f0 !important;
+    color: #0f172a !important;
+    height: 54px;
+  }
+  main.page-content-mobile input.stk-qty:focus {
+    border-color: #1a6b3a !important;
+    outline: none !important;
   }
 
   /* 4. Prevent iOS zoom-on-focus — every text input needs >=16px */
