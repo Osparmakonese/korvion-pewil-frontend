@@ -89,7 +89,19 @@ const M = {
     background: '#fef3e2', border: '1px solid #fbd9a5', borderRadius: 12,
     padding: '10px 12px', fontSize: 12.5, color: '#92400e', marginBottom: 12, lineHeight: 1.45,
   },
+  valueBlock: { background: '#f8fafc', borderRadius: 12, padding: '10px 13px 12px', marginBottom: 12 },
+  vRow: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto auto', columnGap: 14, alignItems: 'baseline', padding: '4px 0' },
+  vHead: { fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.06em', textAlign: 'right', minWidth: 74 },
+  vLabel: { fontSize: 12.5, color: '#64748b', fontWeight: 600 },
+  vNum: (color) => ({
+    fontSize: 15, fontWeight: 800, color: color || '#0f172a',
+    textAlign: 'right', minWidth: 74, fontVariantNumeric: 'tabular-nums',
+  }),
 };
+
+// Module scope: used by both the list screen and the count screen.
+const varColor = (v) => (v < 0 ? '#b91c1c' : v > 0 ? '#b45309' : G);
+const signed = (v) => `${v > 0 ? '+' : ''}${fmt(v, 'zwd')}`;
 
 export default function Stocktake() {
   const qc = useQueryClient();
@@ -119,18 +131,24 @@ export default function Stocktake() {
           <tbody>
             {list.length === 0 && <tr><td style={S.td} colSpan={7}>No stocktakes yet — start one to begin counting.</td></tr>}
             {list.map((s) => {
-              // Server-computed, at each line's snapshotted selling price.
+              // Server-computed, at each line's snapshotted prices.
               const diff = Number(s.variance_value);
+              const diffCost = Number(s.variance_cost);
               const hasDiff = !isNaN(diff) && diff !== 0;
+              const sub = { fontSize: 10, color: '#94a3b8' };
               return (
                 <tr key={s.id}>
                   <td style={S.td}><b>{s.reference}</b></td>
                   <td style={S.td}>{s.started_at ? new Date(s.started_at).toLocaleString() : ''}</td>
                   <td style={S.td}><span style={s.status === 'completed' ? S.pill('#e8f5ee', G) : S.pill('#e0f2fe', '#0369a1')}>{s.status}</span></td>
                   <td style={S.td}>{s.counted} / {s.line_count}</td>
-                  <td style={S.td}>{fmt(s.counted_value, 'zwd')}</td>
+                  <td style={S.td}>
+                    {fmt(s.counted_value, 'zwd')}
+                    <div style={sub}>{fmt(s.counted_cost, 'zwd')} cost</div>
+                  </td>
                   <td style={{ ...S.td, fontWeight: 700, color: !hasDiff ? '#64748b' : diff > 0 ? '#b45309' : '#b91c1c' }}>
-                    {isNaN(diff) ? '—' : `${diff > 0 ? '+' : ''}${fmt(diff, 'zwd')}`}
+                    {isNaN(diff) ? '—' : signed(diff)}
+                    {!isNaN(diffCost) && <div style={sub}>{signed(diffCost)} cost</div>}
                   </td>
                   <td style={S.td}><button style={S.btnO} onClick={() => setActiveId(s.id)}>{s.status === 'open' ? 'Continue' : 'View'}</button></td>
                 </tr>
@@ -207,19 +225,56 @@ function CountScreen({ id, onBack }) {
      Totals are computed here rather than read from the server's
      system_value/counted_value because while counting, the typed
      figures have not been saved yet — the server number would lag. */
-  const priceOf = (l) => { const p = Number(l.unit_price); return isNaN(p) ? 0 : p; };
+  const num = (v) => { const n = Number(v); return isNaN(n) ? 0 : n; };
+  const priceOf = (l) => num(l.unit_price);   // selling price
+  const costOf = (l) => num(l.unit_cost);     // cost price
   const qtyOf = (l) => { const v = varOf(l); return v == null ? null : Number(cval(l)); };
 
-  let systemValue = 0, countedValue = 0, varianceValue = 0;
+  const T = {
+    systemValue: 0, countedValue: 0, varianceValue: 0,   // at selling price
+    systemCost: 0, countedCost: 0, varianceCost: 0,      // at cost price
+  };
   allLines.forEach((l) => {
-    const p = priceOf(l);
-    systemValue += (l.system_qty || 0) * p;
+    const p = priceOf(l), k = costOf(l), sq = l.system_qty || 0;
+    T.systemValue += sq * p;
+    T.systemCost += sq * k;
     const c = qtyOf(l);
     if (c != null) {
-      countedValue += c * p;
-      varianceValue += (c - (l.system_qty || 0)) * p;
+      T.countedValue += c * p;
+      T.countedCost += c * k;
+      T.varianceValue += (c - sq) * p;
+      T.varianceCost += (c - sq) * k;
     }
   });
+  /* Retail vs cost, side by side. Shrinkage at retail is revenue never
+     earned; at cost it is money already spent. Two columns rather than
+     two sets of tiles — the comparison is the point. */
+  const ValueBlock = () => (
+    <div style={M.valueBlock}>
+      <div style={M.vRow}>
+        <span />
+        <span style={M.vHead}>Retail</span>
+        <span style={M.vHead}>Cost</span>
+      </div>
+      <div style={M.vRow}>
+        <span style={M.vLabel}>{open ? 'Counted so far' : 'Value counted'}</span>
+        <span style={M.vNum()}>{fmt(T.countedValue, 'zwd')}</span>
+        <span style={M.vNum()}>{fmt(T.countedCost, 'zwd')}</span>
+      </div>
+      <div style={M.vRow}>
+        <span style={M.vLabel}>Difference</span>
+        <span style={M.vNum(varColor(T.varianceValue))}>{signed(T.varianceValue)}</span>
+        <span style={M.vNum(varColor(T.varianceCost))}>{signed(T.varianceCost)}</span>
+      </div>
+      {nMissed > 0 && (
+        <div style={{ ...M.vRow, opacity: 0.75 }}>
+          <span style={M.vLabel}>Still to count</span>
+          <span style={M.vNum()}>{fmt(T.systemValue - T.countedValue, 'zwd')}</span>
+          <span style={M.vNum()}>{fmt(T.systemCost - T.countedCost, 'zwd')}</span>
+        </div>
+      )}
+    </div>
+  );
 
   const setCount = (l, val) => setCounts((c) => ({ ...c, [l.id]: val }));
   const bump = (l, d) => {
@@ -256,14 +311,6 @@ function CountScreen({ id, onBack }) {
                 </span>
               </div>
               <div style={M.progressTrack}><div style={M.progressFill(pct)} /></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 9, fontSize: 12.5 }}>
-                <span style={{ color: '#64748b' }}>
-                  Counted so far <b style={{ color: '#0f172a' }}>{fmt(countedValue, 'zwd')}</b>
-                </span>
-                <span style={{ fontWeight: 700, color: varianceValue < 0 ? '#b91c1c' : varianceValue > 0 ? '#b45309' : G }}>
-                  {varianceValue > 0 ? '+' : ''}{fmt(varianceValue, 'zwd')}
-                </span>
-              </div>
             </>
           ) : null}
 
@@ -278,20 +325,12 @@ function CountScreen({ id, onBack }) {
           </div>
         </div>
 
-        {/* Report summary — the four numbers an owner actually reads. */}
+        {/* The money summary, retail beside cost. */}
+        <ValueBlock />
+
         {!open && (
           <>
             <div style={M.metricGrid}>
-              <div style={M.metric}>
-                <div style={M.metricLabel}>Value counted</div>
-                <div style={M.metricValue()}>{fmt(countedValue, 'zwd')}</div>
-              </div>
-              <div style={M.metric}>
-                <div style={M.metricLabel}>Difference</div>
-                <div style={M.metricValue(varianceValue < 0 ? '#b91c1c' : varianceValue > 0 ? '#b45309' : G)}>
-                  {varianceValue > 0 ? '+' : ''}{fmt(varianceValue, 'zwd')}
-                </div>
-              </div>
               <div style={M.metric}>
                 <div style={M.metricLabel}>Products counted</div>
                 <div style={M.metricValue()}>{nCounted} <span style={{ fontSize: 13, color: '#94a3b8' }}>of {allLines.length}</span></div>
@@ -304,8 +343,7 @@ function CountScreen({ id, onBack }) {
             {nMissed > 0 && (
               <div style={M.warn}>
                 {nMissed} product{nMissed > 1 ? 's were' : ' was'} never counted, so {nMissed > 1 ? 'their' : 'its'} stock
-                was left untouched — worth {fmt(systemValue - countedValue, 'zwd')} at selling price. They are not part of
-                the difference above.
+                was left untouched. They are the “still to count” row above, and are not part of the difference.
               </div>
             )}
           </>
@@ -330,6 +368,7 @@ function CountScreen({ id, onBack }) {
           const has = isCounted(l);
           const edge = !has ? '#cbd5e1' : v === 0 ? G : '#d97706';
           const price = priceOf(l);
+          const cost = costOf(l);
           const c = qtyOf(l);
           return (
             <div key={l.id} style={M.card(edge)}>
@@ -337,7 +376,7 @@ function CountScreen({ id, onBack }) {
                 <div style={{ minWidth: 0 }}>
                   <div style={M.name}>{l.product_name}</div>
                   <div style={M.sku}>
-                    {l.sku ? `${l.sku} · ` : ''}{fmt(price, 'zwd')} each
+                    {l.sku ? `${l.sku} · ` : ''}{fmt(price, 'zwd')} sell · {fmt(cost, 'zwd')} cost
                   </div>
                 </div>
                 <span style={M.sysChip}>System {l.system_qty}</span>
@@ -366,8 +405,10 @@ function CountScreen({ id, onBack }) {
                   </div>
                   {c != null && (
                     <div style={M.mathLine}>
-                      <span>{c} × {fmt(price, 'zwd')}</span>
-                      <span style={{ fontWeight: 700, color: '#0f172a' }}>{fmt(c * price, 'zwd')}</span>
+                      <span>{c} counted, worth</span>
+                      <span style={{ fontWeight: 700, color: '#0f172a' }}>
+                        {fmt(c * price, 'zwd')} <span style={{ color: '#94a3b8', fontWeight: 600 }}>· {fmt(c * cost, 'zwd')} cost</span>
+                      </span>
                     </div>
                   )}
                 </>
@@ -383,14 +424,15 @@ function CountScreen({ id, onBack }) {
                       : <span style={M.varTag('#fdecea', '#b91c1c')}>{v} short</span>}
                   </div>
                   <div style={M.mathLine}>
-                    <span>{c != null ? `${c} × ${fmt(price, 'zwd')}` : `Still ${l.system_qty} × ${fmt(price, 'zwd')}`}</span>
+                    <span>{v ? 'Difference' : c != null ? 'Worth' : 'Still on system, worth'}</span>
                     {v ? (
                       <span style={{ fontWeight: 700, color: v < 0 ? '#b91c1c' : '#b45309' }}>
-                        {v > 0 ? '+' : ''}{fmt(v * price, 'zwd')}
+                        {signed(v * price)} <span style={{ opacity: 0.7, fontWeight: 600 }}>· {signed(v * cost)} cost</span>
                       </span>
                     ) : (
                       <span style={{ fontWeight: 700, color: '#0f172a' }}>
                         {fmt((c != null ? c : l.system_qty) * price, 'zwd')}
+                        <span style={{ color: '#94a3b8', fontWeight: 600 }}> · {fmt((c != null ? c : l.system_qty) * cost, 'zwd')} cost</span>
                       </span>
                     )}
                   </div>
@@ -434,15 +476,15 @@ function CountScreen({ id, onBack }) {
         style={{ width: '100%', maxWidth: 320, padding: '9px 11px', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13, marginBottom: 12, boxSizing: 'border-box' }} />
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
-        {[['Stock on system', fmt(systemValue, 'zwd'), null],
-          ['Value counted', fmt(countedValue, 'zwd'), null],
-          ['Difference', `${varianceValue > 0 ? '+' : ''}${fmt(varianceValue, 'zwd')}`,
-            varianceValue < 0 ? '#b91c1c' : varianceValue > 0 ? '#b45309' : G],
-          ['Products counted', `${nCounted} of ${allLines.length}`, null],
-        ].map(([label, value, color]) => (
+        {[['Value counted', fmt(T.countedValue, 'zwd'), `${fmt(T.countedCost, 'zwd')} at cost`, null],
+          ['Difference', signed(T.varianceValue), `${signed(T.varianceCost)} at cost`, varColor(T.varianceValue)],
+          ['Still to count', fmt(T.systemValue - T.countedValue, 'zwd'), `${fmt(T.systemCost - T.countedCost, 'zwd')} at cost`, null],
+          ['Products counted', `${nCounted} of ${allLines.length}`, `${nVar} with a difference`, null],
+        ].map(([label, value, sub, color]) => (
           <div key={label} style={{ flex: '1 1 150px', background: '#f8fafc', borderRadius: 10, padding: '10px 13px' }}>
             <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>{label}</div>
             <div style={{ fontSize: 18, fontWeight: 800, color: color || '#0f172a', fontFamily: "'Playfair Display', serif" }}>{value}</div>
+            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{sub}</div>
           </div>
         ))}
       </div>
@@ -457,19 +499,24 @@ function CountScreen({ id, onBack }) {
         <div style={{ overflowX: 'auto' }}><table style={S.table}>
           <thead><tr>
             <th style={S.th}>Product</th><th style={S.th}>SKU</th>
-            <th style={S.th}>Price</th><th style={S.th}>System</th><th style={S.th}>Counted</th>
+            <th style={S.th}>Sell / cost</th><th style={S.th}>System</th><th style={S.th}>Counted</th>
             <th style={S.th}>Variance</th><th style={S.th}>Value</th><th style={S.th}>Difference</th>
           </tr></thead>
           <tbody>
             {lines.map((l) => {
               const v = varOf(l);
               const price = priceOf(l);
+              const cost = costOf(l);
               const c = qtyOf(l);
+              const sub = { fontSize: 10, color: '#94a3b8' };
               return (
                 <tr key={l.id}>
                   <td style={S.td}>{l.product_name}</td>
                   <td style={S.td}>{l.sku}</td>
-                  <td style={S.td}>{fmt(price, 'zwd')}</td>
+                  <td style={S.td}>
+                    {fmt(price, 'zwd')}
+                    <div style={sub}>{fmt(cost, 'zwd')} cost</div>
+                  </td>
                   <td style={S.td}>{l.system_qty}</td>
                   <td style={S.td}>
                     {open ? (
@@ -480,9 +527,12 @@ function CountScreen({ id, onBack }) {
                   <td style={{ ...S.td, fontWeight: 700, color: v == null ? '#94a3b8' : v === 0 ? '#64748b' : v > 0 ? G : '#b91c1c' }}>
                     {v == null ? '—' : (v > 0 ? `+${v}` : v)}
                   </td>
-                  <td style={S.td}>{c == null ? '—' : fmt(c * price, 'zwd')}</td>
+                  <td style={S.td}>
+                    {c == null ? '—' : <>{fmt(c * price, 'zwd')}<div style={sub}>{fmt(c * cost, 'zwd')} cost</div></>}
+                  </td>
                   <td style={{ ...S.td, fontWeight: 700, color: !v ? '#64748b' : v > 0 ? '#b45309' : '#b91c1c' }}>
-                    {v == null ? '—' : v === 0 ? fmt(0, 'zwd') : `${v > 0 ? '+' : ''}${fmt(v * price, 'zwd')}`}
+                    {v == null ? '—' : v === 0 ? fmt(0, 'zwd')
+                      : <>{signed(v * price)}<div style={sub}>{signed(v * cost)} cost</div></>}
                   </td>
                 </tr>
               );
