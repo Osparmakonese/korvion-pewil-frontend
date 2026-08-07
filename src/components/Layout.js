@@ -103,7 +103,9 @@ const RETAIL_DRAWER_SECTIONS = [
     { key: 'Retail Report', emoji: '\u{1F4CA}', label: 'Reports', sub: 'P&L + analytics', ownerOnly: true },
     { key: 'Retail Payroll', emoji: '\u{1F4B0}', label: 'Payroll', sub: 'PAYE + NSSA' },
     { key: 'End of Day', emoji: '\u{1F4C4}', label: 'EOD Report', sub: 'Daily close' },
-    { key: 'Profit Margins', emoji: '\u{1F4C8}', label: 'Margins', sub: 'Profitability', ownerOnly: true },
+    // Labelled "Profit Margins", not "Margins": owners look for the word
+    // "profit" and could not find this screen on a phone.
+    { key: 'Profit Margins', emoji: '\u{1F4C8}', label: 'Profit Margins', sub: 'Profit per product', ownerOnly: true },
   ]},
   { label: 'Loss Prevention', items: [
     { key: 'Loss Prevention', emoji: '\u{1F6E1}\uFE0F', label: 'LP Dashboard', sub: 'Events, flags, trust, shrinkage' },
