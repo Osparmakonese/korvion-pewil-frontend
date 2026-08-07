@@ -98,7 +98,6 @@ export default function Branches() {
   // so match on the suffix rather than an exact key — the same slug-vs-tier
   // mismatch that was silently giving every paying tenant free-tier AI credits.
   const plan = (user?.plan || 'starter').toLowerCase();
-  const isGrowth = /(^|-)growth$/.test(plan);
   const cap = PLAN_CAPS[plan] ?? 1;
   const atCap = branches.length >= cap;
   const capTooltip = atCap
@@ -207,34 +206,20 @@ export default function Branches() {
           )}
         </div>
 
-        {/* Growth shop ladder.
-            This used to be a dead-end amber notice reading "Upgrade to
-            Enterprise to run an unlimited chain" — written before the $8 Extra
-            Shop add-on existed, so it sent someone who needed one more shop to
-            a plan with a 6-shop, $90 minimum. And it was only a paragraph: no
-            link, nothing to press. Now it's the actual action. */}
-        {isOwner && isGrowth && branches.length >= 2 && branches.length < 6 && (
+        {/* Shops are unlimited on every tier and bill automatically at the
+            plan's per-shop rate (billing/0017), so there is nothing to buy
+            here any more — the old "$8 add-on, up to 6" upsell is gone along
+            with the add-on itself. Just tell the owner what the next shop
+            costs so the invoice is never a surprise. */}
+        {isOwner && branches.length >= 1 && (
           <div style={{
             background: '#eff6ff', border: '1px solid #bfdbfe',
-            borderRadius: 10, padding: '13px 15px', marginBottom: 16,
+            borderRadius: 10, padding: '12px 15px', marginBottom: 16,
+            fontSize: 12.5, color: '#1e40af', lineHeight: 1.5,
           }}>
-            <div style={{ fontSize: 13.5, fontWeight: 700, color: '#1e40af', marginBottom: 3 }}>
-              Need another shop?
-            </div>
-            <div style={{ fontSize: 12, color: '#1e40af', opacity: 0.9, marginBottom: 11, lineHeight: 1.5 }}>
-              Growth includes 2. Add more for $8 a month each, up to 6 shops.
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowAddShop(true)}
-              style={{
-                background: T.green, color: '#fff', border: 'none',
-                borderRadius: 8, padding: '9px 14px', fontSize: 12.5,
-                fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-              }}
-            >
-              Add a shop — $8/month
-            </button>
+            Add as many shops as you like — each one is added to your monthly
+            bill at your plan&apos;s per-shop rate. Cashiers are limited per shop;
+            managers and other staff logins are not.
           </div>
         )}
 

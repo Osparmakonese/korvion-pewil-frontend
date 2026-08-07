@@ -23,21 +23,27 @@ const C = {
 const PLANS = {
   retail: [
     {
+      // Every retail tier is PER SHOP as of billing/0017. Shops are unlimited
+      // on all three — what separates them is CASHIERS PER SHOP. Managers,
+      // supervisors and accountants are unlimited everywhere: only tills are
+      // rationed. Keep these in step with billing/migrations/0017.
       tier: 'starter', name: 'Retail Starter', slug: 'retail-starter',
-      price_monthly: 10, price_yearly: 100, blurb: 'For a single shop or restaurant.',
+      price_monthly: 10, price_yearly: 100, per_branch: true,
+      blurb: 'For a small shop — or several of them.',
       features: [
-        '1 shop · 1 till', 'Up to 5 users', 'Tax-authority fiscal receipts',
+        '1 cashier per shop', 'Add as many shops as you like',
+        'Unlimited managers & staff logins', 'Tax-authority fiscal receipts',
         'Mobile money, card & cash', 'Products, stock & basic reports',
         'Email & WhatsApp receipts', 'Email support',
       ],
     },
     {
       tier: 'growth', name: 'Retail Growth', slug: 'retail-growth',
-      price_monthly: 25, price_yearly: 250, popular: true,
-      blurb: 'Most popular — for a busy shop or a small chain.',
+      price_monthly: 15, price_yearly: 150, per_branch: true, popular: true,
+      blurb: 'Most popular — for a busy shop or a growing chain.',
       features: [
-        '2 shops included · 3 tills', 'Add more shops for $8/mo each, up to 6',
-        'Unlimited users', 'Everything in Starter',
+        '3 cashiers per shop', 'Add as many shops as you like',
+        'Unlimited managers & staff logins', 'Everything in Starter',
         'Financial reports & VAT return', 'Layby & customer credit',
         'Wholesale quantity pricing & credit accounts',
         'WhatsApp assistant + AI insights', 'Loyalty & multi-currency', 'Priority support',
@@ -45,13 +51,13 @@ const PLANS = {
     },
     {
       tier: 'enterprise', name: 'Retail Enterprise', slug: 'retail-enterprise',
-      price_monthly: 15, price_yearly: 150, per_branch: true,
-      blurb: 'For chains and service stations — priced per shop, from 6 shops.',
+      price_monthly: 25, price_yearly: 250, per_branch: true,
+      blurb: 'For chains and service stations with busy tills.',
       features: [
-        'Unlimited shops, tills & users', 'Everything in Growth',
-        'Multi-shop chain rollup', 'Fuel forecourt & fleet cards',
-        'White-label branding', 'Dedicated account manager',
-        'Billed from a minimum of 6 shops',
+        'Unlimited cashiers', 'Add as many shops as you like',
+        'Everything in Growth', 'Multi-shop chain rollup',
+        'Fuel forecourt & fleet cards', 'White-label branding',
+        'Dedicated account manager',
       ],
     },
   ],
@@ -89,10 +95,11 @@ const CURRENCIES = {
 // slug → { <currency>: [monthly, yearly] }. Only non-USD currencies listed;
 // USD always falls back to the plan's own price_monthly / price_yearly.
 const LOCAL_PRICES = {
+  // Re-anchored to the per-shop USD prices set in billing/0017
+  // ($10 / $15 / $25 per shop) at roughly ZMW 20 per USD.
   'retail-starter':    { ZMW: [199, 1990] },
-  'retail-growth':     { ZMW: [499, 4990] },
-  // Re-anchored 4 Aug 2026 when USD Enterprise moved $45 -> $15 per shop.
-  'retail-enterprise': { ZMW: [299, 2990] },
+  'retail-growth':     { ZMW: [299, 2990] },
+  'retail-enterprise': { ZMW: [499, 4990] },
   'farm-starter':      { ZMW: [199, 1990] },
   'farm-growth':       { ZMW: [499, 4990] },
   'farm-enterprise':   { ZMW: [1099, 10990] },
@@ -113,8 +120,9 @@ const FAQ = [
   { q: 'How does the free trial work?', a: 'Every new shop gets a 14-day free trial on the Starter plan — no card required upfront. You get the full till, fiscal receipts and mobile money from day one. At the end of the trial you pick a plan and pay by mobile money or card.' },
   { q: 'Is tax-authority fiscalisation included?', a: 'Yes — fiscalisation is built into every tier, including Starter. Every sale is reported to your national tax authority — ZIMRA in Zimbabwe, ZRA in Zambia, and more across Africa — and the receipt carries the QR and verification code. There is no separate fiscalisation fee.' },
   { q: 'Why a flat monthly price instead of per-receipt?', a: 'A flat price is simpler to budget and means you are never surprised by a bill. You pay for the system — the till, stock, reports and compliance — not for how many sales you ring. A quiet day costs the same as a busy one.' },
-  { q: 'What if I have more than one shop or till?', a: 'Starter covers 1 shop and 1 till. Growth includes 2 shops and 3 tills, and you can add more shops for $8/month each up to a total of 6 — added from your Billing page. Beyond 6 shops, Enterprise is priced per shop with no limit.' },
-  { q: 'Do you offer a yearly discount?', a: 'Yes — pay yearly and get 2 months free (about 17% off). Starter is $100/yr, Growth $250/yr, Enterprise $150 per shop per year.' },
+  { q: 'What if I have more than one shop?', a: 'Every plan is priced per shop and you can add as many shops as you like — a second shop simply adds its own monthly rate to your bill. What changes between plans is how many cashiers each shop can have: 1 on Starter, 3 on Growth, unlimited on Enterprise.' },
+  { q: 'Do managers and office staff count as cashiers?', a: 'No. Only tills count. Managers, supervisors and anyone who just needs to see the reports — a bookkeeper, for example — are unlimited on every plan, at no extra cost. Give them the Manager role rather than Cashier.' },
+  { q: 'Do you offer a yearly discount?', a: 'Yes — pay yearly and get 2 months free (about 17% off). That is $100, $150 or $250 per shop per year.' },
   { q: 'What payment methods do you accept?', a: 'Mobile money — EcoCash/OneMoney in Zimbabwe and MTN/Airtel/Zamtel in Zambia — plus Visa and Mastercard, via Paynow, Pesepay and Lenco. You can pay your subscription with mobile money — no card required.' },
   { q: 'Why is farm priced differently?', a: 'Farm is a separate module with its own tools (fields, livestock, harvest). Its tiers (Starter $10, Growth $25, Enterprise $60) match the value a farm gets. Each tenant runs one module — farm OR retail.' },
   { q: 'Can I cancel anytime?', a: 'Yes. Cancel from your Billing page; your subscription stays active until the end of the current period — no immediate lockout.' },

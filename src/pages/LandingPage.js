@@ -507,19 +507,19 @@ const LandingPage = () => {
                 </ul>
                 <div className="pl-op-price-ent">
                   <div className="pl-op-price-ent-head">
-                    <span className="amt">$15</span>
-                    <span className="per">/shop/mo · unlimited tills &amp; users</span>
+                    <span className="amt">$25</span>
+                    <span className="per">/shop/mo · unlimited cashiers</span>
                   </div>
                   <div className="pl-op-price-ent-note">
-                    Enterprise is priced per shop, so you only pay for the size you are &mdash; unlimited tills
-                    and users in every shop, multi-shop rollup, fuel forecourt and white-label branding.
-                    $150/shop/year with 2 months free. Billed from a minimum of 6 shops.
+                    Every plan is priced per shop, so you only pay for the size you are. Enterprise adds
+                    unlimited cashiers per shop, multi-shop rollup, fuel forecourt and white-label branding.
+                    $250/shop/year with 2 months free. Managers and office staff are always unlimited.
                   </div>
                   <div className="pl-op-price-ent-scale">
-                    <div><span className="br">Starter — single shop</span><span className="pr">$10/mo</span></div>
-                    <div><span className="br">Growth — 2 shops, +$8 each to 6</span><span className="pr">$25/mo</span></div>
-                    <div><span className="br">6-shop chain on Growth</span><span className="pr">$57/mo</span></div>
-                    <div><span className="br">10-shop chain on Enterprise</span><span className="pr">$150/mo</span></div>
+                    <div><span className="br">Starter — 1 cashier per shop</span><span className="pr">$10/shop</span></div>
+                    <div><span className="br">Growth — 3 cashiers per shop</span><span className="pr">$15/shop</span></div>
+                    <div><span className="br">3-shop chain on Growth</span><span className="pr">$45/mo</span></div>
+                    <div><span className="br">Enterprise — unlimited cashiers</span><span className="pr">$25/shop</span></div>
                   </div>
                 </div>
                 <Link to="/contact?type=enterprise" className="pl-op-btn">Talk to us about your chain &rarr;</Link>
@@ -646,7 +646,7 @@ const LandingPage = () => {
           <h2 className="pl-serif">Open the till tomorrow &mdash; <em>free</em> for 14 days, then from $10 a month.</h2>
           <p>
             Start with a 14-day free trial &mdash; no card required. After that, one simple flat price:
-            Starter $10/mo, Growth $25/mo (add shops for $8 each, up to 6), Enterprise $15/shop/mo &mdash; with tax-authority fiscalisation, mobile money and
+            $10, $15 or $25 per shop a month &mdash; add as many shops as you like, and only cashiers are counted &mdash; with tax-authority fiscalisation, mobile money and
             the full till included in every plan. Pay yearly and get 2 months free. No per-receipt fees,
             no surprises. Cancel anytime, export everything &mdash; the data was always yours.
           </p>
