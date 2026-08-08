@@ -210,6 +210,14 @@ export default function CashierPerformance({ onTabChange }) {
   // Transform API data to component format
   const leaderboard = Array.isArray(performanceData?.leaderboard) ? performanceData.leaderboard : [];
 
+  // Coerce every money/count field to a real number BEFORE it reaches
+  // .toFixed(). `x || 0` does not do this: DRF renders DecimalFields as
+  // STRINGS, and "1234.50" is truthy, so the string sailed through and
+  // `revenue.toFixed(2)` threw "toFixed is not a function" — the same crash
+  // as Sentry MAKONESE-FARM-FRONTEND-4 on the margins page. The reduce()
+  // calls were worse: 0 + "1234.50" concatenates to "01234.50".
+  const num = (v) => { const n = Number(v); return isNaN(n) ? 0 : n; };
+
   // Get badge colors for ranks
   const rankColors = ['#c97d1a', '#9ca3af', '#b45309'];
   const cashiers = leaderboard.map((cashier, idx) => ({
@@ -217,29 +225,29 @@ export default function CashierPerformance({ onTabChange }) {
     name: cashier.cashier,
     borderColor: rankColors[idx % rankColors.length],
     rankColor: rankColors[idx % rankColors.length],
-    sales: cashier.transactions || 0,
-    revenue: cashier.total_sales || 0,
-    avgValue: cashier.avg_per_session || 0,
+    sales: num(cashier.transactions),
+    revenue: num(cashier.total_sales),
+    avgValue: num(cashier.avg_per_session),
     itemsPerSale: 0,
-    variance: cashier.total_variance || 0,
-    percent: idx === 0 ? 100 : Math.round(((cashier.total_sales || 0) / (leaderboard[0]?.total_sales || 1)) * 100),
+    variance: num(cashier.total_variance),
+    percent: idx === 0 ? 100 : Math.round((num(cashier.total_sales) / (num(leaderboard[0]?.total_sales) || 1)) * 100),
   }));
 
   // Create sessions data from leaderboard
   const sessionsData = leaderboard.map((cashier) => ({
     cashier: cashier.cashier,
-    sessions: cashier.sessions || 0,
+    sessions: num(cashier.sessions),
     hours: '0h',
-    salesPerHour: cashier.avg_per_session || 0,
-    variance: cashier.total_variance || 0,
-    isVariancePositive: (cashier.total_variance || 0) >= 0,
+    salesPerHour: num(cashier.avg_per_session),
+    variance: num(cashier.total_variance),
+    isVariancePositive: num(cashier.total_variance) >= 0,
   }));
 
   // Calculate aggregates
   const totalCashiers = leaderboard.length;
-  const totalSales = leaderboard.reduce((sum, c) => sum + (c.total_sales || 0), 0);
-  const avgTransaction = totalCashiers > 0 ? totalSales / leaderboard.reduce((sum, c) => sum + (c.transactions || 1), 1) : 0;
-  const totalVariance = leaderboard.reduce((sum, c) => sum + Math.abs(c.total_variance || 0), 0);
+  const totalSales = leaderboard.reduce((sum, c) => sum + num(c.total_sales), 0);
+  const avgTransaction = totalCashiers > 0 ? totalSales / (leaderboard.reduce((sum, c) => sum + num(c.transactions), 0) || 1) : 0;
+  const totalVariance = leaderboard.reduce((sum, c) => sum + Math.abs(num(c.total_variance)), 0);
   const varianceRate = totalSales > 0 ? ((totalVariance / totalSales) * 100).toFixed(1) : '0';
 
   return (
@@ -409,7 +417,7 @@ export default function CashierPerformance({ onTabChange }) {
                   <div style={{ marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid #f3f4f6' }}>
                     <div style={{ color: '#6b7280', marginBottom: 4 }}>Top Performer</div>
                     <div style={{ fontWeight: 700, fontSize: 12, color: '#111827' }}>
-                      {cashiers[0]?.name || 'N/A'} - ${cashiers[0]?.revenue.toFixed(2) || '0.00'}
+                      {cashiers[0]?.name || 'N/A'} - ${cashiers[0]?.revenue?.toFixed(2) || '0.00'}
                     </div>
                   </div>
                   <div style={{ marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid #f3f4f6' }}>
@@ -421,7 +429,10 @@ export default function CashierPerformance({ onTabChange }) {
                   <div>
                     <div style={{ color: '#6b7280', marginBottom: 4 }}>Avg Sale Value</div>
                     <div style={{ fontWeight: 700, fontSize: 12, color: '#111827' }}>
-                      ${(totalSales / (cashiers.reduce((sum, c) => sum + c.sales, 1))).toFixed(2)}
+                      {/* Seed 0, not 1. Seeding the reduce with 1 invented a
+                          phantom transaction, so every average sale value was
+                          understated — 10 sales were divided by 11. */}
+                      ${(totalSales / (cashiers.reduce((sum, c) => sum + c.sales, 0) || 1)).toFixed(2)}
                     </div>
                   </div>
                 </div>
