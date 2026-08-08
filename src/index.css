@@ -633,6 +633,53 @@ body.pewil-pos-focus main.page-content-mobile {
   /* Wide preformatted/code blocks scroll instead of forcing the page wide. */
   main.page-content-mobile pre,
   main.page-content-mobile code { overflow-x: auto; max-width: 100%; }
+
+  /* ── GLOBAL (2026-08-08): the rest of the fixed-pixel splits ──────
+     The enumerated list above missed these two, found by extracting every
+     gridTemplateColumns value actually used in the codebase rather than
+     guessing. Also the three-column variant. */
+  main.page-content-mobile [style*="1fr 380px"], main.page-content-mobile [style*="380px 1fr"],
+  main.page-content-mobile [style*="1fr 460px"], main.page-content-mobile [style*="460px 1fr"],
+  main.page-content-mobile [style*="200px 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── GLOBAL: two-column FORM grids go single-column on phones ──────
+     `1fr 1fr` is used 88 times. On a 360px screen each column is about
+     150px — fine for a metric tile, unusable for a labelled input, and
+     the main reason vertical pages (wholesale, pharmacy) "look wrong"
+     on mobile.
+
+     :has() lets us separate the two cases: collapse the grid only when
+     it actually contains a form control, so stat/metric tiles keep
+     their 2x2 layout, which reads well. Engines without :has() simply
+     ignore the rule and behave exactly as they do today. */
+  main.page-content-mobile [style*="1fr 1fr"]:has(input, select, textarea) {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── GLOBAL: modal cards must fit the phone ───────────────────────
+     67 of the 92 fixed-position elements are overlays built as
+     `position:'fixed', inset:0` with a fixed-width card inside. A
+     520px card on a 360px screen loses both edges, which is where the
+     "can't reach the Save button" reports come from. Cap the card to
+     the viewport and let it scroll itself rather than the page.
+     Rule 7 above only covered elements tagged role="dialog"/.modal;
+     most of these are plain inline-styled divs. */
+  [style*="position: fixed"][style*="inset: 0"] > * {
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+  }
+  @supports (height: 100dvh) {
+    [style*="position: fixed"][style*="inset: 0"] > * {
+      max-height: calc(100dvh - 32px);
+    }
+  }
+  /* The bottom sheet is a deliberate full-bleed panel — exempt it. */
+  [style*="position: fixed"][style*="inset: 0"] > .mobile-more-sheet {
+    max-width: none !important;
+  }
 }
 
 /* Mobile "More" drawer height.
