@@ -7,7 +7,10 @@ import useIsMobile from '../hooks/useIsMobile';
 
 export default function ProfitMargins({ onTabChange }) {
   const { user } = useAuth();
-  const isOwner = user?.role === 'owner';
+  // Managers see this screen too (see managerOk in Sidebar/Layout). The
+  // backend never restricted it — the endpoint is IsAuthenticated +
+  // HasRetailModule, so this was only ever a nav gate.
+  const isOwner = user?.role === 'owner' || user?.role === 'manager';
   const isMobile = useIsMobile();
 
   const { data: profitData, isLoading } = useQuery({

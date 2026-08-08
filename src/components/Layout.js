@@ -103,9 +103,8 @@ const RETAIL_DRAWER_SECTIONS = [
     { key: 'Retail Report', emoji: '\u{1F4CA}', label: 'Reports', sub: 'P&L + analytics', ownerOnly: true },
     { key: 'Retail Payroll', emoji: '\u{1F4B0}', label: 'Payroll', sub: 'PAYE + NSSA' },
     { key: 'End of Day', emoji: '\u{1F4C4}', label: 'EOD Report', sub: 'Daily close' },
-    // Labelled "Profit Margins", not "Margins": owners look for the word
-    // "profit" and could not find this screen on a phone.
-    { key: 'Profit Margins', emoji: '\u{1F4C8}', label: 'Profit Margins', sub: 'Profit per product', ownerOnly: true },
+    // managerOk: managers see this too. The backend never restricted it.
+    { key: 'Profit Margins', emoji: '\u{1F4C8}', label: 'Profit Margins', sub: 'Profitability', ownerOnly: true, managerOk: true },
   ]},
   { label: 'Loss Prevention', items: [
     { key: 'Loss Prevention', emoji: '\u{1F6E1}\uFE0F', label: 'LP Dashboard', sub: 'Events, flags, trust, shrinkage' },
@@ -229,7 +228,7 @@ export default function Layout({
     .map((s) => ({
       label: s.section,
       items: s.items.filter((it) =>
-        (!it.ownerOnly || role === 'owner') && meetsShowWhen(it.showWhen) && hasFeature(it.feature)
+        (!it.ownerOnly || role === 'owner' || (it.managerOk && role === 'manager')) && meetsShowWhen(it.showWhen) && hasFeature(it.feature)
       ),
     }))
     .filter((s) => s.items.length > 0);

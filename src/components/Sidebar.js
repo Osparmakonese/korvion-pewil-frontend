@@ -259,7 +259,7 @@ export const NAV_ITEMS = [
     { key: 'Retail Report', emoji: '\u{1F4CA}', label: 'Reports', ownerOnly: true },
     { key: 'Financial Reports', emoji: '\u{1F9FE}', label: 'Financial Reports', ownerOnly: true, feature: 'financials' },
     { key: 'Recurring Invoices', emoji: '\u{1F501}', label: 'Recurring Invoices', feature: 'recurring_billing' },
-    { key: 'Profit Margins', emoji: '\u{1F4C8}', label: 'Profit Margins', ownerOnly: true },
+    { key: 'Profit Margins', emoji: '\u{1F4C8}', label: 'Profit Margins', ownerOnly: true, managerOk: true },
     { key: 'Journal Entries', emoji: '\u{1F4D2}', label: 'Journal Entries' },
     { key: 'Retail Payroll', emoji: '\u{1F4B0}', label: 'Payroll' },
     { key: 'Customer Loyalty', emoji: '⭐', label: 'Loyalty' },
@@ -437,7 +437,7 @@ export default function Sidebar({ activeTab, onTabChange, user, onLogout, lowSto
           // Filter items by ownerOnly + item-level showWhen so the
           // section knows its real visible count for the badge.
           const visibleItems = section.items.filter(item =>
-            (!item.ownerOnly || role === 'owner')
+            (!item.ownerOnly || role === 'owner' || (item.managerOk && role === 'manager'))
             && meetsShowWhen(item.showWhen)
             && hasFeature(item.feature)
           );
