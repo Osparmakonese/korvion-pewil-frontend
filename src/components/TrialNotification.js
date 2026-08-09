@@ -45,6 +45,10 @@ import api from '../api/axios';
 const SHOWN_KEY = 'pewil-trial-notif-shown';
 const DISMISSED_KEY = 'pewil-trial-notif-dismissed';
 
+// Only warn inside this window. Shops ignore a banner that shouts three
+// weeks early, and then ignore it on the day it matters.
+const REMIND_WITHIN_DAYS = 5;
+
 export default function TrialNotification() {
   const { user } = useAuth() || {};
   const [trial, setTrial] = useState(null); // { days_remaining, expired, plan_name }
@@ -71,20 +75,31 @@ export default function TrialNotification() {
       return;
     }
     let cancelled = false;
-    const modules = (user.modules && user.modules.length) ? user.modules : ['farm'];
+    // NEVER default to ['farm']. Pewil started as a farm product and that
+    // default outlived it: a retail-only shop would be checked against a
+    // farm subscription it should not have, and shown a trial banner for a
+    // module it does not use.
+    const modules = (user.modules && user.modules.length) ? user.modules : [];
     (async () => {
       // Pick the trial with the SOONEST end date — if a tenant has both
       // farm + retail subscriptions, the next-to-expire is the one that
       // matters first.
       let best = null;
+      let hasPaidSub = false;
       for (const mod of modules) {
         try {
           const res = await api.get(
             `/billing/billing/current_plan/?module=${encodeURIComponent(mod)}`
           );
           const sub = res.data;
+          // Remember that this tenant is paying for at least one module, so
+          // the tenant-level trial fallback below can't override it.
+          if (sub && sub.status === 'active') hasPaidSub = true;
           if (!sub || sub.status !== 'trialing') continue;
           const days = Number(sub.trial_days_remaining ?? 0);
+          // Only interrupt when it's actually close. Anything further out is
+          // noise the shop will dismiss and stop reading.
+          if (days > REMIND_WITHIN_DAYS) continue;
           const planName = sub.plan_name || sub.plan_display || 'Pewil';
           const candidate = {
             module: mod,
@@ -105,12 +120,18 @@ export default function TrialNotification() {
       // set. The Tenant serializer returns is_trial + trial_days_remaining
       // directly. If we found nothing via the billing endpoint, try the
       // tenant record.
-      if (!best) {
+      // Skip the tenant-level fallback entirely when the tenant already pays
+      // for a module. Tenant.trial_ends_at was historically left set after a
+      // successful payment, so this fallback kept telling a PAYING shop that
+      // their free trial ends tomorrow. The backend now clears it on
+      // activation; this guard means older records can't resurrect the toast.
+      if (!best && !hasPaidSub) {
         try {
           const res = await api.get('/core/tenants/my-tenant/');
           const tn = res.data;
           if (tn && tn.is_trial) {
             const days = Number(tn.trial_days_remaining ?? 0);
+            if (days > REMIND_WITHIN_DAYS) return;
             best = {
               module: (tn.modules && tn.modules[0]) || 'pewil',
               days_remaining: days,
