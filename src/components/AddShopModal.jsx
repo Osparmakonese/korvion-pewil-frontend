@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { subscribeAddon, initializePayment, getBillingSummary, getCurrentPlan } from '../api/billingApi';
+import { getBillingSummary, getCurrentPlan } from '../api/billingApi';
 
 /**
  * AddShopModal — buy one extra shop and pay for it in a single action.
@@ -23,8 +23,6 @@ import { subscribeAddon, initializePayment, getBillingSummary, getCurrentPlan } 
  * Deliberately shows the NEW MONTHLY BILL, not just the charge. "$8" doesn't
  * tell an owner what they're committing to; "$25 → $33 a month" does.
  */
-
-const SHOP_ADDON_SLUG = 'retail-extra-shop';
 
 export default function AddShopModal({ open, onClose, currentShops, module = 'retail' }) {
   const [busy, setBusy] = useState(false);
@@ -54,11 +52,8 @@ export default function AddShopModal({ open, onClose, currentShops, module = 're
   //   plan     → current_plan → subscriptions[].plan_details.price_monthly ("25.00")
   // Prices arrive as STRINGS, hence Number() on each.
   const addons = summary?.addons || {};
-  const catalogue = addons.available || [];
-  const shopAddon = catalogue.find((a) => (a.slug || a.addon?.slug) === SHOP_ADDON_SLUG) || null;
-
-  const addonPrice = Number(shopAddon?.price_monthly ?? 8);
-  const currency = shopAddon?.local?.currency_symbol || '$';
+  const currency = addons?.local?.currency_symbol
+    || summary?.subscription?.local?.currency_symbol || '$';
   const money = (n) => `${currency}${Number(n || 0).toFixed(2)}`;
 
   // The plan price is NOT on the summary. Pull it from current_plan and match
@@ -71,37 +66,28 @@ export default function AddShopModal({ open, onClose, currentShops, module = 're
   const planName = mySub?.plan_details?.name || mySub?.plan_name || null;
   const knowsPlanPrice = planPrice > 0;
 
-  const newBill = planPrice + addonPrice;
   const shopsNow = Number(currentShops || 0);
+  // Every tier is billed PER SHOP, so the new bill is the plan rate times the
+  // new shop count — not plan + a flat add-on.
+  const newBill = planPrice * (shopsNow + 1);
 
+  // DO NOT sell the `retail-extra-shop` add-on here.
+  //
+  // Pricing changed in billing/0017: every tier is billed PER SHOP
+  // ($10 Starter / $15 Growth / $25 Enterprise) and every tier may run as
+  // many shops as it likes. That migration DEACTIVATED the extra-shop
+  // add-on, and retail/views.py::_enforce_branch_cap no longer caps anyone.
+  //
+  // This modal used to call subscribeAddon('retail-extra-shop') — a retired
+  // add-on — and then charge for it. Adding a shop costs nothing up front;
+  // the shop is created immediately and the next invoice simply reflects the
+  // new shop count. Selling an add-on for it would be charging twice.
   const handleBuy = async () => {
     setBusy(true);
     setError(null);
     try {
-      // 1. Create the pending add-on + its invoice.
-      const sub = await subscribeAddon(SHOP_ADDON_SLUG);
-      const invoiceId = sub?.invoice_id || sub?.invoice?.id;
-      if (!invoiceId) {
-        // The add-on may already be pending from an abandoned attempt — send
-        // them to Billing rather than silently doing nothing.
-        setError('Your shop add-on is set up but needs paying. Open Billing to complete it.');
-        setBusy(false);
-        return;
-      }
-      // 2. Pay it immediately — no hunting for an invoice.
-      const pay = await initializePayment({ invoice_id: invoiceId });
-      if (pay?.redirect_url) {
-        window.location.href = pay.redirect_url;
-        return;
-      }
-      if (pay?.instructions) {
-        // Local rail not live (e.g. Zambia before Lenco) — manual collection.
-        setError(pay.instructions);
-        setBusy(false);
-        return;
-      }
-      setError('Could not start the payment. Please try again from Billing.');
-      setBusy(false);
+      onClose?.();          // caller can simply retry creating the branch
+      return;
     } catch (err) {
       const data = err?.response?.data;
       setError(
@@ -143,13 +129,9 @@ export default function AddShopModal({ open, onClose, currentShops, module = 're
           {knowsPlanPrice && (
             <div style={S.row}>
               <span style={S.muted}>{planName || 'Current plan'}</span>
-              <span>{money(planPrice)}</span>
+              <span>{money(planPrice)} per shop</span>
             </div>
           )}
-          <div style={S.row}>
-            <span style={S.muted}>Extra shop &times; 1</span>
-            <span>{money(addonPrice)}</span>
-          </div>
           {knowsPlanPrice && (
             <div style={{
               ...S.row, borderTop: '1px solid #e5e7eb', marginTop: 7,
@@ -163,14 +145,13 @@ export default function AddShopModal({ open, onClose, currentShops, module = 're
 
         <p style={{ fontSize: 12, color: '#4b5563', margin: '0 0 14px', lineHeight: 1.5 }}>
           {knowsPlanPrice
-            ? <>You{'’'}ll pay {money(addonPrice)} now to activate it. Your shop limit rises as
-               soon as the payment clears.</>
-            /* No plan price available (e.g. still on trial — the summary's
-               `subscription` is null then). Say what we actually know rather
-               than inventing a total. */
-            : <>You{'’'}ll pay {money(addonPrice)} now to activate it, then {money(addonPrice)} a
-               month on top of your plan. Your shop limit rises as soon as the
-               payment clears.</>}
+            ? <>Nothing to pay now — the shop is added straight away. Your plan is billed
+               per shop, so your next invoice becomes {money(newBill)} a month for
+               {' '}{shopsNow + 1} shops.</>
+            /* Still trialing, so `subscription` is null and we don't know the
+               rate. Don't invent a total. */
+            : <>Nothing to pay now — the shop is added straight away. Your plan is billed
+               per shop, so your next invoice will cover {shopsNow + 1} shops.</>}
         </p>
 
         {error && (
@@ -194,7 +175,7 @@ export default function AddShopModal({ open, onClose, currentShops, module = 're
             opacity: busy ? 0.7 : 1, marginBottom: 8,
           }}
         >
-          {busy ? 'Starting payment…' : `Pay ${money(addonPrice)} and add shop`}
+          {busy ? 'Adding…' : 'Add shop'}
         </button>
         <button
           type="button"
