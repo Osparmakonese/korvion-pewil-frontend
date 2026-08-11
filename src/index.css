@@ -196,6 +196,49 @@ input, select, textarea, button {
     overscroll-behavior-x: contain;
   }
 
+  /* ── THE GUARANTEE (2026-08-10) ────────────────────────────────────
+     Making the wrapper scroll only helps when a wrapper exists. Two
+     structures defeated it and left data unreachable with nothing to
+     swipe:
+
+       1. <div card style="overflow:hidden; border-radius:14px">
+            <table>            <- no wrapper. The table is wider than the
+                                  card, and the card CLIPS it.
+       2. <div card style="overflow:hidden">
+            <div overflow-x:auto><table>   <- the wrapper scrolls, but the
+                                  card clips the wrapper's own scrollbar
+                                  and its right edge.
+
+     118 card-like containers in this codebase carry overflow:'hidden'
+     (they use it to round their corners). Rather than chase each page,
+     state the rule structurally: whatever element a table sits directly
+     inside becomes horizontally scrollable, and no ancestor holding a
+     table is allowed to clip horizontally.
+
+     :has() is supported everywhere Pewil runs; engines without it just
+     keep today's behaviour, so this cannot make anything worse. */
+  main.page-content-mobile *:has(> table) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    max-width: 100%;
+  }
+  main.page-content-mobile [style*="overflow: hidden"]:has(table) {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+  }
+
+  /* Same guarantee for table-LIKE rows that aren't <table> elements:
+     grids built from three or more fixed pixel columns (Returns, the
+     scanner-lane POS). They squeeze to illegibility on a phone instead
+     of staying readable and scrolling. Give them their natural width
+     and let the parent scroll — the rule above already makes any
+     container of a table scrollable, and this pairs with it. */
+  main.page-content-mobile [style*="px"][style*="grid-template-columns"] {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   /* Pin the first column — the name you are reading the row by —
      so it stays put while the rest of the row scrolls sideways.
      Skipped where the row or the cell paints its own background, so
