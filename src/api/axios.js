@@ -10,9 +10,38 @@ const api = axios.create({
 });
 
 // Attach JWT token to every request
+// Key the owner's "viewing this shop" choice lives under. Exported so the
+// switcher and this interceptor can never disagree about the name.
+export const VIEW_BRANCH_KEY = 'pewil-view-branch';
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
+
+  // ── Owner branch switcher ────────────────────────────────────────
+  // When an owner picks a shop, every retail READ should answer for that
+  // shop. Doing that here means one hook instead of threading a branch
+  // parameter through several dozen queries — and a query added tomorrow
+  // gets it for free.
+  //
+  // Reads only. A write must never be silently retargeted at another shop
+  // by a leftover setting; the server decides where writes land.
+  try {
+    const method = (config.method || 'get').toLowerCase();
+    const url = config.url || '';
+    const viewing = localStorage.getItem(VIEW_BRANCH_KEY);
+    if (
+      viewing &&
+      method === 'get' &&
+      url.startsWith('/retail/') &&
+      !('branch' in (config.params || {}))
+    ) {
+      config.params = { ...(config.params || {}), branch: viewing };
+    }
+  } catch (_) {
+    // localStorage can throw in private mode — never break a request over it.
+  }
+
   return config;
 });
 

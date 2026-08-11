@@ -8,6 +8,7 @@ import Logo from './Logo';
 import { initials, avatarColor } from '../utils/format';
 import { listBranches, listFuelTanks } from '../api/retailApi';
 import haptics from '../utils/haptics';
+import BranchSwitcher from './BranchSwitcher';
 
 /*
   UX Laws applied to mobile drawer:
@@ -271,6 +272,7 @@ export default function Layout({
             <Logo size={30} />
           </div>
           <div className="mh-right">
+            <BranchSwitcher />
             {showMobileInstallBtn && (
               <button
                 onClick={handleMobileInstallClick}
@@ -288,6 +290,9 @@ export default function Layout({
           </div>
         </div>
         <div className="topbar-desktop">
+          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 24px 0' }}>
+            <BranchSwitcher />
+          </div>
           <Topbar
             pageTitle={pageTitle}
             pageSub={pageSub}
