@@ -108,6 +108,7 @@ const RETAIL_DRAWER_SECTIONS = [
     { key: 'End of Day', emoji: '\u{1F4C4}', label: 'EOD Report', sub: 'Daily close' },
     // managerOk: managers see this too. The backend never restricted it.
     { key: 'Profit Margins', emoji: '\u{1F4C8}', label: 'Profit Margins', sub: 'Profitability', ownerOnly: true, managerOk: true },
+    { key: 'Profit Analysis', emoji: '\u{1F4B9}', label: 'Profit Analysis', sub: 'Real earnings from sales', ownerOnly: true, managerOk: true },
   ]},
   { label: 'Loss Prevention', items: [
     { key: 'Loss Prevention', emoji: '\u{1F6E1}\uFE0F', label: 'LP Dashboard', sub: 'Events, flags, trust, shrinkage' },

@@ -266,6 +266,7 @@ export const NAV_ITEMS = [
     { key: 'Financial Reports', emoji: '\u{1F9FE}', label: 'Financial Reports', ownerOnly: true, feature: 'financials' },
     { key: 'Recurring Invoices', emoji: '\u{1F501}', label: 'Recurring Invoices', feature: 'recurring_billing' },
     { key: 'Profit Margins', emoji: '\u{1F4C8}', label: 'Profit Margins', ownerOnly: true, managerOk: true },
+    { key: 'Profit Analysis', emoji: '\u{1F4B9}', label: 'Profit Analysis', ownerOnly: true, managerOk: true },
     { key: 'Journal Entries', emoji: '\u{1F4D2}', label: 'Journal Entries' },
     { key: 'Retail Payroll', emoji: '\u{1F4B0}', label: 'Payroll' },
     { key: 'Customer Loyalty', emoji: '⭐', label: 'Loyalty' },

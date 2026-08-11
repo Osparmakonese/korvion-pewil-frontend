@@ -101,6 +101,7 @@ const ReceiptCustomization = React.lazy(() => import('./pages/ReceiptCustomizati
 const POSSettingsPage = React.lazy(() => import('./pages/POSSettingsPage'));
 const ManagerPinPage = React.lazy(() => import('./pages/ManagerPinPage'));
 const ProfitMargins = React.lazy(() => import('./pages/ProfitMargins'));
+const MarginAnalysis = React.lazy(() => import('./pages/MarginAnalysis'));
 const DeviceConfiguration = React.lazy(() => import('./pages/DeviceConfiguration'));
 const TaxConfigPage = React.lazy(() => import('./pages/TaxConfigPage'));
 // V1 new pages
@@ -222,6 +223,7 @@ const PAGES = {
   'POS Settings': POSSettingsPage,
   'Manager PIN': ManagerPinPage,
   'Profit Margins': ProfitMargins,
+  'Profit Analysis': MarginAnalysis,
   'Device Config': DeviceConfiguration,
   'Tax Config': TaxConfigPage,
   // Billing & Account
@@ -337,6 +339,7 @@ const PAGE_META = {
   'POS Settings': { title: 'POS Settings', sub: 'Cashier-screen style, layout, and behaviour' },
   'Manager PIN': { title: 'Manager PIN', sub: 'Set the PIN cashiers will use to unlock approvals' },
   'Profit Margins': { title: 'Profit Margins', sub: 'Margin analysis and pricing insights' },
+  'Profit Analysis': { title: 'Profit analysis', sub: 'What you actually earned, from real sales' },
   'Device Config': { title: 'Device Configuration', sub: 'Hardware setup, Print Bridge, and ZIMRA compliance' },
   'Tax Config': { title: 'Tax Config', sub: 'Zimbabwe PAYE bands and NSSA rates' },
   // Billing
