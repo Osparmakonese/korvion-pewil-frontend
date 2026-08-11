@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { getPasswordPolicy } from '../api/authApi';
 import { initials, avatarColor } from '../utils/format';
 import usePrimaryAction from '../hooks/usePrimaryAction';
+import { listBranches } from '../api/retailApi';
 
 // Generate a password that satisfies any tenant policy: always one of each
 // character class, length meets the policy minimum. Excludes look-alike
@@ -100,7 +101,7 @@ export default function TeamManagement() {
   const [inviteStatus, setInviteStatus] = useState(null); // null | 'loading' | 'success' | 'error'
   const [inviteMessage, setInviteMessage] = useState('');
   const [editUser, setEditUser] = useState(null);
-  const [editForm, setEditForm] = useState({ first_name: '', last_name: '', role: 'worker' });
+  const [editForm, setEditForm] = useState({ first_name: '', last_name: '', role: 'worker', branch: '' });
   const [editStatus, setEditStatus] = useState(null);
   const [editMessage, setEditMessage] = useState('');
 
@@ -109,6 +110,17 @@ export default function TeamManagement() {
     queryFn: getUsers,
     staleTime: 60000,
   });
+
+  // Shops, for the "Works at" picker. Retail only — a farm tenant has no
+  // branches — and the picker itself stays hidden until there are 2+, so a
+  // single-shop owner never meets the concept.
+  const { data: branchList = [] } = useQuery({
+    queryKey: ['retail-branches'],
+    queryFn: listBranches,
+    enabled: isRetail,
+    staleTime: 60000,
+  });
+  const branches = Array.isArray(branchList) ? branchList : (branchList?.results || []);
 
   const inviteMut = useMutation({
     mutationFn: inviteUser,
@@ -164,7 +176,7 @@ export default function TeamManagement() {
 
   const handleEditSubmit = () => {
     if (!editUser) return;
-    updateUserMut.mutate({ id: editUser.id, data: { first_name: editForm.first_name, last_name: editForm.last_name, role: editForm.role } });
+    updateUserMut.mutate({ id: editUser.id, data: { first_name: editForm.first_name, last_name: editForm.last_name, role: editForm.role, branch: editForm.branch === '' ? null : editForm.branch } });
   };
 
   const handleInviteSubmit = () => {
@@ -353,7 +365,7 @@ export default function TeamManagement() {
                             color: '#374151',
                             cursor: 'pointer',
                             transition: 'all 0.15s',
-                          }} onClick={() => { setEditUser(u); setEditForm({ first_name: u.first_name || '', last_name: u.last_name || '', role: u.role || 'worker' }); setEditStatus(null); }} onMouseEnter={e => { e.currentTarget.style.background = '#f9fafb'; e.currentTarget.style.borderColor = '#1a6b3a'; e.currentTarget.style.color = '#1a6b3a'; }} onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.color = '#374151'; }}>
+                          }} onClick={() => { setEditUser(u); setEditForm({ first_name: u.first_name || '', last_name: u.last_name || '', role: u.role || 'worker', branch: u.branch ? String(u.branch) : '' }); setEditStatus(null); }} onMouseEnter={e => { e.currentTarget.style.background = '#f9fafb'; e.currentTarget.style.borderColor = '#1a6b3a'; e.currentTarget.style.color = '#1a6b3a'; }} onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.color = '#374151'; }}>
                             Edit
                           </button>
                         )}
@@ -711,6 +723,31 @@ export default function TeamManagement() {
                     <option value="worker">{roleLabel('worker')}</option>
                   </select>
                 </div>
+                {/* Which shop this person works at. Only worth showing once
+                    there is more than one shop — a single-branch owner should
+                    never meet this concept. Empty = every shop. */}
+                {isRetail && branches.length > 1 && (
+                  <div style={{ marginBottom: 14 }}>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
+                      Works at
+                    </label>
+                    <select
+                      value={editForm.branch}
+                      onChange={e => setEditForm({ ...editForm, branch: e.target.value })}
+                      style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 14, background: '#fff', boxSizing: 'border-box' }}
+                    >
+                      <option value="">All shops</option>
+                      {branches.map(b => (
+                        <option key={b.id} value={String(b.id)}>{b.name}</option>
+                      ))}
+                    </select>
+                    <div style={{ fontSize: 11, color: '#6b7280', marginTop: 5, lineHeight: 1.45 }}>
+                      {editForm.branch
+                        ? 'Sees only this shop, and can only open a till here.'
+                        : 'Sees every shop. Right for owners and office staff.'}
+                    </div>
+                  </div>
+                )}
                 {editStatus === 'error' && <div style={{ color: '#c0392b', fontSize: 12, marginBottom: 12 }}>{editMessage || 'Failed to update user. Please try again.'}</div>}
                 <div style={{ display: 'flex', gap: 10 }}>
                   <button onClick={handleEditSubmit} disabled={updateUserMut.isPending} style={{ ...btnS(true), flex: 1, justifyContent: 'center', padding: '10px 16px', fontSize: 13 }}>
