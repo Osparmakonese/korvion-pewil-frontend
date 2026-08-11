@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import useIsMobile from '../hooks/useIsMobile';
+import ShopPricing from '../components/ShopPricing';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getProducts,
@@ -187,14 +188,15 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
             </div>
             <div>
               <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>
-                SKU
+                SKU <span style={{ textTransform: 'none', fontWeight: 400, color: '#9ca3af' }}>(optional)</span>
               </label>
               <input
                 type="text"
                 name="sku"
                 value={form.sku}
                 onChange={handleChange}
-                required
+                placeholder="Left blank? We'll create one"
+
                 style={{
                   width: '100%',
                   padding: '8px 10px',
@@ -410,6 +412,16 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
               style={{ width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
             />
           </div>
+
+          {/* Per-shop price. Only meaningful for an existing product
+              (a new one has no id yet) and hidden automatically when the
+              business has fewer than two shops. */}
+          {initialData?.id && (
+            <ShopPricing
+              productId={initialData.id}
+              chainPriceFallback={form.selling_price}
+            />
+          )}
 
           <button
             type="button"

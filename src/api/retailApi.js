@@ -503,3 +503,17 @@ export const generateRegulatorReturn = (data) =>
 export const markRegulatorReturnSubmitted = (id, reference) =>
   api.post(`/retail/regulator-returns/${id}/mark-submitted/`, { reference })
     .then(r => r.data);
+
+// ── Per-shop pricing ────────────────────────────────────────────────
+// Product identity is chain-wide; only the price and whether a shop
+// carries the line can differ. `selling_price: null` means "inherit the
+// chain price", which is where most products should stay.
+export const getShopPricing = (productId) =>
+  api.get(`/retail/products/${productId}/shop-pricing/`).then(r => r.data);
+export const setShopPricing = (productId, branches) =>
+  api.post(`/retail/products/${productId}/shop-pricing/`, { branches }).then(r => r.data);
+
+// Realised profit — built from actual sales at the cost captured when each
+// sale happened, so re-pricing later cannot rewrite history.
+export const getMarginAnalysis = (params) =>
+  api.get('/retail/analytics/margin-analysis/', { params }).then(r => r.data);
