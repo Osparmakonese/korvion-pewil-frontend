@@ -81,9 +81,24 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
     setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
+  // Optional fields that must be OMITTED when blank rather than sent as ''.
+  // An empty string is not a valid date or number, so DRF rejected the whole
+  // save — which is why leaving "Expiry date" empty (an optional field) made
+  // the product refuse to save at all.
+  const OPTIONAL_WHEN_BLANK = [
+    'expiry_date', 'sku', 'barcode', 'category', 'description',
+    'reorder_level', 'quantity_in_stock', 'excise_rate', 'hs_code',
+    'controlled_schedule', 'unit_of_weight', 'age_restriction_type',
+  ];
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(form);
+    const payload = { ...form };
+    OPTIONAL_WHEN_BLANK.forEach((k) => {
+      const v = payload[k];
+      if (v === '' || v === null || v === undefined) delete payload[k];
+    });
+    onSubmit(payload);
     setForm(BLANK_PRODUCT);
   };
 

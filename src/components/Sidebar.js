@@ -245,6 +245,12 @@ export const NAV_ITEMS = [
     { key: 'Vending Setup', emoji: '\u{1F50C}', label: 'Vending Setup', ownerOnly: true, feature: 'vending' },
   ]},
   { section: 'STOCK', module: 'retail', collapsible: true, items: [
+    // Bulk product import. The backend importer (retail/views.py, xlsx+csv
+    // with a downloadable template) has always worked, but this entry only
+    // existed in the FARM nav — so retail shops could not reach it and typed
+    // their whole catalogue in by hand. Two days of data entry, next to a
+    // working importer.
+    { key: 'Import', emoji: '\u{1F4E5}', label: 'Import products', ownerOnly: true, managerOk: true },
     { key: 'Categories', emoji: '\u{1F5C2}', label: 'Categories' },
     { key: 'Suppliers', emoji: '\u{1F4E6}', label: 'Suppliers & POs' },
     { key: 'WhatsApp PO', emoji: '\u{1F4AC}', label: 'WhatsApp PO' },

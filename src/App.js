@@ -297,7 +297,7 @@ const PAGE_META = {
   'Report': { title: 'Financial Report', sub: 'Season P&L - Owner only' },
   'Farm Assets': { title: 'Farm Assets', sub: 'Equipment and long-term investments' },
   'Settings': { title: 'Settings', sub: 'Tenant configuration - Pewil' },
-  'Import': { title: 'Import Data', sub: 'Upload Excel to populate your farm data' },
+  'Import': { title: 'Import products', sub: 'Upload an Excel or CSV file to add your whole catalogue at once' },
   'Harvest': { title: 'Harvest & Yield', sub: 'Track harvest output per field' },
   'Budget': { title: 'Season Budget', sub: 'Plan your spending vs actual' },
   'Water': { title: 'Water & Irrigation', sub: 'Track water usage and rainfall' },

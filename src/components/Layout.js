@@ -63,6 +63,8 @@ const RETAIL_DRAWER_SECTIONS = [
     { key: 'Discounts', emoji: '\u{1F3F7}\uFE0F', label: 'Discounts', sub: 'Promotions' },
   ]},
   { label: 'Inventory', items: [
+    // See Sidebar.js — the importer existed but was farm-only in the nav.
+    { key: 'Import', emoji: '\u{1F4E5}', label: 'Import products', sub: 'Excel / CSV upload', ownerOnly: true, managerOk: true },
     { key: 'Categories', emoji: '\u{1F5C2}', label: 'Categories', sub: 'Organize' },
     { key: 'Suppliers', emoji: '\u{1F4E6}', label: 'Suppliers', sub: 'Vendors & POs' },
     { key: 'WhatsApp PO', emoji: '\u{1F4AC}', label: 'WhatsApp PO', sub: 'AI-parse supplier msgs' },
