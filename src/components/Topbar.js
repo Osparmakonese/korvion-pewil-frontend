@@ -19,7 +19,7 @@ const SANS = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
 const S = {
   bar: {
     position: 'sticky', top: 0, zIndex: 50,
-    background: 'rgba(255,255,255,0.88)',
+    background: 'rgba(255,255,255,0.94)',
     backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
     borderBottom: `1px solid ${TOKENS.line}`,
     padding: '12px 24px', display: 'flex', alignItems: 'center',

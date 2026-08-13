@@ -304,7 +304,7 @@ export default function Layout({
             onTabChange={onTabChange}
           />
         </div>
-        <main className="page-content-mobile" style={{ flex: 1, padding: '20px 24px', background: '#f4f6f4' }}>
+        <main className="page-content-mobile" style={{ flex: 1, padding: '20px 24px', background: 'radial-gradient(ellipse 60% 40% at 18% 0%, #e8f5ee, transparent 60%), radial-gradient(ellipse 50% 35% at 96% 100%, #fff4e1, transparent 65%), #f7f9f7' }}>
           {children}
         </main>
       </div>

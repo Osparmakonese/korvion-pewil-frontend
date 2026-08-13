@@ -33,8 +33,8 @@ function saveExpandedState(state) {
    Same token KEYS so every reference (including the inline hover
    handlers further down) keeps working. ─── */
 const TOKENS = {
-  amber: '#c97d1a', terra: '#1a6b3a', forest: '#1a6b3a', forest2: '#2d9e58',
-  sand: '#e8f5ee', sand2: '#f2f8f4', cream: '#fbfcfb',
+  amber: '#c77700', terra: '#1a6b3a', forest: '#1a6b3a', forest2: '#2d9e58',
+  sand: '#ddeee4', sand2: '#eaf5ee', cream: '#f7faf8',
   ink: '#1f2937', muted: '#68766c',
   line: '#e3e8e4', line2: 'rgba(17,24,20,.05)',
   danger: '#c0392b',
@@ -44,7 +44,10 @@ const SANS = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
 const S = {
   sidebar: {
     position: 'fixed', top: 0, left: 0, width: 220, height: '100vh',
-    background: TOKENS.cream, borderRight: `1px solid ${TOKENS.line}`,
+    /* Same wash as the landing hero — green tint bleeding from the top,
+       settling onto a near-white green-gray. Ties the app to pewil.org. */
+    background: 'radial-gradient(ellipse 130% 26% at 0% 0%, #e8f5ee 0%, rgba(232,245,238,0) 72%), linear-gradient(180deg, #f4f9f5 0%, #fafcfa 100%)',
+    borderRight: `1px solid ${TOKENS.line}`,
     display: 'flex', flexDirection: 'column', zIndex: 60,
     fontFamily: SANS,
   },

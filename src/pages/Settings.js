@@ -33,7 +33,8 @@ const SANS = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
 
 /* ─── Shared style objects ─── */
 const pageShell = {
-  fontFamily: SANS, color: C.ink, background: C.cream,
+  /* transparent so the app shell's landing-style wash shows through */
+  fontFamily: SANS, color: C.ink, background: 'transparent',
   padding: '24px 28px', minHeight: '100%',
 };
 const heroRow = { marginBottom: 20 };
