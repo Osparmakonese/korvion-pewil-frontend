@@ -140,17 +140,13 @@ input, select, textarea, button {
 }
 
 /* ── DESKTOP CORPORATE LAYER (2026-08-13) ─────────────────────────────
-   The desktop shell moved to the corporate deep-green rail + frosted
-   topbar (Sidebar.js / Topbar.js). These rules add the app-wide polish
-   inline styles can't provide from one place: text selection, a
-   scrollbar that reads on the dark rail, a green focus ring on every
-   form control, and a quiet row hover on data tables. Everything
-   viewport-gated to ≥769px is desktop-only — the tuned mobile layer
-   below is untouched. */
+   The desktop shell uses the light sidebar + frosted topbar
+   (Sidebar.js / Topbar.js). These rules add the app-wide polish
+   inline styles can't provide from one place: text selection, a green
+   focus ring on every form control, and a quiet row hover on data
+   tables. Everything viewport-gated to ≥769px is desktop-only — the
+   tuned mobile layer below is untouched. */
 ::selection { background: rgba(45, 158, 88, 0.22); }
-
-.sidebar-desktop ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.14); }
-.sidebar-desktop ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.26); }
 
 @media (min-width: 769px) {
   /* Crisp green focus state on every form control, app-wide. !important

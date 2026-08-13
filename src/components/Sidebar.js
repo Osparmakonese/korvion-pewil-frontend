@@ -27,26 +27,24 @@ function saveExpandedState(state) {
   }
 }
 
-/* ─── Pewil corporate rail — deep-green command console (2026-08-13).
-   Same token KEYS as the old "Living Africa" set so every reference
-   (including the inline hover handlers further down) keeps working —
-   only the values changed. `cream` is now the dark rail surface,
-   `sand` the active-item tint, `terra` the bright green accent. ─── */
+/* ─── Sidebar — the original light design, palette-refreshed (2026-08-13).
+   Same layout, spacing and structure as before; only the warm cream/
+   terracotta values moved to the corporate green-neutral system.
+   Same token KEYS so every reference (including the inline hover
+   handlers further down) keeps working. ─── */
 const TOKENS = {
-  amber: '#e8a13c', terra: '#35c06a', forest: '#ffffff', forest2: '#2d9e58',
-  sand: 'rgba(45,158,88,0.16)', sand2: 'rgba(45,158,88,0.10)',
-  cream: '#0f1a13',
-  ink: '#e7eee8', muted: '#93a698',
-  line: 'rgba(255,255,255,0.08)', line2: 'rgba(255,255,255,0.055)',
-  danger: '#ff8a7a',
+  amber: '#c97d1a', terra: '#1a6b3a', forest: '#1a6b3a', forest2: '#2d9e58',
+  sand: '#e8f5ee', sand2: '#f2f8f4', cream: '#fbfcfb',
+  ink: '#1f2937', muted: '#68766c',
+  line: '#e3e8e4', line2: 'rgba(17,24,20,.05)',
+  danger: '#c0392b',
 };
 const SANS = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
 
 const S = {
   sidebar: {
     position: 'fixed', top: 0, left: 0, width: 220, height: '100vh',
-    background: 'linear-gradient(180deg, #111f16 0%, #0d1710 100%)',
-    borderRight: '1px solid rgba(255,255,255,0.06)',
+    background: TOKENS.cream, borderRight: `1px solid ${TOKENS.line}`,
     display: 'flex', flexDirection: 'column', zIndex: 60,
     fontFamily: SANS,
   },
@@ -56,20 +54,20 @@ const S = {
   },
   /* Tenant switcher */
   tsw: {
-    margin: '10px 10px 6px', padding: '10px 12px',
-    border: `1px solid ${TOKENS.line}`, borderRadius: 12,
-    background: 'rgba(255,255,255,0.045)',
+    margin: '8px 8px 4px', padding: '9px 11px',
+    border: `1px solid ${TOKENS.line}`, borderRadius: 10,
+    background: '#fff',
     cursor: 'pointer', transition: 'all 0.15s',
   },
-  tswName: { fontWeight: 700, fontSize: 12, color: '#ffffff', letterSpacing: '0.01em' },
-  tswPlan: { fontSize: 9, color: TOKENS.muted, marginTop: 2 },
-  tswLabel: { fontSize: 8, color: TOKENS.terra, fontWeight: 600, marginTop: 2 },
+  tswName: { fontWeight: 700, fontSize: 12, color: TOKENS.ink },
+  tswPlan: { fontSize: 9, color: TOKENS.muted, marginTop: 1 },
+  tswLabel: { fontSize: 8, color: TOKENS.forest, fontWeight: 600, marginTop: 2 },
   /* Tenant dropdown */
   tdd: (open) => ({
     display: open ? 'block' : 'none',
     position: 'absolute', left: 8, top: 118, width: 204,
-    background: '#152019', border: `1px solid ${TOKENS.line}`, borderRadius: 12,
-    boxShadow: '0 16px 36px rgba(0,0,0,0.45)', zIndex: 200, overflow: 'hidden',
+    background: '#fff', border: `1px solid ${TOKENS.line}`, borderRadius: 12,
+    boxShadow: '0 12px 28px rgba(15,23,18,0.10)', zIndex: 200, overflow: 'hidden',
   }),
   tdo: (active) => ({
     padding: '10px 14px', cursor: 'pointer', transition: 'background 0.15s',
@@ -79,39 +77,38 @@ const S = {
   }),
   tdoName: { fontWeight: 600, fontSize: 11, color: TOKENS.ink },
   tdoType: { fontSize: 9, color: TOKENS.muted },
-  nav: { flex: 1, overflowY: 'auto', padding: '6px 8px' },
+  nav: { flex: 1, overflowY: 'auto', padding: '4px 8px' },
   sectionGroup: { marginBottom: 2, paddingBottom: 2 },
-  sectionDivider: { height: 1, background: TOKENS.line2, margin: '5px 10px' },
+  sectionDivider: { height: 1, background: TOKENS.line2, margin: '4px 10px' },
   sectionHeader: (isCollapsible) => ({
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '11px 10px 4px', cursor: isCollapsible ? 'pointer' : 'default',
-    userSelect: 'none', borderRadius: 6, transition: 'background 0.15s',
-    fontSize: 9, fontWeight: 700, color: 'rgba(147,166,152,0.85)', textTransform: 'uppercase',
-    letterSpacing: '0.12em',
+    padding: '10px 10px 3px', cursor: isCollapsible ? 'pointer' : 'default',
+    userSelect: 'none', borderRadius: 4, transition: 'background 0.15s',
+    fontSize: 8, fontWeight: 700, color: TOKENS.muted, textTransform: 'uppercase',
+    letterSpacing: '0.08em',
   }),
   sectionChevron: (expanded) => ({
-    fontSize: 9, color: TOKENS.muted, transition: 'transform 0.2s',
+    fontSize: 10, color: TOKENS.muted, transition: 'transform 0.2s',
     transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)',
   }),
   sectionCount: {
-    fontSize: 8, fontWeight: 700, color: TOKENS.ink, background: 'rgba(255,255,255,0.12)',
+    fontSize: 8, fontWeight: 600, color: '#fff', background: TOKENS.muted,
     borderRadius: 8, padding: '1px 5px', marginLeft: 4, minWidth: 14,
     textAlign: 'center', lineHeight: '14px',
   },
   sectionActiveDot: {
-    width: 6, height: 6, borderRadius: '50%', background: TOKENS.terra, marginLeft: 4,
-    boxShadow: '0 0 6px rgba(53,192,106,0.8)',
+    width: 6, height: 6, borderRadius: '50%', background: TOKENS.forest2, marginLeft: 4,
   },
   sectionItems: (expanded) => ({
     overflow: 'hidden', maxHeight: expanded ? 500 : 0,
     transition: 'max-height 0.25s ease-in-out', opacity: expanded ? 1 : 0,
   }),
   navItem: (active) => ({
-    display: 'flex', alignItems: 'center', gap: 8,
-    padding: '7px 10px', borderRadius: 9, fontSize: 11.5,
+    display: 'flex', alignItems: 'center', gap: 7,
+    padding: '6px 10px', borderRadius: 8, fontSize: 11,
     fontWeight: active ? 700 : 500, cursor: 'pointer',
     background: active ? TOKENS.sand : 'transparent',
-    color: active ? '#ffffff' : TOKENS.ink,
+    color: active ? TOKENS.forest : TOKENS.ink,
     transition: 'all 0.15s', border: 'none', width: '100%', textAlign: 'left',
     position: 'relative', fontFamily: 'inherit', margin: '1px 0',
     borderLeft: active ? `3px solid ${TOKENS.terra}` : '3px solid transparent',
@@ -123,17 +120,15 @@ const S = {
     animation: 'badgePulse 2s infinite',
   },
   userSection: {
-    borderTop: `1px solid ${TOKENS.line}`, padding: '11px 14px',
+    borderTop: `1px solid ${TOKENS.line}`, padding: '10px 14px',
     display: 'flex', alignItems: 'center', gap: 8,
-    background: 'rgba(255,255,255,0.03)',
   },
   avatar: (bg) => ({
     width: 30, height: 30, borderRadius: '50%', background: bg,
     color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
     fontSize: 10, fontWeight: 700, flexShrink: 0,
-    boxShadow: '0 0 0 2px rgba(255,255,255,0.10)',
   }),
-  userName: { fontSize: 11, fontWeight: 600, color: '#ffffff' },
+  userName: { fontSize: 11, fontWeight: 600, color: TOKENS.ink },
   userRole: { fontSize: 9, color: TOKENS.muted, textTransform: 'capitalize' },
   logoutBtn: {
     background: 'none', border: 'none', color: TOKENS.muted, cursor: 'pointer',
@@ -430,7 +425,7 @@ export default function Sidebar({ activeTab, onTabChange, user, onLogout, lowSto
     <div style={S.sidebar}>
       {/* Brand */}
       <div style={S.brand}>
-        <Logo size={32} showText variant="dark" />
+        <Logo size={36} showText={false} />
       </div>
 
       {/* Tenant brand — single-module, no switcher */}
