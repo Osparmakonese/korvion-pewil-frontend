@@ -19,28 +19,28 @@ const S = {
     background: 'linear-gradient(135deg, #1a6b3a, #2d9e58)',
     display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden'
   },
-  bannerTitle: { color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: "'Playfair Display', serif", textShadow: '0 1px 3px rgba(0,0,0,0.3)' },
+  bannerTitle: { color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", textShadow: '0 1px 3px rgba(0,0,0,0.3)' },
   bannerSub: { color: 'rgba(255,255,255,0.7)', fontSize: 11, textShadow: '0 1px 2px rgba(0,0,0,0.2)' },
   twoCol: { display: 'grid', gridTemplateColumns: '40% 60%', gap: 20 },
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 18, marginBottom: 16 },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 18, marginBottom: 16 },
   cardTitle: { fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 12 },
   label: { display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 3, marginTop: 8 },
-  input: { width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box' },
-  select: { width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box', cursor: 'pointer' },
+  input: { width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box' },
+  select: { width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box', cursor: 'pointer' },
   row2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 },
   row3: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 },
-  btn: { width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 12 },
+  btn: { width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 12 },
   sectionTitle: { fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 12, marginTop: 16 },
   tabs: { display: 'flex', gap: 0, marginBottom: 16 },
-  tab: (active) => ({ flex: 1, padding: '10px 0', textAlign: 'center', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid #e5e7eb', background: active ? '#1a6b3a' : '#fff', color: active ? '#fff' : '#374151', transition: 'all .15s', borderRadius: active ? '0' : '0' }),
-  goatCard: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '14px 16px', marginBottom: 10 },
+  tab: (active) => ({ flex: 1, padding: '10px 0', textAlign: 'center', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid #e3e8e4', background: active ? '#1a6b3a' : '#fff', color: active ? '#fff' : '#374151', transition: 'all .15s', borderRadius: active ? '0' : '0' }),
+  goatCard: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: '14px 16px', marginBottom: 10 },
   badge: (color) => ({ display: 'inline-block', fontSize: 9, fontWeight: 700, padding: '3px 10px', borderRadius: 12, textTransform: 'uppercase', background: color === 'buck' ? '#dcfce7' : color === 'doe' ? '#fef3c7' : '#f3f4f6', color: color === 'buck' ? '#166534' : color === 'doe' ? '#92400e' : '#374151' }),
   statusBadge: (status) => {
     const map = { active: ['#dcfce7','#166534'], sold: ['#dbeafe','#1e40af'], deceased: ['#fee2e2','#991b1b'], culled: ['#fef3c7','#92400e'] };
     const [bg, fg] = map[status] || map.active;
     return { display: 'inline-block', fontSize: 9, fontWeight: 700, padding: '3px 10px', borderRadius: 12, textTransform: 'uppercase', background: bg, color: fg };
   },
-  preview: { background: '#e8f5ee', borderRadius: 7, padding: '10px 14px', fontSize: 11, color: '#1a6b3a', marginTop: 8 },
+  preview: { background: '#e8f5ee', borderRadius: 10, padding: '10px 14px', fontSize: 11, color: '#1a6b3a', marginTop: 8 },
 };
 
 export default function Goats() {
@@ -330,12 +330,12 @@ export default function Goats() {
                   {g.date_of_birth && <div style={{ fontSize: 10, color: '#6b7280', marginBottom: 6 }}>DOB: <strong>{g.date_of_birth}</strong></div>}
                   {g.purchase_price > 0 && <div style={{ fontSize: 10, color: '#6b7280', marginBottom: 6 }}>Purchase: <strong>{fmt(g.purchase_price)}</strong></div>}
                   {(g.status === 'deceased' || g.status === 'culled') && g.cause_of_death && (
-                    <div style={{ fontSize: 10, color: '#991b1b', marginBottom: 6, padding: '6px 10px', background: '#fef2f2', borderRadius: 6 }}>
+                    <div style={{ fontSize: 10, color: '#991b1b', marginBottom: 6, padding: '6px 10px', background: '#fef2f2', borderRadius: 8 }}>
                       <strong>{g.status === 'deceased' ? 'Died' : 'Culled'}:</strong> {g.cause_of_death}{g.date_of_death && ` on ${g.date_of_death}`}
                     </div>
                   )}
-                  {g.notes && <div style={{ fontSize: 10, color: '#6b7280', fontStyle: 'italic', padding: '6px 10px', background: '#f9fafb', borderRadius: 6, marginBottom: 8 }}>{g.notes}</div>}
-                  <div style={{ marginTop: 6, padding: '6px 8px', background: '#f9fafb', borderRadius: 6, fontSize: 10 }}>
+                  {g.notes && <div style={{ fontSize: 10, color: '#6b7280', fontStyle: 'italic', padding: '6px 10px', background: '#f6f8f6', borderRadius: 8, marginBottom: 8 }}>{g.notes}</div>}
+                  <div style={{ marginTop: 6, padding: '6px 8px', background: '#f6f8f6', borderRadius: 8, fontSize: 10 }}>
                     <div style={{ color: '#6b7280' }}>Costs: {fmt(totalCost)} {healthCost > 0 && <span>(health: {fmt(healthCost)})</span>}</div>
                     {salePrice > 0 && <div style={{ color: '#6b7280' }}>Sale: {fmt(salePrice)}</div>}
                     {(salePrice > 0 || (g.status && g.status !== 'active')) && (
@@ -382,7 +382,7 @@ export default function Goats() {
                     <div style={{ fontSize: 10, color: '#6b7280', marginBottom: 4 }}>Date: {h.record_date}</div>
                     {h.vet_name && <div style={{ fontSize: 10, color: '#6b7280', marginBottom: 4 }}>Vet: {h.vet_name}</div>}
                     {h.next_due && <div style={{ fontSize: 10, color: '#1a6b3a', fontWeight: 600, marginBottom: 4 }}>Next due: {h.next_due}</div>}
-                    {h.notes && <div style={{ fontSize: 10, color: '#6b7280', fontStyle: 'italic', padding: '6px 10px', background: '#f9fafb', borderRadius: 6 }}>{h.notes}</div>}
+                    {h.notes && <div style={{ fontSize: 10, color: '#6b7280', fontStyle: 'italic', padding: '6px 10px', background: '#f6f8f6', borderRadius: 8 }}>{h.notes}</div>}
                     <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
                       <button onClick={() => setEditHealth(h)} style={{ fontSize: 9, padding: '2px 8px', background: '#fff', color: '#1a6b3a', border: '1px solid #1a6b3a', borderRadius: 3, cursor: 'pointer', fontWeight: 600 }}>Edit</button>
                       <button onClick={async () => { if (window.confirm('Delete this health record?')) { await deleteGoatHealth(h.id); qc.invalidateQueries({ queryKey: ['goatHealth'] }); } }} style={{ fontSize: 9, padding: '2px 8px', background: '#fff', color: '#c0392b', border: '1px solid #fca5a5', borderRadius: 3, cursor: 'pointer' }}>Delete</button>
@@ -408,7 +408,7 @@ export default function Goats() {
                     <div style={{ textAlign: 'right', fontSize: 14, fontWeight: 700, color: '#1a6b3a' }}>{fmt(s.sale_price)}</div>
                   </div>
                   <div style={{ fontSize: 10, color: '#6b7280', marginBottom: 4 }}>Date: {s.sale_date}</div>
-                  {s.description && <div style={{ fontSize: 10, color: '#6b7280', fontStyle: 'italic', padding: '6px 10px', background: '#f9fafb', borderRadius: 6 }}>{s.description}</div>}
+                  {s.description && <div style={{ fontSize: 10, color: '#6b7280', fontStyle: 'italic', padding: '6px 10px', background: '#f6f8f6', borderRadius: 8 }}>{s.description}</div>}
                 </div>
               ))}
             </>

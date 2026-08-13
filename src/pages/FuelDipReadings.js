@@ -14,7 +14,7 @@ import {
 function BackToForecourt({ onTabChange }) {
   return (
     <button onClick={() => onTabChange && onTabChange('Forecourt')}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 999, border: '1px solid #e5e7eb', background: '#fff', color: '#374151', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 14 }}>
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 999, border: '1px solid #e3e8e4', background: '#fff', color: '#374151', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 14 }}>
       ← Back to Forecourt
     </button>
   );
@@ -22,9 +22,9 @@ function BackToForecourt({ onTabChange }) {
 
 const T = {
   ink: '#111827', inkSoft: '#374151', muted: '#6b7280',
-  line: '#e5e7eb', surface: '#f9fafb',
+  line: '#e3e8e4', surface: '#f6f8f6',
   green: '#1a6b3a', red: '#c0392b', redT: '#fde8e8',
-  amber: '#c77700', amberT: '#fdeedd',
+  amber: '#c77700', amberT: '#fef3e2',
 };
 
 const blank = {

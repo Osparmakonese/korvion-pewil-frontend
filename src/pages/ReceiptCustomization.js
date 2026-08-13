@@ -152,7 +152,7 @@ export default function ReceiptCustomization({ onTabChange }) {
       bottom: 'calc(76px + env(safe-area-inset-bottom, 0px))',
       padding: '10px 12px',
       background: 'rgba(249,250,251,0.96)',
-      borderTop: '1px solid #e5e7eb',
+      borderTop: '1px solid #e3e8e4',
       zIndex: 60,
     }}>
       <button
@@ -179,7 +179,7 @@ export default function ReceiptCustomization({ onTabChange }) {
         height: 24,
         borderRadius: 12,
         border: 'none',
-        background: checked ? '#1a6b3a' : '#e5e7eb',
+        background: checked ? '#1a6b3a' : '#e3e8e4',
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
@@ -203,10 +203,10 @@ export default function ReceiptCustomization({ onTabChange }) {
   );
 
   return (
-    <div style={{ padding: 24, fontFamily: "'Inter', sans-serif", backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+    <div style={{ padding: 24, fontFamily: "'Inter', sans-serif", backgroundColor: '#f6f8f6', minHeight: '100vh' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Playfair Display', serif", margin: 0, color: '#111827' }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", margin: 0, color: '#111827' }}>
           Receipt Customization
         </h1>
         {isOwner && (
@@ -218,7 +218,7 @@ export default function ReceiptCustomization({ onTabChange }) {
               color: '#fff',
               border: 'none',
               padding: '8px 16px',
-              borderRadius: 7,
+              borderRadius: 10,
               fontSize: 12,
               fontWeight: 600,
               cursor: saveMutation.isPending ? 'not-allowed' : 'pointer',
@@ -244,7 +244,7 @@ export default function ReceiptCustomization({ onTabChange }) {
       {/* Main Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 24 }}>
         {/* Template Settings */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <h3 style={{ fontSize: 12, fontWeight: 700, margin: '0 0 16px 0', color: '#111827' }}>
             Receipt Configuration
           </h3>
@@ -266,8 +266,8 @@ export default function ReceiptCustomization({ onTabChange }) {
                   style={{
                     width: '100%',
                     padding: '8px 12px',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: 6,
+                    border: '1px solid #e3e8e4',
+                    borderRadius: 8,
                     fontSize: 11,
                     fontFamily: "'Inter', sans-serif",
                     boxSizing: 'border-box'
@@ -285,8 +285,8 @@ export default function ReceiptCustomization({ onTabChange }) {
                   style={{
                     width: '100%',
                     padding: '8px 12px',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: 6,
+                    border: '1px solid #e3e8e4',
+                    borderRadius: 8,
                     fontSize: 11,
                     fontFamily: "'Inter', sans-serif",
                     boxSizing: 'border-box'
@@ -302,7 +302,7 @@ export default function ReceiptCustomization({ onTabChange }) {
                   value={tinNumber}
                   onChange={(e) => setTinNumber(e.target.value)}
                   placeholder="e.g. 2001234567"
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 11, boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e3e8e4', borderRadius: 8, fontSize: 11, boxSizing: 'border-box' }}
                 />
               </div>
               <div>
@@ -314,7 +314,7 @@ export default function ReceiptCustomization({ onTabChange }) {
                   value={logoUrl}
                   onChange={(e) => setLogoUrl(e.target.value)}
                   placeholder="https://…/logo.png"
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 11, boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e3e8e4', borderRadius: 8, fontSize: 11, boxSizing: 'border-box' }}
                 />
               </div>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -326,7 +326,7 @@ export default function ReceiptCustomization({ onTabChange }) {
                     type="color"
                     value={brandColor}
                     onChange={(e) => setBrandColor(e.target.value)}
-                    style={{ width: 48, height: 34, border: '1px solid #e5e7eb', borderRadius: 6, padding: 2, cursor: 'pointer' }}
+                    style={{ width: 48, height: 34, border: '1px solid #e3e8e4', borderRadius: 8, padding: 2, cursor: 'pointer' }}
                   />
                 </div>
                 <div style={{ flex: 1 }}>
@@ -338,7 +338,7 @@ export default function ReceiptCustomization({ onTabChange }) {
                     value={bankDetails}
                     onChange={(e) => setBankDetails(e.target.value)}
                     placeholder="Bank · Acc name · Acc no · Branch"
-                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 11, boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #e3e8e4', borderRadius: 8, fontSize: 11, boxSizing: 'border-box' }}
                   />
                 </div>
               </div>
@@ -353,8 +353,8 @@ export default function ReceiptCustomization({ onTabChange }) {
                   style={{
                     width: '100%',
                     padding: '8px 12px',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: 6,
+                    border: '1px solid #e3e8e4',
+                    borderRadius: 8,
                     fontSize: 11,
                     fontFamily: "'Inter', sans-serif",
                     boxSizing: 'border-box'
@@ -372,8 +372,8 @@ export default function ReceiptCustomization({ onTabChange }) {
                   style={{
                     width: '100%',
                     padding: '8px 12px',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: 6,
+                    border: '1px solid #e3e8e4',
+                    borderRadius: 8,
                     fontSize: 11,
                     fontFamily: "'Inter', sans-serif",
                     boxSizing: 'border-box'
@@ -403,8 +403,8 @@ export default function ReceiptCustomization({ onTabChange }) {
                   style={{
                     width: '100%',
                     padding: '8px 12px',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: 6,
+                    border: '1px solid #e3e8e4',
+                    borderRadius: 8,
                     fontSize: 10,
                     fontFamily: "'Inter', sans-serif",
                     boxSizing: 'border-box',
@@ -429,8 +429,8 @@ export default function ReceiptCustomization({ onTabChange }) {
                     style={{
                       width: '100%',
                       padding: '8px 12px',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: 6,
+                      border: '1px solid #e3e8e4',
+                      borderRadius: 8,
                       fontSize: 11,
                       fontFamily: "'Inter', sans-serif",
                       boxSizing: 'border-box'
@@ -509,8 +509,8 @@ export default function ReceiptCustomization({ onTabChange }) {
                   style={{
                     width: '100%',
                     padding: '8px 12px',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: 6,
+                    border: '1px solid #e3e8e4',
+                    borderRadius: 8,
                     fontSize: 11,
                     fontFamily: "'Inter', sans-serif",
                     boxSizing: 'border-box',
@@ -526,7 +526,7 @@ export default function ReceiptCustomization({ onTabChange }) {
         </div>
 
         {/* Live Preview */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <h3 style={{ fontSize: 12, fontWeight: 700, margin: '0 0 16px 0', color: '#111827' }}>
             Receipt Preview
           </h3>
@@ -578,7 +578,7 @@ export default function ReceiptCustomization({ onTabChange }) {
                 {/* invoice line */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                   <span style={{ fontSize: 10.5 * fs, fontWeight: 800, letterSpacing: '.13em' }}>FISCAL TAX INVOICE</span>
-                  <span style={{ fontSize: 8.5 * fs, fontWeight: 800, color: '#fff', background: '#0f172a', padding: '3px 8px', borderRadius: 6 }}>
+                  <span style={{ fontSize: 8.5 * fs, fontWeight: 800, color: '#fff', background: '#0f172a', padding: '3px 8px', borderRadius: 8 }}>
                     {dual ? 'USD/ZiG' : 'USD'}
                   </span>
                 </div>
@@ -662,7 +662,7 @@ export default function ReceiptCustomization({ onTabChange }) {
       <div
         style={{
           background: '#f3f4f6',
-          border: '1px solid #e5e7eb',
+          border: '1px solid #e3e8e4',
           borderRadius: 10,
           padding: 16,
           fontSize: 10,

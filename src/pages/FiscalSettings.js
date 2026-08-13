@@ -50,12 +50,12 @@ const T = {
   ink:     '#111827',
   inkSoft: '#374151',
   muted:   '#6b7280',
-  line:    '#e5e7eb',
-  surface: '#f9fafb',
+  line:    '#e3e8e4',
+  surface: '#f6f8f6',
   green:   '#1a6b3a',
   greenT:  '#e8f5ee',
   amber:   '#c77700',
-  amberT:  '#fdeedd',
+  amberT:  '#fef3e2',
   red:     '#c0392b',
   blue:    '#1d4ed8',
   blueT:   '#dbeafe',
@@ -100,7 +100,7 @@ export default function FiscalSettings() {
   if (!isOwnerOrManager) {
     return (
       <div style={{ padding: 32, fontFamily: "'Inter', sans-serif" }}>
-        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, color: T.ink }}>
+        <h1 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 22, color: T.ink }}>
           Tax compliance
         </h1>
         <p style={{ color: T.muted, fontSize: 14 }}>
@@ -120,7 +120,7 @@ export default function FiscalSettings() {
           <BackLink to="/app" label="Back to dashboard" variant="subtle" />
         </div>
         <h1 style={{
-          fontFamily: "'Playfair Display', serif",
+          fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
           fontSize: 28, fontWeight: 700, color: T.ink, margin: 0,
         }}>Tax compliance</h1>
         <p style={{ color: T.muted, fontSize: 14, marginTop: 6, lineHeight: 1.55 }}>
@@ -328,7 +328,7 @@ function FiscalCredentialsModal({ adapter, credential, onClose, onSaved }) {
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
-          <h2 style={{ margin: 0, fontFamily: "'Playfair Display', serif", fontSize: 20, color: T.ink }}>
+          <h2 style={{ margin: 0, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 20, color: T.ink }}>
             {adapter.country_name || adapter.authority_name}
           </h2>
           <button onClick={onClose} style={closeBtn}>×</button>
@@ -412,7 +412,7 @@ function FiscalCredentialsModal({ adapter, credential, onClose, onSaved }) {
 
 /* ─── Style helpers ─── */
 const sectionTitle = {
-  fontFamily: "'Playfair Display', serif",
+  fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
   fontSize: 18, fontWeight: 700, color: T.ink,
   margin: '0 0 12px',
 };

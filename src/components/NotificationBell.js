@@ -12,7 +12,7 @@ import {
 const S = {
   wrap: { position: 'relative' },
   btn: {
-    background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: 7,
+    background: '#f3f4f6', border: '1px solid #e3e8e4', borderRadius: 10,
     padding: '6px 10px', cursor: 'pointer', display: 'flex',
     alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 600,
     color: '#374151', position: 'relative',
@@ -27,22 +27,22 @@ const S = {
   panel: {
     position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 100,
     width: 360, maxHeight: 460, background: '#fff',
-    border: '1px solid #e5e7eb', borderRadius: 10,
+    border: '1px solid #e3e8e4', borderRadius: 10,
     boxShadow: '0 8px 24px rgba(0,0,0,0.12)', overflow: 'hidden',
     display: 'flex', flexDirection: 'column',
   },
   head: {
-    padding: '12px 14px', borderBottom: '1px solid #e5e7eb',
+    padding: '12px 14px', borderBottom: '1px solid #e3e8e4',
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    background: '#f9fafb',
+    background: '#f6f8f6',
   },
   headTitle: {
-    fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700,
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 15, fontWeight: 700,
     color: '#111827',
   },
   headActions: { display: 'flex', gap: 6 },
   headBtn: {
-    background: 'transparent', border: '1px solid #e5e7eb', borderRadius: 5,
+    background: 'transparent', border: '1px solid #e3e8e4', borderRadius: 5,
     padding: '4px 8px', fontSize: 10, fontWeight: 600, cursor: 'pointer',
     color: '#374151',
   },
@@ -65,12 +65,12 @@ const S = {
     padding: 30, textAlign: 'center', fontSize: 12, color: '#6b7280',
   },
   foot: {
-    padding: '10px 14px', borderTop: '1px solid #e5e7eb', background: '#f9fafb',
+    padding: '10px 14px', borderTop: '1px solid #e3e8e4', background: '#f6f8f6',
     display: 'flex', gap: 6,
   },
   footBtn: {
     flex: 1, background: '#25D366', color: '#fff', border: 'none',
-    borderRadius: 6, padding: '7px 10px', fontSize: 11, fontWeight: 600,
+    borderRadius: 8, padding: '7px 10px', fontSize: 11, fontWeight: 600,
     cursor: 'pointer',
   },
 };
@@ -225,11 +225,11 @@ export default function NotificationBell({ onNavigate }) {
                   key={n.id}
                   style={{
                     ...S.item,
-                    background: n.read_at ? '#fff' : '#f9fafb',
+                    background: n.read_at ? '#fff' : '#f6f8f6',
                   }}
                   onClick={() => handleItemClick(n)}
                   onMouseEnter={e => { e.currentTarget.style.background = '#f3f4f6'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = n.read_at ? '#fff' : '#f9fafb'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = n.read_at ? '#fff' : '#f6f8f6'; }}
                 >
                   <div style={{ ...S.dot, background: SEV_COLOR[n.severity] || '#6b7280' }} />
                   <div style={S.itemBody}>

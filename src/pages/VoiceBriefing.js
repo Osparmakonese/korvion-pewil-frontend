@@ -20,15 +20,15 @@ const AMBER = '#c97d1a';
 const RED = '#c0392b';
 const INK = '#111827';
 const INK_3 = '#6b7280';
-const BORDER = '#e5e7eb';
-const SURFACE = '#f9fafb';
+const BORDER = '#e3e8e4';
+const SURFACE = '#f6f8f6';
 
 const card = {
   background: '#fff',
   border: `1px solid ${BORDER}`,
   borderRadius: 12,
   padding: 20,
-  boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+  boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)',
 };
 const label = {
   fontSize: 11, fontWeight: 700, color: INK_3,
@@ -171,7 +171,7 @@ export default function VoiceBriefing({ onTabChange }) {
       <div style={{ maxWidth: 1180, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, fontWeight: 700, color: INK }}>
+          <div style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 30, fontWeight: 700, color: INK }}>
             Morning Voice Briefing
           </div>
           <div style={{ color: INK_3, fontSize: 14, marginTop: 4 }}>
@@ -258,7 +258,7 @@ export default function VoiceBriefing({ onTabChange }) {
                   {/* Transcript */}
                   <div style={{
                     padding: 18, background: SURFACE, borderRadius: 10,
-                    fontFamily: "'Playfair Display', serif", fontSize: 17, lineHeight: 1.55,
+                    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 17, lineHeight: 1.55,
                     color: INK, whiteSpace: 'pre-wrap', minHeight: 120,
                   }}>
                     {parsed[language] || '—'}
@@ -313,7 +313,7 @@ export default function VoiceBriefing({ onTabChange }) {
             {/* AI credits */}
             <div style={card}>
               <div style={label}>AI credits</div>
-              <div style={{ fontSize: 28, fontFamily: "'Playfair Display', serif", fontWeight: 700, color: GREEN }}>
+              <div style={{ fontSize: 28, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontWeight: 700, color: GREEN }}>
                 {budget?.credits_remaining ?? '—'}
               </div>
               <div style={{ fontSize: 12, color: INK_3 }}>
@@ -353,7 +353,7 @@ function Metric({ label: lbl, value, color }) {
   return (
     <div>
       <div style={{ fontSize: 10, color: INK_3, textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>{lbl}</div>
-      <div style={{ fontSize: 20, fontFamily: "'Playfair Display', serif", fontWeight: 700, color, marginTop: 2 }}>
+      <div style={{ fontSize: 20, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontWeight: 700, color, marginTop: 2 }}>
         {value}
       </div>
     </div>

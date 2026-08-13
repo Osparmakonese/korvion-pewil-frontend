@@ -8,16 +8,16 @@ import usePrimaryAction from '../hooks/usePrimaryAction';
 const styles = {
   page: { maxWidth: 1200, margin: '0 auto', padding: 20 },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  title: { fontSize: 24, fontWeight: 700, color: '#111827', fontFamily: "'Playfair Display', serif", margin: 0 },
-  addBtn: { padding: '10px 18px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' },
+  title: { fontSize: 24, fontWeight: 700, color: '#111827', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", margin: 0 },
+  addBtn: { padding: '10px 18px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' },
   summaryRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 20 },
-  summaryCard: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '14px 16px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' },
+  summaryCard: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: '14px 16px', boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)' },
   summaryLabel: { fontSize: 9, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 },
-  summaryValue: { fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700, color: '#1a6b3a' },
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '0', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' },
+  summaryValue: { fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 22, fontWeight: 700, color: '#1a6b3a' },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: '0', overflow: 'hidden', boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)' },
   table: { width: '100%', borderCollapse: 'collapse' },
-  th: { textAlign: 'left', padding: '10px 12px', fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', background: '#f9fafb', borderBottom: '1px solid #e5e7eb' },
-  td: { padding: '12px 12px', fontSize: 12, color: '#374151', borderBottom: '1px solid #e5e7eb' },
+  th: { textAlign: 'left', padding: '10px 12px', fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', background: '#f6f8f6', borderBottom: '1px solid #e3e8e4' },
+  td: { padding: '12px 12px', fontSize: 12, color: '#374151', borderBottom: '1px solid #e3e8e4' },
   refCell: { fontFamily: 'monospace', color: '#1a6b3a', fontWeight: 600 },
   monospaceCell: { fontFamily: 'monospace' },
   statusPill: (status) => ({
@@ -31,7 +31,7 @@ const styles = {
     background: status === 'Posted' ? '#e8f5ee' : '#f3f4f6',
     color: status === 'Posted' ? '#1a6b3a' : '#6b7280',
   }),
-  trHover: { background: '#f9fafb' },
+  trHover: { background: '#f6f8f6' },
 };
 
 export default function JournalEntries({ onTabChange }) {
@@ -166,8 +166,8 @@ export default function JournalEntries({ onTabChange }) {
                 style={{
                   width: '100%',
                   padding: '8px 10px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 7,
+                  border: '1px solid #e3e8e4',
+                  borderRadius: 10,
                   fontSize: 12,
                   outline: 'none',
                   boxSizing: 'border-box',
@@ -185,8 +185,8 @@ export default function JournalEntries({ onTabChange }) {
                 style={{
                   width: '100%',
                   padding: '8px 10px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 7,
+                  border: '1px solid #e3e8e4',
+                  borderRadius: 10,
                   fontSize: 12,
                   outline: 'none',
                   boxSizing: 'border-box',
@@ -204,8 +204,8 @@ export default function JournalEntries({ onTabChange }) {
                 style={{
                   width: '100%',
                   padding: '8px 10px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 7,
+                  border: '1px solid #e3e8e4',
+                  borderRadius: 10,
                   fontSize: 12,
                   outline: 'none',
                   boxSizing: 'border-box',
@@ -225,8 +225,8 @@ export default function JournalEntries({ onTabChange }) {
                   style={{
                     width: '100%',
                     padding: '8px 10px',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: 7,
+                    border: '1px solid #e3e8e4',
+                    borderRadius: 10,
                     fontSize: 12,
                     outline: 'none',
                     boxSizing: 'border-box',
@@ -245,8 +245,8 @@ export default function JournalEntries({ onTabChange }) {
                   style={{
                     width: '100%',
                     padding: '8px 10px',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: 7,
+                    border: '1px solid #e3e8e4',
+                    borderRadius: 10,
                     fontSize: 12,
                     outline: 'none',
                     boxSizing: 'border-box',
@@ -264,7 +264,7 @@ export default function JournalEntries({ onTabChange }) {
                   background: '#1a6b3a',
                   color: '#fff',
                   border: 'none',
-                  borderRadius: 7,
+                  borderRadius: 10,
                   fontSize: 12,
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -281,7 +281,7 @@ export default function JournalEntries({ onTabChange }) {
                   background: '#f3f4f6',
                   color: '#374151',
                   border: 'none',
-                  borderRadius: 7,
+                  borderRadius: 10,
                   fontSize: 12,
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -321,7 +321,7 @@ export default function JournalEntries({ onTabChange }) {
         ) : (
           <div style={{ overflowX: 'auto' }}><table style={styles.table}>
             <thead>
-              <tr style={{ background: '#f9fafb' }}>
+              <tr style={{ background: '#f6f8f6' }}>
                 <th style={styles.th}>Date</th>
                 <th style={styles.th}>Ref</th>
                 <th style={styles.th}>Description</th>
@@ -335,9 +335,9 @@ export default function JournalEntries({ onTabChange }) {
                 <tr
                   key={row.id}
                   style={{
-                    borderBottom: idx < formattedEntries.length - 1 ? '1px solid #e5e7eb' : 'none',
+                    borderBottom: idx < formattedEntries.length - 1 ? '1px solid #e3e8e4' : 'none',
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#f9fafb')}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = '#f6f8f6')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                 >
                   <td style={styles.td}>{row.date}</td>

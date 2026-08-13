@@ -6,9 +6,9 @@ import useIsMobile from '../hooks/useIsMobile';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
 
-const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginBottom: 16 };
-const input = { padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, boxSizing: 'border-box' };
-const th = { textAlign: 'left', padding: '7px 8px', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', background: '#f9fafb' };
+const card = { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: 16, marginBottom: 16 };
+const input = { padding: '8px 10px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, boxSizing: 'border-box' };
+const th = { textAlign: 'left', padding: '7px 8px', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', background: '#f6f8f6' };
 const td = { padding: '7px 8px', fontSize: 12, borderBottom: '1px solid #f3f4f6' };
 const pill = (c) => ({ fontSize: 8, fontWeight: 700, padding: '2px 7px', borderRadius: 20, textTransform: 'uppercase', background: c.bg, color: c.fg });
 
@@ -63,7 +63,7 @@ export default function Reconciliation() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 10 }}>
           {tenderKeys.length === 0 && <div style={{ fontSize: 12, color: '#9ca3af' }}>No sales in this period.</div>}
           {tenderKeys.map((k) => (
-            <div key={k} style={{ border: '1px solid #e5e7eb', borderRadius: 10, padding: 12 }}>
+            <div key={k} style={{ border: '1px solid #e3e8e4', borderRadius: 10, padding: 12 }}>
               <div style={{ fontSize: 11, color: '#6b7280' }}>{TENDER_LABEL[k] || k}</div>
               <div style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginTop: 2 }}>{fmt(byTender[k] || 0, 'zwd')}</div>
             </div>

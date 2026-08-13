@@ -38,7 +38,7 @@ const STYLES = {
     gap: 6,
     padding: '8px 14px',
     borderRadius: 999,
-    border: '1px solid #e5e7eb',
+    border: '1px solid #e3e8e4',
     background: '#ffffff',
     color: '#374151',
     fontSize: 13,

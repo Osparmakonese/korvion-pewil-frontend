@@ -30,14 +30,14 @@ const T = {
   green:   '#1a6b3a',
   greenT:  '#e8f5ee',
   amber:   '#c77700',
-  amberT:  '#fdeedd',
+  amberT:  '#fef3e2',
   red:     '#c0392b',
   redT:    '#fde8e8',
   ink:     '#111827',
   inkSoft: '#374151',
   muted:   '#6b7280',
-  line:    '#e5e7eb',
-  surface: '#f9fafb',
+  line:    '#e3e8e4',
+  surface: '#f6f8f6',
 };
 
 // Per-receipt retail (2026-05-17): every retail tenant gets unlimited
@@ -177,7 +177,7 @@ export default function Branches() {
         }}>
           <div style={{ flex: '1 1 420px', minWidth: 0 }}>
             <h1 style={{
-              fontFamily: "'Playfair Display', serif",
+              fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
               fontSize: 28, fontWeight: 700, color: T.ink, margin: 0,
             }}>Branches</h1>
             <p style={{ color: T.muted, fontSize: 14, marginTop: 6, lineHeight: 1.55, maxWidth: 640 }}>
@@ -291,16 +291,16 @@ function BranchCard({ branch, isOwner, onEdit, onPromote, onArchive, busy }) {
     <div style={{
       background: '#fff', border: `1px solid ${T.line}`, borderRadius: 12,
       padding: 18, opacity: inactive ? 0.65 : 1,
-      boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+      boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
         <div style={{
-          fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 700,
+          fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 18, fontWeight: 700,
           color: T.ink, marginRight: 4, lineHeight: 1.2,
         }}>{branch.name}</div>
         {branch.code && (
           <span style={{
-            display: 'inline-block', padding: '2px 8px', borderRadius: 6,
+            display: 'inline-block', padding: '2px 8px', borderRadius: 8,
             background: T.surface, border: `1px solid ${T.line}`,
             fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
             color: T.inkSoft,
@@ -308,14 +308,14 @@ function BranchCard({ branch, isOwner, onEdit, onPromote, onArchive, busy }) {
         )}
         {branch.is_hq && (
           <span style={{
-            display: 'inline-block', padding: '2px 8px', borderRadius: 6,
+            display: 'inline-block', padding: '2px 8px', borderRadius: 8,
             background: T.greenT, color: T.green,
             fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
           }}>HQ</span>
         )}
         {inactive && (
           <span style={{
-            display: 'inline-block', padding: '2px 8px', borderRadius: 6,
+            display: 'inline-block', padding: '2px 8px', borderRadius: 8,
             background: T.surface, color: T.muted,
             fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
           }}>INACTIVE</span>
@@ -363,7 +363,7 @@ function BranchCard({ branch, isOwner, onEdit, onPromote, onArchive, busy }) {
 }
 
 const cardBtn = {
-  padding: '6px 12px', borderRadius: 7,
+  padding: '6px 12px', borderRadius: 10,
   border: `1px solid ${T.line}`, background: '#fff',
   fontSize: 11, fontWeight: 600, cursor: 'pointer',
   fontFamily: 'inherit', color: T.inkSoft,
@@ -438,7 +438,7 @@ function BranchModal({ branch, onClose, onSubmit, saving }) {
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h2 style={{
-            fontFamily: "'Playfair Display', serif",
+            fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
             fontSize: 20, fontWeight: 700, margin: 0, color: T.ink,
           }}>
             {isNew ? 'Add branch' : `Edit ${branch.name}`}
@@ -520,7 +520,7 @@ function BranchModal({ branch, onClose, onSubmit, saving }) {
           {err && (
             <div style={{
               background: T.redT, color: T.red,
-              padding: '8px 12px', borderRadius: 7,
+              padding: '8px 12px', borderRadius: 10,
               fontSize: 12, marginTop: 6, marginBottom: 6,
             }}>{err}</div>
           )}
@@ -530,7 +530,7 @@ function BranchModal({ branch, onClose, onSubmit, saving }) {
               type="submit" disabled={saving}
               style={{
                 flex: 1, padding: 11, background: T.green, color: '#fff',
-                border: 'none', borderRadius: 7, fontSize: 13, fontWeight: 600,
+                border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 600,
                 cursor: saving ? 'not-allowed' : 'pointer',
                 opacity: saving ? 0.6 : 1, fontFamily: 'inherit',
               }}
@@ -541,7 +541,7 @@ function BranchModal({ branch, onClose, onSubmit, saving }) {
               type="button" onClick={onClose}
               style={{
                 flex: 1, padding: 11, background: T.surface, color: T.inkSoft,
-                border: `1px solid ${T.line}`, borderRadius: 7,
+                border: `1px solid ${T.line}`, borderRadius: 10,
                 fontSize: 13, fontWeight: 600, cursor: 'pointer',
                 fontFamily: 'inherit',
               }}
@@ -573,7 +573,7 @@ function Field({ label, required, hint, children }) {
 
 const inputStyle = {
   width: '100%', padding: '10px 12px',
-  border: `1px solid ${T.line}`, borderRadius: 7,
+  border: `1px solid ${T.line}`, borderRadius: 10,
   fontSize: 13, outline: 'none',
   boxSizing: 'border-box',
   fontFamily: 'inherit',

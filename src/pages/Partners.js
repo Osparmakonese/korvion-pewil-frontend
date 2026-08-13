@@ -10,23 +10,23 @@ import { getPartnersOverview, createPartner, updatePartner, assignTenantPartner 
 const G = '#1a6b3a';
 const S = {
   page: { maxWidth: 1100, margin: '0 auto', padding: 20, fontFamily: "'Inter', sans-serif" },
-  h1: { fontSize: 22, fontWeight: 800, margin: '0 0 2px', fontFamily: "'Playfair Display', serif", color: '#0f172a' },
+  h1: { fontSize: 22, fontWeight: 800, margin: '0 0 2px', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#0f172a' },
   sub: { fontSize: 12.5, color: '#64748b', margin: '0 0 18px' },
   kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12, marginBottom: 18 },
-  kpi: (a) => ({ background: '#fff', border: '1px solid #e5e7eb', borderLeft: `4px solid ${a}`, borderRadius: 12, padding: '14px 16px' }),
+  kpi: (a) => ({ background: '#fff', border: '1px solid #e3e8e4', borderLeft: `4px solid ${a}`, borderRadius: 12, padding: '14px 16px' }),
   kpiLabel: { fontSize: 10.5, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.05em' },
-  kpiVal: { fontSize: 24, fontWeight: 800, color: '#0f172a', fontFamily: "'Playfair Display', serif", marginTop: 2 },
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginBottom: 16 },
+  kpiVal: { fontSize: 24, fontWeight: 800, color: '#0f172a', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", marginTop: 2 },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: 16, marginBottom: 16 },
   cardH: { fontSize: 13, fontWeight: 800, color: '#0f172a', margin: '0 0 12px' },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: 12.5 },
-  th: { fontSize: 9.5, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', textAlign: 'left', padding: '7px 8px', borderBottom: '1px solid #e5e7eb' },
+  th: { fontSize: 9.5, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', textAlign: 'left', padding: '7px 8px', borderBottom: '1px solid #e3e8e4' },
   td: { padding: '8px 8px', borderBottom: '1px solid #f1f5f9', color: '#334155' },
   btn: { padding: '9px 14px', borderRadius: 8, fontWeight: 700, fontSize: 12.5, cursor: 'pointer', border: 'none', background: G, color: '#fff' },
-  btnO: { padding: '6px 10px', borderRadius: 7, fontWeight: 700, fontSize: 11.5, cursor: 'pointer', border: '1px solid #cbd5e1', background: '#fff', color: '#334155' },
-  input: { width: '100%', padding: '8px 10px', border: '1px solid #d1d5db', borderRadius: 7, fontSize: 13, boxSizing: 'border-box' },
+  btnO: { padding: '6px 10px', borderRadius: 10, fontWeight: 700, fontSize: 11.5, cursor: 'pointer', border: '1px solid #cbd5e1', background: '#fff', color: '#334155' },
+  input: { width: '100%', padding: '8px 10px', border: '1px solid #d1d5db', borderRadius: 10, fontSize: 13, boxSizing: 'border-box' },
   formGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, marginBottom: 12 },
   pill: (bg, fg) => ({ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: bg, color: fg }),
-  sel: { padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: 7, fontSize: 12.5, background: '#fff' },
+  sel: { padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: 10, fontSize: 12.5, background: '#fff' },
 };
 const money = (n) => '$' + (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const TYPES = [['hardware', 'Hardware seller'], ['reseller', 'Reseller'], ['referral', 'Referral partner'], ['agent', 'Field agent'], ['other', 'Other']];
@@ -69,7 +69,7 @@ export default function Partners() {
         </div>
 
         {showForm && (
-          <div style={{ background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 10, padding: 14, marginBottom: 14 }}>
+          <div style={{ background: '#f8fafc', border: '1px solid #e3e8e4', borderRadius: 10, padding: 14, marginBottom: 14 }}>
             <div style={S.formGrid}>
               <input style={S.input} placeholder="Partner / company name *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               <select style={S.input} value={form.partner_type} onChange={(e) => setForm({ ...form, partner_type: e.target.value })}>

@@ -3,10 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getRestaurantTables, createRestaurantTable, setTableStatus, deleteRestaurantTable } from '../api/retailApi';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
-const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginBottom: 16 };
+const card = { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: 16, marginBottom: 16 };
 const label = { fontSize: 10, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 3, marginTop: 8 };
-const input = { width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, boxSizing: 'border-box' };
-const btn = { padding: '9px 16px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 10 };
+const input = { width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, boxSizing: 'border-box' };
+const btn = { padding: '9px 16px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 10 };
 
 const STATUS = ['free', 'occupied', 'reserved', 'cleaning'];
 const COLOR = { free: '#e8f5ee', occupied: '#fee2e2', reserved: '#fef3c7', cleaning: '#eef2ff' };
@@ -35,7 +35,7 @@ export default function RestaurantTables() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 10 }}>
           {tables.length === 0 && <p style={{ fontSize: 12, color: '#6b7280' }}>No tables yet — add some on the right.</p>}
           {tables.map((t) => (
-            <div key={t.id} onClick={() => cycle(t)} style={{ cursor: 'pointer', borderRadius: 10, padding: '14px 10px', textAlign: 'center', background: COLOR[t.status] || '#f9fafb', border: '1px solid #e5e7eb' }}>
+            <div key={t.id} onClick={() => cycle(t)} style={{ cursor: 'pointer', borderRadius: 10, padding: '14px 10px', textAlign: 'center', background: COLOR[t.status] || '#f6f8f6', border: '1px solid #e3e8e4' }}>
               <div style={{ fontSize: 16, fontWeight: 800, color: '#111827' }}>{t.label}</div>
               <div style={{ fontSize: 10, color: '#6b7280' }}>{t.seats} seats{t.zone ? ` · ${t.zone}` : ''}</div>
               <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: TEXT[t.status], marginTop: 4 }}>{t.status}</div>

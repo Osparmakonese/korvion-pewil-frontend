@@ -3,10 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getKitchenOrders, createKitchenOrder, transitionKitchenOrder, getRestaurantTables } from '../api/retailApi';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
-const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginBottom: 16 };
+const card = { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: 16, marginBottom: 16 };
 const label = { fontSize: 10, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 3, marginTop: 8 };
-const input = { width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, boxSizing: 'border-box' };
-const btn = { padding: '9px 16px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 10 };
+const input = { width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, boxSizing: 'border-box' };
+const btn = { padding: '9px 16px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 10 };
 
 const COLUMNS = [
   { key: 'open', label: 'Open', next: 'sent', nextLabel: 'Send to kitchen' },
@@ -71,7 +71,7 @@ export default function KitchenOrders() {
             <div key={col.key} style={{ ...card, marginBottom: 0 }}>
               <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#6b7280', marginBottom: 8 }}>{col.label} ({items.length})</div>
               {items.map((o) => (
-                <div key={o.id} style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 10, marginBottom: 8 }}>
+                <div key={o.id} style={{ border: '1px solid #e3e8e4', borderRadius: 8, padding: 10, marginBottom: 8 }}>
                   <div style={{ fontSize: 12, fontWeight: 700 }}>{o.table_label ? `Table ${o.table_label}` : 'Walk-in'}</div>
                   {(o.items_data || []).map((it, i) => <div key={i} style={{ fontSize: 11, color: '#374151' }}>• {it.qty || 1}× {it.name}</div>)}
                   {o.notes && <div style={{ fontSize: 10, color: '#92400e', marginTop: 2 }}>{o.notes}</div>}

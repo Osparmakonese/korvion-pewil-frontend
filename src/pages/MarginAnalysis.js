@@ -23,17 +23,17 @@ import useIsMobile from '../hooks/useIsMobile';
 const G = '#1a6b3a';
 const S = {
   page: { maxWidth: 1100, margin: '0 auto', padding: 20 },
-  h1: { fontSize: 20, fontWeight: 800, margin: '0 0 4px', fontFamily: "'Playfair Display', serif", color: '#0f172a' },
+  h1: { fontSize: 20, fontWeight: 800, margin: '0 0 4px', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#0f172a' },
   sub: { fontSize: 12, color: '#64748b', margin: '0 0 16px', lineHeight: 1.5 },
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 4, marginBottom: 14 },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: 4, marginBottom: 14 },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: 12 },
-  th: { fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', textAlign: 'left', padding: '9px 10px', borderBottom: '1px solid #e5e7eb', background: '#f8fafc' },
-  thR: { fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', textAlign: 'right', padding: '9px 10px', borderBottom: '1px solid #e5e7eb', background: '#f8fafc' },
+  th: { fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', textAlign: 'left', padding: '9px 10px', borderBottom: '1px solid #e3e8e4', background: '#f8fafc' },
+  thR: { fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', textAlign: 'right', padding: '9px 10px', borderBottom: '1px solid #e3e8e4', background: '#f8fafc' },
   td: { padding: '8px 10px', borderBottom: '1px solid #f1f5f9', color: '#334155' },
   tdR: { padding: '8px 10px', borderBottom: '1px solid #f1f5f9', color: '#334155', textAlign: 'right' },
   tile: { flex: '1 1 160px', background: '#f8fafc', borderRadius: 10, padding: '12px 14px' },
   tileLabel: { fontSize: 11, color: '#64748b', fontWeight: 600 },
-  tileVal: (c) => ({ fontSize: 19, fontWeight: 800, color: c || '#0f172a', fontFamily: "'Playfair Display', serif", lineHeight: 1.15, marginTop: 2 }),
+  tileVal: (c) => ({ fontSize: 19, fontWeight: 800, color: c || '#0f172a', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", lineHeight: 1.15, marginTop: 2 }),
   chip: (on) => ({
     padding: '7px 13px', borderRadius: 20, fontSize: 12.5, fontWeight: 700,
     border: `1px solid ${on ? G : '#e2e8f0'}`, background: on ? G : '#fff',
@@ -147,13 +147,13 @@ export default function MarginAnalysis() {
           ) : isMobile ? (
             <div>
               {products.map((p) => (
-                <div key={p.product_id} style={{ border: '1px solid #e5e7eb', borderLeft: `5px solid ${marginColour(num(p.margin_percent))}`, borderRadius: 12, padding: '13px 14px', marginBottom: 10 }}>
+                <div key={p.product_id} style={{ border: '1px solid #e3e8e4', borderLeft: `5px solid ${marginColour(num(p.margin_percent))}`, borderRadius: 12, padding: '13px 14px', marginBottom: 10 }}>
                   <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', lineHeight: 1.3 }}>{p.name || `#${p.product_id}`}</div>
                   <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
                     {num(p.units_sold)} sold{p.is_estimated ? ' · cost estimated' : ''}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 10 }}>
-                    <span style={{ fontSize: 22, fontWeight: 800, color: marginColour(num(p.margin_percent)), fontFamily: "'Playfair Display', serif" }}>
+                    <span style={{ fontSize: 22, fontWeight: 800, color: marginColour(num(p.margin_percent)), fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
                       {fmt(p.gross_profit, 'zwd')}
                     </span>
                     <span style={{ fontSize: 12, color: '#64748b' }}>profit · {num(p.margin_percent).toFixed(1)}%</span>

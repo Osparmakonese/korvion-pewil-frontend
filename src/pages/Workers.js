@@ -12,17 +12,17 @@ const RATE_LABELS = { hourly: '/hr', daily: '/day', monthly: '/mo' };
 const empty = { name: '', role: 'field_worker', pay_type: 'monthly', rate: '' };
 const S = {
   twoCol: { display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 },
-  card: { background:'#fff', border:'1px solid #e5e7eb', borderRadius:10, padding:18, marginBottom:16 },
+  card: { background:'#fff', border:'1px solid #e3e8e4', borderRadius:10, padding:18, marginBottom:16 },
   label: { display:'block', fontSize:10, fontWeight:600, color:'#6b7280', marginBottom:3, marginTop:8 },
-  input: { width:'100%', padding:'8px 10px', border:'1px solid #e5e7eb', borderRadius:7, fontSize:12, outline:'none', color:'#111827' },
+  input: { width:'100%', padding:'8px 10px', border:'1px solid #e3e8e4', borderRadius:10, fontSize:12, outline:'none', color:'#111827' },
   row2: { display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 },
-  btn: { width:'100%', padding:'10px', background:'#1a6b3a', color:'#fff', border:'none', borderRadius:7, fontSize:12, fontWeight:600, cursor:'pointer', marginTop:12 },
+  btn: { width:'100%', padding:'10px', background:'#1a6b3a', color:'#fff', border:'none', borderRadius:10, fontSize:12, fontWeight:600, cursor:'pointer', marginTop:12 },
   sectionTitle: { fontSize:14, fontWeight:700, color:'#111827', marginBottom:12 },
-  bannerTitle: { color:'#fff', fontSize:16, fontWeight:700, fontFamily:"'Playfair Display', serif" },
+  bannerTitle: { color:'#fff', fontSize:16, fontWeight:700, fontFamily:"'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" },
   bannerSub: { color:'rgba(255,255,255,0.7)', fontSize:11 },
-  workerCard: { background:'#fff', border:'1px solid #e5e7eb', borderRadius:10, padding:'12px 16px', marginBottom:8, display:'flex', alignItems:'center', gap:12 },
+  workerCard: { background:'#fff', border:'1px solid #e3e8e4', borderRadius:10, padding:'12px 16px', marginBottom:8, display:'flex', alignItems:'center', gap:12 },
   avatar: (bg) => ({ width:30, height:30, borderRadius:'50%', background:bg, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:700, flexShrink:0 }),
-  preview: { background:'#e8f5ee', borderRadius:7, padding:'10px 14px', fontSize:11, color:'#1a6b3a', marginTop:8 },
+  preview: { background:'#e8f5ee', borderRadius:10, padding:'10px 14px', fontSize:11, color:'#1a6b3a', marginTop:8 },
   info: { background:'#EFF6FF', border:'1px solid #BFDBFE', borderRadius:8, padding:'10px 14px', fontSize:11, color:'#1d4ed8', marginTop:8 },
 };
 export default function Workers() {

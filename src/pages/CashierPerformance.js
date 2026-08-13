@@ -13,7 +13,7 @@ const S = {
     marginBottom: 20,
   },
   headerTitle: {
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
     fontSize: 24,
     fontWeight: 700,
     color: '#111827',
@@ -23,7 +23,7 @@ const S = {
     display: 'flex',
     gap: 6,
     background: '#f3f4f6',
-    borderRadius: 6,
+    borderRadius: 8,
     padding: 4,
   },
   buttonGroupItem: (isActive) => ({
@@ -44,7 +44,7 @@ const S = {
   },
   metricCard: {
     background: '#fff',
-    border: '1px solid #e5e7eb',
+    border: '1px solid #e3e8e4',
     borderRadius: 10,
     padding: 16,
   },
@@ -56,7 +56,7 @@ const S = {
     marginBottom: 8,
   },
   metricValue: {
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
     fontSize: 24,
     fontWeight: 700,
     color: '#111827',
@@ -66,7 +66,7 @@ const S = {
   },
   card: {
     background: '#fff',
-    border: '1px solid #e5e7eb',
+    border: '1px solid #e3e8e4',
     borderRadius: 10,
     padding: 16,
     marginBottom: 20,
@@ -80,7 +80,7 @@ const S = {
   },
   leaderboardCard: (borderColor, rank) => ({
     background: '#fff',
-    border: `1px solid #e5e7eb`,
+    border: `1px solid #e3e8e4`,
     borderLeft: `4px solid ${borderColor}`,
     borderRadius: 10,
     padding: 16,
@@ -106,7 +106,7 @@ const S = {
     flexShrink: 0,
   }),
   cashierName: {
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
     fontSize: 13,
     fontWeight: 700,
     color: '#111827',
@@ -131,7 +131,7 @@ const S = {
     textAlign: 'center',
       },
   statValue: {
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
     fontSize: 13,
     fontWeight: 700,
     color: '#111827',
@@ -146,7 +146,7 @@ const S = {
   progressBar: {
     width: '100%',
     height: 6,
-    background: '#e5e7eb',
+    background: '#e3e8e4',
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -173,8 +173,8 @@ const S = {
     fontWeight: 700,
     color: '#9ca3af',
     textTransform: 'uppercase',
-    borderBottom: '1px solid #e5e7eb',
-    background: '#f9fafb',
+    borderBottom: '1px solid #e3e8e4',
+    background: '#f6f8f6',
   },
   td: {
     padding: '7px 8px',

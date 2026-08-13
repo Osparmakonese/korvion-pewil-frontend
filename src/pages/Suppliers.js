@@ -46,7 +46,7 @@ function SupplierModal({ open, onClose, onSubmit, initialData, submitting }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <form onSubmit={handle} style={{ background: '#fff', borderRadius: 10, padding: 24, width: 440, maxWidth: '90vw' }}>
-        <h2 style={{ margin: '0 0 16px', fontSize: 18, fontWeight: 700, fontFamily: "'Playfair Display', serif" }}>
+        <h2 style={{ margin: '0 0 16px', fontSize: 18, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
           {initialData ? 'Edit Supplier' : 'Add Supplier'}
         </h2>
         {[
@@ -63,13 +63,13 @@ function SupplierModal({ open, onClose, onSubmit, initialData, submitting }) {
               required={required}
               value={form[key]}
               onChange={up(key)}
-              style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #d1d5db', borderRadius: 6, fontFamily: 'inherit' }}
+              style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #d1d5db', borderRadius: 8, fontFamily: 'inherit' }}
             />
           </div>
         ))}
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 16 }}>
-          <button type="button" onClick={onClose} style={{ padding: '8px 16px', background: '#fff', color: '#374151', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-          <button type="submit" disabled={submitting} style={{ padding: '8px 16px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.6 : 1 }}>
+          <button type="button" onClick={onClose} style={{ padding: '8px 16px', background: '#fff', color: '#374151', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+          <button type="submit" disabled={submitting} style={{ padding: '8px 16px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.6 : 1 }}>
             {submitting ? 'Saving...' : (initialData ? 'Update' : 'Create')}
           </button>
         </div>
@@ -137,13 +137,13 @@ function POModal({ open, onClose, onSubmit, suppliers, products, submitting }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <form onSubmit={handle} style={{ background: '#fff', borderRadius: 10, padding: 24, width: 640, maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto' }}>
-        <h2 style={{ margin: '0 0 16px', fontSize: 18, fontWeight: 700, fontFamily: "'Playfair Display', serif" }}>New Purchase Order</h2>
+        <h2 style={{ margin: '0 0 16px', fontSize: 18, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>New Purchase Order</h2>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
           <div>
             <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Supplier *</label>
             <select required value={form.supplier} onChange={(e) => { setFormError(''); setForm({ ...form, supplier: e.target.value }); }}
-              style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #d1d5db', borderRadius: 6 }}>
+              style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #d1d5db', borderRadius: 8 }}>
               <option value="">-- Select --</option>
               {suppliers.map((s) => (<option key={s.id} value={s.id}>{s.name}</option>))}
             </select>
@@ -151,12 +151,12 @@ function POModal({ open, onClose, onSubmit, suppliers, products, submitting }) {
           <div>
             <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Order Date</label>
             <input type="date" value={form.order_date} onChange={(e) => setForm({ ...form, order_date: e.target.value })}
-              style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #d1d5db', borderRadius: 6 }} />
+              style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #d1d5db', borderRadius: 8 }} />
           </div>
           <div>
             <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Expected Date</label>
             <input type="date" value={form.expected_date} onChange={(e) => setForm({ ...form, expected_date: e.target.value })}
-              style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #d1d5db', borderRadius: 6 }} />
+              style={{ width: '100%', padding: '8px 10px', fontSize: 12, border: '1px solid #d1d5db', borderRadius: 8 }} />
           </div>
         </div>
 
@@ -181,15 +181,15 @@ function POModal({ open, onClose, onSubmit, suppliers, products, submitting }) {
         ))}
         <button type="button" onClick={addItem} style={{ marginTop: 4, padding: '6px 12px', background: '#fff', color: '#1a6b3a', border: '1px solid #1a6b3a', borderRadius: 5, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>+ Add line</button>
 
-        <div style={{ marginTop: 16, padding: '10px 12px', background: '#f9fafb', borderRadius: 6, display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ marginTop: 16, padding: '10px 12px', background: '#f6f8f6', borderRadius: 8, display: 'flex', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 12, fontWeight: 600, color: '#6b7280' }}>Total</span>
           <span style={{ fontSize: 14, fontWeight: 700, color: '#1a6b3a' }}>${total.toFixed(2)}</span>
         </div>
 
         {formError && <div style={{ marginTop: 10, color: '#c0392b', fontSize: 12 }}>{formError}</div>}
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 16 }}>
-          <button type="button" onClick={onClose} style={{ padding: '8px 16px', background: '#fff', color: '#374151', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-          <button type="submit" disabled={submitting} style={{ padding: '8px 16px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.6 : 1 }}>
+          <button type="button" onClick={onClose} style={{ padding: '8px 16px', background: '#fff', color: '#374151', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+          <button type="submit" disabled={submitting} style={{ padding: '8px 16px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.6 : 1 }}>
             {submitting ? 'Creating...' : 'Create PO'}
           </button>
         </div>
@@ -298,7 +298,7 @@ export default function Suppliers({ onTabChange }) {
   };
 
   return (
-    <div style={{ padding: 24, fontFamily: "'Inter', sans-serif", backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+    <div style={{ padding: 24, fontFamily: "'Inter', sans-serif", backgroundColor: '#f6f8f6', minHeight: '100vh' }}>
       <SupplierModal
         open={supplierModalOpen}
         onClose={() => { setSupplierModalOpen(false); setEditingSupplier(null); }}
@@ -324,8 +324,8 @@ export default function Suppliers({ onTabChange }) {
               Delete supplier <strong>"{deletingSupplier.name}"</strong>? This cannot be undone.
             </p>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button onClick={() => setDeletingSupplier(null)} style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid #d1d5db', backgroundColor: '#fff', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={confirmDeleteSupplier} disabled={deleteSupplierMutation.isPending} style={{ padding: '8px 16px', borderRadius: 6, border: 'none', backgroundColor: '#dc2626', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>
+              <button onClick={() => setDeletingSupplier(null)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #d1d5db', backgroundColor: '#fff', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={confirmDeleteSupplier} disabled={deleteSupplierMutation.isPending} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', backgroundColor: '#dc2626', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>
                 {deleteSupplierMutation.isPending ? 'Deleting…' : 'Delete'}
               </button>
             </div>
@@ -335,13 +335,13 @@ export default function Suppliers({ onTabChange }) {
 
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Playfair Display', serif", margin: 0, color: '#111827' }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", margin: 0, color: '#111827' }}>
           Suppliers & Purchase Orders
         </h1>
         {isOwnerOrManager && (
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={openNewSupplier}
-              style={{ background: '#fff', color: '#1a6b3a', border: '1px solid #1a6b3a', padding: '8px 16px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+              style={{ background: '#fff', color: '#1a6b3a', border: '1px solid #1a6b3a', padding: '8px 16px', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
               + Add Supplier
             </button>
             <button onClick={() => {
@@ -349,7 +349,7 @@ export default function Suppliers({ onTabChange }) {
               if (products.length === 0) { alert('Add at least one product first.'); return; }
               setPoModalOpen(true);
             }}
-              style={{ background: '#1a6b3a', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+              style={{ background: '#1a6b3a', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
               + New Purchase Order
             </button>
           </div>
@@ -360,7 +360,7 @@ export default function Suppliers({ onTabChange }) {
       <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
         {['Suppliers', 'Purchase Orders'].map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
-            style={{ background: activeTab === tab ? '#1a6b3a' : '#fff', color: activeTab === tab ? '#fff' : '#374151', border: activeTab === tab ? 'none' : '1px solid #e5e7eb', padding: '8px 16px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+            style={{ background: activeTab === tab ? '#1a6b3a' : '#fff', color: activeTab === tab ? '#fff' : '#374151', border: activeTab === tab ? 'none' : '1px solid #e3e8e4', padding: '8px 16px', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
             {tab}
           </button>
         ))}
@@ -368,7 +368,7 @@ export default function Suppliers({ onTabChange }) {
 
       {/* Suppliers Tab */}
       {activeTab === 'Suppliers' && (
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           {suppliersLoading ? (
             <div style={{ padding: 20, textAlign: 'center', color: '#6b7280' }}>Loading suppliers...</div>
           ) : suppliers.length === 0 ? (
@@ -376,9 +376,9 @@ export default function Suppliers({ onTabChange }) {
           ) : (
             <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
               <thead>
-                <tr style={{ background: '#f9fafb' }}>
+                <tr style={{ background: '#f6f8f6' }}>
                   {['ID', 'Name', 'Contact', 'Phone', 'Email', 'Terms', 'Actions'].map((h) => (
-                    <th key={h} style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: h === 'Actions' ? 'center' : 'left' }}>{h}</th>
+                    <th key={h} style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: h === 'Actions' ? 'center' : 'left' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -413,7 +413,7 @@ export default function Suppliers({ onTabChange }) {
       {/* Purchase Orders Tab */}
       {activeTab === 'Purchase Orders' && (
         <div>
-          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16, marginBottom: 16 }}>
+          <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16, marginBottom: 16 }}>
             {posLoading ? (
               <div style={{ padding: 20, textAlign: 'center', color: '#6b7280' }}>Loading purchase orders...</div>
             ) : purchaseOrders.length === 0 ? (
@@ -421,9 +421,9 @@ export default function Suppliers({ onTabChange }) {
             ) : (
               <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
                 <thead>
-                  <tr style={{ background: '#f9fafb' }}>
+                  <tr style={{ background: '#f6f8f6' }}>
                     {['ID', 'Order Date', 'Supplier', 'Total', 'Expected', 'Status', 'Action'].map((h, i) => (
-                      <th key={h} style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: (i === 3 ? 'right' : (i === 6 ? 'center' : 'left')) }}>{h}</th>
+                      <th key={h} style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: (i === 3 ? 'right' : (i === 6 ? 'center' : 'left')) }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -458,10 +458,10 @@ export default function Suppliers({ onTabChange }) {
           </div>
 
           {/* Summary */}
-          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16, display: 'flex', justifyContent: 'space-around', fontSize: 12, fontWeight: 600, color: '#111827' }}>
+          <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16, display: 'flex', justifyContent: 'space-around', fontSize: 12, fontWeight: 600, color: '#111827' }}>
             <div><span style={{ color: '#6b7280', fontWeight: 500 }}>Total POs:</span> <span style={{ color: '#111827', fontWeight: 700 }}>{purchaseOrders.length}</span></div>
-            <div style={{ borderLeft: '1px solid #e5e7eb', paddingLeft: 16 }}><span style={{ color: '#6b7280', fontWeight: 500 }}>Pending:</span> <span style={{ color: '#111827', fontWeight: 700 }}>{purchaseOrders.filter((po) => po.status === 'Pending').length}</span></div>
-            <div style={{ borderLeft: '1px solid #e5e7eb', paddingLeft: 16 }}><span style={{ color: '#6b7280', fontWeight: 500 }}>Total Value:</span> <span style={{ color: '#111827', fontWeight: 700 }}>${purchaseOrders.reduce((sum, po) => sum + Number(po.total || 0), 0).toFixed(2)}</span></div>
+            <div style={{ borderLeft: '1px solid #e3e8e4', paddingLeft: 16 }}><span style={{ color: '#6b7280', fontWeight: 500 }}>Pending:</span> <span style={{ color: '#111827', fontWeight: 700 }}>{purchaseOrders.filter((po) => po.status === 'Pending').length}</span></div>
+            <div style={{ borderLeft: '1px solid #e3e8e4', paddingLeft: 16 }}><span style={{ color: '#6b7280', fontWeight: 500 }}>Total Value:</span> <span style={{ color: '#111827', fontWeight: 700 }}>${purchaseOrders.reduce((sum, po) => sum + Number(po.total || 0), 0).toFixed(2)}</span></div>
           </div>
         </div>
       )}

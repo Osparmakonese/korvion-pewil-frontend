@@ -33,7 +33,7 @@ import { fmt } from '../utils/format';
  */
 
 const C = {
-  ink: '#111827', muted: '#6b7280', line: '#e5e7eb',
+  ink: '#111827', muted: '#6b7280', line: '#e3e8e4',
   green: '#1a6b3a', greenSoft: '#e8f5ee', greenDark: '#0d4a22',
   amber: '#c77700', amberSoft: '#fff4e1',
   red: '#991b1b', redSoft: '#fee2e2',

@@ -58,7 +58,7 @@ const S = {
     color: '#fff',
     fontSize: 16,
     fontWeight: 700,
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
   },
   bannerSub: {
     color: 'rgba(255,255,255,0.7)',
@@ -71,7 +71,7 @@ const S = {
   },
   card: {
     background: '#fff',
-    border: '1px solid #e5e7eb',
+    border: '1px solid #e3e8e4',
     borderRadius: 10,
     padding: 18,
     marginBottom: 16,
@@ -87,8 +87,8 @@ const S = {
   input: {
     width: '100%',
     padding: '8px 10px',
-    border: '1px solid #e5e7eb',
-    borderRadius: 7,
+    border: '1px solid #e3e8e4',
+    borderRadius: 10,
     fontSize: 12,
     outline: 'none',
     color: '#111827',
@@ -105,7 +105,7 @@ const S = {
     background: '#1a6b3a',
     color: '#fff',
     border: 'none',
-    borderRadius: 7,
+    borderRadius: 10,
     fontSize: 12,
     fontWeight: 600,
     cursor: 'pointer',
@@ -130,7 +130,7 @@ const S = {
   },
   summaryCard: {
     background: '#fff',
-    border: '1px solid #e5e7eb',
+    border: '1px solid #e3e8e4',
     borderRadius: 10,
     padding: '14px 16px',
     textAlign: 'center',
@@ -159,8 +159,8 @@ const S = {
     fontWeight: 700,
     color: '#9ca3af',
     textTransform: 'uppercase',
-    borderBottom: '1px solid #e5e7eb',
-    background: '#f9fafb',
+    borderBottom: '1px solid #e3e8e4',
+    background: '#f6f8f6',
   },
   td: {
     padding: '8px 10px',
@@ -501,7 +501,7 @@ export default function Budget({ onTabChange }) {
                 })}
                 <tr
                   style={{
-                    background: '#f9fafb',
+                    background: '#f6f8f6',
                     fontWeight: 700,
                   }}
                 >

@@ -7,10 +7,10 @@ import {
 import useIsMobile from '../hooks/useIsMobile';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
-const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginBottom: 16 };
+const card = { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: 16, marginBottom: 16 };
 const label = { fontSize: 10, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 3, marginTop: 8 };
-const input = { width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, boxSizing: 'border-box' };
-const btn = { padding: '8px 14px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 10 };
+const input = { width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, boxSizing: 'border-box' };
+const btn = { padding: '8px 14px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 10 };
 
 export default function Modifiers() {
   const isMobile = useIsMobile();
@@ -31,7 +31,7 @@ export default function Modifiers() {
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Modifier groups</h3>
         {groups.length === 0 && <p style={{ fontSize: 12, color: '#6b7280' }}>No modifier groups yet.</p>}
         {groups.map((g) => (
-          <div key={g.id} style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, marginBottom: 10 }}>
+          <div key={g.id} style={{ border: '1px solid #e3e8e4', borderRadius: 8, padding: 12, marginBottom: 10 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <div style={{ fontSize: 13, fontWeight: 700 }}>{g.name} <span style={{ fontSize: 10, color: '#6b7280' }}>{g.required ? 'required' : 'optional'} · pick {g.min_select}–{g.max_select}</span></div>
               <button onClick={() => delGroup.mutate(g.id)} style={{ background: 'none', border: 'none', color: '#991b1b', cursor: 'pointer', fontSize: 11 }}>Delete</button>

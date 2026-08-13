@@ -24,8 +24,8 @@ const C = {
   ink: '#111827',
   ink2: '#374151',
   ink3: '#6b7280',
-  border: '#e5e7eb',
-  surface: '#f9fafb',
+  border: '#e3e8e4',
+  surface: '#f6f8f6',
   white: '#ffffff',
 };
 
@@ -37,7 +37,7 @@ const S = {
   },
   h1: {
     fontSize: 28, fontWeight: 700, color: C.ink,
-    fontFamily: "'Playfair Display', serif", margin: 0,
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", margin: 0,
   },
   badge: {
     background: C.red, color: C.white, fontSize: 9, fontWeight: 700,
@@ -58,7 +58,7 @@ const S = {
   },
   moduleTab: (active) => ({
     padding: '8px 18px', fontSize: 12, fontWeight: 700, cursor: 'pointer',
-    border: 'none', borderRadius: 7,
+    border: 'none', borderRadius: 10,
     background: active ? C.green : 'transparent',
     color: active ? C.white : C.ink3,
     fontFamily: 'inherit', transition: 'all 0.15s',
@@ -70,7 +70,7 @@ const S = {
   },
   cycleBtn: (active) => ({
     padding: '7px 14px', fontSize: 11, fontWeight: 600, cursor: 'pointer',
-    border: 'none', borderRadius: 7,
+    border: 'none', borderRadius: 10,
     background: active ? C.ink : 'transparent',
     color: active ? C.white : C.ink3,
     fontFamily: 'inherit', transition: 'all 0.15s',
@@ -88,7 +88,7 @@ const S = {
     borderRadius: 14, padding: '22px 22px 26px',
     boxShadow: highlight
       ? '0 4px 18px rgba(26,107,58,0.14)'
-      : '0 1px 4px rgba(0,0,0,0.04)',
+      : '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)',
     position: 'relative', display: 'flex', flexDirection: 'column',
     minHeight: 520,
   }),
@@ -104,14 +104,14 @@ const S = {
   },
   tierName: {
     fontSize: 22, fontWeight: 700, color: C.ink,
-    fontFamily: "'Playfair Display', serif", marginBottom: 10,
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", marginBottom: 10,
   },
   priceRow: {
     display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 4,
   },
   priceNum: {
     fontSize: 38, fontWeight: 700, color: C.ink,
-    fontFamily: "'Playfair Display', serif", lineHeight: 1,
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", lineHeight: 1,
   },
   priceSuffix: { fontSize: 13, color: C.ink3, fontWeight: 500 },
   priceNote: {
@@ -176,7 +176,7 @@ const S = {
   deniedIcon: { fontSize: 38, marginBottom: 10 },
   deniedTitle: {
     fontSize: 20, fontWeight: 700, color: C.ink,
-    fontFamily: "'Playfair Display', serif", marginBottom: 8,
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", marginBottom: 8,
   },
   deniedBody: { fontSize: 13, color: C.ink3, lineHeight: 1.55 },
   loading: {

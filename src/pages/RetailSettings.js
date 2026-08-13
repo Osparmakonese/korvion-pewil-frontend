@@ -11,26 +11,27 @@ import api from '../api/axios';
 import useIsMobile from '../hooks/useIsMobile';
 import usePrimaryAction from '../hooks/usePrimaryAction';
 
-/* ─── Design 3 — Living Africa tokens (shared with Landing/Login/Register/Settings) ─── */
+/* ─── Pewil corporate tokens (2026-08-13) — same keys, restrained
+   green-neutral values to match the new desktop shell. ─── */
 const C = {
-  amber: '#f4a743',
-  terra: '#d9562c',
+  amber: '#c97d1a',
+  terra: '#2d9e58',
   clay: '#b13b17',
-  forest: '#1f3d26',
-  forest2: '#2d5a37',
-  sand: '#fff7ec',
-  sand2: '#fdeedd',
-  cream: '#fffcf7',
-  ink: '#1b1b1b',
-  muted: '#6b5d50',
-  line: 'rgba(27,27,27,.12)',
-  line2: 'rgba(27,27,27,.06)',
+  forest: '#1a6b3a',
+  forest2: '#2d9e58',
+  sand: '#e8f5ee',
+  sand2: '#fef3e2',
+  cream: '#f4f6f4',
+  ink: '#111827',
+  muted: '#68766c',
+  line: '#e3e8e4',
+  line2: 'rgba(17,24,20,.05)',
   danger: '#b1291b',
   dangerBg: '#fdecea',
   okBg: '#e8f5ee',
   ok: '#1a6b3a',
 };
-const SERIF = "'Fraunces', Georgia, serif";
+const SERIF = "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif";
 const SANS = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
 
 /* ─── Shared style objects (mirrors Settings.js for consistency) ─── */
@@ -67,7 +68,7 @@ const rightPane = { display: 'flex', flexDirection: 'column', gap: 20 };
 
 const sectionCard = {
   background: '#fff', border: `1px solid ${C.line}`, borderRadius: 16,
-  padding: '22px 24px', boxShadow: '0 1px 3px rgba(27,27,27,.04)',
+  padding: '22px 24px', boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)',
 };
 const sectionHead = { marginBottom: 16 };
 const sectionTitle = {
@@ -99,9 +100,9 @@ const btnBase = {
 };
 const btnPrimary = {
   ...btnBase,
-  background: `linear-gradient(135deg, ${C.amber}, ${C.terra})`,
+  background: `linear-gradient(135deg, ${C.forest}, ${C.terra})`,
   color: '#fff',
-  boxShadow: '0 10px 22px -10px rgba(217,86,44,.55)',
+  boxShadow: '0 10px 22px -10px rgba(26,107,58,.55)',
 };
 const btnForest = { ...btnBase, background: C.forest, color: '#fff' };
 const btnOutline = {
@@ -554,10 +555,10 @@ export default function RetailSettings({ onTabChange }) {
                 <div
                   style={{
                     width: 96, height: 96, borderRadius: 20,
-                    background: `linear-gradient(135deg, ${C.amber}, ${C.terra})`,
+                    background: `linear-gradient(135deg, ${C.forest}, ${C.terra})`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     color: '#fff', fontFamily: SERIF, fontSize: 36, fontWeight: 700,
-                    boxShadow: '0 10px 22px -10px rgba(217,86,44,.55)',
+                    boxShadow: '0 10px 22px -10px rgba(26,107,58,.55)',
                   }}
                 >
                   {(bizName || 'P').slice(0, 1).toUpperCase()}

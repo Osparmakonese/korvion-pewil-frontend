@@ -17,7 +17,7 @@ const S = {
     marginBottom: 20,
   },
   headerTitle: {
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
     fontSize: 24,
     fontWeight: 700,
     color: '#111827',
@@ -32,7 +32,7 @@ const S = {
     background: '#1a6b3a',
     color: '#fff',
     border: 'none',
-    borderRadius: 6,
+    borderRadius: 8,
     padding: '8px 16px',
     fontSize: 12,
     fontWeight: 600,
@@ -40,8 +40,8 @@ const S = {
   },
   dateInput: {
     padding: '6px 8px',
-    border: '1px solid #e5e7eb',
-    borderRadius: 6,
+    border: '1px solid #e3e8e4',
+    borderRadius: 8,
     fontSize: 11,
   },
   heroBar: {
@@ -52,7 +52,7 @@ const S = {
     marginBottom: 14,
   },
   heroTitle: {
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
     fontSize: 16,
     fontWeight: 700,
     margin: '0 0 12px 0',
@@ -71,7 +71,7 @@ const S = {
     opacity: 0.85,
   },
   heroStatValue: {
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
     fontSize: 14,
     fontWeight: 700,
   },
@@ -83,7 +83,7 @@ const S = {
   },
   metricCard: {
     background: '#fff',
-    border: '1px solid #e5e7eb',
+    border: '1px solid #e3e8e4',
     borderRadius: 10,
     padding: 16,
   },
@@ -95,7 +95,7 @@ const S = {
     marginBottom: 8,
   },
   metricValue: {
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
     fontSize: 22,
     fontWeight: 700,
     color: '#111827',
@@ -111,7 +111,7 @@ const S = {
   },
   card: {
     background: '#fff',
-    border: '1px solid #e5e7eb',
+    border: '1px solid #e3e8e4',
     borderRadius: 10,
     padding: 16,
     marginBottom: 20,
@@ -141,7 +141,7 @@ const S = {
     color: '#111827',
   },
   paymentMethodAmount: {
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
     fontSize: 13,
     fontWeight: 700,
     color: '#111827',
@@ -154,7 +154,7 @@ const S = {
   progressBar: {
     width: '100%',
     height: 6,
-    background: '#e5e7eb',
+    background: '#e3e8e4',
     borderRadius: 3,
     overflow: 'hidden',
     marginTop: 6,
@@ -217,7 +217,7 @@ const S = {
   hourlyBar: (height) => ({
     flex: 1,
     height: `${height}px`,
-    background: height > 0 ? 'linear-gradient(180deg, #2563eb, #1e3a5f)' : '#e5e7eb',
+    background: height > 0 ? 'linear-gradient(180deg, #2563eb, #1e3a5f)' : '#e3e8e4',
     borderRadius: '2px 2px 0 0',
     minHeight: 2,
   }),

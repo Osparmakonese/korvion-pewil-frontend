@@ -5,11 +5,11 @@ import { fmt } from '../utils/format';
 import useIsMobile from '../hooks/useIsMobile';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
-const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginBottom: 16 };
+const card = { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: 16, marginBottom: 16 };
 const label = { fontSize: 10, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 3, marginTop: 10, textTransform: 'uppercase' };
 const input = { width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 15, boxSizing: 'border-box' };
 const btn = { padding: '11px 16px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: 'pointer', width: '100%', marginTop: 14 };
-const th = { textAlign: 'left', padding: '7px 8px', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', background: '#f9fafb' };
+const th = { textAlign: 'left', padding: '7px 8px', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', background: '#f6f8f6' };
 const td = { padding: '7px 8px', fontSize: 12, borderBottom: '1px solid #f3f4f6' };
 const pill = (c) => ({ fontSize: 8, fontWeight: 700, padding: '2px 7px', borderRadius: 20, textTransform: 'uppercase', background: c.bg, color: c.fg });
 
@@ -93,7 +93,7 @@ export default function Vending() {
               {billers.map((b) => (
                 <button key={b.code} onClick={() => pickBiller(b)}
                   style={{ padding: '10px 12px', borderRadius: 10, cursor: 'pointer', fontSize: 12.5, fontWeight: 700,
-                           border: '1px solid ' + (biller?.code === b.code ? '#1a6b3a' : '#e5e7eb'),
+                           border: '1px solid ' + (biller?.code === b.code ? '#1a6b3a' : '#e3e8e4'),
                            background: biller?.code === b.code ? '#ecfdf5' : '#fff', color: biller?.code === b.code ? '#064e3b' : '#0f172a' }}>
                   {(KIND_META[b.kind] || KIND_META.other).emoji} {b.name}
                 </button>

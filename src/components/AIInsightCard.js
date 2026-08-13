@@ -52,10 +52,10 @@ export default function AIInsightCard({
 
   const cardStyle = {
     background: '#fff',
-    border: '1px solid #e5e7eb',
+    border: '1px solid #e3e8e4',
     borderRadius: 12,
     padding: compact ? '12px 14px' : '16px 18px',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+    boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)',
   };
 
   const headerStyle = {
@@ -91,7 +91,7 @@ export default function AIInsightCard({
     color: '#fff',
     background: hasCredits ? '#2563eb' : '#9ca3af',
     border: 'none',
-    borderRadius: 6,
+    borderRadius: 8,
     padding: '6px 14px',
     cursor: hasCredits ? 'pointer' : 'not-allowed',
     opacity: isLoading ? 0.7 : 1,

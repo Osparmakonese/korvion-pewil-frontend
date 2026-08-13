@@ -304,7 +304,7 @@ export default function Layout({
             onTabChange={onTabChange}
           />
         </div>
-        <main className="page-content-mobile" style={{ flex: 1, padding: '20px 24px', background: '#fffcf7' }}>
+        <main className="page-content-mobile" style={{ flex: 1, padding: '20px 24px', background: '#f4f6f4' }}>
           {children}
         </main>
       </div>

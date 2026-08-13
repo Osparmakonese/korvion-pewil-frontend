@@ -21,28 +21,28 @@ const S = {
     background: 'linear-gradient(135deg, #1a6b3a, #2d8659)',
     display: 'flex', flexDirection: 'column', justifyContent: 'center',
   },
-  bannerTitle: { color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: "'Playfair Display', serif", textShadow: '0 1px 3px rgba(0,0,0,0.3)' },
+  bannerTitle: { color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", textShadow: '0 1px 3px rgba(0,0,0,0.3)' },
   bannerSub: { color: 'rgba(255,255,255,0.7)', fontSize: 11, textShadow: '0 1px 2px rgba(0,0,0,0.2)' },
   twoCol: { display: 'grid', gridTemplateColumns: '1fr 310px', gap: 20 },
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 18, marginBottom: 16 },
-  cardTitle: { fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 12, fontFamily: "'Playfair Display', serif" },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: 18, marginBottom: 16 },
+  cardTitle: { fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 12, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" },
   label: { display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 3, marginTop: 8 },
-  input: { width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box' },
-  textarea: { width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', resize: 'vertical', minHeight: 60, color: '#111827', boxSizing: 'border-box' },
+  input: { width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box' },
+  textarea: { width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', resize: 'vertical', minHeight: 60, color: '#111827', boxSizing: 'border-box' },
   row2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 },
-  btn: { width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 12 },
-  sectionTitle: { fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 12, fontFamily: "'Playfair Display', serif" },
+  btn: { width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 12 },
+  sectionTitle: { fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 12, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" },
   statsBox: { background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: 16, marginBottom: 16 },
   statValue: { fontSize: 22, fontWeight: 700, color: '#1a6b3a', marginBottom: 4 },
   statLabel: { fontSize: 10, color: '#6b7280', marginBottom: 12 },
-  harvestCard: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, marginBottom: 10 },
+  harvestCard: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 8, padding: 12, marginBottom: 10 },
   harvestHeader: { fontSize: 12, fontWeight: 700, color: '#111827', marginBottom: 6 },
   harvestRow: { display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 4, color: '#374151' },
   harvestMeta: { fontSize: 10, color: '#9ca3af' },
-  badge: (bg, color) => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 6, fontSize: 10, fontWeight: 600, background: bg, color: color, marginBottom: 6 }),
-  deleteBtn: { width: '100%', padding: '6px', background: 'none', border: '1px solid #c0392b', borderRadius: 6, color: '#c0392b', fontSize: 10, fontWeight: 600, cursor: 'pointer', marginTop: 8 },
+  badge: (bg, color) => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 8, fontSize: 10, fontWeight: 600, background: bg, color: color, marginBottom: 6 }),
+  deleteBtn: { width: '100%', padding: '6px', background: 'none', border: '1px solid #c0392b', borderRadius: 8, color: '#c0392b', fontSize: 10, fontWeight: 600, cursor: 'pointer', marginTop: 8 },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: 11 },
-  th: { textAlign: 'left', padding: '8px 10px', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb', background: '#f9fafb' },
+  th: { textAlign: 'left', padding: '8px 10px', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', borderBottom: '1px solid #e3e8e4', background: '#f6f8f6' },
   td: { padding: '8px 10px', borderBottom: '1px solid #f3f4f6', color: '#374151' },
   emptyState: { background: '#f3f4f6', borderRadius: 8, padding: '20px', textAlign: 'center', color: '#6b7280', fontSize: 12 },
 };
@@ -227,7 +227,7 @@ export default function Harvest({ onTabChange }) {
         {yieldTableData.length === 0 ? (
           <div style={S.emptyState}>No harvest data yet. Log a harvest to see field yield statistics.</div>
         ) : (
-          <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+          <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e3e8e4', overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}><table style={S.table}>
               <thead>
                 <tr>
@@ -269,8 +269,8 @@ export default function Harvest({ onTabChange }) {
             <div style={{ fontSize: 17, fontWeight: 700, color: '#111827', marginBottom: 6 }}>Delete Harvest?</div>
             <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 18 }}>Are you sure you want to delete this harvest from <strong>{delConfirm.field_name}</strong> on {delConfirm.harvest_date}? This action cannot be undone.</div>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setDelConfirm(null)} style={{ flex: 1, padding: '10px 0', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>Cancel</button>
-              <button onClick={() => delMut.mutate(delConfirm.id)} style={{ flex: 1, padding: '10px 0', borderRadius: 6, border: 'none', background: '#c0392b', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Delete</button>
+              <button onClick={() => setDelConfirm(null)} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>Cancel</button>
+              <button onClick={() => delMut.mutate(delConfirm.id)} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', background: '#c0392b', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Delete</button>
             </div>
           </div>
         </div>

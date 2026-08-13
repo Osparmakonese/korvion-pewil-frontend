@@ -26,41 +26,41 @@ const S = {
   bannerImg: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' },
   bannerOverlay: { position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(26,107,58,0.85), rgba(0,0,0,0.3))' },
   bannerContent: { position: 'relative', zIndex: 1 },
-  bannerTitle: { color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: "'Playfair Display', serif", textShadow: '0 1px 3px rgba(0,0,0,0.3)' },
+  bannerTitle: { color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", textShadow: '0 1px 3px rgba(0,0,0,0.3)' },
   bannerSub: { color: 'rgba(255,255,255,0.7)', fontSize: 11, textShadow: '0 1px 2px rgba(0,0,0,0.2)' },
   twoCol: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 },
   formCard: {
-    background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10,
+    background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10,
     padding: '20px', position: 'sticky', top: 120,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+    boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)',
   },
   formTitle: {
-    fontFamily: "'Playfair Display', serif", fontSize: 14, fontWeight: 700,
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 14, fontWeight: 700,
     color: '#111827', marginBottom: 14,
   },
   label: { display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, marginTop: 10 },
   input: {
-    width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb',
-    borderRadius: 7, fontSize: 12, outline: 'none', color: '#111827',
+    width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4',
+    borderRadius: 10, fontSize: 12, outline: 'none', color: '#111827',
     transition: 'border-color 0.15s',
   },
   textarea: {
-    width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb',
-    borderRadius: 7, fontSize: 12, outline: 'none', resize: 'vertical',
+    width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4',
+    borderRadius: 10, fontSize: 12, outline: 'none', resize: 'vertical',
     minHeight: 60, color: '#111827',
   },
   btn: {
     width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff',
-    border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600,
+    border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600,
     cursor: 'pointer', marginTop: 12, transition: 'background 0.15s',
   },
   error: { fontSize: 10, color: '#c0392b', marginTop: 4 },
   sectionTitle: {
     fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 12,
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
   },
   tabBar: {
-    display: 'flex', gap: 8, marginBottom: 16, borderBottom: '1px solid #e5e7eb', paddingBottom: 12,
+    display: 'flex', gap: 8, marginBottom: 16, borderBottom: '1px solid #e3e8e4', paddingBottom: 12,
   },
   tabBtn: (active) => ({
     padding: '8px 16px', border: 'none', background: 'none',
@@ -74,7 +74,7 @@ const S = {
     padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 700, marginLeft: 6,
   },
   cattleCard: {
-    background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10,
+    background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10,
     padding: '14px 16px', marginBottom: 10,
   },
   cardHeader: {
@@ -89,7 +89,7 @@ const S = {
   cardBody: { fontSize: 11, color: '#6b7280', lineHeight: 1.6 },
   cardStats: {
     display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8,
-    borderTop: '1px solid #e5e7eb', paddingTop: 8, marginTop: 8, fontSize: 10,
+    borderTop: '1px solid #e3e8e4', paddingTop: 8, marginTop: 8, fontSize: 10,
   },
   row2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 },
   row3: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 },
@@ -274,7 +274,7 @@ export default function Cattle() {
                   <button key={val}
                     onClick={() => setStatusFilter(val)}
                     style={{
-                      padding: '5px 12px', borderRadius: 6, border: statusFilter === val ? '1px solid #1a6b3a' : '1px solid #e5e7eb',
+                      padding: '5px 12px', borderRadius: 8, border: statusFilter === val ? '1px solid #1a6b3a' : '1px solid #e3e8e4',
                       background: statusFilter === val ? '#e8f5ee' : '#fff',
                       fontSize: 11, fontWeight: 600, cursor: 'pointer',
                       color: statusFilter === val ? '#1a6b3a' : '#6b7280',
@@ -320,7 +320,7 @@ export default function Cattle() {
                       </div>
                     )}
                     {c.notes && <div style={{ marginTop: 6, fontStyle: 'italic', color: '#9ca3af' }}>{c.notes}</div>}
-                    <div style={{ marginTop: 6, padding: '6px 8px', background: '#f9fafb', borderRadius: 6, fontSize: 10 }}>
+                    <div style={{ marginTop: 6, padding: '6px 8px', background: '#f6f8f6', borderRadius: 8, fontSize: 10 }}>
                       <div style={{ color: '#6b7280' }}>Costs: {fmt(totalCost)} {healthCost > 0 && <span>(health: {fmt(healthCost)})</span>}</div>
                       {salePrice > 0 && <div style={{ color: '#6b7280' }}>Sale: {fmt(salePrice)}</div>}
                       {(salePrice > 0 || c.status !== 'active') && (

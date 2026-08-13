@@ -18,19 +18,19 @@ import useIsMobile from '../hooks/useIsMobile';
 const GREEN = '#1a6b3a';
 const GREEN_TINT = '#e8f5ee';
 const AMBER = '#c97d1a';
-const AMBER_TINT = '#fdeedd';
+const AMBER_TINT = '#fef3e2';
 const RED = '#c0392b';
 const INK = '#111827';
 const INK_3 = '#6b7280';
-const BORDER = '#e5e7eb';
-const SURFACE = '#f9fafb';
+const BORDER = '#e3e8e4';
+const SURFACE = '#f6f8f6';
 
 const card = {
   background: '#fff',
   border: `1px solid ${BORDER}`,
   borderRadius: 12,
   padding: 20,
-  boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+  boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)',
 };
 const label = {
   fontSize: 11,
@@ -169,7 +169,7 @@ export default function WhatsAppPOParser({ onTabChange }) {
         <div style={card}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
             <div>
-              <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 22, fontWeight: 700, color: INK, marginBottom: 4 }}>
+              <div style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 22, fontWeight: 700, color: INK, marginBottom: 4 }}>
                 WhatsApp PO Parser
               </div>
               <div style={{ fontSize: 13, color: INK_3 }}>
@@ -271,7 +271,7 @@ export default function WhatsAppPOParser({ onTabChange }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
               <div>
                 <div style={label}>Parsed order</div>
-                <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 20, fontWeight: 600, color: INK }}>
+                <div style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 20, fontWeight: 600, color: INK }}>
                   {p.supplier_guess || 'Unknown supplier'}
                   {p.supplier_id ? (
                     <span style={{ marginLeft: 8, fontSize: 12, color: GREEN, fontWeight: 700, fontFamily: 'Inter, sans-serif' }}>
@@ -420,7 +420,7 @@ export default function WhatsAppPOParser({ onTabChange }) {
         <div style={card}>
           <div style={label}>AI credits</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-            <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 32, fontWeight: 700, color: INK }}>
+            <div style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 32, fontWeight: 700, color: INK }}>
               {budget?.credits_remaining ?? '—'}
             </div>
             <div style={{ fontSize: 12, color: INK_3 }}>/ {budget?.credits_total ?? '—'}</div>

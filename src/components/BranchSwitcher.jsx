@@ -87,7 +87,7 @@ export default function BranchSwitcher() {
         fontSize: 12.5, fontWeight: 600,
         color: current ? '#1a6b3a' : '#374151',
         background: current ? '#e8f5ee' : '#fff',
-        border: `1px solid ${current ? '#1a6b3a' : '#e5e7eb'}`,
+        border: `1px solid ${current ? '#1a6b3a' : '#e3e8e4'}`,
         borderRadius: 20, padding: '6px 12px', cursor: 'pointer',
         maxWidth: 190, fontFamily: 'inherit',
       }}

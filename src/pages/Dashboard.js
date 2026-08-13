@@ -9,15 +9,16 @@ import AIInsightCard from '../components/AIInsightCard';
 import MobileFarmDashboard from '../components/MobileFarmDashboard';
 import usePrimaryAction, { focusFirstForm } from '../hooks/usePrimaryAction';
 
-/* ─── Design 3 — Living Africa tokens ─── */
+/* ─── Pewil corporate tokens (2026-08-13) — same keys, restrained
+   green-neutral values to match the new desktop shell. ─── */
 const TOKENS = {
-  amber: '#f4a743', terra: '#d9562c', clay: '#b13b17',
-  forest: '#1f3d26', forest2: '#2d5a37',
-  sand: '#fff7ec', sand2: '#fdeedd', cream: '#fffcf7',
-  ink: '#1b1b1b', muted: '#6b5d50',
-  line: 'rgba(27,27,27,.10)', line2: 'rgba(27,27,27,.06)',
+  amber: '#c97d1a', terra: '#2d9e58', clay: '#b13b17',
+  forest: '#1a6b3a', forest2: '#2d9e58',
+  sand: '#e8f5ee', sand2: '#fef3e2', cream: '#f6f8f6',
+  ink: '#111827', muted: '#68766c',
+  line: '#e3e8e4', line2: 'rgba(17,24,20,.05)',
 };
-const SERIF = "'Fraunces', Georgia, serif";
+const SERIF = "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif";
 const SANS = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
 
 function Skeleton({ w, h, r, mb }) {
@@ -40,7 +41,7 @@ function SkeletonDash() {
 /* ─── Shared card style ─── */
 const card = {
   background: '#fff', border: `1px solid ${TOKENS.line}`, borderRadius: 12,
-  padding: '16px 18px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+  padding: '16px 18px', boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)',
 };
 const sectionLabel = {
   fontSize: 10, fontWeight: 700, color: TOKENS.muted, textTransform: 'uppercase',
@@ -84,7 +85,7 @@ const S = {
     boxShadow: isPositive ? '0 2px 10px rgba(31,61,38,0.14)' : '0 2px 10px rgba(177,59,23,0.14)',
     position: 'relative', overflow: 'hidden',
   }),
-  metricIcon: (bg) => ({ width: 24, height: 24, borderRadius: 6, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, marginBottom: 6 }),
+  metricIcon: (bg) => ({ width: 24, height: 24, borderRadius: 8, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, marginBottom: 6 }),
   metricLabel: { fontSize: 10, color: TOKENS.muted, fontWeight: 600, marginBottom: 2, fontFamily: SANS, textTransform: 'uppercase', letterSpacing: '0.04em' },
   metricVal: (color) => ({ fontFamily: SERIF, fontSize: 22, fontWeight: 700, color, lineHeight: 1.2, letterSpacing: '-0.01em' }),
   metricTrend: { fontSize: 9, color: TOKENS.muted, marginTop: 4, fontFamily: SANS },
@@ -98,7 +99,7 @@ const S = {
   twoCol: { display: 'grid', gridTemplateColumns: '1fr 300px', gap: 16 },
   sectionTitle: { fontFamily: SERIF, fontSize: 15, fontWeight: 700, color: TOKENS.forest, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6, letterSpacing: '-0.01em' },
   fieldGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 },
-  fcard: { background: '#fff', borderRadius: 10, border: `1px solid ${TOKENS.line}`, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' },
+  fcard: { background: '#fff', borderRadius: 10, border: `1px solid ${TOKENS.line}`, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 0.2s', boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)' },
   fcardOverlay: { position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(27,27,27,0.5) 100%)' },
   fcardLabel: { position: 'relative', zIndex: 2, color: '#fff', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4, textShadow: '0 1px 3px rgba(0,0,0,0.4)', fontFamily: SANS },
   fcardBadge: { position: 'absolute', top: 6, right: 6, zIndex: 2 },
@@ -154,7 +155,7 @@ export default function Dashboard({ activeModule = 'farm' }) {
     <div style={S.errorBox}>
       <p style={{ fontSize: 16, marginBottom: 8 }}>Failed to load dashboard</p>
       <p style={{ fontSize: 12, marginBottom: 16 }}>{error.message}</p>
-      <button onClick={() => refetch()} style={{ background: `linear-gradient(135deg, ${TOKENS.amber}, ${TOKENS.terra})`, color: '#fff', border: 'none', borderRadius: 999, padding: '8px 20px', cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: SANS, boxShadow: '0 6px 14px -6px rgba(217,86,44,.55)' }}>Retry</button>
+      <button onClick={() => refetch()} style={{ background: `linear-gradient(135deg, ${TOKENS.forest}, ${TOKENS.terra})`, color: '#fff', border: 'none', borderRadius: 999, padding: '8px 20px', cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: SANS, boxShadow: '0 6px 14px -6px rgba(26,107,58,.55)' }}>Retry</button>
     </div>
   );
 
@@ -171,7 +172,7 @@ export default function Dashboard({ activeModule = 'farm' }) {
   const totalBreakdown = Object.values(breakdown).reduce((a, b) => a + b, 0) || 1;
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-  const BREAKDOWN_COLORS = [TOKENS.forest, TOKENS.amber, TOKENS.terra, TOKENS.clay, TOKENS.forest2, '#7a5230'];
+  const BREAKDOWN_COLORS = [TOKENS.forest, TOKENS.amber, TOKENS.forest2, TOKENS.clay, '#2b8a8a', '#7a5230'];
   const hsColor = healthScore ? (healthScore.score >= 65 ? TOKENS.forest : healthScore.score >= 50 ? TOKENS.terra : TOKENS.clay) : TOKENS.muted;
 
   return (
@@ -307,7 +308,7 @@ export default function Dashboard({ activeModule = 'farm' }) {
                   const bgs = { danger: TOKENS.sand2, warning: TOKENS.sand2, success: TOKENS.sand, info: TOKENS.sand };
                   const icons = { loan: '🏢', overdue: '⚠️', water: '💧', budget: '📋', price: '📈', wages: '👷', stock: '📦', health: '💉' };
                   return (
-                    <div key={i} style={{ display: 'flex', gap: 8, padding: '6px 8px', background: bgs[insight.type] || TOKENS.cream, borderRadius: 6, borderLeft: `3px solid ${colors[insight.type] || TOKENS.muted}` }}>
+                    <div key={i} style={{ display: 'flex', gap: 8, padding: '6px 8px', background: bgs[insight.type] || TOKENS.cream, borderRadius: 8, borderLeft: `3px solid ${colors[insight.type] || TOKENS.muted}` }}>
                       <span style={{ fontSize: 14, flexShrink: 0 }}>{icons[insight.icon] || '📌'}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 11, fontWeight: 700, color: TOKENS.ink, fontFamily: SANS }}>{insight.title}</div>
@@ -492,7 +493,7 @@ export default function Dashboard({ activeModule = 'farm' }) {
           <div style={S.sectionTitle}>🚛 Recent Market Trips</div>
           <div style={{ position: 'relative', height: 65, borderRadius: 10, overflow: 'hidden', marginBottom: 12 }}>
             <img src={HERO_IMAGES.logistics} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(217,86,44,0.82), rgba(27,27,27,0.15))' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(26,107,58,0.82), rgba(15,23,18,0.18))' }} />
             <div style={{ position: 'absolute', bottom: 0, left: 0, padding: '10px 14px', color: '#fff', zIndex: 1 }}>
               <div style={S.bannerText}>Produce on the road</div>
               <div style={S.bannerSub}>Track your sales and trip expenses</div>
@@ -585,7 +586,7 @@ export default function Dashboard({ activeModule = 'farm' }) {
                   { label: 'Broilers', val: d.livestock.broilers, emoji: '🐔' },
                   { label: 'Layers', val: d.livestock.layers, emoji: '🥚' },
                 ].filter(a => a.val > 0).map((a, i) => (
-                  <div key={i} style={{ textAlign: 'center', background: TOKENS.cream, borderRadius: 6, padding: '4px 2px', border: `1px solid ${TOKENS.line}` }}>
+                  <div key={i} style={{ textAlign: 'center', background: TOKENS.cream, borderRadius: 8, padding: '4px 2px', border: `1px solid ${TOKENS.line}` }}>
                     <div style={{ fontSize: 14 }}>{a.emoji}</div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: TOKENS.ink, fontFamily: SERIF }}>{a.val}</div>
                     <div style={{ fontSize: 7, color: TOKENS.muted, textTransform: 'uppercase', fontFamily: SANS, letterSpacing: '0.04em' }}>{a.label}</div>

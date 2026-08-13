@@ -24,16 +24,16 @@ const S = {
   bannerImg: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' },
   bannerOverlay: { position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(20, 30, 60, 0.85), rgba(0, 0, 0, 0.25))' },
   bannerContent: { position: 'absolute', bottom: 0, left: 0, padding: '12px 16px', color: '#fff', zIndex: 1 },
-  bannerTitle: { color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: "'Playfair Display', serif" },
+  bannerTitle: { color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" },
   bannerSub: { color: 'rgba(255, 255, 255, 0.7)', fontSize: 11 },
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 18, marginBottom: 16 },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 18, marginBottom: 16 },
   label: { display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 3, marginTop: 8 },
-  input: { width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box' },
+  input: { width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box' },
   row2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 },
-  btn: { width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 14 },
+  btn: { width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 14 },
   error: { fontSize: 10, color: '#c0392b', marginTop: 4 },
   sectionTitle: { fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 10 },
-  tabsContainer: { display: 'flex', gap: 8, marginBottom: 16, borderBottom: '1px solid #e5e7eb', paddingBottom: 0 },
+  tabsContainer: { display: 'flex', gap: 8, marginBottom: 16, borderBottom: '1px solid #e3e8e4', paddingBottom: 0 },
   tabBtn: (active) => ({
     padding: '10px 16px',
     fontSize: 12,
@@ -46,9 +46,9 @@ const S = {
     transition: 'all 0.2s',
   }),
   table: { width: '100%', borderCollapse: 'collapse', fontSize: 11 },
-  th: { textAlign: 'left', padding: '8px 10px', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb', background: '#f9fafb' },
+  th: { textAlign: 'left', padding: '8px 10px', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', borderBottom: '1px solid #e3e8e4', background: '#f6f8f6' },
   td: { padding: '8px 10px', borderBottom: '1px solid #f3f4f6', color: '#374151' },
-  flockCard: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 14, marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  flockCard: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 14, marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   flockCardInfo: { flex: 1 },
   flockCardName: { fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 4 },
   flockCardMeta: { fontSize: 11, color: '#6b7280', marginBottom: 4 },
@@ -56,7 +56,7 @@ const S = {
   badgeActive: { background: '#dcfce7', color: '#166534' },
   badgeInactive: { background: '#fecaca', color: '#991b1b' },
   preview: { background: '#e8f5ee', border: '1px solid #bbf7d0', borderRadius: 8, padding: '12px 14px', marginTop: 10, fontSize: 11, color: '#1a6b3a' },
-  total: { background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 10, padding: 14, marginTop: 16, fontSize: 12, fontWeight: 600, color: '#111827' },
+  total: { background: '#f6f8f6', border: '1px solid #e3e8e4', borderRadius: 10, padding: 14, marginTop: 16, fontSize: 12, fontWeight: 600, color: '#111827' },
 };
 
 export default function Layers() {
@@ -266,7 +266,7 @@ export default function Layers() {
                             </button>
                           </div>
                         </div>
-                        <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 6, padding: '8px 10px', marginTop: 8, fontSize: 10 }}>
+                        <div style={{ background: '#f6f8f6', border: '1px solid #e3e8e4', borderRadius: 8, padding: '8px 10px', marginTop: 8, fontSize: 10 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
                             <span style={{ color: '#6b7280' }}>Purchase:</span>
                             <span style={{ color: '#111827', fontWeight: 600 }}>{fmt(purchase)}</span>
@@ -275,7 +275,7 @@ export default function Layers() {
                             <span style={{ color: '#6b7280' }}>Expenses:</span>
                             <span style={{ color: '#c0392b', fontWeight: 600 }}>{fmt(flockExpenses)}</span>
                           </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e5e7eb', paddingTop: 3, marginTop: 3 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e3e8e4', paddingTop: 3, marginTop: 3 }}>
                             <span style={{ color: '#374151', fontWeight: 700 }}>Total Cost:</span>
                             <span style={{ color: '#1a6b3a', fontWeight: 700 }}>{fmt(flockTotalCost)}</span>
                           </div>
@@ -353,7 +353,7 @@ export default function Layers() {
               {eggs.length === 0 ? (
                 <p style={{ fontSize: 11, color: '#9ca3af' }}>No egg collections logged yet.</p>
               ) : (
-                <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+                <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e3e8e4', overflow: 'hidden' }}>
                   <div style={{ overflowX: 'auto' }}><table style={S.table}>
                     <thead>
                       <tr>
@@ -427,7 +427,7 @@ export default function Layers() {
               {expenses.length === 0 ? (
                 <p style={{ fontSize: 11, color: '#9ca3af' }}>No expenses logged yet.</p>
               ) : (
-                <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+                <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e3e8e4', overflow: 'hidden' }}>
                   <div style={{ overflowX: 'auto' }}><table style={S.table}>
                     <thead>
                       <tr>
@@ -501,7 +501,7 @@ export default function Layers() {
               {sales.length === 0 ? (
                 <p style={{ fontSize: 11, color: '#9ca3af' }}>No sales logged yet.</p>
               ) : (
-                <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+                <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e3e8e4', overflow: 'hidden' }}>
                   <div style={{ overflowX: 'auto' }}><table style={S.table}>
                     <thead>
                       <tr>
@@ -549,8 +549,8 @@ export default function Layers() {
             <label style={S.label}>How many died?</label>
             <input style={S.input} type="number" min="1" max={mortalityModal.current_count || mortalityModal.quantity} value={mortalityCount} onChange={e => setMortalityCount(e.target.value)} autoFocus placeholder="0" />
             <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
-              <button onClick={() => { setMortalityModal(null); setMortalityCount(''); }} style={{ flex: 1, padding: '10px 0', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>Cancel</button>
-              <button onClick={submitMortality} disabled={!mortalityCount || updateFlockMut.isPending} style={{ flex: 1, padding: '10px 0', borderRadius: 6, border: 'none', background: '#c97d1a', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600, opacity: (!mortalityCount || updateFlockMut.isPending) ? 0.5 : 1 }}>
+              <button onClick={() => { setMortalityModal(null); setMortalityCount(''); }} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>Cancel</button>
+              <button onClick={submitMortality} disabled={!mortalityCount || updateFlockMut.isPending} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', background: '#c97d1a', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600, opacity: (!mortalityCount || updateFlockMut.isPending) ? 0.5 : 1 }}>
                 {updateFlockMut.isPending ? 'Saving...' : 'Record'}
               </button>
             </div>
@@ -565,14 +565,14 @@ export default function Layers() {
             <div style={{ fontSize: 17, fontWeight: 700, color: '#111827', marginBottom: 6 }}>Delete {rowDelete.type}?</div>
             <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 18 }}>Remove "<strong>{rowDelete.label}</strong>"? This action cannot be undone.</div>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setRowDelete(null)} style={{ flex: 1, padding: '10px 0', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>Cancel</button>
+              <button onClick={() => setRowDelete(null)} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>Cancel</button>
               <button
                 onClick={() => {
                   if (rowDelete.type === 'egg') delEggMut.mutate(rowDelete.id);
                   else if (rowDelete.type === 'expense') delExpenseMut.mutate(rowDelete.id);
                   else if (rowDelete.type === 'sale') delSaleMut.mutate(rowDelete.id);
                 }}
-                style={{ flex: 1, padding: '10px 0', borderRadius: 6, border: 'none', background: '#c0392b', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
+                style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', background: '#c0392b', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
               >
                 Delete
               </button>

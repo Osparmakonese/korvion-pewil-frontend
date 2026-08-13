@@ -16,20 +16,20 @@ import useIsMobile from '../hooks/useIsMobile';
 const GREEN = '#1a6b3a';
 const GREEN_TINT = '#e8f5ee';
 const AMBER = '#c97d1a';
-const AMBER_TINT = '#fdeedd';
+const AMBER_TINT = '#fef3e2';
 const RED = '#c0392b';
 const RED_TINT = '#fde8e8';
 const INK = '#111827';
 const INK_3 = '#6b7280';
-const BORDER = '#e5e7eb';
-const SURFACE = '#f9fafb';
+const BORDER = '#e3e8e4';
+const SURFACE = '#f6f8f6';
 
 const card = {
   background: '#fff',
   border: `1px solid ${BORDER}`,
   borderRadius: 12,
   padding: 20,
-  boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+  boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)',
 };
 const label = {
   fontSize: 11, fontWeight: 700, color: INK_3,
@@ -95,7 +95,7 @@ export default function TheftScan({ onTabChange }) {
       <div style={{ maxWidth: 1180, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, fontWeight: 700, color: INK }}>
+          <div style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 30, fontWeight: 700, color: INK }}>
             Loss-Prevention Scan
           </div>
           <div style={{ color: INK_3, fontSize: 14, marginTop: 4 }}>
@@ -147,7 +147,7 @@ export default function TheftScan({ onTabChange }) {
                   <div style={{ flex: 1 }}>
                     <div style={{ ...label, color: bandStyle.fg }}>{bandStyle.hero}</div>
                     <div style={{
-                      fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 700, color: INK, lineHeight: 1.3,
+                      fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 24, fontWeight: 700, color: INK, lineHeight: 1.3,
                     }}>
                       {parsed.headline || 'Scan complete.'}
                     </div>
@@ -241,7 +241,7 @@ export default function TheftScan({ onTabChange }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={card}>
               <div style={label}>AI credits</div>
-              <div style={{ fontSize: 28, fontFamily: "'Playfair Display', serif", fontWeight: 700, color: GREEN }}>
+              <div style={{ fontSize: 28, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontWeight: 700, color: GREEN }}>
                 {budget?.credits_remaining ?? '—'}
               </div>
               <div style={{ fontSize: 12, color: INK_3 }}>
@@ -285,7 +285,7 @@ function RiskDial({ score, color }) {
   return (
     <div style={{ position: 'relative', width: 92, height: 92 }}>
       <svg viewBox="0 0 92 92" width="92" height="92">
-        <circle cx="46" cy="46" r={r} stroke="#e5e7eb" strokeWidth="8" fill="none" />
+        <circle cx="46" cy="46" r={r} stroke="#e3e8e4" strokeWidth="8" fill="none" />
         <circle
           cx="46" cy="46" r={r} stroke={color} strokeWidth="8" fill="none"
           strokeDasharray={c} strokeDashoffset={offset}
@@ -296,7 +296,7 @@ function RiskDial({ score, color }) {
         position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
       }}>
-        <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "'Playfair Display', serif", color }}>
+        <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color }}>
           {Math.round(pct)}
         </div>
         <div style={{ fontSize: 9, color: '#6b7280', fontWeight: 700, letterSpacing: '0.08em' }}>RISK</div>

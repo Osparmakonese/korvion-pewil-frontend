@@ -30,7 +30,7 @@ const S = {
   },
   headerTitle: {
     fontSize: 20, fontWeight: 700, color: '#111827',
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
   },
   headerSub: { fontSize: 11, color: '#6b7280' },
   superBadge: {
@@ -38,7 +38,7 @@ const S = {
     padding: '3px 8px', borderRadius: 10, textTransform: 'uppercase', letterSpacing: '0.05em',
   },
   tabs: {
-    display: 'flex', gap: 0, borderBottom: '2px solid #e5e7eb', marginBottom: 20,
+    display: 'flex', gap: 0, borderBottom: '2px solid #e3e8e4', marginBottom: 20,
   },
   tab: (active) => ({
     padding: '10px 18px', fontSize: 12, fontWeight: active ? 700 : 500,
@@ -48,28 +48,28 @@ const S = {
     transition: 'color 0.15s',
   }),
   card: {
-    background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10,
+    background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10,
     padding: '18px 20px', marginBottom: 14,
   },
   btn: (bg = '#1a6b3a', color = '#fff') => ({
     padding: '8px 14px', background: bg, color, border: 'none',
-    borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+    borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer',
   }),
   btnSm: (bg = '#f3f4f6', color = '#374151') => ({
     padding: '5px 10px', background: bg, color, border: 'none',
-    borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+    borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: 'pointer',
   }),
   table: { width: '100%', borderCollapse: 'collapse', fontSize: 11 },
   th: {
     textAlign: 'left', padding: '8px 10px', fontSize: 9, fontWeight: 700,
-    color: '#9ca3af', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb',
-    background: '#f9fafb',
+    color: '#9ca3af', textTransform: 'uppercase', borderBottom: '1px solid #e3e8e4',
+    background: '#f6f8f6',
   },
   td: { padding: '8px 10px', borderBottom: '1px solid #f3f4f6', color: '#374151' },
   label: { display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 3, marginTop: 8 },
   input: {
-    width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb',
-    borderRadius: 7, fontSize: 12, outline: 'none', color: '#111827',
+    width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4',
+    borderRadius: 10, fontSize: 12, outline: 'none', color: '#111827',
   },
   row2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 },
   overlay: {
@@ -268,7 +268,7 @@ export default function AdminPanel() {
 
           {isLoading && <p style={{ fontSize: 11, color: '#9ca3af' }}>Loading users…</p>}
 
-          <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+          <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e3e8e4', overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}><table style={S.table}>
               <thead>
                 <tr>
@@ -463,7 +463,7 @@ export default function AdminPanel() {
             <span style={{ fontSize: 11, color: '#9ca3af' }}>{filteredAudit.length} entries</span>
           </div>
 
-          <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+          <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e3e8e4', overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}><table style={S.table}>
               <thead>
                 <tr>

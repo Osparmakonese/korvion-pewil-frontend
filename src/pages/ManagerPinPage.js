@@ -30,11 +30,11 @@ const MAX_PIN = 10;
 
 const card = {
   background: '#fff',
-  border: '1px solid #e5e7eb',
+  border: '1px solid #e3e8e4',
   borderRadius: 12,
   padding: 24,
   maxWidth: 560,
-  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+  boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)',
 };
 
 const label = {
@@ -223,7 +223,7 @@ export default function ManagerPinPage() {
                   style={{
                     marginTop: 14,
                     padding: 10,
-                    borderRadius: 6,
+                    borderRadius: 8,
                     fontSize: 14,
                     background: flash.ok ? '#ecfdf5' : '#fef2f2',
                     color: flash.ok ? '#065f46' : '#991b1b',

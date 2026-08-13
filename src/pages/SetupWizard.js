@@ -8,7 +8,7 @@ import { getVerticals, completeSetup } from '../api/coreApi';
 
 const C = {
   green: '#1a6b3a', green3: '#e8f5ee', ink: '#111827', ink3: '#6b7280',
-  line: '#e5e7eb', surface: '#f9fafb',
+  line: '#e3e8e4', surface: '#f6f8f6',
 };
 
 // Light, optional quick-setup questions per vertical. Saved to vertical_settings.
@@ -26,7 +26,7 @@ const S = {
   wrap: { minHeight: '100vh', background: C.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, fontFamily: "'Inter', sans-serif" },
   card: { background: '#fff', borderRadius: 16, boxShadow: '0 8px 40px rgba(0,0,0,0.08)', width: 720, maxWidth: '100%', padding: '32px 32px 28px' },
   eyebrow: { fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: C.green },
-  h1: { fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 700, color: C.ink, margin: '6px 0 4px' },
+  h1: { fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 26, fontWeight: 700, color: C.ink, margin: '6px 0 4px' },
   sub: { fontSize: 14, color: C.ink3, marginBottom: 22 },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 },
   tile: (on) => ({ textAlign: 'left', border: `1.5px solid ${on ? C.green : C.line}`, background: on ? C.green3 : '#fff', borderRadius: 12, padding: '14px 14px', cursor: 'pointer', transition: 'all .15s' }),

@@ -25,13 +25,13 @@ const MANAGER_ROLES = new Set(['owner', 'manager']);
 const styles = {
   page: { maxWidth: 1200, margin: '0 auto', padding: 20 },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  title: { fontSize: 24, fontWeight: 700, color: '#111827', fontFamily: "'Playfair Display', serif", margin: 0 },
-  addBtn: { padding: '10px 18px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' },
+  title: { fontSize: 24, fontWeight: 700, color: '#111827', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", margin: 0 },
+  addBtn: { padding: '10px 18px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' },
   infoBanner: { background: '#fef3e2', border: '1px solid #c97d1a', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: '#c97d1a', fontWeight: 600 },
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)' },
   table: { width: '100%', borderCollapse: 'collapse' },
-  th: { textAlign: 'left', padding: '10px 12px', fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', background: '#f9fafb', borderBottom: '1px solid #e5e7eb' },
-  td: { padding: '12px 12px', fontSize: 12, color: '#374151', borderBottom: '1px solid #e5e7eb' },
+  th: { textAlign: 'left', padding: '10px 12px', fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', background: '#f6f8f6', borderBottom: '1px solid #e3e8e4' },
+  td: { padding: '12px 12px', fontSize: 12, color: '#374151', borderBottom: '1px solid #e3e8e4' },
   mono: { fontFamily: 'monospace' },
   rowLink: { cursor: 'pointer' },
   pill: (status) => ({
@@ -48,15 +48,15 @@ const styles = {
             background: '#fff', zIndex: 901, boxShadow: '-4px 0 20px rgba(0,0,0,0.12)',
             overflowY: 'auto', padding: 24 },
   btnPrimary: { padding: '8px 16px', background: '#1a6b3a', color: '#fff', border: 'none',
-                borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' },
+                borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' },
   btnGhost: { padding: '8px 16px', background: '#f3f4f6', color: '#374151', border: 'none',
-              borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' },
+              borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' },
   btnRed: { padding: '6px 12px', background: '#fff', color: '#c0392b', border: '1px solid #fecaca',
-            borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer' },
+            borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: 'pointer' },
   label: { display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280',
            marginBottom: 4, textTransform: 'uppercase' },
-  input: { width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb',
-           borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box' },
+  input: { width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4',
+           borderRadius: 10, fontSize: 12, outline: 'none', boxSizing: 'border-box' },
 };
 
 const money = (v) => `$${Number(v || 0).toFixed(2)}`;
@@ -120,8 +120,8 @@ function printPayslip(slip) {
       h1{font-family:Georgia,serif;margin:0 0 4px 0;}
       .muted{color:#6b7280;font-size:12px;}
       table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px;}
-      td,th{padding:6px 8px;border-bottom:1px solid #e5e7eb;text-align:left;}
-      th{background:#f9fafb;text-transform:uppercase;font-size:10px;color:#6b7280;}
+      td,th{padding:6px 8px;border-bottom:1px solid #e3e8e4;text-align:left;}
+      th{background:#f6f8f6;text-transform:uppercase;font-size:10px;color:#6b7280;}
       .right{text-align:right;font-family:monospace;}
       .section{margin-top:18px;}
       .net{font-size:18px;font-weight:700;color:#1a6b3a;}
@@ -280,7 +280,7 @@ function RunDrawer({ runId, onClose, canManage }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 16 }}>
               <div>
                 <h2 style={{ fontSize: 22, fontWeight: 700, color: '#111827',
-                             fontFamily: "'Playfair Display', serif", margin: 0 }}>
+                             fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", margin: 0 }}>
                   Payroll Run #{run.id}
                 </h2>
                 <div style={{ color: '#6b7280', fontSize: 13, marginTop: 4 }}>
@@ -299,7 +299,7 @@ function RunDrawer({ runId, onClose, canManage }) {
                 ['NSSA',  run.total_nssa,  '#c97d1a'],
                 ['Net',   run.total_net,   '#1a6b3a'],
               ].map(([label, val, color]) => (
-                <div key={label} style={{ background: '#f9fafb', border: '1px solid #e5e7eb',
+                <div key={label} style={{ background: '#f6f8f6', border: '1px solid #e3e8e4',
                      borderRadius: 10, padding: '10px 14px' }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280',
                                 textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
@@ -477,7 +477,7 @@ export default function RetailPayroll() {
               {runs.map((run) => (
                 <tr key={run.id} style={styles.rowLink}
                     onClick={() => setOpenId(run.id)}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = '#f9fafb')}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = '#f6f8f6')}
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
                   <td style={styles.td}>#{run.id}</td>
                   <td style={styles.td}>

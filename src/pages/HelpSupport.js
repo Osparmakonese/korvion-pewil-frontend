@@ -1,14 +1,14 @@
 import { useState } from 'react';
 
 const S = {
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '18px 20px', marginBottom: 16 },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: '18px 20px', marginBottom: 16 },
   title: { fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 12 },
   p: { fontSize: 13, color: '#374151', lineHeight: 1.7, marginBottom: 10 },
   label: { display: 'block', fontSize: 11, fontWeight: 600, color: '#6b7280', marginBottom: 4, marginTop: 10 },
-  input: { width: '100%', padding: '9px 11px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box' },
-  textarea: { width: '100%', padding: '9px 11px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box', minHeight: 100, resize: 'vertical', fontFamily: 'inherit' },
-  btn: { padding: '10px 20px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 12 },
-  faqQ: { fontSize: 13, fontWeight: 600, color: '#111827', cursor: 'pointer', padding: '10px 12px', background: '#f9fafb', borderRadius: 7, marginBottom: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #e5e7eb' },
+  input: { width: '100%', padding: '9px 11px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box' },
+  textarea: { width: '100%', padding: '9px 11px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box', minHeight: 100, resize: 'vertical', fontFamily: 'inherit' },
+  btn: { padding: '10px 20px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 12 },
+  faqQ: { fontSize: 13, fontWeight: 600, color: '#111827', cursor: 'pointer', padding: '10px 12px', background: '#f6f8f6', borderRadius: 10, marginBottom: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #e3e8e4' },
   faqA: { fontSize: 12, color: '#374151', lineHeight: 1.7, padding: '8px 12px 14px', marginBottom: 6 },
   chip: (active, color, text) => ({
     display: 'inline-block', padding: '5px 12px', borderRadius: 14, fontSize: 11, fontWeight: 700,
@@ -147,7 +147,7 @@ export default function HelpSupport() {
         <p style={S.p}>Can't find what you're looking for? Send us a message and we'll get back to you within 24 hours.</p>
 
         {sent && (
-          <div style={{ background: '#e8f5ee', color: '#1a6b3a', padding: '10px 14px', borderRadius: 7, fontSize: 12, marginBottom: 12, fontWeight: 600 }}>
+          <div style={{ background: '#e8f5ee', color: '#1a6b3a', padding: '10px 14px', borderRadius: 10, fontSize: 12, marginBottom: 12, fontWeight: 600 }}>
             Opening your email app — send the draft to osy@pewil.org and we'll respond within 24 hours.
           </div>
         )}

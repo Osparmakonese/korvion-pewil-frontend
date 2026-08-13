@@ -28,11 +28,11 @@ function strongPassword(policy) {
   return chars.join('');
 }
 
-const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' };
+const card = { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)' };
 const pill = (bg, color) => ({ fontSize: 8, fontWeight: 700, padding: '2px 7px', borderRadius: 20, display: 'inline-block', letterSpacing: '0.02em', textTransform: 'uppercase', background: bg, color });
 const sLabel = { fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 };
-const btnS = (primary) => ({ padding: '6px 12px', borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: primary ? 'none' : '1px solid #1a6b3a', background: primary ? '#1a6b3a' : '#fff', color: primary ? '#fff' : '#1a6b3a', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'all 0.15s' });
-const thS = { textAlign: 'left', padding: '7px 8px', fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', background: '#f9fafb' };
+const btnS = (primary) => ({ padding: '6px 12px', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: primary ? 'none' : '1px solid #1a6b3a', background: primary ? '#1a6b3a' : '#fff', color: primary ? '#fff' : '#1a6b3a', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'all 0.15s' });
+const thS = { textAlign: 'left', padding: '7px 8px', fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', background: '#f6f8f6' };
 
 // Keyed by the stored role value. There is no 'cashier' role — retail simply
 // labels 'worker' as "Cashier" (see roleLabel below).
@@ -286,7 +286,7 @@ export default function TeamManagement() {
           ) : (
             <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                <tr style={{ borderBottom: '1px solid #e3e8e4' }}>
                   <th style={thS}>User</th>
                   <th style={thS}>Role</th>
                   <th style={thS}>Module</th>
@@ -357,15 +357,15 @@ export default function TeamManagement() {
                         {u.role !== 'owner' && (
                           <button style={{
                             background: '#fff',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: 6,
+                            border: '1px solid #e3e8e4',
+                            borderRadius: 8,
                             padding: '4px 10px',
                             fontSize: 10,
                             fontWeight: 600,
                             color: '#374151',
                             cursor: 'pointer',
                             transition: 'all 0.15s',
-                          }} onClick={() => { setEditUser(u); setEditForm({ first_name: u.first_name || '', last_name: u.last_name || '', role: u.role || 'worker', branch: u.branch ? String(u.branch) : '' }); setEditStatus(null); }} onMouseEnter={e => { e.currentTarget.style.background = '#f9fafb'; e.currentTarget.style.borderColor = '#1a6b3a'; e.currentTarget.style.color = '#1a6b3a'; }} onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.color = '#374151'; }}>
+                          }} onClick={() => { setEditUser(u); setEditForm({ first_name: u.first_name || '', last_name: u.last_name || '', role: u.role || 'worker', branch: u.branch ? String(u.branch) : '' }); setEditStatus(null); }} onMouseEnter={e => { e.currentTarget.style.background = '#f6f8f6'; e.currentTarget.style.borderColor = '#1a6b3a'; e.currentTarget.style.color = '#1a6b3a'; }} onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e3e8e4'; e.currentTarget.style.color = '#374151'; }}>
                             Edit
                           </button>
                         )}
@@ -402,7 +402,7 @@ export default function TeamManagement() {
             boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
           }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 700, margin: 0 }}>
+              <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 18, fontWeight: 700, margin: 0 }}>
                 Invite Team Member
               </h3>
               <button
@@ -451,7 +451,7 @@ export default function TeamManagement() {
                       style={{
                         width: '100%',
                         padding: '10px 12px',
-                        border: '1px solid #e5e7eb',
+                        border: '1px solid #e3e8e4',
                         borderRadius: 8,
                         fontSize: 14,
                         outline: 'none',
@@ -466,7 +466,7 @@ export default function TeamManagement() {
                       style={{
                         width: '100%',
                         padding: '10px 12px',
-                        border: '1px solid #e5e7eb',
+                        border: '1px solid #e3e8e4',
                         borderRadius: 8,
                         fontSize: 14,
                         outline: 'none',
@@ -489,7 +489,7 @@ export default function TeamManagement() {
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #e5e7eb',
+                      border: '1px solid #e3e8e4',
                       borderRadius: 8,
                       fontSize: 14,
                       outline: 'none',
@@ -511,7 +511,7 @@ export default function TeamManagement() {
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #e5e7eb',
+                      border: '1px solid #e3e8e4',
                       borderRadius: 8,
                       fontSize: 14,
                       outline: 'none',
@@ -549,12 +549,12 @@ export default function TeamManagement() {
                       style={{
                         flex: 1,
                         padding: '10px 12px',
-                        border: '1px solid #e5e7eb',
+                        border: '1px solid #e3e8e4',
                         borderRadius: 8,
                         fontSize: 14,
                         outline: 'none',
                         boxSizing: 'border-box',
-                        background: autoPassword ? '#f9fafb' : '#fff',
+                        background: autoPassword ? '#f6f8f6' : '#fff',
                       }}
                     />
                     {!autoPassword && (
@@ -565,7 +565,7 @@ export default function TeamManagement() {
                         aria-label={showPassword ? 'Hide password' : 'Show password'}
                         style={{
                           padding: '8px 10px',
-                          border: '1px solid #e5e7eb',
+                          border: '1px solid #e3e8e4',
                           borderRadius: 8,
                           fontSize: 13,
                           background: '#fff',
@@ -582,7 +582,7 @@ export default function TeamManagement() {
                           onClick={copyPassword}
                           style={{
                             padding: '8px 12px',
-                            border: '1px solid ' + (passwordCopied ? '#1a6b3a' : '#e5e7eb'),
+                            border: '1px solid ' + (passwordCopied ? '#1a6b3a' : '#e3e8e4'),
                             borderRadius: 8,
                             fontSize: 11,
                             fontWeight: 600,
@@ -599,7 +599,7 @@ export default function TeamManagement() {
                           onClick={generatePassword}
                           style={{
                             padding: '8px 12px',
-                            border: '1px solid #e5e7eb',
+                            border: '1px solid #e3e8e4',
                             borderRadius: 8,
                             fontSize: 11,
                             fontWeight: 600,
@@ -608,8 +608,8 @@ export default function TeamManagement() {
                             cursor: 'pointer',
                             transition: 'all 0.15s',
                           }}
-                          onMouseEnter={e => { e.currentTarget.style.background = '#f9fafb'; e.currentTarget.style.borderColor = '#1a6b3a'; e.currentTarget.style.color = '#1a6b3a'; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.color = '#374151'; }}
+                          onMouseEnter={e => { e.currentTarget.style.background = '#f6f8f6'; e.currentTarget.style.borderColor = '#1a6b3a'; e.currentTarget.style.color = '#1a6b3a'; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e3e8e4'; e.currentTarget.style.color = '#374151'; }}
                         >
                           Refresh
                         </button>
@@ -632,7 +632,7 @@ export default function TeamManagement() {
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #e5e7eb',
+                      border: '1px solid #e3e8e4',
                       borderRadius: 8,
                       fontSize: 14,
                       outline: 'none',
@@ -697,7 +697,7 @@ export default function TeamManagement() {
             boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
           }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 700, margin: 0 }}>
+              <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 18, fontWeight: 700, margin: 0 }}>
                 Edit User
               </h3>
               <button onClick={() => setEditUser(null)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#9ca3af' }}>{'\u2715'}</button>
@@ -709,16 +709,16 @@ export default function TeamManagement() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>First Name</label>
-                    <input value={editForm.first_name} onChange={e => setEditForm({ ...editForm, first_name: e.target.value })} style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+                    <input value={editForm.first_name} onChange={e => setEditForm({ ...editForm, first_name: e.target.value })} style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
                   </div>
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Last Name</label>
-                    <input value={editForm.last_name} onChange={e => setEditForm({ ...editForm, last_name: e.target.value })} style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+                    <input value={editForm.last_name} onChange={e => setEditForm({ ...editForm, last_name: e.target.value })} style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
                   </div>
                 </div>
                 <div style={{ marginBottom: 20 }}>
                   <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Role</label>
-                  <select value={editForm.role} onChange={e => setEditForm({ ...editForm, role: e.target.value })} style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 14, background: '#fff', boxSizing: 'border-box' }}>
+                  <select value={editForm.role} onChange={e => setEditForm({ ...editForm, role: e.target.value })} style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 8, fontSize: 14, background: '#fff', boxSizing: 'border-box' }}>
                     <option value="manager">Manager</option>
                     <option value="worker">{roleLabel('worker')}</option>
                   </select>
@@ -734,7 +734,7 @@ export default function TeamManagement() {
                     <select
                       value={editForm.branch}
                       onChange={e => setEditForm({ ...editForm, branch: e.target.value })}
-                      style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 14, background: '#fff', boxSizing: 'border-box' }}
+                      style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 8, fontSize: 14, background: '#fff', boxSizing: 'border-box' }}
                     >
                       <option value="">All shops</option>
                       {branches.map(b => (

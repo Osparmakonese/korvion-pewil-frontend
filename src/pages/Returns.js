@@ -227,7 +227,7 @@ export default function Returns({ onTabChange }) {
 
   if (returnsLoading) {
     return (
-      <div style={{ padding: 24, fontFamily: "'Inter', sans-serif", backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+      <div style={{ padding: 24, fontFamily: "'Inter', sans-serif", backgroundColor: '#f6f8f6', minHeight: '100vh' }}>
         <div style={{ textAlign: 'center', color: '#6b7280' }}>Loading...</div>
       </div>
     );
@@ -235,17 +235,17 @@ export default function Returns({ onTabChange }) {
 
   if (returnsError) {
     return (
-      <div style={{ padding: 24, fontFamily: "'Inter', sans-serif", backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+      <div style={{ padding: 24, fontFamily: "'Inter', sans-serif", backgroundColor: '#f6f8f6', minHeight: '100vh' }}>
         <div style={{ textAlign: 'center', color: '#c0392b' }}>Failed to load returns. Please try again later.</div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 24, fontFamily: "'Inter', sans-serif", backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+    <div style={{ padding: 24, fontFamily: "'Inter', sans-serif", backgroundColor: '#f6f8f6', minHeight: '100vh' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Playfair Display', serif", margin: 0, color: '#111827' }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", margin: 0, color: '#111827' }}>
           Returns & Refunds
         </h1>
         {isOwnerOrManager && (
@@ -256,7 +256,7 @@ export default function Returns({ onTabChange }) {
               color: '#fff',
               border: 'none',
               padding: '8px 16px',
-              borderRadius: 7,
+              borderRadius: 10,
               fontSize: 12,
               fontWeight: 600,
               cursor: 'pointer'
@@ -269,7 +269,7 @@ export default function Returns({ onTabChange }) {
 
       {/* Add Return Form */}
       {showAddForm && (
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16, marginBottom: 24 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16, marginBottom: 24 }}>
           <form onSubmit={handleAddReturn}>
             {/* Step 1 — choose the original sale */}
             <div style={{ marginBottom: 12 }}>
@@ -277,7 +277,7 @@ export default function Returns({ onTabChange }) {
               <select
                 value={sel.saleId}
                 onChange={(e) => pickSale(e.target.value)}
-                style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, fontFamily: "'Inter', sans-serif", background: '#fff' }}
+                style={{ width: '100%', padding: '8px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, fontFamily: "'Inter', sans-serif", background: '#fff' }}
                 required
               >
                 <option value="">Select the sale being returned…</option>
@@ -292,7 +292,7 @@ export default function Returns({ onTabChange }) {
             {/* Step 2 — choose which items + quantities */}
             {sel.lines.length > 0 && (
               <div style={{ border: '1px solid #f3f4f6', borderRadius: 8, marginBottom: 12 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px 90px', gap: 8, padding: '8px 10px', background: '#f9fafb', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px 90px', gap: 8, padding: '8px 10px', background: '#f6f8f6', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' }}>
                   <div>Item</div><div style={{ textAlign: 'right' }}>Sold</div><div style={{ textAlign: 'right' }}>Return qty</div><div style={{ textAlign: 'right' }}>Refund</div>
                 </div>
                 {sel.lines.map((l, i) => (
@@ -302,7 +302,7 @@ export default function Returns({ onTabChange }) {
                     <div style={{ textAlign: 'right' }}>
                       <input type="number" min={0} max={l.sold} value={l.returnQty}
                         onChange={(e) => setLineQty(i, e.target.value)}
-                        style={{ width: 64, padding: '4px 6px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 11, textAlign: 'right' }} />
+                        style={{ width: 64, padding: '4px 6px', border: '1px solid #e3e8e4', borderRadius: 8, fontSize: 11, textAlign: 'right' }} />
                     </div>
                     <div style={{ textAlign: 'right', color: '#111827', fontWeight: 600 }}>{fmt(l.returnQty * l.unit_price, 'zwd')}</div>
                   </div>
@@ -315,7 +315,7 @@ export default function Returns({ onTabChange }) {
               <div>
                 <label style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Reason *</label>
                 <select value={sel.reason} onChange={(e) => setSel({ ...sel, reason: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, background: '#fff' }} required>
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, background: '#fff' }} required>
                   <option value="">Select…</option>
                   {REASONS.map(([v, lab]) => <option key={v} value={v}>{lab}</option>)}
                 </select>
@@ -323,7 +323,7 @@ export default function Returns({ onTabChange }) {
               <div>
                 <label style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Refund method *</label>
                 <select value={sel.refund_method} onChange={(e) => setSel({ ...sel, refund_method: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, background: '#fff' }} required>
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, background: '#fff' }} required>
                   <option value="">Select…</option>
                   {REFUND_METHODS.map(([v, lab]) => <option key={v} value={v}>{lab}</option>)}
                 </select>
@@ -332,7 +332,7 @@ export default function Returns({ onTabChange }) {
                 <label style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Refund amount *</label>
                 <input type="number" step="0.01" value={sel.refund_amount}
                   onChange={(e) => setSel({ ...sel, refund_amount: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12 }} required />
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12 }} required />
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -344,7 +344,7 @@ export default function Returns({ onTabChange }) {
                   color: '#fff',
                   border: 'none',
                   padding: '8px 16px',
-                  borderRadius: 7,
+                  borderRadius: 10,
                   fontSize: 11,
                   fontWeight: 600,
                   cursor: createMutation.isPending ? 'not-allowed' : 'pointer',
@@ -357,11 +357,11 @@ export default function Returns({ onTabChange }) {
                 type="button"
                 onClick={() => setShowAddForm(false)}
                 style={{
-                  background: '#e5e7eb',
+                  background: '#e3e8e4',
                   color: '#374151',
                   border: 'none',
                   padding: '8px 16px',
-                  borderRadius: 7,
+                  borderRadius: 10,
                   fontSize: 11,
                   fontWeight: 600,
                   cursor: 'pointer'
@@ -377,7 +377,7 @@ export default function Returns({ onTabChange }) {
       {/* Metric Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 24 }}>
         {/* Returns This Month */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div
               style={{
@@ -397,7 +397,7 @@ export default function Returns({ onTabChange }) {
               <div style={{ fontSize: 9, color: '#6b7280', fontWeight: 500, marginBottom: 4 }}>
                 TOTAL RETURNS
               </div>
-              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Playfair Display', serif", color: '#c0392b', marginBottom: 2 }}>
+              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#c0392b', marginBottom: 2 }}>
                 {summary?.total_returns || 0}
               </div>
               <div style={{ fontSize: 9, color: '#9ca3af' }}>All time</div>
@@ -406,7 +406,7 @@ export default function Returns({ onTabChange }) {
         </div>
 
         {/* Total Refunded */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div
               style={{
@@ -426,7 +426,7 @@ export default function Returns({ onTabChange }) {
               <div style={{ fontSize: 9, color: '#6b7280', fontWeight: 500, marginBottom: 4 }}>
                 TOTAL REFUNDED
               </div>
-              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Playfair Display', serif", color: '#c0392b', marginBottom: 2 }}>
+              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#c0392b', marginBottom: 2 }}>
                 {fmt(summary?.total_refunded || 0, 'zwd')}
               </div>
               <div style={{ fontSize: 9, color: '#9ca3af' }}>Total amount</div>
@@ -435,7 +435,7 @@ export default function Returns({ onTabChange }) {
         </div>
 
         {/* Return Rate */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div
               style={{
@@ -455,7 +455,7 @@ export default function Returns({ onTabChange }) {
               <div style={{ fontSize: 9, color: '#6b7280', fontWeight: 500, marginBottom: 4 }}>
                 RETURN RATE
               </div>
-              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Playfair Display', serif", color: '#c97d1a', marginBottom: 2 }}>
+              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#c97d1a', marginBottom: 2 }}>
                 {(summary?.return_rate || 0).toFixed(1)}%
               </div>
               <div style={{ fontSize: 9, color: '#9ca3af' }}>Of all sales</div>
@@ -465,20 +465,20 @@ export default function Returns({ onTabChange }) {
       </div>
 
       {/* Returns Table Card */}
-      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16, marginBottom: 16 }}>
+      <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16, marginBottom: 16 }}>
         <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
           <thead>
-            <tr style={{ background: '#f9fafb' }}>
-              <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Return #</th>
-              <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Date</th>
-              <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Original Sale</th>
-              <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Customer</th>
-              <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>Items</th>
-              <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>Refund Amount</th>
-              <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Method</th>
-              <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Reason</th>
-              <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Status</th>
-              {isOwnerOrManager && <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>Action</th>}
+            <tr style={{ background: '#f6f8f6' }}>
+              <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>Return #</th>
+              <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>Date</th>
+              <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>Original Sale</th>
+              <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>Customer</th>
+              <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'right' }}>Items</th>
+              <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'right' }}>Refund Amount</th>
+              <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>Method</th>
+              <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>Reason</th>
+              <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>Status</th>
+              {isOwnerOrManager && <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'center' }}>Action</th>}
             </tr>
           </thead>
           <tbody>

@@ -16,19 +16,19 @@ const S = {
     background: 'linear-gradient(135deg, #1e3a5f, #2563eb)',
     display: 'flex', flexDirection: 'column', justifyContent: 'center',
   },
-  bannerTitle: { color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: "'Playfair Display', serif", textShadow: '0 1px 3px rgba(0,0,0,0.3)' },
+  bannerTitle: { color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", textShadow: '0 1px 3px rgba(0,0,0,0.3)' },
   bannerSub: { color: 'rgba(255,255,255,0.7)', fontSize: 11, textShadow: '0 1px 2px rgba(0,0,0,0.2)' },
   twoCol: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 },
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 18, marginBottom: 16 },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 18, marginBottom: 16 },
   cardTitle: { fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 12 },
   label: { display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 3, marginTop: 8 },
-  input: { width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', color: '#111827' },
+  input: { width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', color: '#111827' },
   row2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 },
   row3: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 },
-  btn: { width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 12 },
-  preview: { background: '#e8f5ee', borderRadius: 7, padding: '10px 14px', fontSize: 11, color: '#1a6b3a', marginTop: 8 },
+  btn: { width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 12 },
+  preview: { background: '#e8f5ee', borderRadius: 10, padding: '10px 14px', fontSize: 11, color: '#1a6b3a', marginTop: 8 },
   sectionTitle: { fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 12 },
-  stockItem: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '14px 16px', marginBottom: 10 },
+  stockItem: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: '14px 16px', marginBottom: 10 },
   barTrack: { height: 6, background: '#f3f4f6', borderRadius: 3, overflow: 'hidden', marginTop: 6 },
   barFill: (color, pct) => ({ height: '100%', width: `${Math.min(pct, 100)}%`, background: color, borderRadius: 3, transition: 'width 0.4s' }),
 };
@@ -189,7 +189,7 @@ export default function Stock() {
                     <div style={{ fontSize: 10, color: '#9ca3af' }}>{s.category} - Total: {fmt(totalCost)} ({fmt(s.unit_cost)}/{s.unit})</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: isLow ? '#c0392b' : '#1a6b3a', fontFamily: "'Playfair Display', serif" }}>{qty(rem)}</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: isLow ? '#c0392b' : '#1a6b3a', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>{qty(rem)}</div>
                     <div style={{ fontSize: 9, color: '#9ca3af' }}>{s.unit} left</div>
                   </div>
                 </div>

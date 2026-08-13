@@ -17,35 +17,35 @@ const S = {
   page: { maxWidth: 1100, margin: '0 auto' },
   twoCol: { display: 'grid', gridTemplateColumns: '1fr 340px', gap: 20, alignItems: 'start' },
   banner: { height: 90, borderRadius: 10, padding: '20px 24px', marginBottom: 14, background: 'linear-gradient(135deg, rgba(180,40,0,0.9), rgba(200,60,20,0.8))', display: 'flex', flexDirection: 'column', justifyContent: 'center' },
-  bannerTitle: { color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: "'Playfair Display', serif", textShadow: '0 1px 3px rgba(0,0,0,0.3)' },
+  bannerTitle: { color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", textShadow: '0 1px 3px rgba(0,0,0,0.3)' },
   bannerSub: { color: 'rgba(255,255,255,0.7)', fontSize: 11, textShadow: '0 1px 2px rgba(0,0,0,0.2)' },
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 18, marginBottom: 16 },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 18, marginBottom: 16 },
   label: { display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 3, marginTop: 8 },
-  input: { width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box' },
+  input: { width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box' },
   row2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 },
   row3: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 },
-  entryBox: { background: '#f9fafb', borderRadius: 8, padding: 12, marginBottom: 10, border: '1px solid #e5e7eb' },
-  addBtn: { width: '100%', padding: '8px', background: 'none', border: '1px dashed #1a6b3a', borderRadius: 7, color: '#1a6b3a', fontSize: 11, fontWeight: 600, cursor: 'pointer', marginBottom: 10 },
-  btn: { width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' },
+  entryBox: { background: '#f6f8f6', borderRadius: 8, padding: 12, marginBottom: 10, border: '1px solid #e3e8e4' },
+  addBtn: { width: '100%', padding: '8px', background: 'none', border: '1px dashed #1a6b3a', borderRadius: 10, color: '#1a6b3a', fontSize: 11, fontWeight: 600, cursor: 'pointer', marginBottom: 10 },
+  btn: { width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' },
   sectionTitle: { fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 10, marginTop: 16 },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: 11 },
-  th: { textAlign: 'left', padding: '8px 10px', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb' },
+  th: { textAlign: 'left', padding: '8px 10px', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', borderBottom: '1px solid #e3e8e4' },
   td: { padding: '8px 10px', borderBottom: '1px solid #f3f4f6', color: '#374151' },
-  rightCard: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16, marginBottom: 14 },
+  rightCard: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16, marginBottom: 14 },
   tabs: { display: 'flex', gap: 0, marginBottom: 16 },
-  tab: (active) => ({ flex: 1, padding: '10px 0', textAlign: 'center', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid #e5e7eb', background: active ? '#1a6b3a' : '#fff', color: active ? '#fff' : '#374151', transition: 'all .15s' }),
-  pill: (active) => ({ padding: '6px 14px', fontSize: 11, fontWeight: 600, cursor: 'pointer', border: '1px solid #e5e7eb', borderRadius: 20, background: active ? '#111827' : '#fff', color: active ? '#fff' : '#374151', transition: 'all .15s' }),
+  tab: (active) => ({ flex: 1, padding: '10px 0', textAlign: 'center', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid #e3e8e4', background: active ? '#1a6b3a' : '#fff', color: active ? '#fff' : '#374151', transition: 'all .15s' }),
+  pill: (active) => ({ padding: '6px 14px', fontSize: 11, fontWeight: 600, cursor: 'pointer', border: '1px solid #e3e8e4', borderRadius: 20, background: active ? '#111827' : '#fff', color: active ? '#fff' : '#374151', transition: 'all .15s' }),
   pendingBanner: { background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 10, padding: '14px 18px', marginBottom: 14 },
   pendingTitle: { fontSize: 12, fontWeight: 700, color: '#92400e', marginBottom: 6 },
   pendingItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid rgba(245,158,11,0.2)' },
   badge: (color) => ({ display: 'inline-block', fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 10, textTransform: 'uppercase', background: color === 'amber' ? '#fef3c7' : '#dcfce7', color: color === 'amber' ? '#92400e' : '#166534' }),
-  settleBtn: { padding: '5px 12px', fontSize: 10, fontWeight: 700, background: '#f59e0b', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' },
+  settleBtn: { padding: '5px 12px', fontSize: 10, fontWeight: 700, background: '#f59e0b', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' },
   info: { background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, padding: '10px 14px', fontSize: 11, color: '#1e40af', marginBottom: 12 },
   grayInfo: { background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 8, padding: '10px 14px', fontSize: 11, color: '#374151', marginBottom: 12 },
-  collapseHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#f9fafb', borderRadius: 8, border: '1px solid #e5e7eb', cursor: 'pointer', marginBottom: 8 },
+  collapseHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#f6f8f6', borderRadius: 8, border: '1px solid #e3e8e4', cursor: 'pointer', marginBottom: 8 },
   summaryBox: { background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '8px 12px', fontSize: 10, color: '#166534', marginTop: 8, fontWeight: 500 },
   warningText: { color: '#dc2626', fontWeight: 700 },
-  smallAddBtn: { padding: '4px 10px', fontSize: 10, fontWeight: 600, background: 'none', border: '1px dashed #6b7280', borderRadius: 6, color: '#6b7280', cursor: 'pointer', marginTop: 6 },
+  smallAddBtn: { padding: '4px 10px', fontSize: 10, fontWeight: 600, background: 'none', border: '1px dashed #6b7280', borderRadius: 8, color: '#6b7280', cursor: 'pointer', marginTop: 6 },
   removeLink: { background: 'none', border: 'none', color: '#c0392b', cursor: 'pointer', fontSize: 10, fontWeight: 700 },
 };
 
@@ -516,7 +516,7 @@ export default function Sales() {
                       </div>
 
                       {isOpen && (
-                        <div style={{ marginTop: 6, paddingLeft: 8, borderLeft: '2px solid #e5e7eb' }}>
+                        <div style={{ marginTop: 6, paddingLeft: 8, borderLeft: '2px solid #e3e8e4' }}>
                           {(t.entries || []).map((ent, ei) => {
                             const fieldObj = fields.find(f => f.id === ent.field);
                             const entSent = (ent.large_sent || 0) + (ent.medium_sent || 0) + (ent.small_sent || 0);

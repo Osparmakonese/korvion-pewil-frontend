@@ -54,7 +54,7 @@ function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={onClose}>
       <div style={{ background: '#fff', borderRadius: 12, padding: 24, maxWidth: 480, width: '90%' }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: "'Playfair Display', serif", color: '#111827' }}>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#111827' }}>
             {'\u{1F4E6}'} Log Stock Adjustment
           </h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#9ca3af' }}>{'\u00D7'}</button>
@@ -63,7 +63,7 @@ function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
           <div style={{ marginBottom: 14, position: 'relative' }}>
             <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>Product</label>
             {selectedProduct ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', border: '1px solid #1a6b3a', background: '#f0fdf4', borderRadius: 7 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', border: '1px solid #1a6b3a', background: '#f0fdf4', borderRadius: 10 }}>
                 <span style={{ fontSize: 12, color: '#0f172a' }}>
                   <strong>{selectedProduct.name}</strong> ({selectedProduct.sku}) &mdash; Stock: {selectedProduct.quantity_in_stock}
                 </span>
@@ -82,16 +82,16 @@ function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
                   onFocus={() => setShowProductList(true)}
                   placeholder="Type product name, SKU, or barcode..."
                   autoComplete="off"
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
                 />
                 {showProductList && productSearch.trim() && (
-                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 7, marginTop: 4, maxHeight: 240, overflowY: 'auto', boxShadow: '0 8px 20px rgba(0,0,0,0.12)' }}>
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20, background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, marginTop: 4, maxHeight: 240, overflowY: 'auto', boxShadow: '0 8px 20px rgba(0,0,0,0.12)' }}>
                     {filteredProducts.length > 0 ? filteredProducts.map(p => (
                       <div
                         key={p.id}
                         onClick={() => { setForm(prev => ({ ...prev, product: p.id })); setProductSearch(''); setShowProductList(false); }}
                         style={{ padding: '9px 12px', fontSize: 12, cursor: 'pointer', borderBottom: '1px solid #f3f4f6' }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = '#f9fafb')}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = '#f6f8f6')}
                         onMouseLeave={(e) => (e.currentTarget.style.background = '#fff')}
                       >
                         <strong>{p.name}</strong> <span style={{ color: '#9ca3af' }}>({p.sku})</span>
@@ -108,7 +108,7 @@ function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
             <div>
               <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>Type</label>
-              <select name="adjustment_type" value={form.adjustment_type} onChange={handleChange} required style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box' }}>
+              <select name="adjustment_type" value={form.adjustment_type} onChange={handleChange} required style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', boxSizing: 'border-box' }}>
                 <option value="damaged">Damaged</option>
                 <option value="stolen">Stolen</option>
                 <option value="expired">Expired</option>
@@ -120,7 +120,7 @@ function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
             </div>
             <div>
               <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>Quantity</label>
-              <input type="number" name="quantity" value={form.quantity} onChange={handleChange} required min="1" placeholder="0" style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box' }} />
+              <input type="number" name="quantity" value={form.quantity} onChange={handleChange} required min="1" placeholder="0" style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', boxSizing: 'border-box' }} />
             </div>
           </div>
           {form.adjustment_type === 'restock' && (
@@ -138,7 +138,7 @@ function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
                     min="0"
                     step="0.01"
                     placeholder={selectedProduct ? `Current: ${selectedProduct.cost_price ?? '0.00'}` : '0.00'}
-                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
@@ -153,7 +153,7 @@ function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
                     min="0"
                     step="0.01"
                     placeholder={selectedProduct ? `Current: ${selectedProduct.selling_price ?? '0.00'}` : '0.00'}
-                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
                   />
                 </div>
               </div>
@@ -164,13 +164,13 @@ function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
           )}
           <div style={{ marginBottom: 20 }}>
             <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>Notes (optional)</label>
-            <textarea name="notes" value={form.notes} onChange={handleChange} rows={3} placeholder="Reason for adjustment..." style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box', fontFamily: 'Inter, sans-serif' }} />
+            <textarea name="notes" value={form.notes} onChange={handleChange} rows={3} placeholder="Reason for adjustment..." style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', boxSizing: 'border-box', fontFamily: 'Inter, sans-serif' }} />
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button type="submit" disabled={loading} style={{ flex: 1, padding: 10, background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', opacity: loading ? 0.6 : 1 }}>
+            <button type="submit" disabled={loading} style={{ flex: 1, padding: 10, background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', opacity: loading ? 0.6 : 1 }}>
               {loading ? 'Saving...' : 'Log Adjustment'}
             </button>
-            <button type="button" onClick={onClose} style={{ flex: 1, padding: 10, background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+            <button type="button" onClick={onClose} style={{ flex: 1, padding: 10, background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
           </div>
         </form>
       </div>
@@ -182,14 +182,14 @@ function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
 const S = {
   page: { maxWidth: 1200, margin: '0 auto', padding: 20 },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  title: { fontSize: 24, fontWeight: 700, color: '#111827', fontFamily: "'Playfair Display', serif", margin: 0 },
-  addBtn: { padding: '10px 18px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' },
+  title: { fontSize: 24, fontWeight: 700, color: '#111827', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", margin: 0 },
+  addBtn: { padding: '10px 18px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' },
   controls: { display: 'grid', gridTemplateColumns: '1fr 160px', gap: 12, marginBottom: 20 },
-  input: { width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box' },
-  select: { width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box' },
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' },
+  input: { width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', boxSizing: 'border-box' },
+  select: { width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', boxSizing: 'border-box' },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)' },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: 11 },
-  th: { textAlign: 'left', padding: '10px 12px', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb', background: '#f9fafb' },
+  th: { textAlign: 'left', padding: '10px 12px', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', borderBottom: '1px solid #e3e8e4', background: '#f6f8f6' },
   td: { padding: '10px 12px', borderBottom: '1px solid #f3f4f6', color: '#374151' },
   badge: (type) => {
     const colors = {
@@ -283,15 +283,15 @@ export default function StockAdjustments() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
         <div style={S.card}>
           <div style={{ fontSize: 9, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>{'\u{1F4CB}'} Total Adjustments</div>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700, color: '#374151' }}>{filtered.length}</div>
+          <div style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 22, fontWeight: 700, color: '#374151' }}>{filtered.length}</div>
         </div>
         <div style={S.card}>
           <div style={{ fontSize: 9, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>{'\u{1F534}'} Units Lost</div>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700, color: '#c0392b' }}>{totalLoss}</div>
+          <div style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 22, fontWeight: 700, color: '#c0392b' }}>{totalLoss}</div>
         </div>
         <div style={S.card}>
           <div style={{ fontSize: 9, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>{'\u{1F7E2}'} Units Restocked</div>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700, color: '#1a6b3a' }}>{totalRestock}</div>
+          <div style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 22, fontWeight: 700, color: '#1a6b3a' }}>{totalRestock}</div>
         </div>
       </div>
 

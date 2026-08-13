@@ -9,18 +9,18 @@ import { fmt } from '../utils/format';
 const G = '#1a6b3a';
 const S = {
   page: { maxWidth: 1000, margin: '0 auto', padding: 20 },
-  h1: { fontSize: 20, fontWeight: 800, margin: '0 0 4px', fontFamily: "'Playfair Display', serif", color: '#0f172a' },
+  h1: { fontSize: 20, fontWeight: 800, margin: '0 0 4px', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#0f172a' },
   sub: { fontSize: 12, color: '#64748b', margin: '0 0 16px' },
   btn: { padding: '9px 14px', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', border: 'none', background: G, color: '#fff' },
-  btnO: { padding: '7px 12px', borderRadius: 7, fontWeight: 700, fontSize: 12, cursor: 'pointer', border: '1px solid #cbd5e1', background: '#fff', color: '#334155' },
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 4, marginBottom: 14 },
+  btnO: { padding: '7px 12px', borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: 'pointer', border: '1px solid #cbd5e1', background: '#fff', color: '#334155' },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: 4, marginBottom: 14 },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: 12 },
-  th: { fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', textAlign: 'left', padding: '9px 10px', borderBottom: '1px solid #e5e7eb', background: '#f8fafc' },
+  th: { fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', textAlign: 'left', padding: '9px 10px', borderBottom: '1px solid #e3e8e4', background: '#f8fafc' },
   td: { padding: '8px 10px', borderBottom: '1px solid #f1f5f9', color: '#334155' },
   // 96px, not 80: on mobile index.css forces inputs to 16px font with
   // 12px/14px padding, which left an 80px box showing barely two digits —
   // you could not read a count of 145 while typing it.
-  input: { width: 96, minWidth: 96, padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 13, textAlign: 'right' },
+  input: { width: 96, minWidth: 96, padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13, textAlign: 'right' },
   pill: (bg, fg) => ({ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: bg, color: fg }),
 };
 
@@ -41,7 +41,7 @@ const M = {
     color: on ? '#fff' : '#475569', cursor: 'pointer', whiteSpace: 'nowrap',
   }),
   card: (edge) => ({
-    background: '#fff', border: '1px solid #e5e7eb', borderLeft: `5px solid ${edge}`,
+    background: '#fff', border: '1px solid #e3e8e4', borderLeft: `5px solid ${edge}`,
     borderRadius: 14, padding: '13px 14px', marginBottom: 10,
   }),
   name: { fontSize: 15, fontWeight: 700, color: '#0f172a', lineHeight: 1.3 },
@@ -66,7 +66,7 @@ const M = {
     position: 'fixed', left: 0, right: 0,
     bottom: 'calc(76px + env(safe-area-inset-bottom, 0px))', // clears the bottom nav
     zIndex: 400, background: 'rgba(255,255,255,.97)', backdropFilter: 'blur(12px)',
-    borderTop: '1px solid #e5e7eb', padding: '10px 12px',
+    borderTop: '1px solid #e3e8e4', padding: '10px 12px',
     display: 'flex', gap: 10,
   },
   barBtn: (primary) => ({
@@ -83,7 +83,7 @@ const M = {
   metricLabel: { fontSize: 11, color: '#64748b', fontWeight: 600, marginBottom: 4 },
   metricValue: (color) => ({
     fontSize: 19, fontWeight: 800, color: color || '#0f172a',
-    fontFamily: "'Playfair Display', serif", lineHeight: 1.1,
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", lineHeight: 1.1,
   }),
   warn: {
     background: '#fef3e2', border: '1px solid #fbd9a5', borderRadius: 12,
@@ -483,7 +483,7 @@ function CountScreen({ id, onBack }) {
         ].map(([label, value, sub, color]) => (
           <div key={label} style={{ flex: '1 1 150px', background: '#f8fafc', borderRadius: 10, padding: '10px 13px' }}>
             <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>{label}</div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: color || '#0f172a', fontFamily: "'Playfair Display', serif" }}>{value}</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: color || '#0f172a', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>{value}</div>
             <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{sub}</div>
           </div>
         ))}

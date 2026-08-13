@@ -139,6 +139,43 @@ input, select, textarea, button {
   100% { box-shadow: 0 0 0 2px rgba(192,57,43,0.2); }
 }
 
+/* ── DESKTOP CORPORATE LAYER (2026-08-13) ─────────────────────────────
+   The desktop shell moved to the corporate deep-green rail + frosted
+   topbar (Sidebar.js / Topbar.js). These rules add the app-wide polish
+   inline styles can't provide from one place: text selection, a
+   scrollbar that reads on the dark rail, a green focus ring on every
+   form control, and a quiet row hover on data tables. Everything
+   viewport-gated to ≥769px is desktop-only — the tuned mobile layer
+   below is untouched. */
+::selection { background: rgba(45, 158, 88, 0.22); }
+
+.sidebar-desktop ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.14); }
+.sidebar-desktop ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.26); }
+
+@media (min-width: 769px) {
+  /* Crisp green focus state on every form control, app-wide. !important
+     is needed to beat per-page inline borders, and only applies while
+     the control is focused. */
+  .main-content input:focus:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  .main-content select:focus,
+  .main-content textarea:focus {
+    border-color: #1a6b3a !important;
+    box-shadow: 0 0 0 3px rgba(26, 107, 58, 0.13) !important;
+    outline: none !important;
+  }
+
+  /* Quiet row hover on data tables. background-color (not the shorthand)
+     and no !important, so any row/cell that paints its own inline
+     `background` — status tints, selected rows — keeps winning. */
+  .main-content main table tbody tr:hover td {
+    background-color: rgba(26, 107, 58, 0.035);
+  }
+
+  /* Subtle hover affordance on buttons. Stylesheet-level, so buttons
+     with their own inline transition simply skip the ease. */
+  .main-content main button:not([disabled]):hover { filter: brightness(0.965); }
+}
+
 /* ── MOBILE BOTTOM NAV ── */
 .mobile-header { display: none; }
 .bottom-nav { display: none; }

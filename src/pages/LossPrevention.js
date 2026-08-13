@@ -45,13 +45,13 @@ import MobileLossPrevention from '../components/MobileLossPrevention';
 const GREEN = '#1a6b3a';
 const GREEN_TINT = '#e8f5ee';
 const AMBER = '#c97d1a';
-const AMBER_TINT = '#fdeedd';
+const AMBER_TINT = '#fef3e2';
 const RED = '#c0392b';
 const RED_TINT = '#fde8e8';
 const INK = '#111827';
 const INK_3 = '#6b7280';
-const BORDER = '#e5e7eb';
-const SURFACE = '#f9fafb';
+const BORDER = '#e3e8e4';
+const SURFACE = '#f6f8f6';
 
 // Shared styles
 const card = {
@@ -59,7 +59,7 @@ const card = {
   border: `1px solid ${BORDER}`,
   borderRadius: 12,
   padding: '16px 18px',
-  boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+  boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)',
 };
 const sectionLabel = {
   fontSize: 10, fontWeight: 700, color: INK_3,
@@ -173,7 +173,7 @@ function OverviewTab({ isOwner }) {
       {/* Hero + action */}
       <div style={{ ...card, marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 700, color: INK }}>
+          <div style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 24, fontWeight: 700, color: INK }}>
             Loss-Prevention Overview
           </div>
           <div style={{ color: INK_3, fontSize: 13, marginTop: 4 }}>
@@ -196,7 +196,7 @@ function OverviewTab({ isOwner }) {
         {kpis.map(k => (
           <div key={k.label} style={card}>
             <div style={sectionLabel}>{k.label}</div>
-            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 700, color: k.fg }}>
+            <div style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 26, fontWeight: 700, color: k.fg }}>
               {k.value}
             </div>
           </div>
@@ -216,7 +216,7 @@ function OverviewTab({ isOwner }) {
               <div key={c.cashier_id || c.cashier_name} style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: 12 }}>
                 <div style={{ fontWeight: 600, fontSize: 14, color: INK }}>{c.cashier_name || 'Unknown'}</div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
-                  <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700, color: gradeColor(c.grade) }}>
+                  <span style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 22, fontWeight: 700, color: gradeColor(c.grade) }}>
                     {c.grade || '—'}
                   </span>
                   <span style={{ color: INK_3, fontSize: 12 }}>{Number(c.score ?? 0).toFixed(1)} / 100</span>
@@ -273,7 +273,7 @@ function EventsTab() {
   return (
     <div>
       <div style={{ ...card, marginBottom: 12, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-        <select value={filterType} onChange={e => setFilterType(e.target.value)} style={{ padding: 8, border: `1px solid ${BORDER}`, borderRadius: 6, fontSize: 13 }}>
+        <select value={filterType} onChange={e => setFilterType(e.target.value)} style={{ padding: 8, border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 13 }}>
           <option value="">All event types</option>
           <option value="sale_large">Large sale</option>
           <option value="void">Void</option>
@@ -290,12 +290,12 @@ function EventsTab() {
           <option value="session_variance_large">Session variance (large)</option>
           <option value="stock_adjustment_negative">Negative stock adjustment</option>
         </select>
-        <select value={minRisk} onChange={e => setMinRisk(e.target.value)} style={{ padding: 8, border: `1px solid ${BORDER}`, borderRadius: 6, fontSize: 13 }}>
+        <select value={minRisk} onChange={e => setMinRisk(e.target.value)} style={{ padding: 8, border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 13 }}>
           <option value="">Any risk</option>
           <option value="50">Risk &gt;= 50 (high)</option>
           <option value="30">Risk &gt;= 30 (medium)</option>
         </select>
-        <select value={reviewedOnly} onChange={e => setReviewedOnly(e.target.value)} style={{ padding: 8, border: `1px solid ${BORDER}`, borderRadius: 6, fontSize: 13 }}>
+        <select value={reviewedOnly} onChange={e => setReviewedOnly(e.target.value)} style={{ padding: 8, border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 13 }}>
           <option value="">Any review state</option>
           <option value="false">Unreviewed only</option>
           <option value="true">Reviewed only</option>
@@ -390,7 +390,7 @@ function FlagsTab() {
   return (
     <div>
       <div style={{ ...card, marginBottom: 12, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ padding: 8, border: `1px solid ${BORDER}`, borderRadius: 6, fontSize: 13 }}>
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ padding: 8, border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 13 }}>
           <option value="">All statuses</option>
           <option value="open">Open</option>
           <option value="investigating">Investigating</option>
@@ -748,8 +748,8 @@ function CreateCountForm({ onCreate, onCancel, isPending }) {
     <div>
       <div style={sectionLabel}>New shrinkage count</div>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-        <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ padding: 8, border: `1px solid ${BORDER}`, borderRadius: 6 }} />
-        <input type="text" placeholder="Notes (optional)" value={notes} onChange={e => setNotes(e.target.value)} style={{ padding: 8, border: `1px solid ${BORDER}`, borderRadius: 6, flex: 1, minWidth: 200 }} />
+        <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ padding: 8, border: `1px solid ${BORDER}`, borderRadius: 8 }} />
+        <input type="text" placeholder="Notes (optional)" value={notes} onChange={e => setNotes(e.target.value)} style={{ padding: 8, border: `1px solid ${BORDER}`, borderRadius: 8, flex: 1, minWidth: 200 }} />
         <button style={btnPri} onClick={() => onCreate({ count_date: date, notes })} disabled={isPending}>
           {isPending ? 'Creating...' : 'Create'}
         </button>
@@ -764,8 +764,8 @@ function AddLineForm({ onAdd, isPending }) {
   const [counted, setCounted] = useState('');
   return (
     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-      <input type="number" placeholder="Product ID" value={product} onChange={e => setProduct(e.target.value)} style={{ padding: 8, border: `1px solid ${BORDER}`, borderRadius: 6, width: 120 }} />
-      <input type="number" step="0.01" placeholder="Counted qty" value={counted} onChange={e => setCounted(e.target.value)} style={{ padding: 8, border: `1px solid ${BORDER}`, borderRadius: 6, width: 140 }} />
+      <input type="number" placeholder="Product ID" value={product} onChange={e => setProduct(e.target.value)} style={{ padding: 8, border: `1px solid ${BORDER}`, borderRadius: 8, width: 120 }} />
+      <input type="number" step="0.01" placeholder="Counted qty" value={counted} onChange={e => setCounted(e.target.value)} style={{ padding: 8, border: `1px solid ${BORDER}`, borderRadius: 8, width: 140 }} />
       <button
         style={btnSec}
         onClick={() => {

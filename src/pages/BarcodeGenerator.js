@@ -68,10 +68,10 @@ export default function BarcodeGenerator({ onTabChange }) {
   );
 
   return (
-    <div style={{ padding: 24, fontFamily: "'Inter', sans-serif", backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+    <div style={{ padding: 24, fontFamily: "'Inter', sans-serif", backgroundColor: '#f6f8f6', minHeight: '100vh' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Playfair Display', serif", margin: 0, color: '#111827' }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", margin: 0, color: '#111827' }}>
           Barcode & Labels
         </h1>
         {isOwnerOrManager && (
@@ -82,7 +82,7 @@ export default function BarcodeGenerator({ onTabChange }) {
               color: '#fff',
               border: 'none',
               padding: '8px 16px',
-              borderRadius: 7,
+              borderRadius: 10,
               fontSize: 12,
               fontWeight: 600,
               cursor: 'pointer'
@@ -112,7 +112,7 @@ export default function BarcodeGenerator({ onTabChange }) {
       {/* Main Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 24 }}>
         {/* Generate Barcode */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <h3 style={{ fontSize: 12, fontWeight: 700, margin: '0 0 16px 0', color: '#111827' }}>
             Generate New Barcode
           </h3>
@@ -130,8 +130,8 @@ export default function BarcodeGenerator({ onTabChange }) {
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 6,
+                  border: '1px solid #e3e8e4',
+                  borderRadius: 8,
                   fontSize: 11,
                   fontFamily: "'Inter', sans-serif",
                   boxSizing: 'border-box',
@@ -161,8 +161,8 @@ export default function BarcodeGenerator({ onTabChange }) {
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 6,
+                  border: '1px solid #e3e8e4',
+                  borderRadius: 8,
                   fontSize: 11,
                   fontFamily: "'Inter', sans-serif",
                   boxSizing: 'border-box',
@@ -187,8 +187,8 @@ export default function BarcodeGenerator({ onTabChange }) {
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 6,
+                  border: '1px solid #e3e8e4',
+                  borderRadius: 8,
                   fontSize: 11,
                   fontFamily: "'Inter', sans-serif",
                   boxSizing: 'border-box'
@@ -207,7 +207,7 @@ export default function BarcodeGenerator({ onTabChange }) {
               color: '#fff',
               border: 'none',
               padding: '10px 16px',
-              borderRadius: 6,
+              borderRadius: 8,
               fontSize: 11,
               fontWeight: 600,
               cursor: 'pointer',
@@ -220,8 +220,8 @@ export default function BarcodeGenerator({ onTabChange }) {
           {/* Preview */}
           <div
             style={{
-              background: '#f9fafb',
-              border: '1px dashed #e5e7eb',
+              background: '#f6f8f6',
+              border: '1px dashed #e3e8e4',
               borderRadius: 8,
               padding: 20,
               display: 'flex',
@@ -241,7 +241,7 @@ export default function BarcodeGenerator({ onTabChange }) {
         </div>
 
         {/* Label Preview */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <h3 style={{ fontSize: 12, fontWeight: 700, margin: '0 0 16px 0', color: '#111827' }}>
             Shelf Label Preview
           </h3>
@@ -282,10 +282,10 @@ export default function BarcodeGenerator({ onTabChange }) {
                 onClick={() => setLabelSize(size)}
                 style={{
                   padding: '6px 12px',
-                  border: labelSize === size ? 'none' : '1px solid #e5e7eb',
+                  border: labelSize === size ? 'none' : '1px solid #e3e8e4',
                   background: labelSize === size ? '#1a6b3a' : '#fff',
                   color: labelSize === size ? '#fff' : '#111827',
-                  borderRadius: 6,
+                  borderRadius: 8,
                   fontSize: 9,
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -300,7 +300,7 @@ export default function BarcodeGenerator({ onTabChange }) {
       </div>
 
       {/* Products Without Barcodes Table */}
-      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+      <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
         <h3 style={{ fontSize: 12, fontWeight: 700, margin: '0 0 16px 0', color: '#111827' }}>
           Products Without Barcodes
         </h3>
@@ -309,13 +309,13 @@ export default function BarcodeGenerator({ onTabChange }) {
         ) : (
           <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
             <thead>
-              <tr style={{ background: '#f9fafb' }}>
-                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>SKU</th>
-                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Product</th>
-                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Category</th>
-                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>Price</th>
-                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Status</th>
-                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>Action</th>
+              <tr style={{ background: '#f6f8f6' }}>
+                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>SKU</th>
+                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>Product</th>
+                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>Category</th>
+                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'right' }}>Price</th>
+                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>Status</th>
+                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'center' }}>Action</th>
               </tr>
             </thead>
             <tbody>

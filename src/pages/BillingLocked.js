@@ -247,14 +247,14 @@ const styles = {
     display: 'inline-block',
   },
   brandWord: {
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
     fontSize: 22,
     fontWeight: 800,
     color: '#0f2436',
     letterSpacing: '-0.01em',
   },
   headline: {
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
     fontSize: 30,
     fontWeight: 800,
     color: '#0f2436',

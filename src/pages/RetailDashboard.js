@@ -32,13 +32,13 @@ const S = {
     borderRadius: 16,
     padding: '22px 24px',
     marginBottom: 16,
-    background: 'linear-gradient(135deg, #c97d1a 0%, #e09a3f 100%)',
+    background: 'linear-gradient(135deg, #12331f 0%, #1a6b3a 55%, #2d9e58 100%)',
     display: 'flex',
     flexDirection: 'column',
     position: 'relative',
     overflow: 'hidden',
     color: '#fff',
-    boxShadow: '0 4px 20px rgba(201, 125, 26, 0.18)',
+    boxShadow: '0 10px 30px -10px rgba(18, 51, 31, 0.45)',
   },
   bannerDecor: {
     position: 'absolute',
@@ -62,7 +62,7 @@ const S = {
     marginBottom: 2,
   },
   bannerTitle: {
-    fontFamily: "'Playfair Display', 'Fraunces', serif",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
     fontSize: 20,
     fontWeight: 700,
     color: '#fff',
@@ -90,7 +90,7 @@ const S = {
     zIndex: 1,
   },
   bannerValue: {
-    fontFamily: "'Playfair Display', 'Fraunces', serif",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
     fontSize: 38,
     fontWeight: 700,
     letterSpacing: '-0.02em',
@@ -121,7 +121,7 @@ const S = {
   },
   quickAction: {
     background: '#fff',
-    border: '1px solid #e5e7eb',
+    border: '1px solid #e3e8e4',
     borderRadius: 12,
     padding: '14px 8px',
     textAlign: 'center',
@@ -158,17 +158,17 @@ const S = {
   },
   card: {
     background: '#fff',
-    border: '1px solid #e5e7eb',
+    border: '1px solid #e3e8e4',
     borderRadius: 12,
     padding: '16px 18px',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+    boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)',
   },
   metricCard: {
     background: '#fff',
-    border: '1px solid #e5e7eb',
+    border: '1px solid #e3e8e4',
     borderRadius: 12,
     padding: '16px 18px',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+    boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)',
     position: 'relative',
     overflow: 'hidden',
     display: 'flex',
@@ -194,7 +194,7 @@ const S = {
     letterSpacing: '0.05em',
   },
   metricValue: {
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
     fontSize: 24,
     fontWeight: 700,
     color: '#111827',
@@ -209,7 +209,7 @@ const S = {
   progressBar: {
     width: '100%',
     height: 4,
-    background: '#e5e7eb',
+    background: '#e3e8e4',
     borderRadius: 2,
     overflow: 'hidden',
     marginTop: 'auto',
@@ -252,10 +252,10 @@ const S = {
   bar: (h) => ({
     width: '100%',
     height: h,
-    background: 'linear-gradient(180deg, #c97d1a 0%, #e09a3f 100%)',
+    background: 'linear-gradient(180deg, #1a6b3a 0%, #2d9e58 100%)',
     borderRadius: '4px 4px 0 0',
     position: 'relative',
-    boxShadow: '0 -2px 8px rgba(201, 125, 26, 0.15)',
+    boxShadow: '0 -2px 8px rgba(26, 107, 58, 0.18)',
   }),
   barValue: {
     fontSize: 9,
@@ -325,8 +325,8 @@ const S = {
     fontWeight: 700,
     color: '#9ca3af',
     textTransform: 'uppercase',
-    borderBottom: '1px solid #e5e7eb',
-    background: '#f9fafb',
+    borderBottom: '1px solid #e3e8e4',
+    background: '#f6f8f6',
   },
   td: {
     padding: '8px 10px',
@@ -508,27 +508,27 @@ export default function RetailDashboard({ onTabChange }) {
     <div style={S.page}>
       {/* First-run setup checklist — shows until every step is done. */}
       {onboarding && !onboarding.complete && (
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, padding: 20, marginBottom: 18, boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 14, padding: 20, marginBottom: 18, boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
             <div>
               <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>🚀 Finish setting up your shop</div>
               <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{onboarding.done} of {onboarding.total} steps done</div>
             </div>
-            <div style={{ width: 160, height: 8, background: '#e5e7eb', borderRadius: 99, overflow: 'hidden' }}>
+            <div style={{ width: 160, height: 8, background: '#e3e8e4', borderRadius: 99, overflow: 'hidden' }}>
               <div style={{ width: `${(onboarding.done / onboarding.total) * 100}%`, height: '100%', background: '#1a6b3a' }} />
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 10, marginTop: 14 }}>
             {(onboarding.steps || []).map((s) => (
               <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', border: '1px solid #eef0f3', borderRadius: 10, background: s.done ? '#f0fdf4' : '#fff' }}>
-                <span style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, background: s.done ? '#1a6b3a' : '#e5e7eb', color: s.done ? '#fff' : '#94a3b8' }}>{s.done ? '✓' : ''}</span>
+                <span style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, background: s.done ? '#1a6b3a' : '#e3e8e4', color: s.done ? '#fff' : '#94a3b8' }}>{s.done ? '✓' : ''}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{s.label}</div>
                   <div style={{ fontSize: 11, color: '#94a3b8' }}>{s.hint}</div>
                 </div>
                 {!s.done && (
                   <button onClick={() => onTabChange && onTabChange(s.tab)}
-                    style={{ padding: '6px 12px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    style={{ padding: '6px 12px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                     Go →
                   </button>
                 )}

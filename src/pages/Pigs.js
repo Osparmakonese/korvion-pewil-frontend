@@ -22,30 +22,30 @@ const S = {
     background: 'linear-gradient(135deg, #1a6b3a, #2d9e58)',
     display: 'flex', flexDirection: 'column', justifyContent: 'center',
   },
-  bannerTitle: { color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: "'Playfair Display', serif", textShadow: '0 1px 3px rgba(0,0,0,0.3)' },
+  bannerTitle: { color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", textShadow: '0 1px 3px rgba(0,0,0,0.3)' },
   bannerSub: { color: 'rgba(255,255,255,0.7)', fontSize: 11, textShadow: '0 1px 2px rgba(0,0,0,0.2)' },
   twoCol: { display: 'grid', gridTemplateColumns: '40% 60%', gap: 20 },
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 18, marginBottom: 16 },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 18, marginBottom: 16 },
   cardTitle: { fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 12 },
   label: { display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 3, marginTop: 8 },
-  input: { width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', color: '#111827' },
+  input: { width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', color: '#111827' },
   row2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 },
   row3: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 },
-  btn: { width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 12 },
-  preview: { background: '#e8f5ee', borderRadius: 7, padding: '10px 14px', fontSize: 11, color: '#1a6b3a', marginTop: 8 },
+  btn: { width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 12 },
+  preview: { background: '#e8f5ee', borderRadius: 10, padding: '10px 14px', fontSize: 11, color: '#1a6b3a', marginTop: 8 },
   sectionTitle: { fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 12 },
-  tabContainer: { display: 'flex', gap: 8, marginBottom: 16, borderBottom: '1px solid #e5e7eb', paddingBottom: 12 },
+  tabContainer: { display: 'flex', gap: 8, marginBottom: 16, borderBottom: '1px solid #e3e8e4', paddingBottom: 12 },
   tab: (active) => ({
     padding: '8px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
     color: active ? '#1a6b3a' : '#9ca3af',
     borderBottom: active ? '2px solid #1a6b3a' : 'none',
     background: 'none', border: 'none',
   }),
-  pigCard: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '14px 16px', marginBottom: 10 },
+  pigCard: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: '14px 16px', marginBottom: 10 },
   badge: (color) => ({ display: 'inline-block', padding: '3px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600, color: '#fff', background: color, marginLeft: 6 }),
   deleteBtn: { padding: '4px 8px', background: '#c0392b', color: '#fff', border: 'none', borderRadius: 4, fontSize: 10, fontWeight: 600, cursor: 'pointer' },
-  healthRecord: { background: '#f9fafb', borderRadius: 8, padding: '10px 12px', marginBottom: 8, fontSize: 11, borderLeft: '3px solid #c97d1a' },
-  saleRecord: { background: '#f9fafb', borderRadius: 8, padding: '10px 12px', marginBottom: 8, fontSize: 11, borderLeft: '3px solid #059669' },
+  healthRecord: { background: '#f6f8f6', borderRadius: 8, padding: '10px 12px', marginBottom: 8, fontSize: 11, borderLeft: '3px solid #c97d1a' },
+  saleRecord: { background: '#f6f8f6', borderRadius: 8, padding: '10px 12px', marginBottom: 8, fontSize: 11, borderLeft: '3px solid #059669' },
   countBadge: { display: 'inline-block', background: '#c97d1a', color: '#fff', padding: '4px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600, marginLeft: 8 },
 };
 
@@ -213,8 +213,8 @@ export default function Pigs() {
               <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
                 {['active', 'sold', 'deceased', 'culled', 'all'].map(val => (
                   <button key={val} onClick={() => setStatusFilter(val)} style={{
-                    padding: '5px 12px', borderRadius: 6,
-                    border: statusFilter === val ? '1px solid #1a6b3a' : '1px solid #e5e7eb',
+                    padding: '5px 12px', borderRadius: 8,
+                    border: statusFilter === val ? '1px solid #1a6b3a' : '1px solid #e3e8e4',
                     background: statusFilter === val ? '#e8f5ee' : '#fff',
                     fontSize: 11, fontWeight: 600, cursor: 'pointer',
                     color: statusFilter === val ? '#1a6b3a' : '#6b7280',
@@ -250,11 +250,11 @@ export default function Pigs() {
                           </div>
                         )}
                         {(pig.status === 'deceased' || pig.status === 'culled') && pig.cause_of_death && (
-                          <div style={{ fontSize: 10, color: '#991b1b', marginTop: 6, padding: '6px 10px', background: '#fef2f2', borderRadius: 6 }}>
+                          <div style={{ fontSize: 10, color: '#991b1b', marginTop: 6, padding: '6px 10px', background: '#fef2f2', borderRadius: 8 }}>
                             <strong>{pig.status === 'deceased' ? 'Died' : 'Culled'}:</strong> {pig.cause_of_death}{pig.date_of_death && ` on ${pig.date_of_death}`}
                           </div>
                         )}
-                        <div style={{ marginTop: 6, padding: '6px 8px', background: '#f9fafb', borderRadius: 6, fontSize: 10 }}>
+                        <div style={{ marginTop: 6, padding: '6px 8px', background: '#f6f8f6', borderRadius: 8, fontSize: 10 }}>
                           <div style={{ color: '#6b7280' }}>Costs: {fmt(totalCost)} {healthCost > 0 && <span>(health: {fmt(healthCost)})</span>}</div>
                           {salePrice > 0 && <div style={{ color: '#6b7280' }}>Sale: {fmt(salePrice)}</div>}
                           {(salePrice > 0 || (pig.status && pig.status !== 'active')) && (

@@ -14,12 +14,12 @@ import { fmt } from '../utils/format';
 const G = '#1a6b3a';
 const INK = '#111827';
 const MUTED = '#6b7280';
-const LINE = '#e5e7eb';
+const LINE = '#e3e8e4';
 
 const S = {
   page: { maxWidth: 1180, margin: '0 auto', padding: 20, fontFamily: "'Inter', sans-serif" },
   headRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap', marginBottom: 16 },
-  h1: { fontSize: 22, fontWeight: 800, margin: '0 0 2px', fontFamily: "'Playfair Display', serif", color: INK },
+  h1: { fontSize: 22, fontWeight: 800, margin: '0 0 2px', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: INK },
   sub: { fontSize: 12.5, color: MUTED, margin: 0 },
   refreshBtn: (busy) => ({
     padding: '9px 16px', borderRadius: 9, fontWeight: 700, fontSize: 12.5,
@@ -33,7 +33,7 @@ const S = {
   }),
   kpi: (accent) => ({ background: '#fff', border: `1px solid ${LINE}`, borderLeft: `4px solid ${accent}`, borderRadius: 12, padding: '13px 15px' }),
   kpiLabel: { fontSize: 10.5, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.05em' },
-  kpiVal: { fontSize: 24, fontWeight: 800, color: INK, fontFamily: "'Playfair Display', serif", marginTop: 2 },
+  kpiVal: { fontSize: 24, fontWeight: 800, color: INK, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", marginTop: 2 },
   kpiMeta: { fontSize: 11.5, color: MUTED, marginTop: 2 },
   card: { background: '#fff', border: `1px solid ${LINE}`, borderRadius: 14, padding: 16, marginBottom: 16 },
   cardH: { fontSize: 13, fontWeight: 800, color: INK, margin: '0 0 12px' },

@@ -20,12 +20,12 @@ const T = {
   ink:     '#111827',
   inkSoft: '#374151',
   muted:   '#6b7280',
-  line:    '#e5e7eb',
-  surface: '#f9fafb',
+  line:    '#e3e8e4',
+  surface: '#f6f8f6',
   green:   '#1a6b3a',
   greenT:  '#e8f5ee',
   amber:   '#c77700',
-  amberT:  '#fdeedd',
+  amberT:  '#fef3e2',
   red:     '#c0392b',
   redT:    '#fde8e8',
 };
@@ -34,7 +34,7 @@ function FillBar({ pct, color }) {
   const clamped = Math.max(0, Math.min(100, Number(pct) || 0));
   return (
     <div style={{
-      height: 10, background: T.line, borderRadius: 6, overflow: 'hidden', position: 'relative',
+      height: 10, background: T.line, borderRadius: 8, overflow: 'hidden', position: 'relative',
     }}>
       <div style={{
         position: 'absolute', inset: 0, width: `${clamped}%`,

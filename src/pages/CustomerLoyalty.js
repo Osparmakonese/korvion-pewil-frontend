@@ -85,10 +85,10 @@ export default function CustomerLoyalty({ onTabChange }) {
   const recentActivity = transactionList.map(formatTransactionRow);
 
   return (
-    <div style={{ padding: 24, fontFamily: "'Inter', sans-serif", backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+    <div style={{ padding: 24, fontFamily: "'Inter', sans-serif", backgroundColor: '#f6f8f6', minHeight: '100vh' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Playfair Display', serif", margin: 0, color: '#111827' }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", margin: 0, color: '#111827' }}>
           Customer Loyalty Program
         </h1>
       </div>
@@ -108,7 +108,7 @@ export default function CustomerLoyalty({ onTabChange }) {
         }}
       >
         <div>
-          <h2 style={{ fontSize: 18, fontFamily: "'Playfair Display', serif", margin: '0 0 8px 0', fontWeight: 700 }}>
+          <h2 style={{ fontSize: 18, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", margin: '0 0 8px 0', fontWeight: 700 }}>
             Customer Loyalty Program
           </h2>
           <p style={{ fontSize: 10, margin: 0, opacity: 0.85 }}>
@@ -121,7 +121,7 @@ export default function CustomerLoyalty({ onTabChange }) {
       {/* Metric Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8, marginBottom: 24 }}>
         {/* Members Enrolled */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div
               style={{
@@ -141,7 +141,7 @@ export default function CustomerLoyalty({ onTabChange }) {
               <div style={{ fontSize: 9, color: '#6b7280', fontWeight: 500, marginBottom: 4 }}>
                 MEMBERS ENROLLED
               </div>
-              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Playfair Display', serif", color: '#7c3aed', marginBottom: 2 }}>
+              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#7c3aed', marginBottom: 2 }}>
                 {statsLoading ? '—' : stats?.total_members || 0}
               </div>
               <div style={{ fontSize: 9, color: '#9ca3af' }}>Active members</div>
@@ -150,7 +150,7 @@ export default function CustomerLoyalty({ onTabChange }) {
         </div>
 
         {/* Points Issued (MTD) */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div
               style={{
@@ -170,7 +170,7 @@ export default function CustomerLoyalty({ onTabChange }) {
               <div style={{ fontSize: 9, color: '#6b7280', fontWeight: 500, marginBottom: 4 }}>
                 POINTS ISSUED (MTD)
               </div>
-              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Playfair Display', serif", color: '#1a6b3a', marginBottom: 2 }}>
+              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#1a6b3a', marginBottom: 2 }}>
                 {statsLoading ? '—' : stats?.points_issued_mtd || 0}
               </div>
               <div style={{ fontSize: 9, color: '#9ca3af' }}>This month</div>
@@ -179,7 +179,7 @@ export default function CustomerLoyalty({ onTabChange }) {
         </div>
 
         {/* Points Redeemed (MTD) */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div
               style={{
@@ -199,7 +199,7 @@ export default function CustomerLoyalty({ onTabChange }) {
               <div style={{ fontSize: 9, color: '#6b7280', fontWeight: 500, marginBottom: 4 }}>
                 POINTS REDEEMED (MTD)
               </div>
-              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Playfair Display', serif", color: '#c97d1a', marginBottom: 2 }}>
+              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#c97d1a', marginBottom: 2 }}>
                 {statsLoading ? '—' : stats?.points_redeemed_mtd || 0}
               </div>
               <div style={{ fontSize: 9, color: '#9ca3af' }}>This month</div>
@@ -208,7 +208,7 @@ export default function CustomerLoyalty({ onTabChange }) {
         </div>
 
         {/* Redemption Rate */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div
               style={{
@@ -228,7 +228,7 @@ export default function CustomerLoyalty({ onTabChange }) {
               <div style={{ fontSize: 9, color: '#6b7280', fontWeight: 500, marginBottom: 4 }}>
                 REDEMPTION RATE
               </div>
-              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Playfair Display', serif", color: '#2563eb', marginBottom: 2 }}>
+              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#2563eb', marginBottom: 2 }}>
                 {statsLoading ? '—' : `${(stats?.redemption_rate || 0).toFixed(0)}%`}
               </div>
               <div style={{ fontSize: 9, color: '#9ca3af' }}>Conversion rate</div>
@@ -240,7 +240,7 @@ export default function CustomerLoyalty({ onTabChange }) {
       {/* Main Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 12, marginBottom: 24 }}>
         {/* Loyalty Tiers */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <h3 style={{ fontSize: 12, fontWeight: 700, margin: '0 0 16px 0', color: '#111827' }}>
             Loyalty Tiers
           </h3>
@@ -253,7 +253,7 @@ export default function CustomerLoyalty({ onTabChange }) {
                   borderLeft: `4px solid ${tier.borderColor}`,
                   borderRadius: 8,
                   padding: 12,
-                  background: '#f9fafb'
+                  background: '#f6f8f6'
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -276,7 +276,7 @@ export default function CustomerLoyalty({ onTabChange }) {
         </div>
 
         {/* Earning Rules */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <h3 style={{ fontSize: 12, fontWeight: 700, margin: '0 0 16px 0', color: '#111827' }}>
             How Customers Earn Points
           </h3>
@@ -313,7 +313,7 @@ export default function CustomerLoyalty({ onTabChange }) {
       </div>
 
       {/* Recent Activity Table */}
-      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+      <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
         <h3 style={{ fontSize: 12, fontWeight: 700, margin: '0 0 16px 0', color: '#111827' }}>
           Recent Loyalty Activity
         </h3>
@@ -322,13 +322,13 @@ export default function CustomerLoyalty({ onTabChange }) {
         ) : (
           <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
             <thead>
-              <tr style={{ background: '#f9fafb' }}>
-                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Date</th>
-                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Customer</th>
-                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Action</th>
-                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>Points</th>
-                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>Balance</th>
-                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Tier</th>
+              <tr style={{ background: '#f6f8f6' }}>
+                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>Date</th>
+                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>Customer</th>
+                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>Action</th>
+                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'right' }}>Points</th>
+                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'right' }}>Balance</th>
+                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>Tier</th>
               </tr>
             </thead>
             <tbody>

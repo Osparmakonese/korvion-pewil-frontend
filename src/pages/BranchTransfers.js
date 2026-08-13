@@ -34,14 +34,14 @@ const T = {
   green:   '#1a6b3a',
   greenT:  '#e8f5ee',
   amber:   '#c77700',
-  amberT:  '#fdeedd',
+  amberT:  '#fef3e2',
   red:     '#c0392b',
   redT:    '#fde8e8',
   ink:     '#111827',
   inkSoft: '#374151',
   muted:   '#6b7280',
-  line:    '#e5e7eb',
-  surface: '#f9fafb',
+  line:    '#e3e8e4',
+  surface: '#f6f8f6',
 };
 
 const STATUS_PILL = {
@@ -175,7 +175,7 @@ export default function BranchTransfers() {
         }}>
           <div style={{ flex: '1 1 420px', minWidth: 0 }}>
             <h1 style={{
-              fontFamily: "'Playfair Display', serif",
+              fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
               fontSize: 28, fontWeight: 700, color: T.ink, margin: 0,
             }}>Stock transfers</h1>
             <p style={{ color: T.muted, fontSize: 14, marginTop: 6, lineHeight: 1.55, maxWidth: 640 }}>
@@ -341,7 +341,7 @@ function RowBtn({ children, onClick, disabled, tone = 'muted' }) {
     <button
       onClick={onClick} disabled={disabled}
       style={{
-        marginLeft: 6, padding: '4px 10px', borderRadius: 6,
+        marginLeft: 6, padding: '4px 10px', borderRadius: 8,
         border: `1px solid ${c.border}`, background: c.bg,
         color: c.fg, fontSize: 11, fontWeight: 600,
         cursor: disabled ? 'not-allowed' : 'pointer',
@@ -449,7 +449,7 @@ function NewTransferModal({ branches, products, saving, onClose, onSubmit }) {
                 title="Remove line"
                 style={{
                   background: 'transparent', border: `1px solid ${T.line}`,
-                  borderRadius: 6, color: T.muted, cursor: lines.length === 1 ? 'not-allowed' : 'pointer',
+                  borderRadius: 8, color: T.muted, cursor: lines.length === 1 ? 'not-allowed' : 'pointer',
                   fontSize: 14, fontFamily: 'inherit', height: 36,
                 }}
               >{'×'}</button>
@@ -457,7 +457,7 @@ function NewTransferModal({ branches, products, saving, onClose, onSubmit }) {
           ))}
           <button type="button" onClick={addLine} style={{
             marginTop: 4, padding: '6px 12px', background: 'transparent',
-            border: `1px dashed ${T.line}`, borderRadius: 6,
+            border: `1px dashed ${T.line}`, borderRadius: 8,
             color: T.green, fontSize: 12, fontWeight: 600,
             cursor: 'pointer', fontFamily: 'inherit',
           }}>+ Add another line</button>
@@ -466,7 +466,7 @@ function NewTransferModal({ branches, products, saving, onClose, onSubmit }) {
         {err && (
           <div style={{
             background: T.redT, color: T.red,
-            padding: '8px 12px', borderRadius: 7,
+            padding: '8px 12px', borderRadius: 10,
             fontSize: 12, marginBottom: 10,
           }}>{err}</div>
         )}
@@ -474,7 +474,7 @@ function NewTransferModal({ branches, products, saving, onClose, onSubmit }) {
         <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
           <button type="submit" disabled={saving} style={{
             flex: 1, padding: 11, background: T.green, color: '#fff',
-            border: 'none', borderRadius: 7, fontSize: 13, fontWeight: 600,
+            border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 600,
             cursor: saving ? 'not-allowed' : 'pointer',
             opacity: saving ? 0.6 : 1, fontFamily: 'inherit',
           }}>
@@ -482,7 +482,7 @@ function NewTransferModal({ branches, products, saving, onClose, onSubmit }) {
           </button>
           <button type="button" onClick={onClose} style={{
             flex: 1, padding: 11, background: T.surface, color: T.inkSoft,
-            border: `1px solid ${T.line}`, borderRadius: 7,
+            border: `1px solid ${T.line}`, borderRadius: 10,
             fontSize: 13, fontWeight: 600, cursor: 'pointer',
             fontFamily: 'inherit',
           }}>Cancel</button>
@@ -558,7 +558,7 @@ function ReceiveTransferModal({ transfer, saving, onClose, onSubmit }) {
                   onChange={(e) => setCounts((c) => ({ ...c, [it.id]: e.target.value }))}
                   style={{
                     width: 80, padding: '6px 8px', textAlign: 'right',
-                    border: `1px solid ${T.line}`, borderRadius: 6,
+                    border: `1px solid ${T.line}`, borderRadius: 8,
                     fontSize: 13, outline: 'none', fontFamily: 'inherit',
                   }}
                 />
@@ -570,7 +570,7 @@ function ReceiveTransferModal({ transfer, saving, onClose, onSubmit }) {
         {err && (
           <div style={{
             background: T.redT, color: T.red,
-            padding: '8px 12px', borderRadius: 7,
+            padding: '8px 12px', borderRadius: 10,
             fontSize: 12, marginTop: 10,
           }}>{err}</div>
         )}
@@ -578,7 +578,7 @@ function ReceiveTransferModal({ transfer, saving, onClose, onSubmit }) {
         <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
           <button type="submit" disabled={saving} style={{
             flex: 1, padding: 11, background: T.green, color: '#fff',
-            border: 'none', borderRadius: 7, fontSize: 13, fontWeight: 600,
+            border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 600,
             cursor: saving ? 'not-allowed' : 'pointer',
             opacity: saving ? 0.6 : 1, fontFamily: 'inherit',
           }}>
@@ -586,7 +586,7 @@ function ReceiveTransferModal({ transfer, saving, onClose, onSubmit }) {
           </button>
           <button type="button" onClick={onClose} style={{
             flex: 1, padding: 11, background: T.surface, color: T.inkSoft,
-            border: `1px solid ${T.line}`, borderRadius: 7,
+            border: `1px solid ${T.line}`, borderRadius: 10,
             fontSize: 13, fontWeight: 600, cursor: 'pointer',
             fontFamily: 'inherit',
           }}>Cancel</button>
@@ -643,7 +643,7 @@ function ModalShell({ title, onClose, maxWidth = 480, children }) {
           alignItems: 'center', marginBottom: 14,
         }}>
           <h2 style={{
-            fontFamily: "'Playfair Display', serif",
+            fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
             fontSize: 20, fontWeight: 700, margin: 0, color: T.ink,
           }}>{title}</h2>
           <button onClick={onClose} style={{
@@ -674,7 +674,7 @@ function Field({ label, required, children }) {
 
 const inputStyle = {
   width: '100%', padding: '8px 10px',
-  border: `1px solid ${T.line}`, borderRadius: 6,
+  border: `1px solid ${T.line}`, borderRadius: 8,
   fontSize: 13, outline: 'none',
   boxSizing: 'border-box',
   fontFamily: 'inherit',

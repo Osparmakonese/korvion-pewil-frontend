@@ -19,18 +19,18 @@ const S = {
   bannerContainer: { position: 'relative', height: 110, borderRadius: 10, overflow: 'hidden', marginBottom: 14 },
   banner: { position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%)' },
   bannerContent: { position: 'absolute', bottom: 0, left: 0, padding: '12px 16px', color: '#fff', zIndex: 1 },
-  bannerTitle: { color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: "'Playfair Display', serif" },
+  bannerTitle: { color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" },
   bannerSub: { color: 'rgba(255,255,255,0.7)', fontSize: 11 },
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 18, marginBottom: 16 },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 18, marginBottom: 16 },
   label: { display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 3, marginTop: 8 },
-  input: { width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box' },
+  input: { width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box' },
   row2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 },
   row3: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 },
-  btn: { width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 14 },
+  btn: { width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 14 },
   error: { fontSize: 10, color: '#c0392b', marginTop: 4 },
   sectionTitle: { fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 10 },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: 11 },
-  th: { textAlign: 'left', padding: '8px 10px', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb', background: '#f9fafb' },
+  th: { textAlign: 'left', padding: '8px 10px', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', borderBottom: '1px solid #e3e8e4', background: '#f6f8f6' },
   td: { padding: '8px 10px', borderBottom: '1px solid #f3f4f6', color: '#374151' },
   summaryBox: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 },
   summaryCard: { background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: 14 },
@@ -39,7 +39,7 @@ const S = {
   summaryValue: { fontSize: 18, fontWeight: 700, color: '#1a6b3a' },
   summaryValueBlue: { fontSize: 18, fontWeight: 700, color: '#0369a1' },
   summaryValueRed: { fontSize: 18, fontWeight: 700, color: '#c0392b' },
-  logEntry: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, marginBottom: 10 },
+  logEntry: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 8, padding: 12, marginBottom: 10 },
   logHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   logField: { fontSize: 12, fontWeight: 700, color: '#111827' },
   logType: { display: 'inline-block', fontSize: 20, marginRight: 8 },
@@ -248,7 +248,7 @@ export default function Water({ onTabChange }) {
         {fieldSummaries.length === 0 ? (
           <p style={{ fontSize: 11, color: '#9ca3af' }}>No fields available.</p>
         ) : (
-          <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+          <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e3e8e4', overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}><table style={S.table}>
               <thead>
                 <tr>

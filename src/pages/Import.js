@@ -4,13 +4,13 @@ import axios from 'axios';
 const S = {
   page: { maxWidth: 780, margin: '0 auto' },
   header: { marginBottom: 20 },
-  title: { fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700, color: '#111827' },
+  title: { fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 22, fontWeight: 700, color: '#111827' },
   sub: { fontSize: 12, color: '#6b7280', marginTop: 2 },
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 20, marginBottom: 16 },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 20, marginBottom: 16 },
   cardTitle: { fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 6 },
   cardText: { fontSize: 12, color: '#6b7280', marginBottom: 12 },
   greenCard: { background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: 20, marginBottom: 16 },
-  btn: { padding: '10px 20px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'opacity .15s' },
+  btn: { padding: '10px 20px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'opacity .15s' },
   btnDisabled: { opacity: 0.5, cursor: 'not-allowed' },
   dropzone: (active) => ({
     border: `2px dashed ${active ? '#1a6b3a' : '#d1d5db'}`,
@@ -33,7 +33,7 @@ const S = {
   detailList: { fontSize: 11, color: '#374151', lineHeight: 1.8, padding: '8px 0 0', maxHeight: 300, overflowY: 'auto' },
   detailItem: (type) => ({ padding: '3px 0', borderBottom: '1px solid #f3f4f6', color: type === 'error' ? '#991b1b' : type === 'skip' ? '#92400e' : '#374151' }),
   table: { width: '100%', borderCollapse: 'collapse', fontSize: 11, marginTop: 8 },
-  th: { textAlign: 'left', padding: '8px 10px', fontSize: 10, fontWeight: 700, color: '#6b7280', borderBottom: '2px solid #e5e7eb', background: '#f9fafb' },
+  th: { textAlign: 'left', padding: '8px 10px', fontSize: 10, fontWeight: 700, color: '#6b7280', borderBottom: '2px solid #e3e8e4', background: '#f6f8f6' },
   td: { padding: '8px 10px', borderBottom: '1px solid #f3f4f6', color: '#374151', verticalAlign: 'top' },
   errorBox: { background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '12px 16px', fontSize: 12, color: '#991b1b', marginBottom: 12 },
 };

@@ -5,7 +5,7 @@ import { getPlans } from '../api/billingApi';
 // ─── STYLES ───────────────────────────────────────────────
 const card = {
   background: '#fff',
-  border: '2px solid #e5e7eb',
+  border: '2px solid #e3e8e4',
   borderRadius: 14,
   padding: 20,
   display: 'flex',
@@ -31,7 +31,7 @@ const btn = (primary) => ({
 const tabBtn = (active) => ({
   padding: '8px 18px',
   borderRadius: 20,
-  border: active ? '1px solid #1a6b3a' : '1px solid #e5e7eb',
+  border: active ? '1px solid #1a6b3a' : '1px solid #e3e8e4',
   background: active ? '#1a6b3a' : '#fff',
   color: active ? '#fff' : '#374151',
   fontSize: 12,
@@ -226,7 +226,7 @@ export default function PlansTable({ activeSubscriptions = {}, onSelectPlan, def
               </div>
 
               <div style={{ marginBottom: 14 }}>
-                <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, fontWeight: 700, color: '#1a6b3a' }}>
+                <div style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 30, fontWeight: 700, color: '#1a6b3a' }}>
                   ${displayPrice}
                   <span style={{ fontSize: 12, color: '#6b7280', fontFamily: 'Inter', fontWeight: 400 }}>/mo</span>
                 </div>

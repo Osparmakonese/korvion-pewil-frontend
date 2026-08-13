@@ -130,11 +130,11 @@ export default function DeviceConfiguration({ onTabChange }) {
   const [delConfirm, setDelConfirm] = useState(null);
 
   // ── Styles ──
-  const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' };
+  const card = { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)' };
   const sectionLabel = { fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 };
   const btn = { padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13, fontFamily: 'Inter, sans-serif' };
   const greenBtn = { ...btn, background: '#1a6b3a', color: '#fff' };
-  const grayBtn = { ...btn, background: '#f3f4f6', color: '#374151', border: '1px solid #e5e7eb' };
+  const grayBtn = { ...btn, background: '#f3f4f6', color: '#374151', border: '1px solid #e3e8e4' };
   const redBtn = { ...btn, background: '#fee2e2', color: '#c0392b' };
   const tab = (active) => ({
     padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer',
@@ -173,7 +173,7 @@ export default function DeviceConfiguration({ onTabChange }) {
               <div key={key} style={{ ...card, padding: '12px 14px', textAlign: 'center' }}>
                 <div style={{ fontSize: 22, marginBottom: 4 }}>{typeIcons[key] || '\u{1F50C}'}</div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' }}>{val.label}</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: val.count > 0 ? '#1a6b3a' : '#d1d5db', fontFamily: 'Playfair Display, serif' }}>{val.count}</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: val.count > 0 ? '#1a6b3a' : '#d1d5db', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>{val.count}</div>
                 {val.has_online && <span style={{ ...statusDot('online'), marginTop: 4 }} />}
               </div>
             ))}
@@ -316,7 +316,7 @@ export default function DeviceConfiguration({ onTabChange }) {
           )}
 
           {/* How Print Bridge Works */}
-          <div style={{ ...card, marginTop: 16, background: '#f9fafb' }}>
+          <div style={{ ...card, marginTop: 16, background: '#f6f8f6' }}>
             <div style={{ fontWeight: 700, fontSize: 14, color: '#111827', marginBottom: 8 }}>How the Print Bridge Works</div>
             <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.6 }}>
               The Print Bridge is a lightweight local service that runs on your POS computer. When you complete a sale, Pewil sends the receipt data to the bridge at localhost:9100. The bridge converts it to ESC/POS commands and sends them directly to your thermal printer {'\u2014'} instant, silent, no browser dialog. It also handles cash drawer kicks (sends a pulse command via the printer port), customer display updates, and label printing.
@@ -345,24 +345,24 @@ export default function DeviceConfiguration({ onTabChange }) {
                 }}>{zd.status}</div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
-                <div style={{ background: '#f9fafb', borderRadius: 8, padding: '8px 10px' }}>
+                <div style={{ background: '#f6f8f6', borderRadius: 8, padding: '8px 10px' }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' }}>VAT Number</div>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{zd.vat_number}</div>
                 </div>
-                <div style={{ background: '#f9fafb', borderRadius: 8, padding: '8px 10px' }}>
+                <div style={{ background: '#f6f8f6', borderRadius: 8, padding: '8px 10px' }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' }}>Fiscal Day</div>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{zd.current_fiscal_day || 0}</div>
                 </div>
-                <div style={{ background: '#f9fafb', borderRadius: 8, padding: '8px 10px' }}>
+                <div style={{ background: '#f6f8f6', borderRadius: 8, padding: '8px 10px' }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' }}>Environment</div>
                   <div style={{ fontSize: 13, fontWeight: 600, textTransform: 'capitalize' }}>{zd.environment || 'sandbox'}</div>
                 </div>
-                <div style={{ background: '#f9fafb', borderRadius: 8, padding: '8px 10px' }}>
+                <div style={{ background: '#f6f8f6', borderRadius: 8, padding: '8px 10px' }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' }}>Last Sync</div>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{zd.last_sync ? new Date(zd.last_sync).toLocaleDateString() : 'Never'}</div>
                 </div>
                 {zd.certificate_expiry && (
-                  <div style={{ background: zd.certificate_expiring_soon ? '#fee2e2' : '#f9fafb', borderRadius: 8, padding: '8px 10px' }}>
+                  <div style={{ background: zd.certificate_expiring_soon ? '#fee2e2' : '#f6f8f6', borderRadius: 8, padding: '8px 10px' }}>
                     <div style={{ fontSize: 10, fontWeight: 700, color: zd.certificate_expiring_soon ? '#c0392b' : '#6b7280', textTransform: 'uppercase' }}>Cert Expiry</div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: zd.certificate_expiring_soon ? '#c0392b' : '#111827' }}>{zd.certificate_expiry}</div>
                   </div>
@@ -390,7 +390,7 @@ export default function DeviceConfiguration({ onTabChange }) {
                   { label: 'Retrying', val: fiscalStats.retrying, color: '#2563eb' },
                 ].map(s => (
                   <div key={s.label} style={{ textAlign: 'center', padding: '10px 0' }}>
-                    <div style={{ fontSize: 22, fontWeight: 700, color: s.color, fontFamily: 'Playfair Display, serif' }}>{s.val || 0}</div>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: s.color, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>{s.val || 0}</div>
                     <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' }}>{s.label}</div>
                   </div>
                 ))}
@@ -404,13 +404,13 @@ export default function DeviceConfiguration({ onTabChange }) {
       {activeTab === 'guide' && (
         <>
           <div style={{ ...card, marginBottom: 16 }}>
-            <div style={{ fontWeight: 700, fontSize: 18, color: '#1a6b3a', marginBottom: 16, fontFamily: 'Playfair Display, serif' }}>Hardware Setup Guide</div>
+            <div style={{ fontWeight: 700, fontSize: 18, color: '#1a6b3a', marginBottom: 16, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>Hardware Setup Guide</div>
             <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.7, marginBottom: 16 }}>
               Pewil is a cloud-based SaaS {'\u2014'} you bring your own hardware, and our software configures itself to work with whatever devices you have. This guide explains how to set up each device type.
             </div>
 
             {/* Section 1: Barcode Scanner */}
-            <div style={{ background: '#f9fafb', borderRadius: 10, padding: 16, marginBottom: 12 }}>
+            <div style={{ background: '#f6f8f6', borderRadius: 10, padding: 16, marginBottom: 12 }}>
               <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8 }}>{'\u{1F4F7}'} Barcode Scanner</div>
               <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.6 }}>
                 <strong>USB Scanner (Recommended):</strong> Plug in any USB barcode scanner. Most scanners work in "keyboard wedge" mode {'\u2014'} they type the barcode number into whatever field is focused, just like a keyboard. No configuration needed. Just make sure the POS search field is focused when you scan.
@@ -424,7 +424,7 @@ export default function DeviceConfiguration({ onTabChange }) {
             </div>
 
             {/* Section 2: Receipt Printer */}
-            <div style={{ background: '#f9fafb', borderRadius: 10, padding: 16, marginBottom: 12 }}>
+            <div style={{ background: '#f6f8f6', borderRadius: 10, padding: 16, marginBottom: 12 }}>
               <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8 }}>{'\u{1F5A8}'} Receipt Printer</div>
               <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.6 }}>
                 <strong>With Print Bridge (Recommended):</strong> Install the Print Bridge service on your POS computer. It enables instant, silent receipt printing with no browser dialog. Supports Epson TM series, Star TSP, Bixolon, and any ESC/POS compatible thermal printer (58mm or 80mm paper).
@@ -438,7 +438,7 @@ export default function DeviceConfiguration({ onTabChange }) {
             </div>
 
             {/* Section 3: Cash Drawer */}
-            <div style={{ background: '#f9fafb', borderRadius: 10, padding: 16, marginBottom: 12 }}>
+            <div style={{ background: '#f6f8f6', borderRadius: 10, padding: 16, marginBottom: 12 }}>
               <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8 }}>{'\u{1F4B0}'} Cash Drawer</div>
               <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.6 }}>
                 Cash drawers connect to the receipt printer via an RJ11 cable (the small phone-style plug on the back of most thermal printers). When the Print Bridge sends a receipt, it also sends a "kick" command to open the drawer automatically after cash payments. No separate configuration needed {'\u2014'} just plug the drawer into the printer.
@@ -446,7 +446,7 @@ export default function DeviceConfiguration({ onTabChange }) {
             </div>
 
             {/* Section 4: Weighing Scale */}
-            <div style={{ background: '#f9fafb', borderRadius: 10, padding: 16, marginBottom: 12 }}>
+            <div style={{ background: '#f6f8f6', borderRadius: 10, padding: 16, marginBottom: 12 }}>
               <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8 }}>{'\u2696\uFE0F'} Weighing Scale</div>
               <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.6 }}>
                 <strong>USB HID Scale:</strong> Many modern scales connect via USB and report weights through the standard HID protocol. Chrome can read these directly through the WebHID API with no additional software.
@@ -460,7 +460,7 @@ export default function DeviceConfiguration({ onTabChange }) {
             </div>
 
             {/* Section 5: Customer Display */}
-            <div style={{ background: '#f9fafb', borderRadius: 10, padding: 16, marginBottom: 12 }}>
+            <div style={{ background: '#f6f8f6', borderRadius: 10, padding: 16, marginBottom: 12 }}>
               <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8 }}>{'\u{1F4FA}'} Customer Display (VFD Pole)</div>
               <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.6 }}>
                 Customer-facing pole displays show the current item price and sale total. They connect via serial port (RS-232) or USB. The Print Bridge sends text commands to update the display during each scan and at the payment step. Add a device profile with type "Customer Display" and configure the COM port.
@@ -468,7 +468,7 @@ export default function DeviceConfiguration({ onTabChange }) {
             </div>
 
             {/* Section 6: Label Printer */}
-            <div style={{ background: '#f9fafb', borderRadius: 10, padding: 16, marginBottom: 12 }}>
+            <div style={{ background: '#f6f8f6', borderRadius: 10, padding: 16, marginBottom: 12 }}>
               <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8 }}>{'\u{1F3F7}\uFE0F'} Label Printer</div>
               <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.6 }}>
                 For shelf labels and product barcode stickers, add a label printer profile. Supports Zebra (ZPL), TSC (TSPL), and generic EPL printers. The Print Bridge sends label commands. Configure paper width (usually 4 inch for shelf labels) and the driver profile matching your printer brand.
@@ -505,7 +505,7 @@ export default function DeviceConfiguration({ onTabChange }) {
 
             {/* Device Type */}
             <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Device Type</label>
-            <select value={form.device_type} onChange={e => setForm({ ...form, device_type: e.target.value })} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, marginBottom: 14, fontFamily: 'Inter, sans-serif' }}>
+            <select value={form.device_type} onChange={e => setForm({ ...form, device_type: e.target.value })} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e3e8e4', fontSize: 13, marginBottom: 14, fontFamily: 'Inter, sans-serif' }}>
               <option value="receipt_printer">Receipt Printer</option>
               <option value="barcode_scanner">Barcode Scanner</option>
               <option value="cash_drawer">Cash Drawer</option>
@@ -516,11 +516,11 @@ export default function DeviceConfiguration({ onTabChange }) {
 
             {/* Device Name */}
             <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Device Name</label>
-            <input type="text" placeholder="e.g. Front Counter Printer" value={form.device_name} onChange={e => setForm({ ...form, device_name: e.target.value })} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, marginBottom: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }} />
+            <input type="text" placeholder="e.g. Front Counter Printer" value={form.device_name} onChange={e => setForm({ ...form, device_name: e.target.value })} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e3e8e4', fontSize: 13, marginBottom: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }} />
 
             {/* Connection Type */}
             <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Connection Type</label>
-            <select value={form.connection_type} onChange={e => setForm({ ...form, connection_type: e.target.value })} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, marginBottom: 14, fontFamily: 'Inter, sans-serif' }}>
+            <select value={form.connection_type} onChange={e => setForm({ ...form, connection_type: e.target.value })} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e3e8e4', fontSize: 13, marginBottom: 14, fontFamily: 'Inter, sans-serif' }}>
               <option value="print_bridge">Print Bridge Service</option>
               <option value="usb_hid">USB HID (Plug & Play)</option>
               <option value="serial">Serial / COM Port</option>
@@ -532,7 +532,7 @@ export default function DeviceConfiguration({ onTabChange }) {
 
             {/* Driver Profile */}
             <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Driver Profile</label>
-            <select value={form.driver_profile} onChange={e => setForm({ ...form, driver_profile: e.target.value })} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, marginBottom: 14, fontFamily: 'Inter, sans-serif' }}>
+            <select value={form.driver_profile} onChange={e => setForm({ ...form, driver_profile: e.target.value })} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e3e8e4', fontSize: 13, marginBottom: 14, fontFamily: 'Inter, sans-serif' }}>
               <option value="generic_escpos">Generic ESC/POS</option>
               <option value="epson_tm">Epson TM Series</option>
               <option value="star_tsp">Star TSP Series</option>
@@ -547,7 +547,7 @@ export default function DeviceConfiguration({ onTabChange }) {
             {(form.device_type === 'receipt_printer' || form.device_type === 'label_printer') && (
               <>
                 <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Paper Width</label>
-                <select value={form.paper_width} onChange={e => setForm({ ...form, paper_width: e.target.value })} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, marginBottom: 14, fontFamily: 'Inter, sans-serif' }}>
+                <select value={form.paper_width} onChange={e => setForm({ ...form, paper_width: e.target.value })} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e3e8e4', fontSize: 13, marginBottom: 14, fontFamily: 'Inter, sans-serif' }}>
                   <option value="58mm">58mm (Mini Thermal)</option>
                   <option value="80mm">80mm (Standard Thermal)</option>
                   <option value="4inch">4 inch (Label)</option>
@@ -559,9 +559,9 @@ export default function DeviceConfiguration({ onTabChange }) {
             {form.connection_type === 'network' && (
               <>
                 <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>IP Address</label>
-                <input type="text" placeholder="192.168.1.100" value={form.connection_config.ip || ''} onChange={e => setForm({ ...form, connection_config: { ...form.connection_config, ip: e.target.value } })} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, marginBottom: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }} />
+                <input type="text" placeholder="192.168.1.100" value={form.connection_config.ip || ''} onChange={e => setForm({ ...form, connection_config: { ...form.connection_config, ip: e.target.value } })} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e3e8e4', fontSize: 13, marginBottom: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }} />
                 <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Port</label>
-                <input type="text" placeholder="9100" value={form.connection_config.port || ''} onChange={e => setForm({ ...form, connection_config: { ...form.connection_config, port: e.target.value } })} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, marginBottom: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }} />
+                <input type="text" placeholder="9100" value={form.connection_config.port || ''} onChange={e => setForm({ ...form, connection_config: { ...form.connection_config, port: e.target.value } })} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e3e8e4', fontSize: 13, marginBottom: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }} />
               </>
             )}
 
@@ -569,9 +569,9 @@ export default function DeviceConfiguration({ onTabChange }) {
             {form.connection_type === 'serial' && (
               <>
                 <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>COM Port</label>
-                <input type="text" placeholder="COM3 or /dev/ttyUSB0" value={form.connection_config.com_port || ''} onChange={e => setForm({ ...form, connection_config: { ...form.connection_config, com_port: e.target.value } })} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, marginBottom: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }} />
+                <input type="text" placeholder="COM3 or /dev/ttyUSB0" value={form.connection_config.com_port || ''} onChange={e => setForm({ ...form, connection_config: { ...form.connection_config, com_port: e.target.value } })} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e3e8e4', fontSize: 13, marginBottom: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }} />
                 <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Baud Rate</label>
-                <select value={form.connection_config.baud_rate || '9600'} onChange={e => setForm({ ...form, connection_config: { ...form.connection_config, baud_rate: e.target.value } })} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, marginBottom: 14, fontFamily: 'Inter, sans-serif' }}>
+                <select value={form.connection_config.baud_rate || '9600'} onChange={e => setForm({ ...form, connection_config: { ...form.connection_config, baud_rate: e.target.value } })} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e3e8e4', fontSize: 13, marginBottom: 14, fontFamily: 'Inter, sans-serif' }}>
                   <option value="9600">9600</option>
                   <option value="19200">19200</option>
                   <option value="38400">38400</option>

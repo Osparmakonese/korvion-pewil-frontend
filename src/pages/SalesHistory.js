@@ -42,7 +42,7 @@ function ReceiptDetailModal({ isOpen, onClose, sale }) {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={onClose}>
       <div style={{ background: '#fff', borderRadius: 12, padding: 24, maxWidth: 480, width: '90%', maxHeight: '85vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: "'Playfair Display', serif", color: '#111827' }}>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#111827' }}>
             Receipt #{sale.receipt_number}
           </h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#9ca3af' }}>{'\u00D7'}</button>
@@ -54,10 +54,10 @@ function ReceiptDetailModal({ isOpen, onClose, sale }) {
         </div>
 
         {/* Items */}
-        <div style={{ background: '#f9fafb', borderRadius: 8, padding: 12, marginBottom: 16 }}>
+        <div style={{ background: '#f6f8f6', borderRadius: 8, padding: 12, marginBottom: 16 }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Items</div>
           {items.map((item, idx) => (
-            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, padding: '4px 0', borderBottom: idx < items.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
+            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, padding: '4px 0', borderBottom: idx < items.length - 1 ? '1px solid #e3e8e4' : 'none' }}>
               <span>{item.product_name || 'Item'} {'\u00D7'} {item.qty || 0}</span>
               <strong>{fmt(item.total || 0, 'zwd')}</strong>
             </div>
@@ -77,7 +77,7 @@ function ReceiptDetailModal({ isOpen, onClose, sale }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6, color: '#374151' }}>
             <span>Tax</span><strong>{fmt(sale.tax, 'zwd')}</strong>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 700, color: '#1a6b3a', paddingTop: 8, borderTop: '1px solid #e5e7eb' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 700, color: '#1a6b3a', paddingTop: 8, borderTop: '1px solid #e3e8e4' }}>
             <span>Total</span><strong>{fmt(sale.total, 'zwd')}</strong>
           </div>
         </div>
@@ -91,10 +91,10 @@ function ReceiptDetailModal({ isOpen, onClose, sale }) {
         </div>
 
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={handlePrint} style={{ flex: 1, padding: 10, background: '#fff', color: '#1a6b3a', border: '1px solid #1a6b3a', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={handlePrint} style={{ flex: 1, padding: 10, background: '#fff', color: '#1a6b3a', border: '1px solid #1a6b3a', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
             {'\u{1F5A8}'} Print
           </button>
-          <button onClick={onClose} style={{ flex: 1, padding: 10, background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={onClose} style={{ flex: 1, padding: 10, background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
             Close
           </button>
         </div>
@@ -107,24 +107,24 @@ function ReceiptDetailModal({ isOpen, onClose, sale }) {
 const S = {
   page: { maxWidth: 1200, margin: '0 auto', padding: 20 },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  title: { fontSize: 24, fontWeight: 700, color: '#111827', fontFamily: "'Playfair Display', serif", margin: 0 },
+  title: { fontSize: 24, fontWeight: 700, color: '#111827', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", margin: 0 },
   controls: { display: 'grid', gridTemplateColumns: '1fr 160px 160px', gap: 12, marginBottom: 20 },
-  input: { width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box' },
-  select: { width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box' },
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' },
+  input: { width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', boxSizing: 'border-box' },
+  select: { width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', boxSizing: 'border-box' },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)' },
   summaryGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 },
-  summaryCard: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '14px 16px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' },
+  summaryCard: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: '14px 16px', boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)' },
   summaryLabel: { fontSize: 9, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 },
-  summaryValue: { fontFamily: "'Playfair Display', serif", fontSize: 20, fontWeight: 700, color: '#1a6b3a' },
+  summaryValue: { fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 20, fontWeight: 700, color: '#1a6b3a' },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: 11 },
-  th: { textAlign: 'left', padding: '10px 12px', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb', background: '#f9fafb' },
+  th: { textAlign: 'left', padding: '10px 12px', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', borderBottom: '1px solid #e3e8e4', background: '#f6f8f6' },
   td: { padding: '10px 12px', borderBottom: '1px solid #f3f4f6', color: '#374151' },
   badge: (color) => ({
     display: 'inline-block', fontSize: 8, fontWeight: 700, padding: '3px 8px', borderRadius: 10, textTransform: 'uppercase',
     background: color === 'green' ? '#e8f5ee' : color === 'amber' ? '#fef3e2' : '#eff6ff',
     color: color === 'green' ? '#1a6b3a' : color === 'amber' ? '#92400e' : '#1e40af',
   }),
-  viewBtn: { background: 'none', border: '1px solid #e5e7eb', borderRadius: 6, padding: '4px 10px', fontSize: 10, fontWeight: 600, color: '#1a6b3a', cursor: 'pointer' },
+  viewBtn: { background: 'none', border: '1px solid #e3e8e4', borderRadius: 8, padding: '4px 10px', fontSize: 10, fontWeight: 600, color: '#1a6b3a', cursor: 'pointer' },
   emptyState: { textAlign: 'center', padding: '40px 20px', color: '#9ca3af' },
 };
 

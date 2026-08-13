@@ -17,11 +17,11 @@ import PlansTable from '../components/PlansTable';
 import { fmt } from '../utils/format';
 import usePrimaryAction from '../hooks/usePrimaryAction';
 
-const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' };
+const card = { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)' };
 const pill = (bg, color) => ({ fontSize: 8, fontWeight: 700, padding: '2px 7px', borderRadius: 20, display: 'inline-block', letterSpacing: '0.02em', textTransform: 'uppercase', background: bg, color });
 const sLabel = { fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 };
-const btnS = (primary) => ({ padding: '6px 12px', borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: primary ? 'none' : '1px solid #1a6b3a', background: primary ? '#1a6b3a' : '#fff', color: primary ? '#fff' : '#1a6b3a', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'all 0.15s' });
-const thS = { textAlign: 'left', padding: '7px 8px', fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', background: '#f9fafb' };
+const btnS = (primary) => ({ padding: '6px 12px', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: primary ? 'none' : '1px solid #1a6b3a', background: primary ? '#1a6b3a' : '#fff', color: primary ? '#fff' : '#1a6b3a', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'all 0.15s' });
+const thS = { textAlign: 'left', padding: '7px 8px', fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', background: '#f6f8f6' };
 
 // Invoice amounts carry their own currency (USD for Zimbabwe / Pesepay, ZMW
 // for Zambia / Lenco), so format with the invoice's currency. Explicit 'USD'
@@ -295,7 +295,7 @@ export default function Billing({ activeModule }) {
       {/* Hero */}
       <div style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)', borderRadius: 14, padding: '0 24px', height: 90, display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, overflow: 'hidden' }}>
         <div>
-          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700, color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>Billing & Subscription</h2>
+          <h2 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 15, fontWeight: 700, color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>Billing & Subscription</h2>
           <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.85)', marginTop: 3 }}>Manage your {moduleLabel} subscription {'\u2014'} monthly or yearly</p>
         </div>
         <div style={{ fontSize: 48, opacity: 0.2 }}>{'\u{1F4B3}'}</div>
@@ -324,7 +324,7 @@ export default function Billing({ activeModule }) {
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
         {[['overview', 'Overview'], ['plans', 'Plans'], ['invoices', 'Invoices']].map(([k, l]) => (
-          <button key={k} onClick={() => setTab(k)} style={{ padding: '6px 14px', borderRadius: 20, border: tab === k ? '1px solid #1a6b3a' : '1px solid #e5e7eb', background: tab === k ? '#1a6b3a' : '#fff', color: tab === k ? '#fff' : '#374151', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{l}</button>
+          <button key={k} onClick={() => setTab(k)} style={{ padding: '6px 14px', borderRadius: 20, border: tab === k ? '1px solid #1a6b3a' : '1px solid #e3e8e4', background: tab === k ? '#1a6b3a' : '#fff', color: tab === k ? '#fff' : '#374151', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{l}</button>
         ))}
       </div>
 
@@ -350,7 +350,7 @@ export default function Billing({ activeModule }) {
             <div style={card}>
               <div style={sLabel}>Recent Invoices</div>
               <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
-                <thead><tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                <thead><tr style={{ borderBottom: '1px solid #e3e8e4' }}>
                   {['Date', 'Amount', 'Status'].map(h => <th key={h} style={thS}>{h}</th>)}
                 </tr></thead>
                 <tbody>
@@ -422,7 +422,7 @@ export default function Billing({ activeModule }) {
         <div style={card}>
           <div style={sLabel}>Invoice History</div>
           <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead><tr style={{ borderBottom: '2px solid #e5e7eb' }}>
+            <thead><tr style={{ borderBottom: '2px solid #e3e8e4' }}>
               {['Date', 'Description', 'Amount', 'Method', 'Status', 'Receipt'].map(h => <th key={h} style={{ textAlign: 'left', padding: '10px 14px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#6b7280' }}>{h}</th>)}
             </tr></thead>
             <tbody>
@@ -461,7 +461,7 @@ export default function Billing({ activeModule }) {
                               alert('Could not download receipt.');
                             }
                           }}
-                          style={{ padding: '6px 10px', fontSize: 12, background: '#1b5e20', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+                          style={{ padding: '6px 10px', fontSize: 12, background: '#1b5e20', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}
                         >Download</button>
                         <button
                           onClick={async () => {
@@ -472,7 +472,7 @@ export default function Billing({ activeModule }) {
                               alert('Could not email receipt.');
                             }
                           }}
-                          style={{ padding: '6px 10px', fontSize: 12, background: '#fff', color: '#1b5e20', border: '1px solid #1b5e20', borderRadius: 6, cursor: 'pointer' }}
+                          style={{ padding: '6px 10px', fontSize: 12, background: '#fff', color: '#1b5e20', border: '1px solid #1b5e20', borderRadius: 8, cursor: 'pointer' }}
                         >Email me</button>
                       </span>
                     ) : (
@@ -485,7 +485,7 @@ export default function Billing({ activeModule }) {
               )}
             </tbody>
           </table></div>
-          <div style={{ marginTop: 24, padding: 16, background: '#f9fafb', borderRadius: 10, fontSize: 13, color: '#6b7280' }}>
+          <div style={{ marginTop: 24, padding: 16, background: '#f6f8f6', borderRadius: 10, fontSize: 13, color: '#6b7280' }}>
             Payments are processed securely via <strong style={{ color: '#111827' }}>Pesepay</strong> — Visa, Mastercard, EcoCash, OneMoney and Zimswitch all in one hosted checkout. Card details are never stored on our servers.
           </div>
         </div>
@@ -497,7 +497,7 @@ export default function Billing({ activeModule }) {
           <div style={{ background: '#fff', borderRadius: 16, padding: 28, width: 440, maxWidth: '90vw', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <div>
-                <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 700, margin: 0 }}>
+                <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 18, fontWeight: 700, margin: 0 }}>
                   {selectedPlan.name}
                 </h3>
                 <div style={{ fontSize: 10, color: '#6b7280', marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -515,7 +515,7 @@ export default function Billing({ activeModule }) {
                     flex: 1,
                     padding: '8px 10px',
                     borderRadius: 8,
-                    border: billingCycle === c ? '2px solid #1a6b3a' : '1px solid #e5e7eb',
+                    border: billingCycle === c ? '2px solid #1a6b3a' : '1px solid #e3e8e4',
                     background: billingCycle === c ? '#f4fbf6' : '#fff',
                     fontWeight: 600,
                     fontSize: 12,
@@ -530,8 +530,8 @@ export default function Billing({ activeModule }) {
             )}
 
             {/* Price */}
-            <div style={{ textAlign: 'center', padding: '12px 0 20px', borderBottom: '1px solid #e5e7eb', marginBottom: 20 }}>
-              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 700, color: '#1a6b3a' }}>
+            <div style={{ textAlign: 'center', padding: '12px 0 20px', borderBottom: '1px solid #e3e8e4', marginBottom: 20 }}>
+              <div style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 36, fontWeight: 700, color: '#1a6b3a' }}>
                 {sym}{displayPrice}<span style={{ fontSize: 14, fontWeight: 400, color: '#6b7280' }}>{selectedPlan.is_per_branch ? '/branch/mo' : '/month'}</span>
               </div>
               <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>
@@ -545,7 +545,7 @@ export default function Billing({ activeModule }) {
                 <label style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>
                   Mobile money number
                 </label>
-                <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 0971234567" style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 13 }} />
+                <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 0971234567" style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 8, fontSize: 13 }} />
                 <div style={{ fontSize: 10, color: '#6b7280', marginTop: 6 }}>
                   We{'’'}ll send a prompt to your phone (MTN, Airtel or Zamtel). Approve it to pay.
                 </div>
@@ -587,7 +587,7 @@ export default function Billing({ activeModule }) {
 
             {/* Payment info — Pesepay hosted checkout handles method selection */}
             {payStatus !== 'success' && payStatus !== 'awaiting' && !isLocal && !manualPay && (
-              <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+              <div style={{ background: '#f6f8f6', border: '1px solid #e3e8e4', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
                 <div style={{ fontSize: 11, color: '#374151', fontWeight: 600, marginBottom: 4 }}>
                   You{'\u2019'}ll be redirected to Pesepay to complete payment.
                 </div>
@@ -734,7 +734,7 @@ function UsageCard() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
-        <span style={{ fontSize: 26, fontWeight: 800, color: '#111827', fontFamily: "'Playfair Display', serif" }}>
+        <span style={{ fontSize: 26, fontWeight: 800, color: '#111827', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
           {Number(receipts_this_month).toLocaleString()}
         </span>
         <span style={{ fontSize: 12, color: '#6b7280' }}>receipts so far</span>
@@ -767,7 +767,7 @@ function UsageCard() {
           <div style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             {isFlat ? 'Would pay on per-receipt' : 'Projected this month'}
           </div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: '#0D4A22', fontFamily: "'Playfair Display', serif" }}>
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#0D4A22', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
             ${Number(final_bill).toFixed(2)}
           </div>
           {Number(data_share_rebate_pct) > 0 && (
@@ -826,7 +826,7 @@ function ModuleSubCard({ title, sub, onManage }) {
           {sub.status}
         </span>
       </div>
-      <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700, color: '#1a6b3a', marginBottom: 4 }}>
+      <div style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 22, fontWeight: 700, color: '#1a6b3a', marginBottom: 4 }}>
         ${Number(amount).toFixed(2)}
         <span style={{ fontSize: 11, color: '#6b7280', fontFamily: 'Inter', fontWeight: 400 }}>/{cycleLabel}</span>
       </div>
@@ -942,7 +942,7 @@ function AddonsSection({ addons }) {
           const pendingInv = pendingBySlug[a.slug];
           const payKey = pendingInv ? `pay:${pendingInv.invoice_id}` : null;
           return (
-            <div key={a.slug} style={{ border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px' }}>
+            <div key={a.slug} style={{ border: '1px solid #e3e8e4', borderRadius: 10, padding: '12px 14px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: 10 }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -952,7 +952,7 @@ function AddonsSection({ addons }) {
                   <div style={{ fontSize: 11.5, color: '#6b7280', marginTop: 2 }}>{a.tagline}</div>
                 </div>
                 <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 700, color: '#1a6b3a' }}>
+                  <div style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 18, fontWeight: 700, color: '#1a6b3a' }}>
                     ${Number(a.price_monthly).toFixed(0)}<span style={{ fontSize: 10, color: '#6b7280', fontWeight: 400 }}>/mo</span>
                   </div>
                 </div>

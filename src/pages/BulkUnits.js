@@ -3,9 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getProducts, updateProduct } from '../api/retailApi';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
-const card = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, marginBottom: 16 };
-const input = { width: '100%', padding: '7px 8px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 12, boxSizing: 'border-box' };
-const th = { textAlign: 'left', padding: '7px 8px', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', background: '#f9fafb' };
+const card = { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: 16, marginBottom: 16 };
+const input = { width: '100%', padding: '7px 8px', border: '1px solid #e3e8e4', borderRadius: 8, fontSize: 12, boxSizing: 'border-box' };
+const th = { textAlign: 'left', padding: '7px 8px', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', background: '#f6f8f6' };
 const td = { padding: '7px 8px', fontSize: 12, borderBottom: '1px solid #f3f4f6' };
 
 function Row({ p }) {
@@ -20,7 +20,7 @@ function Row({ p }) {
       <td style={td}><input style={input} placeholder="e.g. box" value={unit} onChange={(e) => setUnit(e.target.value)} /></td>
       <td style={td}><input style={input} type="number" min={1} step="0.01" value={per} onChange={(e) => setPer(e.target.value)} /></td>
       <td style={td}>{unit ? `Buy 1 ${unit} = ${Number(per) || 1} ${p.unit || 'each'}` : 'Sold the same way it is bought'}</td>
-      <td style={td}>{dirty && <button onClick={() => save.mutate()} style={{ background: '#1a6b3a', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{save.isPending ? '…' : 'Save'}</button>}</td>
+      <td style={td}>{dirty && <button onClick={() => save.mutate()} style={{ background: '#1a6b3a', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{save.isPending ? '…' : 'Save'}</button>}</td>
     </tr>
   );
 }

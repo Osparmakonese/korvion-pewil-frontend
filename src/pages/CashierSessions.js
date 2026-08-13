@@ -56,7 +56,7 @@ function OpenSessionModal({ isOpen, onClose, onSubmit, loading, branches = [] })
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={onClose}>
       <div style={{ background: '#fff', borderRadius: 12, padding: 24, maxWidth: 420, width: '90%' }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: "'Playfair Display', serif", color: '#111827' }}>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#111827' }}>
             {'\u{1F4B5}'} Open New Session
           </h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#9ca3af' }}>{'\u00D7'}</button>
@@ -69,7 +69,7 @@ function OpenSessionModal({ isOpen, onClose, onSubmit, loading, branches = [] })
                 value={branchId}
                 onChange={e => setBranchId(e.target.value)}
                 required
-                style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 14, outline: 'none', boxSizing: 'border-box', background: '#fff' }}
+                style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box', background: '#fff' }}
               >
                 <option value="" disabled>Select a branch{'\u2026'}</option>
                 {branches.map((b) => (
@@ -86,17 +86,17 @@ function OpenSessionModal({ isOpen, onClose, onSubmit, loading, branches = [] })
           )}
           <div style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>Opening Float (Cash in Drawer)</label>
-            <input type="number" step="0.01" value={openingFloat} onChange={e => setOpeningFloat(e.target.value)} required placeholder="0.00" style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+            <input type="number" step="0.01" value={openingFloat} onChange={e => setOpeningFloat(e.target.value)} required placeholder="0.00" style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
           </div>
           <div style={{ marginBottom: 20 }}>
             <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>Notes (optional)</label>
-            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Any notes for this session..." style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box', fontFamily: 'Inter, sans-serif' }} />
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Any notes for this session..." style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', boxSizing: 'border-box', fontFamily: 'Inter, sans-serif' }} />
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button type="submit" disabled={loading} style={{ flex: 1, padding: 10, background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', opacity: loading ? 0.6 : 1 }}>
+            <button type="submit" disabled={loading} style={{ flex: 1, padding: 10, background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', opacity: loading ? 0.6 : 1 }}>
               {loading ? 'Opening...' : 'Open Session'}
             </button>
-            <button type="button" onClick={onClose} style={{ flex: 1, padding: 10, background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+            <button type="button" onClick={onClose} style={{ flex: 1, padding: 10, background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
           </div>
         </form>
       </div>
@@ -130,15 +130,15 @@ function ManagerPinGate({ action, onApproved, small = false }) {
   };
 
   return (
-    <form onSubmit={submit} style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 7, padding: small ? 8 : 12, marginBottom: 12 }}>
+    <form onSubmit={submit} style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: small ? 8 : 12, marginBottom: 12 }}>
       <div style={{ fontSize: 11, fontWeight: 600, color: '#92400e', marginBottom: 6 }}>
         {'\u{1F510}'} Manager approval required ({action.replace('_', ' ')})
       </div>
       <div style={{ display: 'flex', gap: 6 }}>
         <input type="number" value={managerId} onChange={e => setManagerId(e.target.value)} placeholder="Mgr ID" required
-          style={{ width: 72, padding: '6px 8px', border: '1px solid #e5e7eb', borderRadius: 5, fontSize: 12, outline: 'none' }} />
+          style={{ width: 72, padding: '6px 8px', border: '1px solid #e3e8e4', borderRadius: 5, fontSize: 12, outline: 'none' }} />
         <input type="password" value={pin} onChange={e => setPin(e.target.value)} placeholder="PIN" required
-          style={{ flex: 1, padding: '6px 8px', border: '1px solid #e5e7eb', borderRadius: 5, fontSize: 12, outline: 'none' }} />
+          style={{ flex: 1, padding: '6px 8px', border: '1px solid #e3e8e4', borderRadius: 5, fontSize: 12, outline: 'none' }} />
         <button type="submit" disabled={loading}
           style={{ padding: '6px 10px', background: '#92400e', color: '#fff', border: 'none', borderRadius: 5, fontSize: 11, fontWeight: 600, cursor: 'pointer', opacity: loading ? 0.6 : 1 }}>
           {loading ? '...' : 'Approve'}
@@ -184,7 +184,7 @@ function CashDropModal({ isOpen, onClose, session, onDone }) {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={onClose}>
       <div style={{ background: '#fff', borderRadius: 12, padding: 24, maxWidth: 440, width: '92%' }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: "'Playfair Display', serif", color: '#111827' }}>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#111827' }}>
             {'\u{1F4B0}'} Cash Drop — Session #{session.id}
           </h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#9ca3af' }}>{'\u00D7'}</button>
@@ -197,11 +197,11 @@ function CashDropModal({ isOpen, onClose, session, onDone }) {
         <form onSubmit={submit}>
           <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>Amount</label>
           <input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} required placeholder="0.00"
-            style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 14, outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
+            style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
 
           <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>Reason</label>
           <select value={reason} onChange={e => setReason(e.target.value)}
-            style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 13, outline: 'none', boxSizing: 'border-box', marginBottom: 12 }}>
+            style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 13, outline: 'none', boxSizing: 'border-box', marginBottom: 12 }}>
             <option value="bank_drop">Bank drop</option>
             <option value="supplier_payment">Supplier payment</option>
             <option value="petty_cash">Petty cash / expense</option>
@@ -211,16 +211,16 @@ function CashDropModal({ isOpen, onClose, session, onDone }) {
 
           <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>Notes</label>
           <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Optional..."
-            style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box', fontFamily: 'Inter, sans-serif', marginBottom: 14 }} />
+            style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', boxSizing: 'border-box', fontFamily: 'Inter, sans-serif', marginBottom: 14 }} />
 
           {err && <div style={{ color: '#c0392b', fontSize: 11, marginBottom: 10 }}>{err}</div>}
 
           <div style={{ display: 'flex', gap: 8 }}>
             <button type="submit" disabled={loading || !approvalToken}
-              style={{ flex: 1, padding: 10, background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', opacity: (loading || !approvalToken) ? 0.6 : 1 }}>
+              style={{ flex: 1, padding: 10, background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', opacity: (loading || !approvalToken) ? 0.6 : 1 }}>
               {loading ? 'Recording...' : 'Record Drop'}
             </button>
-            <button type="button" onClick={onClose} style={{ flex: 1, padding: 10, background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+            <button type="button" onClick={onClose} style={{ flex: 1, padding: 10, background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
           </div>
         </form>
       </div>
@@ -245,7 +245,7 @@ function XReportModal({ isOpen, onClose, session }) {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={onClose}>
       <div style={{ background: '#fff', borderRadius: 12, padding: 24, maxWidth: 460, width: '92%', maxHeight: '92vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: "'Playfair Display', serif", color: '#111827' }}>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#111827' }}>
             {'\u{1F4CA}'} X-Report — Session #{session.id}
           </h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#9ca3af' }}>{'\u00D7'}</button>
@@ -274,13 +274,13 @@ function XReportModal({ isOpen, onClose, session }) {
               {Object.keys(data.payment_breakdown || {}).length === 0 && (
                 <div style={{ fontSize: 11, color: '#9ca3af' }}>No sales yet.</div>
               )}
-              <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid #e5e7eb' }}>
+              <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid #e3e8e4' }}>
                 <RowKV k={<strong>Expected in drawer</strong>} v={<strong style={{ color: '#1a6b3a' }}>{fmt(data.expected_cash, 'zwd')}</strong>} />
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-              <button onClick={() => window.print()} style={{ flex: 1, padding: 10, background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Print</button>
-              <button onClick={onClose} style={{ flex: 1, padding: 10, background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Close</button>
+              <button onClick={() => window.print()} style={{ flex: 1, padding: 10, background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Print</button>
+              <button onClick={onClose} style={{ flex: 1, padding: 10, background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Close</button>
             </div>
           </>
         )}
@@ -311,7 +311,7 @@ function TimelineModal({ isOpen, onClose, session }) {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={onClose}>
       <div id="timeline-print-area" style={{ background: '#fff', borderRadius: 12, padding: 24, maxWidth: 480, width: '92%', maxHeight: '92vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: "'Playfair Display', serif", color: '#111827' }}>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#111827' }}>
             {'\u{1F4CB}'} Shift Report — #{session.id}
           </h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#9ca3af' }}>{'\u00D7'}</button>
@@ -348,8 +348,8 @@ function TimelineModal({ isOpen, onClose, session }) {
         </div>
 
         <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-          <button onClick={() => window.print()} style={{ flex: 1, padding: 10, background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Print</button>
-          <button onClick={onClose} style={{ flex: 1, padding: 10, background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Close</button>
+          <button onClick={() => window.print()} style={{ flex: 1, padding: 10, background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Print</button>
+          <button onClick={onClose} style={{ flex: 1, padding: 10, background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Close</button>
         </div>
       </div>
     </div>
@@ -434,14 +434,14 @@ function CloseSessionModal({ isOpen, onClose, onSubmit, session, loading, blindC
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={onClose}>
       <div style={{ background: '#fff', borderRadius: 12, padding: 24, maxWidth: 560, width: '92%', maxHeight: '92vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: "'Playfair Display', serif", color: '#111827' }}>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#111827' }}>
             {'\u{1F512}'} Close Session #{session.id}
           </h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#9ca3af' }}>{'\u00D7'}</button>
         </div>
 
         {/* Session facts */}
-        <div style={{ background: '#f9fafb', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 11 }}>
+        <div style={{ background: '#f6f8f6', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 11 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
             <span style={{ color: '#6b7280' }}>Cashier:</span>
             <strong>{session.cashier_username}</strong>
@@ -467,7 +467,7 @@ function CloseSessionModal({ isOpen, onClose, onSubmit, session, loading, blindC
         </div>
 
         {blindClose && !submitted && (
-          <div style={{ background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', borderRadius: 7, padding: 10, marginBottom: 12, fontSize: 11 }}>
+          <div style={{ background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', borderRadius: 10, padding: 10, marginBottom: 12, fontSize: 11 }}>
             {'\u{1F441}'} <strong>Blind close mode.</strong> Count the drawer by denomination without seeing the expected total. Variance will be revealed after you submit.
           </div>
         )}
@@ -481,7 +481,7 @@ function CloseSessionModal({ isOpen, onClose, onSubmit, session, loading, blindC
               const c = counts[d.value] || '';
               const sub = (parseInt(c || 0, 10) || 0) * d.value;
               return (
-                <div key={d.value} style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1px solid #e5e7eb', borderRadius: 7, padding: '6px 8px' }}>
+                <div key={d.value} style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1px solid #e3e8e4', borderRadius: 10, padding: '6px 8px' }}>
                   <span style={{ fontWeight: 700, width: 46, color: '#111827' }}>{d.label}</span>
                   <span style={{ color: '#9ca3af' }}>x</span>
                   <input
@@ -489,7 +489,7 @@ function CloseSessionModal({ isOpen, onClose, onSubmit, session, loading, blindC
                     value={c}
                     onChange={e => setCounts(prev => ({ ...prev, [d.value]: e.target.value }))}
                     placeholder="0"
-                    style={{ flex: 1, padding: '6px 8px', border: '1px solid #e5e7eb', borderRadius: 5, fontSize: 13, outline: 'none', minWidth: 0 }}
+                    style={{ flex: 1, padding: '6px 8px', border: '1px solid #e3e8e4', borderRadius: 5, fontSize: 13, outline: 'none', minWidth: 0 }}
                   />
                   <span style={{ fontSize: 11, color: '#6b7280', minWidth: 62, textAlign: 'right' }}>
                     {sub > 0 ? fmt(sub, 'zwd') : ''}
@@ -533,7 +533,7 @@ function CloseSessionModal({ isOpen, onClose, onSubmit, session, loading, blindC
               </div>
               <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>Reason code</label>
               <select required value={varianceReason} onChange={e => setVarianceReason(e.target.value)}
-                style={{ width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 12, outline: 'none', boxSizing: 'border-box', marginBottom: 10, background: '#fff' }}>
+                style={{ width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4', borderRadius: 8, fontSize: 12, outline: 'none', boxSizing: 'border-box', marginBottom: 10, background: '#fff' }}>
                 <option value="">{'Select reason\u2026'}</option>
                 <option value="till_short">Till short — cash missing</option>
                 <option value="till_over">Till over — extra cash</option>
@@ -555,12 +555,12 @@ function CloseSessionModal({ isOpen, onClose, onSubmit, session, loading, blindC
 
           <div style={{ display: 'flex', gap: 8 }}>
             <button type="submit" disabled={loading || (showVariance && gateActive && !gateSatisfied)}
-              style={{ flex: 1, padding: 10, background: '#c0392b', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', opacity: (loading || (showVariance && gateActive && !gateSatisfied)) ? 0.6 : 1 }}>
+              style={{ flex: 1, padding: 10, background: '#c0392b', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', opacity: (loading || (showVariance && gateActive && !gateSatisfied)) ? 0.6 : 1 }}>
               {loading
                 ? 'Closing...'
                 : (blindClose && !submitted) ? 'Review Variance' : 'Confirm & Close Session'}
             </button>
-            <button type="button" onClick={onClose} style={{ flex: 1, padding: 10, background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+            <button type="button" onClick={onClose} style={{ flex: 1, padding: 10, background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
           </div>
         </form>
       </div>
@@ -572,15 +572,15 @@ function CloseSessionModal({ isOpen, onClose, onSubmit, session, loading, blindC
 const S = {
   page: { maxWidth: 1200, margin: '0 auto', padding: 20 },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  title: { fontSize: 28, fontWeight: 700, color: '#111827', fontFamily: "'Playfair Display', serif", margin: 0 },
-  addBtn: { padding: '10px 18px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 14, fontWeight: 600, cursor: 'pointer' },
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '0', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', marginBottom: 20, overflow: 'hidden' },
+  title: { fontSize: 28, fontWeight: 700, color: '#111827', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", margin: 0 },
+  addBtn: { padding: '10px 18px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer' },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: '0', boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)', marginBottom: 20, overflow: 'hidden' },
   table: { width: '100%', borderCollapse: 'collapse' },
-  tableHead: { background: '#f9fafb' },
-  tableHeaderCell: { padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb' },
+  tableHead: { background: '#f6f8f6' },
+  tableHeaderCell: { padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', borderBottom: '1px solid #e3e8e4' },
   tableBody: { fontSize: 13, color: '#374151' },
-  tableRow: { borderBottom: '1px solid #e5e7eb' },
-  tableRowHover: { background: '#f9fafb' },
+  tableRow: { borderBottom: '1px solid #e3e8e4' },
+  tableRowHover: { background: '#f6f8f6' },
   tableCell: { padding: '14px 16px', textAlign: 'left' },
   sessionIdCell: { fontFamily: 'monospace', fontWeight: 600, color: '#1a6b3a' },
   cashierCell: { fontWeight: 600 },
@@ -758,7 +758,7 @@ export default function CashierSessions() {
                   <tr
                     key={session.id}
                     style={{ ...S.tableRow, cursor: 'pointer' }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = '#f9fafb'}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#f6f8f6'}
                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                   >
                     <td style={{ ...S.tableCell, ...S.sessionIdCell }}>CS-{String(session.id).padStart(3, '0')}</td>

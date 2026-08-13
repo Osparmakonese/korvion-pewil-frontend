@@ -21,7 +21,7 @@ const C = {
   red: '#c0392b', red3: '#fdecea',
   purple: '#7c3aed',
   ink: '#111827', ink3: '#9ca3af', ink4: '#d1d5db',
-  border: '#e5e7eb', surface: '#f9fafb', white: '#fff',
+  border: '#e3e8e4', surface: '#f6f8f6', white: '#fff',
 };
 
 const PAYMENT_COLORS = { cash: C.green, card: C.blue2, mobile_money: C.amber, mixed: C.purple };
@@ -44,23 +44,23 @@ const S = {
     borderRadius: 12, padding: '20px 24px', marginBottom: 14,
     display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12,
   },
-  heroTitle: { fontFamily: "'Playfair Display', serif", fontSize: 20, fontWeight: 700, color: '#fff' },
+  heroTitle: { fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 20, fontWeight: 700, color: '#fff' },
   heroSub: { fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 2 },
   heroIcon: { fontSize: 36, opacity: 0.25 },
   dateRow: { display: 'flex', alignItems: 'center', gap: 8 },
   dateInput: {
-    padding: '6px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.35)',
+    padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.35)',
     background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 11, fontWeight: 600,
     outline: 'none', cursor: 'pointer',
   },
   dateLabel: { fontSize: 10, color: 'rgba(255,255,255,0.7)', fontWeight: 600 },
   applyBtn: {
-    padding: '6px 14px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.4)',
+    padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.4)',
     background: 'rgba(255,255,255,0.2)', color: '#fff', fontSize: 11, fontWeight: 700,
     cursor: 'pointer',
   },
   exportBtn: {
-    padding: '6px 14px', borderRadius: 6, border: 'none',
+    padding: '6px 14px', borderRadius: 8, border: 'none',
     background: 'rgba(255,255,255,0.9)', color: C.blue1, fontSize: 11, fontWeight: 700,
     cursor: 'pointer',
   },
@@ -70,7 +70,7 @@ const S = {
     borderRadius: 8, padding: 3, border: `1px solid ${C.border}`,
   },
   tab: (active) => ({
-    padding: '8px 16px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+    padding: '8px 16px', borderRadius: 8, fontSize: 11, fontWeight: 600,
     cursor: 'pointer', border: 'none', transition: 'all 0.2s',
     background: active ? C.white : 'transparent',
     color: active ? C.blue2 : C.ink3,
@@ -84,11 +84,11 @@ const S = {
   },
   metLabel: { display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: C.ink3, fontWeight: 600 },
   metIcon: (bg) => ({
-    width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center',
+    width: 24, height: 24, borderRadius: 8, display: 'flex', alignItems: 'center',
     justifyContent: 'center', fontSize: 12, background: bg,
   }),
   metVal: (color) => ({
-    fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700, color, marginTop: 6,
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 22, fontWeight: 700, color, marginTop: 6,
   }),
   metChange: (pos) => ({
     fontSize: 10, color: pos ? C.green : C.red, fontWeight: 600, marginTop: 2,
@@ -119,7 +119,7 @@ const S = {
     textAlign: 'center', marginTop: 10,
   }),
   netVal: (pos) => ({
-    fontFamily: "'Playfair Display', serif", fontSize: 20, fontWeight: 700,
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 20, fontWeight: 700,
     color: pos ? C.green : C.red,
   }),
   netLabel: { fontSize: 10, color: '#6b7280', marginBottom: 4, fontWeight: 600 },
@@ -157,7 +157,7 @@ const S = {
     border: `1px solid ${C.border}`,
   },
   kpiLabel: { fontSize: 9, fontWeight: 700, color: C.ink3, textTransform: 'uppercase', letterSpacing: '0.04em' },
-  kpiVal: (color) => ({ fontSize: 18, fontWeight: 700, color, marginTop: 2, fontFamily: "'Playfair Display', serif" }),
+  kpiVal: (color) => ({ fontSize: 18, fontWeight: 700, color, marginTop: 2, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }),
   kpiDesc: { fontSize: 9, color: C.ink3, marginTop: 2 },
   /* Locked */
   locked: { textAlign: 'center', padding: 60, color: '#6b7280' },
@@ -546,7 +546,7 @@ export default function RetailReport() {
                 <span style={S.rowVal(C.green)}>+{num(sm.units_restocked)}</span>
               </div>
               {kpis.shrinkage_rate > 2 && (
-                <div style={{ background: C.red3, borderRadius: 6, padding: '8px 12px', marginTop: 8, fontSize: 10, color: C.red }}>
+                <div style={{ background: C.red3, borderRadius: 8, padding: '8px 12px', marginTop: 8, fontSize: 10, color: C.red }}>
                   {'\u26A0\uFE0F'} Shrinkage rate above 2% — industry average is 1.4%. Investigate loss causes.
                 </div>
               )}
@@ -684,7 +684,7 @@ export default function RetailReport() {
                   </span>
                 </div>
                 {kpis.inventory_turnover < 1 && (
-                  <div style={{ background: C.amber3, borderRadius: 6, padding: '8px 12px', marginTop: 8, fontSize: 10, color: '#92400e' }}>
+                  <div style={{ background: C.amber3, borderRadius: 8, padding: '8px 12px', marginTop: 8, fontSize: 10, color: '#92400e' }}>
                     {'\u{1F4A1}'} Low turnover — stock is moving slowly. Consider promotions or markdowns on slow items.
                   </div>
                 )}

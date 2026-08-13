@@ -21,31 +21,31 @@ const S = {
     background: 'linear-gradient(135deg, #1a6b3a, #2d8659)',
     display: 'flex', flexDirection: 'column', justifyContent: 'center',
   },
-  bannerTitle: { color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: "'Playfair Display', serif", textShadow: '0 1px 3px rgba(0,0,0,0.3)' },
+  bannerTitle: { color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", textShadow: '0 1px 3px rgba(0,0,0,0.3)' },
   bannerSub: { color: 'rgba(255,255,255,0.7)', fontSize: 11, textShadow: '0 1px 2px rgba(0,0,0,0.2)' },
   twoCol: { display: 'grid', gridTemplateColumns: '40% 1fr', gap: 20 },
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 18, marginBottom: 16 },
-  cardTitle: { fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 12, fontFamily: "'Playfair Display', serif" },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 18, marginBottom: 16 },
+  cardTitle: { fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 12, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" },
   label: { display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 3, marginTop: 8 },
-  input: { width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box' },
-  textarea: { width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', resize: 'vertical', minHeight: 60, color: '#111827', boxSizing: 'border-box' },
+  input: { width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box' },
+  textarea: { width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', resize: 'vertical', minHeight: 60, color: '#111827', boxSizing: 'border-box' },
   row2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 },
-  btn: { width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 12 },
-  sectionTitle: { fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 12, fontFamily: "'Playfair Display', serif" },
+  btn: { width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 12 },
+  sectionTitle: { fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 12, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" },
   tabs: { display: 'flex', gap: 8, marginBottom: 16 },
-  tab: (active) => ({ flex: 1, padding: '10px 0', textAlign: 'center', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid #e5e7eb', background: active ? '#1a6b3a' : '#fff', color: active ? '#fff' : '#374151', borderRadius: 7, transition: 'all .15s' }),
-  batchCard: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 14, marginBottom: 12 },
+  tab: (active) => ({ flex: 1, padding: '10px 0', textAlign: 'center', fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid #e3e8e4', background: active ? '#1a6b3a' : '#fff', color: active ? '#fff' : '#374151', borderRadius: 10, transition: 'all .15s' }),
+  batchCard: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 14, marginBottom: 12 },
   batchName: { fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 8 },
   batchMeta: { fontSize: 11, color: '#6b7280', marginBottom: 4 },
-  badge: (bg, color) => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 6, fontSize: 10, fontWeight: 600, background: bg, color: color, marginBottom: 6 }),
-  deleteBtn: { width: '100%', padding: '6px', background: 'none', border: '1px solid #c0392b', borderRadius: 6, color: '#c0392b', fontSize: 10, fontWeight: 600, cursor: 'pointer', marginTop: 8 },
+  badge: (bg, color) => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 8, fontSize: 10, fontWeight: 600, background: bg, color: color, marginBottom: 6 }),
+  deleteBtn: { width: '100%', padding: '6px', background: 'none', border: '1px solid #c0392b', borderRadius: 8, color: '#c0392b', fontSize: 10, fontWeight: 600, cursor: 'pointer', marginTop: 8 },
   totalBox: { background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: 16, marginBottom: 16 },
   totalValue: { fontSize: 24, fontWeight: 700, color: '#1a6b3a', marginBottom: 4 },
   totalLabel: { fontSize: 11, color: '#6b7280' },
-  expenseRecord: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: 10, marginBottom: 8 },
+  expenseRecord: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 8, padding: 10, marginBottom: 8 },
   expenseRow: { display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 4 },
   expenseAmount: { fontWeight: 700, color: '#c97d1a' },
-  saleRecord: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: 10, marginBottom: 8 },
+  saleRecord: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 8, padding: 10, marginBottom: 8 },
   saleRow: { display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 4 },
   saleAmount: { fontWeight: 700, color: '#1a6b3a' },
   summary: { background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, padding: '10px 14px', fontSize: 11, color: '#1e40af', marginTop: 12 },
@@ -289,7 +289,7 @@ export default function Broilers() {
                       <div style={S.badge(statusColor, statusTextColor)}>
                         {currentCount > 0 ? 'Active' : 'Finished'}
                       </div>
-                      <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 6, padding: '8px 10px', marginTop: 6, fontSize: 10 }}>
+                      <div style={{ background: '#f6f8f6', border: '1px solid #e3e8e4', borderRadius: 8, padding: '8px 10px', marginTop: 6, fontSize: 10 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
                           <span style={{ color: '#6b7280' }}>Purchase:</span>
                           <span style={{ color: '#111827', fontWeight: 600 }}>{fmt(purchaseCost)}</span>
@@ -298,7 +298,7 @@ export default function Broilers() {
                           <span style={{ color: '#6b7280' }}>Expenses:</span>
                           <span style={{ color: '#c0392b', fontWeight: 600 }}>{fmt(batchExpenses)}</span>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e5e7eb', paddingTop: 3, marginTop: 3 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e3e8e4', paddingTop: 3, marginTop: 3 }}>
                           <span style={{ color: '#374151', fontWeight: 700 }}>Total Cost:</span>
                           <span style={{ color: '#1a6b3a', fontWeight: 700 }}>{fmt(totalCost)}</span>
                         </div>
@@ -311,7 +311,7 @@ export default function Broilers() {
                       </div>
                       <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
                         <button
-                          style={{ flex: 1, padding: '6px', background: 'none', border: '1px solid #c97d1a', borderRadius: 6, color: '#c97d1a', fontSize: 10, fontWeight: 600, cursor: 'pointer' }}
+                          style={{ flex: 1, padding: '6px', background: 'none', border: '1px solid #c97d1a', borderRadius: 8, color: '#c97d1a', fontSize: 10, fontWeight: 600, cursor: 'pointer' }}
                           onClick={() => { setMortalityModal(batch); setMortalityCount(''); }}
                         >
                           + Mortality
@@ -477,8 +477,8 @@ export default function Broilers() {
             <label style={S.label}>How many died?</label>
             <input style={S.input} type="number" min="1" max={mortalityModal.current_count || mortalityModal.quantity} value={mortalityCount} onChange={e => setMortalityCount(e.target.value)} autoFocus placeholder="0" />
             <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
-              <button onClick={() => { setMortalityModal(null); setMortalityCount(''); }} style={{ flex: 1, padding: '10px 0', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>Cancel</button>
-              <button onClick={submitMortality} disabled={!mortalityCount || updateBatchMut.isPending} style={{ flex: 1, padding: '10px 0', borderRadius: 6, border: 'none', background: '#c97d1a', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600, opacity: (!mortalityCount || updateBatchMut.isPending) ? 0.5 : 1 }}>
+              <button onClick={() => { setMortalityModal(null); setMortalityCount(''); }} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>Cancel</button>
+              <button onClick={submitMortality} disabled={!mortalityCount || updateBatchMut.isPending} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', background: '#c97d1a', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600, opacity: (!mortalityCount || updateBatchMut.isPending) ? 0.5 : 1 }}>
                 {updateBatchMut.isPending ? 'Saving...' : 'Record'}
               </button>
             </div>
@@ -493,10 +493,10 @@ export default function Broilers() {
             <div style={{ fontSize: 17, fontWeight: 700, color: '#111827', marginBottom: 6 }}>Delete {rowDelete.type}?</div>
             <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 18 }}>Remove "<strong>{rowDelete.label}</strong>"? This action cannot be undone.</div>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setRowDelete(null)} style={{ flex: 1, padding: '10px 0', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>Cancel</button>
+              <button onClick={() => setRowDelete(null)} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>Cancel</button>
               <button
                 onClick={() => rowDelete.type === 'expense' ? delExpenseMut.mutate(rowDelete.id) : delSaleMut.mutate(rowDelete.id)}
-                style={{ flex: 1, padding: '10px 0', borderRadius: 6, border: 'none', background: '#c0392b', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
+                style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', background: '#c0392b', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
               >
                 Delete
               </button>
@@ -512,8 +512,8 @@ export default function Broilers() {
             <div style={{ fontSize: 17, fontWeight: 700, color: '#111827', marginBottom: 6 }}>Delete Batch?</div>
             <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 18 }}>Are you sure you want to delete "<strong>{delConfirm.batch_name}</strong>"? This action cannot be undone.</div>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setDelConfirm(null)} style={{ flex: 1, padding: '10px 0', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>Cancel</button>
-              <button onClick={() => delBatchMut.mutate(delConfirm.id)} style={{ flex: 1, padding: '10px 0', borderRadius: 6, border: 'none', background: '#c0392b', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Delete</button>
+              <button onClick={() => setDelConfirm(null)} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>Cancel</button>
+              <button onClick={() => delBatchMut.mutate(delConfirm.id)} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', background: '#c0392b', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Delete</button>
             </div>
           </div>
         </div>

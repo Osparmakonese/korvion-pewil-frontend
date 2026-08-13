@@ -13,38 +13,38 @@ const empty = { name: '', crop: 'tomatoes', size_ha: '', plant_date: today(), no
 const S = {
   twoCol: { display: 'grid', gridTemplateColumns: '310px 1fr', gap: 20 },
   formCard: {
-    background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10,
+    background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10,
     padding: '20px', position: 'sticky', top: 80,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+    boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)',
   },
   formTitle: {
-    fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700,
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 15, fontWeight: 700,
     color: '#111827', marginBottom: 16,
   },
   label: { display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, marginTop: 10 },
   input: {
-    width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb',
-    borderRadius: 7, fontSize: 12, outline: 'none', color: '#111827',
+    width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4',
+    borderRadius: 10, fontSize: 12, outline: 'none', color: '#111827',
     transition: 'border-color 0.15s',
   },
   textarea: {
-    width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb',
-    borderRadius: 7, fontSize: 12, outline: 'none', resize: 'vertical',
+    width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4',
+    borderRadius: 10, fontSize: 12, outline: 'none', resize: 'vertical',
     minHeight: 60, color: '#111827',
   },
   btn: {
     width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff',
-    border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600,
+    border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600,
     cursor: 'pointer', marginTop: 14, transition: 'background 0.15s',
   },
   error: { fontSize: 10, color: '#c0392b', marginTop: 4 },
   sectionTitle: {
     fontSize: 15, fontWeight: 700, color: '#111827', marginBottom: 14,
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
   },
   fieldGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 },
   fcard: {
-    background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb',
+    background: '#fff', borderRadius: 10, border: '1px solid #e3e8e4',
     overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 0.2s',
   },
   fcardImg: (crop) => ({
@@ -66,18 +66,18 @@ const S = {
   fcardMeta: { fontSize: 10, color: '#9ca3af', marginBottom: 8 },
   fcardStats: {
     display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6,
-    borderTop: '1px solid #e5e7eb', paddingTop: 8, marginBottom: 8,
+    borderTop: '1px solid #e3e8e4', paddingTop: 8, marginBottom: 8,
   },
   fcardStat: { textAlign: 'center' },
   fcardStatVal: (c) => ({ fontSize: 12, fontWeight: 700, color: c }),
   fcardStatLabel: { fontSize: 8, color: '#9ca3af', textTransform: 'uppercase' },
   closeBtn: {
     width: '100%', padding: '7px', background: 'none', border: '1px solid #c0392b',
-    borderRadius: 6, color: '#c0392b', fontSize: 11, fontWeight: 600,
+    borderRadius: 8, color: '#c0392b', fontSize: 11, fontWeight: 600,
     cursor: 'pointer', transition: 'all 0.15s',
   },
   closedBox: {
-    background: '#f3f4f6', borderRadius: 6, padding: '8px 12px',
+    background: '#f3f4f6', borderRadius: 8, padding: '8px 12px',
     fontSize: 10, color: '#6b7280', textAlign: 'center',
   },
 };
@@ -182,25 +182,25 @@ export default function Fields() {
                 padding: '6px 12px', fontSize: 11, fontWeight: 600, cursor: 'pointer',
                 background: showPnlTable ? '#1a6b3a' : '#fff',
                 color: showPnlTable ? '#fff' : '#1a6b3a',
-                border: '1px solid #1a6b3a', borderRadius: 6,
+                border: '1px solid #1a6b3a', borderRadius: 8,
               }}
             >{showPnlTable ? '‹ Back to Cards' : '📊 P&L Comparison'}</button>
           </div>
 
           {showPnlTable && pnlData && (
-            <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16, marginBottom: 16 }}>
+            <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16, marginBottom: 16 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 10 }}>All Fields P&L Comparison</div>
               <div style={{ overflowX: 'auto' }}>
                 <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                   <thead>
-                    <tr style={{ background: '#f9fafb', textAlign: 'left' }}>
-                      <th style={{ padding: '8px 10px', borderBottom: '1px solid #e5e7eb' }}>Field</th>
-                      <th style={{ padding: '8px 10px', borderBottom: '1px solid #e5e7eb' }}>Crop</th>
-                      <th style={{ padding: '8px 10px', borderBottom: '1px solid #e5e7eb' }}>Size</th>
-                      <th style={{ padding: '8px 10px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>Revenue</th>
-                      <th style={{ padding: '8px 10px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>Expenses</th>
-                      <th style={{ padding: '8px 10px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>Profit</th>
-                      <th style={{ padding: '8px 10px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>Margin</th>
+                    <tr style={{ background: '#f6f8f6', textAlign: 'left' }}>
+                      <th style={{ padding: '8px 10px', borderBottom: '1px solid #e3e8e4' }}>Field</th>
+                      <th style={{ padding: '8px 10px', borderBottom: '1px solid #e3e8e4' }}>Crop</th>
+                      <th style={{ padding: '8px 10px', borderBottom: '1px solid #e3e8e4' }}>Size</th>
+                      <th style={{ padding: '8px 10px', borderBottom: '1px solid #e3e8e4', textAlign: 'right' }}>Revenue</th>
+                      <th style={{ padding: '8px 10px', borderBottom: '1px solid #e3e8e4', textAlign: 'right' }}>Expenses</th>
+                      <th style={{ padding: '8px 10px', borderBottom: '1px solid #e3e8e4', textAlign: 'right' }}>Profit</th>
+                      <th style={{ padding: '8px 10px', borderBottom: '1px solid #e3e8e4', textAlign: 'right' }}>Margin</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -218,7 +218,7 @@ export default function Fields() {
                         <td style={{ padding: '8px 10px', borderBottom: '1px solid #f3f4f6', textAlign: 'right', color: p.margin >= 0 ? '#1a6b3a' : '#c0392b' }}>{p.margin.toFixed(1)}%</td>
                       </tr>
                     ))}
-                    <tr style={{ background: '#f9fafb', fontWeight: 700 }}>
+                    <tr style={{ background: '#f6f8f6', fontWeight: 700 }}>
                       <td style={{ padding: '10px', borderTop: '2px solid #1a6b3a' }} colSpan={3}>TOTAL</td>
                       <td style={{ padding: '10px', borderTop: '2px solid #1a6b3a', textAlign: 'right', color: '#1a6b3a' }}>{fmt(pnlData.totals?.revenue || 0)}</td>
                       <td style={{ padding: '10px', borderTop: '2px solid #1a6b3a', textAlign: 'right', color: '#c0392b' }}>{fmt(pnlData.totals?.expenses || 0)}</td>

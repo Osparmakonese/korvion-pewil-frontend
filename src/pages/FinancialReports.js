@@ -18,21 +18,21 @@ const TABS = [
 
 const S = {
   page: { maxWidth: 1100, margin: '0 auto', padding: 20 },
-  h1: { fontSize: 20, fontWeight: 800, color: '#0f172a', margin: '0 0 4px', fontFamily: "'Playfair Display', serif" },
+  h1: { fontSize: 20, fontWeight: 800, color: '#0f172a', margin: '0 0 4px', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" },
   sub: { fontSize: 12, color: '#64748b', margin: '0 0 16px' },
   tabs: { display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 },
   tab: (on) => ({ padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer',
     border: `1px solid ${on ? G : '#e2e8f0'}`, background: on ? G : '#fff', color: on ? '#fff' : '#475569' }),
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20, marginBottom: 14 },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: 20, marginBottom: 14 },
   row: { display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid #f1f5f9', fontSize: 14 },
   rowBold: { display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderTop: '2px solid #0f172a', fontSize: 15, fontWeight: 800, color: '#0f172a' },
   lbl: { color: '#475569' },
   val: { fontWeight: 700, color: '#0f172a', fontVariantNumeric: 'tabular-nums' },
   period: { display: 'flex', gap: 8, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' },
-  input: { padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: 7, fontSize: 13 },
+  input: { padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: 10, fontSize: 13 },
   note: { fontSize: 11, color: '#94a3b8', marginTop: 10, lineHeight: 1.5 },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: 12 },
-  th: { fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', textAlign: 'left', padding: '8px', borderBottom: '1px solid #e5e7eb', background: '#f8fafc' },
+  th: { fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', textAlign: 'left', padding: '8px', borderBottom: '1px solid #e3e8e4', background: '#f8fafc' },
   td: { padding: '8px', borderBottom: '1px solid #f1f5f9', color: '#334155' },
   pill: (bg, fg) => ({ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: bg, color: fg }),
 };
@@ -182,7 +182,7 @@ export default function FinancialReports() {
 function Loading() { return <div style={{ color: '#94a3b8', fontSize: 13, padding: 16 }}>Loading…</div>; }
 function Stat({ label, value, raw }) {
   return (
-    <div style={{ background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 10, padding: '10px 14px', minWidth: 130 }}>
+    <div style={{ background: '#f8fafc', border: '1px solid #e3e8e4', borderRadius: 10, padding: '10px 14px', minWidth: 130 }}>
       <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>{label}</div>
       <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a' }}>{raw ? value : money(value)}</div>
     </div>

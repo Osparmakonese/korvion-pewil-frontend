@@ -39,14 +39,14 @@ const T = {
   greenT:  '#e8f5ee',
   green2:  '#0f4d28',
   amber:   '#c77700',
-  amberT:  '#fdeedd',
+  amberT:  '#fef3e2',
   red:     '#c0392b',
   redT:    '#fde8e8',
   ink:     '#111827',
   inkSoft: '#374151',
   muted:   '#6b7280',
-  line:    '#e5e7eb',
-  surface: '#f9fafb',
+  line:    '#e3e8e4',
+  surface: '#f6f8f6',
 };
 
 export default function ChainRollup() {
@@ -74,7 +74,7 @@ export default function ChainRollup() {
         </div>
 
         <h1 style={{
-          fontFamily: "'Playfair Display', serif",
+          fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
           fontSize: 28, fontWeight: 700, color: T.ink, margin: 0,
         }}>Chain rollup</h1>
         <p style={{ color: T.muted, fontSize: 14, marginTop: 6, lineHeight: 1.55, maxWidth: 640 }}>
@@ -114,7 +114,7 @@ export default function ChainRollup() {
                 textTransform: 'uppercase', opacity: 0.85,
               }}>Today's chain revenue</div>
               <div style={{
-                fontFamily: "'Playfair Display', serif",
+                fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
                 fontSize: 42, fontWeight: 700, marginTop: 6, lineHeight: 1.1,
               }}>
                 {fmt(totals.today_revenue || 0, 'zwd')}
@@ -263,7 +263,7 @@ function BranchCardList({ branches, selectedId, onSelect }) {
               marginBottom: 10, flexWrap: 'wrap',
             }}>
               <div style={{
-                fontFamily: "'Playfair Display', serif",
+                fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
                 fontSize: 16, fontWeight: 700, color: T.ink,
               }}>{b.name}</div>
               {b.code && (

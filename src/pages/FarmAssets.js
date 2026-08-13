@@ -16,14 +16,14 @@ const empty = { name: '', cost: '', purchase_date: today(), lifespan: 'long', fu
 
 const S = {
   twoCol: { display: 'grid', gridTemplateColumns: '340px 1fr', gap: 20 },
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 18, marginBottom: 14 },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 18, marginBottom: 14 },
   label: { display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 3, marginTop: 8 },
-  input: { width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', color: '#111827' },
-  btn: { width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 12 },
+  input: { width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', color: '#111827' },
+  btn: { width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 12 },
   sectionTitle: { fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 12 },
-  assetCard: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '14px 16px', marginBottom: 10 },
+  assetCard: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: '14px 16px', marginBottom: 10 },
   infoBox: { background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, padding: '12px 14px', fontSize: 11, color: '#1d4ed8', marginBottom: 14 },
-  depBox: { background: '#e8f5ee', border: '1px solid #86efac', borderRadius: 6, padding: '8px 12px', fontSize: 11, color: '#166534', marginTop: 8 },
+  depBox: { background: '#e8f5ee', border: '1px solid #86efac', borderRadius: 8, padding: '8px 12px', fontSize: 11, color: '#166534', marginTop: 8 },
 };
 
 function calcDep(cost, lifespan) {
@@ -76,7 +76,7 @@ export default function FarmAssets() {
             {LIFESPANS.map(([val, title, desc]) => (
               <div key={val}
                 onClick={() => set('lifespan', val)}
-                style={{ border: form.lifespan === val ? '2px solid #1a6b3a' : '1px solid #e5e7eb', borderRadius: 8, padding: '10px 12px', cursor: 'pointer', background: form.lifespan === val ? '#e8f5ee' : '#fff', marginBottom: 6 }}>
+                style={{ border: form.lifespan === val ? '2px solid #1a6b3a' : '1px solid #e3e8e4', borderRadius: 8, padding: '10px 12px', cursor: 'pointer', background: form.lifespan === val ? '#e8f5ee' : '#fff', marginBottom: 6 }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#111827' }}>{title}</div>
                 <div style={{ fontSize: 10, color: '#6b7280' }}>{desc}</div>
               </div>

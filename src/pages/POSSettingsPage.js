@@ -183,7 +183,7 @@ export default function POSSettingsPage() {
             value={form.variance_threshold ?? 5}
             onChange={(e) => canEdit && set({ variance_threshold: e.target.value })}
             disabled={!canEdit}
-            style={{ width: 160, padding: '10px 12px', border: '1px solid #e2e8f0', borderRadius: 7, fontSize: 14, outline: 'none' }}
+            style={{ width: 160, padding: '10px 12px', border: '1px solid #e2e8f0', borderRadius: 10, fontSize: 14, outline: 'none' }}
           />
           <span style={{ fontSize: 12, color: '#64748b' }}>USD</span>
         </div>
@@ -228,7 +228,7 @@ const styles = {
     background: '#fff', font: 'inherit', color: 'inherit',
   },
   preview: {
-    height: 72, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
+    height: 72, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
     fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', marginBottom: 10,
   },
   themeLabel: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, color: '#0f172a' },

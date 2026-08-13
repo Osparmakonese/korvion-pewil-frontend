@@ -102,10 +102,10 @@ export default function ProfitMargins({ onTabChange }) {
   const lowestMarginProduct = marginData.length > 0 ? marginData.reduce((min, p) => p.marginPercent < min.marginPercent ? p : min) : null;
 
   return (
-    <div style={{ padding: isMobile ? 0 : 24, fontFamily: "'Inter', sans-serif", backgroundColor: isMobile ? 'transparent' : '#f9fafb', minHeight: isMobile ? 0 : '100vh' }}>
+    <div style={{ padding: isMobile ? 0 : 24, fontFamily: "'Inter', sans-serif", backgroundColor: isMobile ? 'transparent' : '#f6f8f6', minHeight: isMobile ? 0 : '100vh' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Playfair Display', serif", margin: 0, color: '#111827' }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", margin: 0, color: '#111827' }}>
           Profit Margins
         </h1>
         {isOwner && (
@@ -117,7 +117,7 @@ export default function ProfitMargins({ onTabChange }) {
               color: '#1a6b3a',
               border: '2px solid #1a6b3a',
               padding: '8px 16px',
-              borderRadius: 7,
+              borderRadius: 10,
               fontSize: 12,
               fontWeight: 600,
               cursor: 'pointer'
@@ -131,7 +131,7 @@ export default function ProfitMargins({ onTabChange }) {
       {/* Metric Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8, marginBottom: 24 }}>
         {/* Avg. Margin */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div
               style={{
@@ -151,7 +151,7 @@ export default function ProfitMargins({ onTabChange }) {
               <div style={{ fontSize: 9, color: '#6b7280', fontWeight: 500, marginBottom: 4 }}>
                 AVG. MARGIN
               </div>
-              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Playfair Display', serif", color: '#1a6b3a', marginBottom: 2 }}>
+              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#1a6b3a', marginBottom: 2 }}>
                 {isLoading ? '—' : `${(Number(profitData?.summary?.avg_margin) || 0).toFixed(1)}%`}
               </div>
               <div style={{ fontSize: 9, color: '#9ca3af' }}>All products</div>
@@ -160,7 +160,7 @@ export default function ProfitMargins({ onTabChange }) {
         </div>
 
         {/* Highest Margin */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div
               style={{
@@ -193,7 +193,7 @@ export default function ProfitMargins({ onTabChange }) {
         </div>
 
         {/* Lowest Margin */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div
               style={{
@@ -223,7 +223,7 @@ export default function ProfitMargins({ onTabChange }) {
         </div>
 
         {/* Below Target */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div
               style={{
@@ -243,7 +243,7 @@ export default function ProfitMargins({ onTabChange }) {
               <div style={{ fontSize: 9, color: '#6b7280', fontWeight: 500, marginBottom: 4 }}>
                 BELOW TARGET (&lt;30%)
               </div>
-              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Playfair Display', serif", color: '#c97d1a', marginBottom: 2 }}>
+              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#c97d1a', marginBottom: 2 }}>
                 {isLoading ? '—' : belowTargetCount}
               </div>
               <div style={{ fontSize: 9, color: '#9ca3af' }}>products</div>
@@ -253,7 +253,7 @@ export default function ProfitMargins({ onTabChange }) {
       </div>
 
       {/* Margin Analysis Table */}
-      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16, marginBottom: 24 }}>
+      <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16, marginBottom: 24 }}>
         <h3 style={{ fontSize: 12, fontWeight: 700, margin: '0 0 16px 0', color: '#111827' }}>
           Margin Analysis by Product
         </h3>
@@ -273,7 +273,7 @@ export default function ProfitMargins({ onTabChange }) {
               const colour = getMarginColor(pct);
               return (
                 <div key={idx} style={{
-                  border: '1px solid #e5e7eb', borderLeft: `5px solid ${colour}`,
+                  border: '1px solid #e3e8e4', borderLeft: `5px solid ${colour}`,
                   borderRadius: 12, padding: '13px 14px', marginBottom: 10,
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start' }}>
@@ -289,13 +289,13 @@ export default function ProfitMargins({ onTabChange }) {
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 11 }}>
-                    <span style={{ fontSize: 26, fontWeight: 800, color: colour, fontFamily: "'Playfair Display', serif", lineHeight: 1 }}>
+                    <span style={{ fontSize: 26, fontWeight: 800, color: colour, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", lineHeight: 1 }}>
                       {pct.toFixed(1)}%
                     </span>
                     <span style={{ fontSize: 12, color: '#64748b' }}>margin</span>
                   </div>
-                  <div style={{ height: 6, background: '#f1f5f9', borderRadius: 6, marginTop: 8, overflow: 'hidden' }}>
-                    <div style={{ height: 6, width: `${Math.max(0, Math.min(100, pct))}%`, background: colour, borderRadius: 6 }} />
+                  <div style={{ height: 6, background: '#f1f5f9', borderRadius: 8, marginTop: 8, overflow: 'hidden' }}>
+                    <div style={{ height: 6, width: `${Math.max(0, Math.min(100, pct))}%`, background: colour, borderRadius: 8 }} />
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginTop: 11, paddingTop: 10, borderTop: '1px dashed #eef2f6', fontSize: 12.5, color: '#64748b' }}>
@@ -313,16 +313,16 @@ export default function ProfitMargins({ onTabChange }) {
           <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, minWidth: 800 }}>
               <thead>
-                <tr style={{ background: '#f9fafb' }}>
-                  <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>SKU</th>
-                  <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Product</th>
-                  <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>Cost</th>
-                  <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>Sell</th>
-                  <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>Margin $</th>
-                  <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>Margin %</th>
-                  <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>In Stock</th>
-                  <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>Potential Profit</th>
-                  <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Status</th>
+                <tr style={{ background: '#f6f8f6' }}>
+                  <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>SKU</th>
+                  <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>Product</th>
+                  <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'right' }}>Cost</th>
+                  <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'right' }}>Sell</th>
+                  <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'right' }}>Margin $</th>
+                  <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'right' }}>Margin %</th>
+                  <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'right' }}>In Stock</th>
+                  <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'right' }}>Potential Profit</th>
+                  <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -368,7 +368,7 @@ export default function ProfitMargins({ onTabChange }) {
       {/* Bottom Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
         {/* Margin Distribution */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <h3 style={{ fontSize: 12, fontWeight: 700, margin: '0 0 16px 0', color: '#111827' }}>
             Products by Margin Range
           </h3>

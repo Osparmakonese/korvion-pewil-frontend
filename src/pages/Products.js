@@ -144,7 +144,7 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
               fontSize: 18,
               fontWeight: 700,
               color: '#111827',
-              fontFamily: "'Playfair Display', serif",
+              fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
             }}
           >
             {initialData ? '\u{270F}' : '\u{2795}'} {initialData ? 'Edit Product' : 'Add Product'}
@@ -178,8 +178,8 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
                 style={{
                   width: '100%',
                   padding: '8px 10px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 7,
+                  border: '1px solid #e3e8e4',
+                  borderRadius: 10,
                   fontSize: 12,
                   outline: 'none',
                   boxSizing: 'border-box',
@@ -200,8 +200,8 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
                 style={{
                   width: '100%',
                   padding: '8px 10px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 7,
+                  border: '1px solid #e3e8e4',
+                  borderRadius: 10,
                   fontSize: 12,
                   outline: 'none',
                   boxSizing: 'border-box',
@@ -222,8 +222,8 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
               style={{
                 width: '100%',
                 padding: '8px 10px',
-                border: '1px solid #e5e7eb',
-                borderRadius: 7,
+                border: '1px solid #e3e8e4',
+                borderRadius: 10,
                 fontSize: 12,
                 outline: 'none',
                 boxSizing: 'border-box',
@@ -253,8 +253,8 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
                 style={{
                   width: '100%',
                   padding: '8px 10px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 7,
+                  border: '1px solid #e3e8e4',
+                  borderRadius: 10,
                   fontSize: 12,
                   outline: 'none',
                   boxSizing: 'border-box',
@@ -275,8 +275,8 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
                 style={{
                   width: '100%',
                   padding: '8px 10px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 7,
+                  border: '1px solid #e3e8e4',
+                  borderRadius: 10,
                   fontSize: 12,
                   outline: 'none',
                   boxSizing: 'border-box',
@@ -299,8 +299,8 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
                 style={{
                   width: '100%',
                   padding: '8px 10px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 7,
+                  border: '1px solid #e3e8e4',
+                  borderRadius: 10,
                   fontSize: 12,
                   outline: 'none',
                   boxSizing: 'border-box',
@@ -320,8 +320,8 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
                 style={{
                   width: '100%',
                   padding: '8px 10px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 7,
+                  border: '1px solid #e3e8e4',
+                  borderRadius: 10,
                   fontSize: 12,
                   outline: 'none',
                   boxSizing: 'border-box',
@@ -342,8 +342,8 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
                 style={{
                   width: '100%',
                   padding: '8px 10px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 7,
+                  border: '1px solid #e3e8e4',
+                  borderRadius: 10,
                   fontSize: 12,
                   outline: 'none',
                   boxSizing: 'border-box',
@@ -368,8 +368,8 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
                 style={{
                   width: '100%',
                   padding: '8px 10px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 7,
+                  border: '1px solid #e3e8e4',
+                  borderRadius: 10,
                   fontSize: 12,
                   outline: 'none',
                   boxSizing: 'border-box',
@@ -390,8 +390,8 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
               style={{
                 width: '100%',
                 padding: '8px 10px',
-                border: '1px solid #e5e7eb',
-                borderRadius: 7,
+                border: '1px solid #e3e8e4',
+                borderRadius: 10,
                 fontSize: 12,
                 outline: 'none',
                 boxSizing: 'border-box',
@@ -409,7 +409,7 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
               value={form.barcode}
               onChange={handleChange}
               placeholder="Scan or type the barcode"
-              style={{ width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
             />
           </div>
 
@@ -435,7 +435,7 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
             <div style={{ border: '1px solid #eef2f0', borderRadius: 8, padding: 12, marginBottom: 16, background: '#fafbfb' }}>
               {(() => {
                 const chk = { display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#111827', margin: '6px 0', cursor: 'pointer' };
-                const sub = { marginLeft: 26, marginBottom: 8, padding: '6px 8px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 11 };
+                const sub = { marginLeft: 26, marginBottom: 8, padding: '6px 8px', border: '1px solid #e3e8e4', borderRadius: 8, fontSize: 11 };
                 return (
                   <>
                     <label style={chk}><input type="checkbox" name="is_weighable" checked={form.is_weighable} onChange={handleChange} /> Sold by weight (use a scale)</label>
@@ -487,7 +487,7 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
                 background: '#1a6b3a',
                 color: '#fff',
                 border: 'none',
-                borderRadius: 7,
+                borderRadius: 10,
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -505,7 +505,7 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
                 background: '#f3f4f6',
                 color: '#374151',
                 border: 'none',
-                borderRadius: 7,
+                borderRadius: 10,
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -533,7 +533,7 @@ const S = {
     fontSize: 24,
     fontWeight: 700,
     color: '#111827',
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
     margin: 0,
   },
   addBtn: {
@@ -541,7 +541,7 @@ const S = {
     background: '#1a6b3a',
     color: '#fff',
     border: 'none',
-    borderRadius: 7,
+    borderRadius: 10,
     fontSize: 12,
     fontWeight: 600,
     cursor: 'pointer',
@@ -555,8 +555,8 @@ const S = {
   input: {
     width: '100%',
     padding: '10px 12px',
-    border: '1px solid #e5e7eb',
-    borderRadius: 7,
+    border: '1px solid #e3e8e4',
+    borderRadius: 10,
     fontSize: 12,
     outline: 'none',
     boxSizing: 'border-box',
@@ -564,18 +564,18 @@ const S = {
   select: {
     width: '100%',
     padding: '10px 12px',
-    border: '1px solid #e5e7eb',
-    borderRadius: 7,
+    border: '1px solid #e3e8e4',
+    borderRadius: 10,
     fontSize: 12,
     outline: 'none',
     boxSizing: 'border-box',
   },
   card: {
     background: '#fff',
-    border: '1px solid #e5e7eb',
+    border: '1px solid #e3e8e4',
     borderRadius: 12,
     padding: '16px 18px',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+    boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)',
   },
   table: {
     width: '100%',
@@ -589,8 +589,8 @@ const S = {
     fontWeight: 700,
     color: '#9ca3af',
     textTransform: 'uppercase',
-    borderBottom: '1px solid #e5e7eb',
-    background: '#f9fafb',
+    borderBottom: '1px solid #e3e8e4',
+    background: '#f6f8f6',
   },
   td: {
     padding: '10px 12px',

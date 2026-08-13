@@ -2,15 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { getAuditLog } from '../api/authApi';
 
 const S = {
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '18px 20px', marginBottom: 16 },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: '18px 20px', marginBottom: 16 },
   title: { fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 12 },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: 12 },
-  th: { textAlign: 'left', padding: '8px 10px', borderBottom: '2px solid #e5e7eb', fontWeight: 700, fontSize: 10, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' },
+  th: { textAlign: 'left', padding: '8px 10px', borderBottom: '2px solid #e3e8e4', fontWeight: 700, fontSize: 10, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' },
   td: { padding: '8px 10px', borderBottom: '1px solid #f3f4f6', color: '#374151', verticalAlign: 'top' },
   badge: (color) => ({ display: 'inline-block', padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600, background: color === 'green' ? '#e8f5ee' : color === 'amber' ? '#fffbeb' : color === 'red' ? '#fef2f2' : '#f3f4f6', color: color === 'green' ? '#1a6b3a' : color === 'amber' ? '#92400e' : color === 'red' ? '#991b1b' : '#374151' }),
   filterBar: { display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' },
-  select: { padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 11, color: '#374151', outline: 'none', background: '#fff' },
-  btn: (active) => ({ padding: '6px 14px', border: active ? 'none' : '1px solid #e5e7eb', background: active ? '#1a6b3a' : '#fff', color: active ? '#fff' : '#374151', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer' }),
+  select: { padding: '6px 10px', border: '1px solid #e3e8e4', borderRadius: 8, fontSize: 11, color: '#374151', outline: 'none', background: '#fff' },
+  btn: (active) => ({ padding: '6px 14px', border: active ? 'none' : '1px solid #e3e8e4', background: active ? '#1a6b3a' : '#fff', color: active ? '#fff' : '#374151', borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: 'pointer' }),
   pagination: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 },
 };
 
@@ -71,7 +71,7 @@ export default function AuditLog() {
         </div>
 
         {error && (
-          <div style={{ background: '#fef2f2', color: '#991b1b', padding: '10px 14px', borderRadius: 7, fontSize: 12, marginBottom: 12 }}>{error}</div>
+          <div style={{ background: '#fef2f2', color: '#991b1b', padding: '10px 14px', borderRadius: 10, fontSize: 12, marginBottom: 12 }}>{error}</div>
         )}
 
         {loading ? (

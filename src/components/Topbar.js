@@ -7,50 +7,54 @@ import NotificationBell from './NotificationBell';
 import OfflineIndicator from './OfflineIndicator';
 import { subscribe, promptInstall, isStandalone } from '../utils/pwaInstall';
 
-/* ─── Design 3 — Living Africa tokens ─── */
+/* ─── Pewil corporate topbar — frosted white over the app surface,
+   restrained green accents (2026-08-13). ─── */
 const TOKENS = {
-  amber: '#f4a743', terra: '#d9562c', forest: '#1f3d26', forest2: '#2d5a37',
-  sand: '#fff7ec', cream: '#fffcf7', ink: '#1b1b1b', muted: '#6b5d50',
-  line: 'rgba(27,27,27,.10)',
+  green: '#1a6b3a', green2: '#2d9e58',
+  ink: '#0f1712', muted: '#68766c',
+  line: '#e3e8e4', chip: '#f2f5f2',
 };
-const SERIF = "'Fraunces', Georgia, serif";
 const SANS = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
 
 const S = {
   bar: {
     position: 'sticky', top: 0, zIndex: 50,
-    background: TOKENS.cream, borderBottom: `1px solid ${TOKENS.line}`,
+    background: 'rgba(255,255,255,0.88)',
+    backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
+    borderBottom: `1px solid ${TOKENS.line}`,
     padding: '12px 24px', display: 'flex', alignItems: 'center',
     justifyContent: 'space-between', minHeight: 56,
     fontFamily: SANS,
   },
   left: { display: 'flex', flexDirection: 'column' },
   title: {
-    fontFamily: SERIF, fontSize: 20, fontWeight: 700,
-    color: TOKENS.forest, lineHeight: 1.2, letterSpacing: '-0.01em',
+    fontFamily: SANS, fontSize: 19, fontWeight: 800,
+    color: TOKENS.ink, lineHeight: 1.2, letterSpacing: '-0.02em',
   },
   sub: { fontSize: 12, color: TOKENS.muted, marginTop: 2 },
   right: { display: 'flex', alignItems: 'center', gap: 8 },
   installBtn: {
-    background: 'transparent', fontSize: 11, padding: '6px 12px', borderRadius: 999,
-    color: TOKENS.forest, fontWeight: 700, border: `1px solid ${TOKENS.forest}`,
+    background: 'transparent', fontSize: 11, padding: '7px 13px', borderRadius: 10,
+    color: TOKENS.green, fontWeight: 700, border: '1px solid rgba(26,107,58,0.45)',
     cursor: 'pointer', fontFamily: 'inherit',
   },
   dateChip: {
-    background: TOKENS.sand, fontSize: 11, padding: '6px 12px', borderRadius: 999,
-    color: TOKENS.forest, fontWeight: 600, border: `1px solid ${TOKENS.line}`,
+    background: TOKENS.chip, fontSize: 11, padding: '7px 13px', borderRadius: 10,
+    color: '#3c4a41', fontWeight: 600, border: `1px solid ${TOKENS.line}`,
+    fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em',
   },
   waBtn: {
-    background: '#25D366', color: '#fff', border: 'none', borderRadius: 999,
-    padding: '8px 16px', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+    background: '#25D366', color: '#fff', border: 'none', borderRadius: 10,
+    padding: '8px 15px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
     display: 'flex', alignItems: 'center', gap: 6, transition: 'opacity 0.15s',
   },
   primaryBtn: {
-    background: `linear-gradient(135deg, ${TOKENS.amber}, ${TOKENS.terra})`,
-    color: '#fff', border: 'none', borderRadius: 999,
-    padding: '8px 18px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+    background: `linear-gradient(135deg, ${TOKENS.green}, ${TOKENS.green2})`,
+    color: '#fff', border: 'none', borderRadius: 10,
+    padding: '9px 18px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+    letterSpacing: '0.01em',
     transition: 'transform 0.12s, box-shadow 0.15s',
-    boxShadow: '0 6px 14px -6px rgba(217,86,44,.55)',
+    boxShadow: '0 6px 16px -6px rgba(26,107,58,0.55)',
   },
 };
 
@@ -121,13 +125,13 @@ function BranchChip({ activeModule }) {
     <span
       title={mySession ? `Active session at ${branchObj.name}` : `Default branch (no session open)`}
       style={{
-        background: '#fdeedd',
-        color: '#c97d1a',
+        background: '#e8f5ee',
+        color: '#1a6b3a',
         fontSize: 11,
-        padding: '6px 12px',
-        borderRadius: 999,
+        padding: '7px 13px',
+        borderRadius: 10,
         fontWeight: 700,
-        border: '1px solid rgba(201,125,26,.18)',
+        border: '1px solid rgba(26,107,58,.18)',
         letterSpacing: '0.02em',
       }}
     >

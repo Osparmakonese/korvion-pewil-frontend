@@ -124,17 +124,17 @@ export default function Customers({ onTabChange }) {
 
   if (customersLoading) {
     return (
-      <div style={{ padding: 24, fontFamily: "'Inter', sans-serif", backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+      <div style={{ padding: 24, fontFamily: "'Inter', sans-serif", backgroundColor: '#f6f8f6', minHeight: '100vh' }}>
         <div style={{ textAlign: 'center', color: '#6b7280' }}>Loading...</div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 24, fontFamily: "'Inter', sans-serif", backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+    <div style={{ padding: 24, fontFamily: "'Inter', sans-serif", backgroundColor: '#f6f8f6', minHeight: '100vh' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Playfair Display', serif", margin: 0, color: '#111827' }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", margin: 0, color: '#111827' }}>
           Customers
         </h1>
         {isOwnerOrManager && (
@@ -145,7 +145,7 @@ export default function Customers({ onTabChange }) {
               color: '#fff',
               border: 'none',
               padding: '8px 16px',
-              borderRadius: 7,
+              borderRadius: 10,
               fontSize: 12,
               fontWeight: 600,
               cursor: 'pointer'
@@ -158,7 +158,7 @@ export default function Customers({ onTabChange }) {
 
       {/* Add Customer Form */}
       {showAddForm && (
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16, marginBottom: 24 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16, marginBottom: 24 }}>
           <form onSubmit={handleAddCustomer}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 12 }}>
               <input
@@ -168,8 +168,8 @@ export default function Customers({ onTabChange }) {
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 style={{
                   padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 7,
+                  border: '1px solid #e3e8e4',
+                  borderRadius: 10,
                   fontSize: 11,
                   fontFamily: "'Inter', sans-serif",
                 }}
@@ -182,8 +182,8 @@ export default function Customers({ onTabChange }) {
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 style={{
                   padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 7,
+                  border: '1px solid #e3e8e4',
+                  borderRadius: 10,
                   fontSize: 11,
                   fontFamily: "'Inter', sans-serif",
                 }}
@@ -196,8 +196,8 @@ export default function Customers({ onTabChange }) {
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 style={{
                   padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 7,
+                  border: '1px solid #e3e8e4',
+                  borderRadius: 10,
                   fontSize: 11,
                   fontFamily: "'Inter', sans-serif",
                 }}
@@ -212,7 +212,7 @@ export default function Customers({ onTabChange }) {
                   color: '#fff',
                   border: 'none',
                   padding: '8px 16px',
-                  borderRadius: 7,
+                  borderRadius: 10,
                   fontSize: 11,
                   fontWeight: 600,
                   cursor: createMutation.isPending ? 'not-allowed' : 'pointer',
@@ -225,11 +225,11 @@ export default function Customers({ onTabChange }) {
                 type="button"
                 onClick={() => setShowAddForm(false)}
                 style={{
-                  background: '#e5e7eb',
+                  background: '#e3e8e4',
                   color: '#374151',
                   border: 'none',
                   padding: '8px 16px',
-                  borderRadius: 7,
+                  borderRadius: 10,
                   fontSize: 11,
                   fontWeight: 600,
                   cursor: 'pointer'
@@ -245,7 +245,7 @@ export default function Customers({ onTabChange }) {
       {/* Metric Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 24 }}>
         {/* Total Customers */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div
               style={{
@@ -265,7 +265,7 @@ export default function Customers({ onTabChange }) {
               <div style={{ fontSize: 9, color: '#6b7280', fontWeight: 500, marginBottom: 4 }}>
                 TOTAL CUSTOMERS
               </div>
-              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Playfair Display', serif", color: '#1e3a5f', marginBottom: 2 }}>
+              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#1e3a5f', marginBottom: 2 }}>
                 {totalCustomers}
               </div>
               <div style={{ fontSize: 9, color: '#9ca3af' }}>All time</div>
@@ -274,7 +274,7 @@ export default function Customers({ onTabChange }) {
         </div>
 
         {/* Active This Month */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div
               style={{
@@ -294,7 +294,7 @@ export default function Customers({ onTabChange }) {
               <div style={{ fontSize: 9, color: '#6b7280', fontWeight: 500, marginBottom: 4 }}>
                 ACTIVE CUSTOMERS
               </div>
-              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Playfair Display', serif", color: '#1a6b3a', marginBottom: 2 }}>
+              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#1a6b3a', marginBottom: 2 }}>
                 {activeCustomers}
               </div>
               <div style={{ fontSize: 9, color: '#9ca3af' }}>Currently active</div>
@@ -303,7 +303,7 @@ export default function Customers({ onTabChange }) {
         </div>
 
         {/* Total Revenue */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div
               style={{
@@ -323,7 +323,7 @@ export default function Customers({ onTabChange }) {
               <div style={{ fontSize: 9, color: '#6b7280', fontWeight: 500, marginBottom: 4 }}>
                 TOTAL REVENUE
               </div>
-              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Playfair Display', serif", color: '#1a6b3a', marginBottom: 2 }}>
+              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#1a6b3a', marginBottom: 2 }}>
                 {fmt(totalRevenue, 'zwd')}
               </div>
               <div style={{ fontSize: 9, color: '#9ca3af' }}>All sales</div>
@@ -332,7 +332,7 @@ export default function Customers({ onTabChange }) {
         </div>
 
         {/* Average Spend */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div
               style={{
@@ -352,7 +352,7 @@ export default function Customers({ onTabChange }) {
               <div style={{ fontSize: 9, color: '#6b7280', fontWeight: 500, marginBottom: 4 }}>
                 AVG. SPEND
               </div>
-              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Playfair Display', serif", color: '#c97d1a', marginBottom: 2 }}>
+              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", color: '#c97d1a', marginBottom: 2 }}>
                 {fmt(avgSpend, 'zwd')}
               </div>
               <div style={{ fontSize: 9, color: '#9ca3af' }}>Per customer</div>
@@ -364,7 +364,7 @@ export default function Customers({ onTabChange }) {
       {/* Main Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
         {/* Customer Table Card */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <input
             type="text"
             placeholder="Search by name, phone, or customer ID..."
@@ -373,8 +373,8 @@ export default function Customers({ onTabChange }) {
             style={{
               width: '100%',
               padding: '8px 12px',
-              border: '1px solid #e5e7eb',
-              borderRadius: 7,
+              border: '1px solid #e3e8e4',
+              borderRadius: 10,
               fontSize: 11,
               marginBottom: 16,
               fontFamily: "'Inter', sans-serif",
@@ -384,15 +384,15 @@ export default function Customers({ onTabChange }) {
 
           <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
             <thead>
-              <tr style={{ background: '#f9fafb' }}>
-                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>ID</th>
-                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Name</th>
-                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Phone</th>
-                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Email</th>
-                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>Purchases</th>
-                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>Total Spent</th>
-                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Status</th>
-                {isOwnerOrManager && <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>Action</th>}
+              <tr style={{ background: '#f6f8f6' }}>
+                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>ID</th>
+                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>Name</th>
+                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>Phone</th>
+                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>Email</th>
+                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'right' }}>Purchases</th>
+                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'right' }}>Total Spent</th>
+                <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'left' }}>Status</th>
+                {isOwnerOrManager && <th style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '7px 8px', borderBottom: '1px solid #e3e8e4', textAlign: 'center' }}>Action</th>}
               </tr>
             </thead>
             <tbody>
@@ -440,7 +440,7 @@ export default function Customers({ onTabChange }) {
         </div>
 
         {/* Top Customers Card */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 16 }}>
+        <div style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 16 }}>
           <h3 style={{ fontSize: 12, fontWeight: 700, fontFamily: "'Inter', sans-serif", margin: '0 0 16px 0', color: '#111827' }}>
             Top Customers
           </h3>

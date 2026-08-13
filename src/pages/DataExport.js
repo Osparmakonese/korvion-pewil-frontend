@@ -2,16 +2,16 @@ import { useState } from 'react';
 import { exportData } from '../api/authApi';
 
 const S = {
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '18px 20px', marginBottom: 16 },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: '18px 20px', marginBottom: 16 },
   title: { fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 12 },
   p: { fontSize: 13, color: '#374151', lineHeight: 1.7, marginBottom: 10 },
   btn: (primary) => ({
-    padding: '10px 20px', border: primary ? 'none' : '1px solid #e5e7eb',
+    padding: '10px 20px', border: primary ? 'none' : '1px solid #e3e8e4',
     background: primary ? '#1a6b3a' : '#fff', color: primary ? '#fff' : '#374151',
-    borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+    borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer',
   }),
   optionCard: (selected) => ({
-    border: selected ? '2px solid #1a6b3a' : '1px solid #e5e7eb',
+    border: selected ? '2px solid #1a6b3a' : '1px solid #e3e8e4',
     borderRadius: 10, padding: '16px 18px', cursor: 'pointer',
     background: selected ? '#e8f5ee' : '#fff', transition: 'all 0.15s',
     flex: 1, minWidth: 200,
@@ -92,7 +92,7 @@ export default function DataExport() {
             'Customers', 'Sales history', 'Suppliers & POs',
             'Invoices & billing',
           ].map((item) => (
-            <div key={item} style={{ fontSize: 12, color: '#374151', padding: '6px 10px', background: '#f9fafb', borderRadius: 6, border: '1px solid #f3f4f6' }}>
+            <div key={item} style={{ fontSize: 12, color: '#374151', padding: '6px 10px', background: '#f6f8f6', borderRadius: 8, border: '1px solid #f3f4f6' }}>
               {'\u2713'} {item}
             </div>
           ))}
@@ -102,10 +102,10 @@ export default function DataExport() {
       {/* Action */}
       <div style={S.card}>
         {error && (
-          <div style={{ background: '#fef2f2', color: '#991b1b', padding: '10px 14px', borderRadius: 7, fontSize: 12, marginBottom: 12 }}>{error}</div>
+          <div style={{ background: '#fef2f2', color: '#991b1b', padding: '10px 14px', borderRadius: 10, fontSize: 12, marginBottom: 12 }}>{error}</div>
         )}
         {success && (
-          <div style={{ background: '#e8f5ee', color: '#1a6b3a', padding: '10px 14px', borderRadius: 7, fontSize: 12, marginBottom: 12 }}>{success}</div>
+          <div style={{ background: '#e8f5ee', color: '#1a6b3a', padding: '10px 14px', borderRadius: 10, fontSize: 12, marginBottom: 12 }}>{success}</div>
         )}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button style={S.btn(true)} onClick={handleExport} disabled={loading}>

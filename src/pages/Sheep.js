@@ -25,32 +25,32 @@ const S = {
     position: 'relative',
   },
   bannerOverlay: { position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(26,107,58,0.85), rgba(0,0,0,0.2))', borderRadius: 10 },
-  bannerTitle: { color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: "'Playfair Display', serif", textShadow: '0 1px 3px rgba(0,0,0,0.3)', position: 'relative', zIndex: 2 },
+  bannerTitle: { color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", textShadow: '0 1px 3px rgba(0,0,0,0.3)', position: 'relative', zIndex: 2 },
   bannerSub: { color: 'rgba(255,255,255,0.7)', fontSize: 11, textShadow: '0 1px 2px rgba(0,0,0,0.2)', position: 'relative', zIndex: 2 },
   twoCol: { display: 'grid', gridTemplateColumns: '40% 1fr', gap: 20, alignItems: 'start' },
-  card: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: 18, marginBottom: 16 },
-  cardTitle: { fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 12, fontFamily: "'Playfair Display', serif" },
+  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: 18, marginBottom: 16 },
+  cardTitle: { fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 12, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" },
   label: { display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 3, marginTop: 8 },
-  input: { width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box' },
-  textarea: { width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box', fontFamily: 'Inter, sans-serif', resize: 'vertical', minHeight: 60 },
+  input: { width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box' },
+  textarea: { width: '100%', padding: '8px 10px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', color: '#111827', boxSizing: 'border-box', fontFamily: 'Inter, sans-serif', resize: 'vertical', minHeight: 60 },
   row2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 },
   row3: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 },
-  btn: { width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 12 },
-  btnSecondary: { width: '100%', padding: '10px', background: '#c97d1a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 8 },
-  btnSmall: { padding: '6px 12px', fontSize: 11, fontWeight: 600, background: '#c0392b', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' },
-  sectionTitle: { fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 12, fontFamily: "'Playfair Display', serif" },
-  sheepCard: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '14px 16px', marginBottom: 10 },
+  btn: { width: '100%', padding: '10px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 12 },
+  btnSecondary: { width: '100%', padding: '10px', background: '#c97d1a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginTop: 8 },
+  btnSmall: { padding: '6px 12px', fontSize: 11, fontWeight: 600, background: '#c0392b', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' },
+  sectionTitle: { fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 12, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" },
+  sheepCard: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 10, padding: '14px 16px', marginBottom: 10 },
   sheepCardRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   sheepName: { fontSize: 13, fontWeight: 700, color: '#111827' },
   sheepMeta: { fontSize: 11, color: '#6b7280', marginTop: 4 },
   badge: (color) => ({ display: 'inline-block', fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 4, textTransform: 'uppercase', background: color === 'amber' ? '#fef3c7' : color === 'red' ? '#fee2e2' : '#dcfce7', color: color === 'amber' ? '#92400e' : color === 'red' ? '#991b1b' : '#166534' }),
-  tabs: { display: 'flex', gap: 0, marginBottom: 16, borderBottom: '1px solid #e5e7eb' },
+  tabs: { display: 'flex', gap: 0, marginBottom: 16, borderBottom: '1px solid #e3e8e4' },
   tab: (active) => ({ flex: 1, padding: '12px 16px', textAlign: 'center', fontSize: 12, fontWeight: 600, cursor: 'pointer', borderBottom: active ? '2px solid #1a6b3a' : '2px solid transparent', color: active ? '#1a6b3a' : '#6b7280', transition: 'all .15s' }),
   countBadge: { display: 'inline-block', background: '#1a6b3a', color: '#fff', borderRadius: 20, padding: '4px 10px', fontSize: 11, fontWeight: 700, marginLeft: 8 },
-  healthCard: { background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: '12px 14px', marginBottom: 10 },
-  saleCard: { background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: '12px 14px', marginBottom: 10 },
-  filterPill: (active) => ({ padding: '6px 14px', fontSize: 11, fontWeight: 600, cursor: 'pointer', border: '1px solid #e5e7eb', borderRadius: 20, background: active ? '#111827' : '#fff', color: active ? '#fff' : '#374151', transition: 'all .15s', marginRight: 8, marginBottom: 8 }),
-  preview: { background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 7, padding: '10px 12px', fontSize: 11, color: '#166534', marginTop: 8 },
+  healthCard: { background: '#f6f8f6', border: '1px solid #e3e8e4', borderRadius: 8, padding: '12px 14px', marginBottom: 10 },
+  saleCard: { background: '#f6f8f6', border: '1px solid #e3e8e4', borderRadius: 8, padding: '12px 14px', marginBottom: 10 },
+  filterPill: (active) => ({ padding: '6px 14px', fontSize: 11, fontWeight: 600, cursor: 'pointer', border: '1px solid #e3e8e4', borderRadius: 20, background: active ? '#111827' : '#fff', color: active ? '#fff' : '#374151', transition: 'all .15s', marginRight: 8, marginBottom: 8 }),
+  preview: { background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '10px 12px', fontSize: 11, color: '#166534', marginTop: 8 },
 };
 
 const HEALTH_TYPES = [['vaccination','Vaccination'],['shearing','Shearing'],['treatment','Treatment'],['check','Health Check'],['other','Other']];
@@ -323,7 +323,7 @@ export default function Sheep() {
                           <div style={S.sheepMeta}>{s.tag_number} • {s.breed || 'Unknown breed'}</div>
                         </div>
                         <div style={{ display: 'flex', gap: 6 }}>
-                          <button style={{ padding: '6px 12px', fontSize: 11, fontWeight: 600, background: '#fff', color: '#1a6b3a', border: '1px solid #1a6b3a', borderRadius: 6, cursor: 'pointer' }} onClick={() => setEditAnimal(s)}>Edit</button>
+                          <button style={{ padding: '6px 12px', fontSize: 11, fontWeight: 600, background: '#fff', color: '#1a6b3a', border: '1px solid #1a6b3a', borderRadius: 8, cursor: 'pointer' }} onClick={() => setEditAnimal(s)}>Edit</button>
                           <button style={S.btnSmall} onClick={() => handleDeleteSheep(s.id)}>Delete</button>
                         </div>
                       </div>
@@ -335,11 +335,11 @@ export default function Sheep() {
                         {s.status === 'culled' && <span style={S.badge('amber')}>Culled</span>}
                       </div>
                       {(s.status === 'deceased' || s.status === 'culled') && s.cause_of_death && (
-                        <div style={{ fontSize: 10, color: '#991b1b', marginTop: 6, padding: '6px 10px', background: '#fef2f2', borderRadius: 6 }}>
+                        <div style={{ fontSize: 10, color: '#991b1b', marginTop: 6, padding: '6px 10px', background: '#fef2f2', borderRadius: 8 }}>
                           <strong>{s.status === 'deceased' ? 'Died' : 'Culled'}:</strong> {s.cause_of_death}{s.date_of_death && ` on ${s.date_of_death}`}
                         </div>
                       )}
-                      <div style={{ marginTop: 6, padding: '6px 8px', background: '#f9fafb', borderRadius: 6, fontSize: 10 }}>
+                      <div style={{ marginTop: 6, padding: '6px 8px', background: '#f6f8f6', borderRadius: 8, fontSize: 10 }}>
                         <div style={{ color: '#6b7280' }}>Costs: {fmt(totalCost)} {healthCost > 0 && <span>(health: {fmt(healthCost)})</span>}</div>
                         {woolKg > 0 && <div style={{ color: '#6b7280' }}>Wool: {woolKg.toFixed(2)} kg</div>}
                         {salePrice > 0 && <div style={{ color: '#6b7280' }}>Sale: {fmt(salePrice)}</div>}
