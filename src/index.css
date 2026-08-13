@@ -15,9 +15,9 @@
   --ink-2: #374151;
   --ink-3: #6b7280;
   --ink-4: #9ca3af;
-  --surface: #f9fafb;
+  --surface: #f6f8f6;
   --surface-2: #f3f4f6;
-  --border: #e5e7eb;
+  --border: #e3e8e4;
   --white: #ffffff;
 }
 
@@ -127,7 +127,7 @@ input, select, textarea, button {
   100% { opacity: 0.6; }
 }
 .skeleton {
-  background: #e5e7eb;
+  background: #e3e8e4;
   border-radius: 6px;
   animation: skeleton-pulse 1.5s ease-in-out infinite;
 }
@@ -229,6 +229,26 @@ input, select, textarea, button {
     overscroll-behavior-x: contain;
   }
 
+  /* ── Smooth sliding polish (2026-08-13) ─────────────────────────────
+     Purely cosmetic: momentum scrolling stays native (no scroll-snap,
+     no fixed slide widths — that experiment broke wide tables). The
+     chunky default scrollbar is replaced with a hairline green
+     indicator so the swipe affordance is visible without juddering
+     the row height while you drag. */
+  main.page-content-mobile [style*="overflow-x: auto"]::-webkit-scrollbar,
+  main.page-content-mobile *:has(> table)::-webkit-scrollbar {
+    height: 3px;
+  }
+  main.page-content-mobile [style*="overflow-x: auto"]::-webkit-scrollbar-thumb,
+  main.page-content-mobile *:has(> table)::-webkit-scrollbar-thumb {
+    background: rgba(26, 107, 58, 0.28);
+    border-radius: 2px;
+  }
+  main.page-content-mobile [style*="overflow-x: auto"]::-webkit-scrollbar-track,
+  main.page-content-mobile *:has(> table)::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
   /* ── THE GUARANTEE (2026-08-10) ────────────────────────────────────
      Making the wrapper scroll only helps when a wrapper exists. Two
      structures defeated it and left data unreachable with nothing to
@@ -281,11 +301,11 @@ input, select, textarea, button {
     position: sticky;
     left: 0;
     background: #fff;
-    box-shadow: 1px 0 0 0 #e5e7eb;
+    box-shadow: 2px 0 6px -2px rgba(15, 23, 18, 0.10);
     z-index: 1;
   }
   main.page-content-mobile table > thead > tr > th:first-child {
-    background: #f9fafb;
+    background: #f6f8f6;
     z-index: 2;
   }
 
@@ -319,6 +339,16 @@ input, select, textarea, button {
   main.page-content-mobile select,
   main.page-content-mobile textarea {
     font-size: 16px !important;
+  }
+
+  /* Green focus state on mobile form controls — mirrors the desktop
+     layer so the whole system answers a tap the same way. */
+  main.page-content-mobile input:focus:not([type=checkbox]):not([type=radio]):not([type=range]),
+  main.page-content-mobile select:focus,
+  main.page-content-mobile textarea:focus {
+    border-color: #1a6b3a !important;
+    box-shadow: 0 0 0 3px rgba(26, 107, 58, 0.13) !important;
+    outline: none !important;
   }
 
   /* 5. Touch targets: min 44x44 for buttons and button-like links */
@@ -363,7 +393,7 @@ input, select, textarea, button {
     justify-content: space-between;
     background: #ffffff;
     padding: 10px 16px 8px;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e3e8e4;
     position: sticky;
     top: 0;
     z-index: 200;
@@ -389,7 +419,7 @@ input, select, textarea, button {
     background: rgba(255, 255, 255, 0.94);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid #e3e8e4;
     z-index: 500;
     align-items: center;
     padding: 6px 8px calc(18px + env(safe-area-inset-bottom, 0px));
@@ -470,15 +500,16 @@ input, select, textarea, button {
   main.page-content-mobile > .card,
   main.page-content-mobile > [data-mobile-card] {
     background: #fff;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #e3e8e4;
     border-radius: 16px;
     margin-bottom: 12px;
     padding: 14px;
   }
 
-  /* Heading typography matches desktop. Playfair for headings. */
+  /* Heading typography matches desktop — Jakarta Sans (2026-08-13).
+     The brand wordmark in .mh-brand keeps Playfair; that's the logo. */
   main.page-content-mobile h1 {
-    font-family: 'Playfair Display', Georgia, serif !important;
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif !important;
     font-weight: 700 !important;
     font-size: 26px !important;
     letter-spacing: -0.01em !important;
@@ -519,7 +550,7 @@ input, select, textarea, button {
   main.page-content-mobile select,
   main.page-content-mobile textarea {
     background: #fff !important;
-    border: 1px solid #d1d5db !important;
+    border: 1px solid #d5ddd8 !important;
     border-radius: 12px !important;
     padding: 12px 14px !important;
     color: #111827 !important;
@@ -531,7 +562,7 @@ input, select, textarea, button {
     background: rgba(255, 255, 255, 0.94) !important;
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    border-bottom: 1px solid #e5e7eb !important;
+    border-bottom: 1px solid #e3e8e4 !important;
     padding: calc(8px + env(safe-area-inset-top, 0px)) 16px 8px !important;
   }
   .mobile-header .mh-brand,
@@ -546,7 +577,7 @@ input, select, textarea, button {
      now rounded on the scroll wrapper instead. */
   main.page-content-mobile table {
     background: #fff;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #e3e8e4;
     overflow: visible;
   }
   main.page-content-mobile [style*="overflow-x: auto"] {
@@ -557,7 +588,7 @@ input, select, textarea, button {
     border-color: #f3f4f6 !important;
   }
   main.page-content-mobile table th {
-    background: #f9fafb !important;
+    background: #f6f8f6 !important;
     color: #374151 !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
@@ -567,10 +598,10 @@ input, select, textarea, button {
   /* Mobile metric cards — 2x2 grid */
   .metric-grid-desktop { display: none !important; }
   .metric-grid-mobile { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 14px; margin-bottom: 14px; }
-  .metric-card-mobile { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; }
+  .metric-card-mobile { background: #fff; border: 1px solid #e3e8e4; border-radius: 10px; padding: 12px 14px; }
   .metric-card-mobile .mc-lbl { font-size: 10px; font-weight: 500; color: #6b7280; margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
   .metric-card-mobile .mc-ico { width: 22px; height: 22px; border-radius: 5px; display: flex; align-items: center; justify-content:center; font-size: 11px; }
-  .metric-card-mobile .mc-val { font-size: 19px; font-weight: 700; font-family: 'Playfair Display', serif; margin-bottom: 3px; }
+  .metric-card-mobile .mc-val { font-size: 19px; font-weight: 800; font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; margin-bottom: 3px; }
   .metric-card-mobile .mc-sub { font-size: 10px; color: #6b7280; }
   .metric-card-mobile .mc-bar { margin-top: 8px; height: 3px; background: #f3f4f6; border-radius: 2px; overflow: hidden; }
   .metric-card-mobile .mc-bar div { height: 3px; border-radius: 2px; }
@@ -579,7 +610,7 @@ input, select, textarea, button {
   .field-cards-desktop { display: none !important; }
   .field-cards-mobile { display: flex !important; gap: 10px; padding: 0 14px 14px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .field-cards-mobile::-webkit-scrollbar { display: none; }
-  .field-card-mobile { flex-shrink: 0; width: 175px; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; cursor: pointer; }
+  .field-card-mobile { flex-shrink: 0; width: 175px; background: #fff; border: 1px solid #e3e8e4; border-radius: 10px; overflow: hidden; cursor: pointer; }
   .field-card-mobile .fcm-img { height: 88px; position: relative; overflow: hidden; }
   .field-card-mobile .fcm-img img { width: 100%; height: 100%; object-fit: cover; }
   .field-card-mobile .fcm-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.55)); }
@@ -609,14 +640,14 @@ input, select, textarea, button {
   /* Mobile trips as list */
   .trips-table { display: none !important; }
   .trips-list-mobile { display: block !important; }
-  .trip-item-mobile { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #e5e7eb; background: #fff; }
-  .trip-item-mobile:first-child { border-top: 1px solid #e5e7eb; }
+  .trip-item-mobile { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #e3e8e4; background: #fff; }
+  .trip-item-mobile:first-child { border-top: 1px solid #e3e8e4; }
   .trip-icon-mobile { width: 36px; height: 36px; border-radius: 8px; overflow: hidden; flex-shrink: 0; }
   .trip-icon-mobile img { width: 100%; height: 100%; object-fit: cover; }
   .trip-info-mobile { flex: 1; }
   .trip-market-mobile { font-size: 13px; font-weight: 600; color: #111827; }
   .trip-meta-mobile { font-size: 10px; color: #6b7280; margin-top: 2px; }
-  .trip-rev-mobile { text-align: right; font-size: 14px; font-weight: 700; color: #1a6b3a; font-family: 'Playfair Display', serif; }
+  .trip-rev-mobile { text-align: right; font-size: 14px; font-weight: 800; color: #1a6b3a; font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; font-variant-numeric: tabular-nums; }
   .trip-date-mobile { font-size: 10px; color: #6b7280; }
 }
 
@@ -768,4 +799,18 @@ body.pewil-pos-focus main.page-content-mobile {
 .mobile-more-sheet { max-height: 85vh; }
 @supports (height: 100dvh) {
   .mobile-more-sheet { max-height: 85dvh; }
+}
+
+/* Slide the More sheet up instead of snapping into place. Transform
+   animates once on mount and settles back to none, so the sheet's
+   fixed positioning and scrolling behave exactly as before. */
+@keyframes pewil-sheet-up {
+  from { transform: translateY(28px); opacity: 0.5; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.mobile-more-sheet {
+  animation: pewil-sheet-up 0.28s cubic-bezier(0.2, 0, 0, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-more-sheet { animation: none; }
 }
