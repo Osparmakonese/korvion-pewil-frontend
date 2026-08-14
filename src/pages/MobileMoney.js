@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { collectPayment, getPaymentStatus, getPaymentTransactions } from '../api/retailApi';
+import { collectPayment, getPaymentStatus, getPaymentTransactions, refundPayment } from '../api/retailApi';
+import { toast, errorMessage } from '../utils/toast';
 import { fmt } from '../utils/format';
 import useIsMobile from '../hooks/useIsMobile';
 
@@ -75,6 +76,31 @@ export default function MobileMoney() {
 
   const isPending = active && !TERMINAL.includes(active.status);
 
+  // ── Send change / refund back to the customer's EcoCash ──────────
+  // Only direct-EcoCash payments support it (money can only go back to
+  // the number that paid), and the server re-checks role + amount.
+  const [refunding, setRefunding] = useState(null);   // txn being refunded
+  const [refundForm, setRefundForm] = useState({ amount: '', reason: 'Change' });
+  const [refundBusy, setRefundBusy] = useState(false);
+  const submitRefund = async (e) => {
+    e?.preventDefault?.();
+    if (!refunding) return;
+    setRefundBusy(true);
+    try {
+      const res = await refundPayment(refunding.id, {
+        amount: refundForm.amount, reason: refundForm.reason || 'Change',
+      });
+      toast({ kind: 'success', message: `Sent ${fmt(Number(refundForm.amount) || 0, (refunding.currency || 'usd').toLowerCase())} to ${refunding.phone} (${res.status}).` });
+      setRefunding(null);
+      setRefundForm({ amount: '', reason: 'Change' });
+      qc.invalidateQueries({ queryKey: ['payment-transactions'] });
+    } catch (err2) {
+      toast({ kind: 'error', message: errorMessage(err2, 'Could not send the refund.') });
+    } finally {
+      setRefundBusy(false);
+    }
+  };
+
   return (
     <div className="vtl-stack" style={{ maxWidth: 1080, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '380px 1fr', gap: 16 }}>
       <div style={card}>
@@ -134,22 +160,61 @@ export default function MobileMoney() {
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Recent mobile money</h3>
         <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead><tr><th style={th}>When</th><th style={th}>Phone</th><th style={th}>Wallet</th><th style={th}>Amount</th><th style={th}>Status</th></tr></thead>
+          <thead><tr><th style={th}>When</th><th style={th}>Phone</th><th style={th}>Wallet</th><th style={th}>Amount</th><th style={th}>Status</th><th style={th}></th></tr></thead>
           <tbody>
-            {txns.length === 0 && <tr><td style={td} colSpan={5}>No payments yet.</td></tr>}
+            {txns.length === 0 && <tr><td style={td} colSpan={6}>No payments yet.</td></tr>}
             {txns.map((t) => (
               <tr key={t.id}>
                 <td style={td}>{t.created_at ? new Date(t.created_at).toLocaleString() : '—'}</td>
                 <td style={td}>{t.phone}</td>
-                <td style={td}>{t.method}</td>
+                <td style={td}>{t.method}{t.provider === 'ecocash' ? ' · direct' : ''}</td>
                 <td style={{ ...td, fontWeight: 600 }}>{fmt(t.amount || 0, (t.currency || 'usd').toLowerCase())}</td>
                 <td style={td}><span style={pill(SC[t.status] || SC.created)}>{t.status}</span></td>
+                <td style={td}>
+                  {t.provider === 'ecocash' && t.status === 'paid' && (
+                    <button
+                      onClick={() => { setRefunding(t); setRefundForm({ amount: '', reason: 'Change' }); }}
+                      style={{ background: '#fff', border: '1px solid #e3e8e4', borderRadius: 8, padding: '4px 10px', fontSize: 10, fontWeight: 700, color: '#1a6b3a', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                      Send change
+                    </button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
         </table></div>
         </div>
       </div>
+
+      {/* Send-change / refund modal — money goes BACK to the number that
+          paid, capped at the original amount (server enforces both). */}
+      {refunding && (
+        <div onClick={() => !refundBusy && setRefunding(null)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', zIndex: 10002, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={(e) => e.stopPropagation()}
+            style={{ background: '#fff', borderRadius: 14, width: '92%', maxWidth: 380, padding: 20, boxShadow: '0 24px 60px rgba(0,0,0,0.3)' }}>
+            <h3 style={{ fontSize: 15, fontWeight: 800, margin: 0, color: '#111827' }}>Send change to EcoCash</h3>
+            <p style={{ fontSize: 12, color: '#6b7280', margin: '6px 0 12px', lineHeight: 1.5 }}>
+              Back to <b>{refunding.phone}</b> — up to {fmt(refunding.amount || 0, (refunding.currency || 'usd').toLowerCase())} (the original payment).
+            </p>
+            <form onSubmit={submitRefund}>
+              <label style={label}>Amount</label>
+              <input style={input} autoFocus inputMode="decimal" placeholder="0.00" value={refundForm.amount}
+                onChange={(e) => setRefundForm({ ...refundForm, amount: e.target.value })} required />
+              <label style={label}>Reason</label>
+              <input style={input} value={refundForm.reason}
+                onChange={(e) => setRefundForm({ ...refundForm, reason: e.target.value })} />
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 14 }}>
+                <button type="button" disabled={refundBusy} onClick={() => setRefunding(null)}
+                  style={{ padding: '9px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#334155', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                <button type="submit" disabled={refundBusy}
+                  style={{ padding: '9px 14px', borderRadius: 8, border: 0, background: '#1a6b3a', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  {refundBusy ? 'Sending…' : 'Send'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

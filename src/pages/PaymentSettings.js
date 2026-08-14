@@ -60,6 +60,10 @@ export default function PaymentSettings() {
     const p = providers.find((x) => x.slug === form.provider);
     return p ? `Methods: ${(p.methods || []).join(', ')} · Currencies: ${(p.currencies || []).join(', ')}` : '';
   })();
+  // Field labels differ per provider: Paynow has an Integration ID + Key +
+  // account email; direct EcoCash has ONE API key from
+  // developers.ecocash.co.zw and no ID/email.
+  const isEcocash = form.provider === 'ecocash';
 
   return (
     <div className="vtl-stack" style={{ maxWidth: 1080, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 380px', gap: 16 }}>
@@ -67,8 +71,8 @@ export default function PaymentSettings() {
         <div style={card}>
           <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Your payment accounts</h3>
           <p style={{ fontSize: 11.5, color: '#6b7280', marginBottom: 10 }}>
-            Money is collected straight into <b>your own</b> mobile money merchant account. Paste the Integration ID and Key
-            you got from your provider. New Paynow integrations start in <b>test mode</b> — no real money moves until you switch them to live.
+            Money is collected straight into <b>your own</b> merchant account. Paynow needs an Integration ID + Key;
+            direct EcoCash needs the API key from developers.ecocash.co.zw. New accounts start in <b>test mode</b> — no real money moves until you switch them to live.
           </p>
           <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -128,15 +132,18 @@ export default function PaymentSettings() {
           <label style={label}>Account label</label>
           <input style={input} placeholder="e.g. Pewil POS – USD" value={form.display_name} onChange={(e) => setForm({ ...form, display_name: e.target.value })} />
 
-          <label style={label}>Integration ID</label>
-          <input style={input} value={form.integration_id} onChange={(e) => setForm({ ...form, integration_id: e.target.value })} required />
+          <label style={label}>{isEcocash ? 'App name (optional)' : 'Integration ID'}</label>
+          <input style={input} value={form.integration_id} onChange={(e) => setForm({ ...form, integration_id: e.target.value })} required={!isEcocash} placeholder={isEcocash ? 'Your app name on the EcoCash portal' : ''} />
 
-          <label style={label}>Integration Key {editId && <span style={{ color: '#9ca3af' }}>(leave blank to keep current)</span>}</label>
-          <PasswordInput style={input} autoComplete="off" placeholder={editId ? '•••• keep current' : 'Paste your secret key'} value={form.integration_key} onChange={(e) => setForm({ ...form, integration_key: e.target.value })} required={!editId} />
+          <label style={label}>{isEcocash ? 'EcoCash API key' : 'Integration Key'} {editId && <span style={{ color: '#9ca3af' }}>(leave blank to keep current)</span>}</label>
+          <PasswordInput style={input} autoComplete="off" placeholder={editId ? '•••• keep current' : (isEcocash ? 'Paste the API key from developers.ecocash.co.zw' : 'Paste your secret key')} value={form.integration_key} onChange={(e) => setForm({ ...form, integration_key: e.target.value })} required={!editId} />
+          {isEcocash && <p style={{ fontSize: 10, color: '#9ca3af', marginTop: 3 }}>Sign up at developers.ecocash.co.zw, create an application, copy its API key. Test mode uses the sandbox — no real money moves.</p>}
 
+          {!isEcocash && (<>
           <label style={label}>Paynow account email</label>
           <input style={input} type="email" placeholder="A login email of your Paynow account" value={form.account_email} onChange={(e) => setForm({ ...form, account_email: e.target.value })} />
           <p style={{ fontSize: 10, color: '#9ca3af', marginTop: 3 }}>Required for mobile money. In test mode it must match a login email on your Paynow account.</p>
+          </>)}
 
           <label style={{ ...label, display: 'flex', alignItems: 'center', gap: 6, marginTop: 10 }}>
             <input type="checkbox" checked={form.is_enabled} onChange={(e) => setForm({ ...form, is_enabled: e.target.checked })} /> Enabled
