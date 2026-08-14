@@ -32,12 +32,17 @@ export default function BranchSwitcher() {
   const isRetail = !!(user?.modules && user.modules[0] === 'retail');
 
   // A user pinned to a shop can't switch — they just see where they are.
+  // Exception: the owner can grant a pinned manager "view all shops"
+  // (can_view_all_branches), which puts the switcher back. The server
+  // enforces the same rule, so this is purely which control renders.
   const ownBranchName = user?.branch_name || '';
+  const canViewAll = user?.can_view_all_branches === true;
+  const maySwitch = !ownBranchName || canViewAll;
 
   const { data: raw = [] } = useQuery({
     queryKey: ['retail-branches'],
     queryFn: listBranches,
-    enabled: isRetail && !ownBranchName,
+    enabled: isRetail && maySwitch,
     staleTime: 60_000,
   });
   const branches = Array.isArray(raw) ? raw : (raw?.results || []);
@@ -60,8 +65,8 @@ export default function BranchSwitcher() {
 
   if (!isRetail) return null;
 
-  // Assigned staff: show the shop, no control.
-  if (ownBranchName) {
+  // Assigned staff without the all-shops right: show the shop, no control.
+  if (ownBranchName && !canViewAll) {
     return (
       <span style={{
         fontSize: 12, fontWeight: 600, color: '#1a6b3a',

@@ -101,7 +101,7 @@ export default function TeamManagement() {
   const [inviteStatus, setInviteStatus] = useState(null); // null | 'loading' | 'success' | 'error'
   const [inviteMessage, setInviteMessage] = useState('');
   const [editUser, setEditUser] = useState(null);
-  const [editForm, setEditForm] = useState({ first_name: '', last_name: '', role: 'worker', branch: '' });
+  const [editForm, setEditForm] = useState({ first_name: '', last_name: '', role: 'worker', branch: '', can_view_all_branches: false });
   const [editStatus, setEditStatus] = useState(null);
   const [editMessage, setEditMessage] = useState('');
 
@@ -176,7 +176,16 @@ export default function TeamManagement() {
 
   const handleEditSubmit = () => {
     if (!editUser) return;
-    updateUserMut.mutate({ id: editUser.id, data: { first_name: editForm.first_name, last_name: editForm.last_name, role: editForm.role, branch: editForm.branch === '' ? null : editForm.branch } });
+    // Managers may only send the day-to-day fields — the server rejects the
+    // whole PATCH if an owner-only key (role, branch, all-shops right) is
+    // present, so don't include them unless this user is the owner.
+    const data = { first_name: editForm.first_name, last_name: editForm.last_name };
+    if (user?.role === 'owner') {
+      data.role = editForm.role;
+      data.branch = editForm.branch === '' ? null : editForm.branch;
+      data.can_view_all_branches = editForm.can_view_all_branches === true;
+    }
+    updateUserMut.mutate({ id: editUser.id, data });
   };
 
   const handleInviteSubmit = () => {
@@ -365,7 +374,7 @@ export default function TeamManagement() {
                             color: '#374151',
                             cursor: 'pointer',
                             transition: 'all 0.15s',
-                          }} onClick={() => { setEditUser(u); setEditForm({ first_name: u.first_name || '', last_name: u.last_name || '', role: u.role || 'worker', branch: u.branch ? String(u.branch) : '' }); setEditStatus(null); }} onMouseEnter={e => { e.currentTarget.style.background = '#f6f8f6'; e.currentTarget.style.borderColor = '#1a6b3a'; e.currentTarget.style.color = '#1a6b3a'; }} onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e3e8e4'; e.currentTarget.style.color = '#374151'; }}>
+                          }} onClick={() => { setEditUser(u); setEditForm({ first_name: u.first_name || '', last_name: u.last_name || '', role: u.role || 'worker', branch: u.branch ? String(u.branch) : '', can_view_all_branches: u.can_view_all_branches === true }); setEditStatus(null); }} onMouseEnter={e => { e.currentTarget.style.background = '#f6f8f6'; e.currentTarget.style.borderColor = '#1a6b3a'; e.currentTarget.style.color = '#1a6b3a'; }} onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e3e8e4'; e.currentTarget.style.color = '#374151'; }}>
                             Edit
                           </button>
                         )}
@@ -716,17 +725,23 @@ export default function TeamManagement() {
                     <input value={editForm.last_name} onChange={e => setEditForm({ ...editForm, last_name: e.target.value })} style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
                   </div>
                 </div>
-                <div style={{ marginBottom: 20 }}>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Role</label>
-                  <select value={editForm.role} onChange={e => setEditForm({ ...editForm, role: e.target.value })} style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 8, fontSize: 14, background: '#fff', boxSizing: 'border-box' }}>
-                    <option value="manager">Manager</option>
-                    <option value="worker">{roleLabel('worker')}</option>
-                  </select>
-                </div>
+                {/* Role, shop assignment and the all-shops right are the
+                    OWNER'S controls — a manager editing their shop's staff
+                    only gets names + permission toggles, and the server
+                    rejects owner-only keys from managers anyway. */}
+                {user?.role === 'owner' && (
+                  <div style={{ marginBottom: 20 }}>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Role</label>
+                    <select value={editForm.role} onChange={e => setEditForm({ ...editForm, role: e.target.value })} style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 8, fontSize: 14, background: '#fff', boxSizing: 'border-box' }}>
+                      <option value="manager">Manager</option>
+                      <option value="worker">{roleLabel('worker')}</option>
+                    </select>
+                  </div>
+                )}
                 {/* Which shop this person works at. Only worth showing once
                     there is more than one shop — a single-branch owner should
                     never meet this concept. Empty = every shop. */}
-                {isRetail && branches.length > 1 && (
+                {user?.role === 'owner' && isRetail && branches.length > 1 && (
                   <div style={{ marginBottom: 14 }}>
                     <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
                       Works at
@@ -746,6 +761,25 @@ export default function TeamManagement() {
                         ? 'Sees only this shop, and can only open a till here.'
                         : 'Sees every shop. Right for owners and office staff.'}
                     </div>
+                  </div>
+                )}
+                {/* All-shops viewing right — only meaningful for someone
+                    pinned to a shop. Lets the owner pin a manager to their
+                    branch and still allow chain-wide figures. */}
+                {user?.role === 'owner' && isRetail && branches.length > 1 && editForm.branch !== '' && (
+                  <div style={{ marginBottom: 14, display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', background: '#f6f8f6', border: '1px solid #e3e8e4', borderRadius: 10 }}>
+                    <input
+                      id="tm-view-all-shops"
+                      type="checkbox"
+                      checked={editForm.can_view_all_branches === true}
+                      onChange={e => setEditForm({ ...editForm, can_view_all_branches: e.target.checked })}
+                      style={{ marginTop: 2, width: 16, height: 16, accentColor: '#1a6b3a', cursor: 'pointer' }}
+                    />
+                    <label htmlFor="tm-view-all-shops" style={{ fontSize: 12.5, color: '#374151', lineHeight: 1.5, cursor: 'pointer' }}>
+                      <strong style={{ color: '#111827' }}>Can view all shops</strong><br />
+                      Sees every branch&apos;s figures in reports and the branch
+                      switcher, but still works and rings sales at their own shop.
+                    </label>
                   </div>
                 )}
                 {editStatus === 'error' && <div style={{ color: '#c0392b', fontSize: 12, marginBottom: 12 }}>{editMessage || 'Failed to update user. Please try again.'}</div>}
