@@ -74,16 +74,64 @@ export default function TeamManagement() {
   // 'cashier' role in the database and adding one would mean migrating live
   // staff accounts that already have open cashier sessions.
   const isRetail = !!(user?.modules && user.modules[0] === 'retail');
-  // A tenant runs exactly ONE module, and there is no per-user module field in
-  // the API (the dead module-access checkboxes were removed for that reason).
-  // This column used to be hardcoded "Farm, Retail" for every row, which told
-  // owners something untrue — it now shows the tenant's actual module.
-  const moduleLabel = isRetail ? 'Retail' : 'Farm';
+  // The old "Module" column (one module per tenant, so the same value on
+  // every row) was replaced by "Works at" + "Access" in the 2026-08-14
+  // access rework — those answer real questions; the module never did.
   const roleLabel = (role) => {
     if (role === 'worker') return isRetail ? 'Cashier' : 'Worker';
     if (role === 'manager') return 'Manager';
     if (role === 'owner') return 'Owner';
     return role;
+  };
+  // ── Access rights ────────────────────────────────────────────────
+  // These map 1:1 to the backend's permission booleans on the user row.
+  // There are deliberately NO new roles here: a "cashier", "accountant"
+  // or "view-only member" is role=worker plus a toggle combination —
+  // the DB roles stay owner / manager / worker (see 4 Aug repair notes).
+  const PERM_FIELDS = isRetail
+    ? [
+        { key: 'can_add_products', label: 'Add products', desc: 'Create new catalogue items' },
+        { key: 'can_edit_products', label: 'Edit products & prices', desc: 'Change details, prices, stock' },
+        { key: 'can_view_reports', label: 'View reports', desc: 'Sales, P&L, analytics' },
+        { key: 'can_view_journal', label: 'View accounting journal', desc: 'Double-entry records' },
+      ]
+    : [
+        { key: 'can_view_report', label: 'View P&L report', desc: '' },
+        { key: 'can_view_costs', label: 'View costs', desc: '' },
+        { key: 'can_view_workers', label: 'View workers', desc: '' },
+        { key: 'can_view_stock', label: 'View stock', desc: '' },
+        { key: 'can_view_sales', label: 'View sales', desc: '' },
+        { key: 'can_view_hours', label: 'View hours & pay', desc: '' },
+      ];
+  const permsFromUser = (u) => Object.fromEntries(
+    PERM_FIELDS.map(f => [f.key, u ? u[f.key] !== false : true])
+  );
+  // One-click profiles — shorthand for a role + toggle combination.
+  // Role part applies only when the editor is the owner (role changes
+  // are owner-only server-side); toggles apply for managers too.
+  const PRESETS = isRetail ? [
+    { name: 'Cashier — till only', role: 'worker',
+      perms: { can_add_products: false, can_edit_products: false, can_view_reports: false, can_view_journal: false } },
+    { name: 'Senior cashier', role: 'worker',
+      perms: { can_add_products: true, can_edit_products: true, can_view_reports: false, can_view_journal: false } },
+    { name: 'Shop manager', role: 'manager',
+      perms: { can_add_products: true, can_edit_products: true, can_view_reports: true, can_view_journal: true } },
+    { name: 'View only — accountant', role: 'worker',
+      perms: { can_add_products: false, can_edit_products: false, can_view_reports: true, can_view_journal: true } },
+  ] : [];
+  // Human summary of what a person can actually do, for the team list.
+  const accessSummary = (u) => {
+    if (u.role === 'owner') return 'Everything';
+    if (!isRetail) return roleLabel(u.role);
+    const canSell = u.role === 'worker' || u.role === 'manager';
+    const edits = (u.can_add_products !== false) || (u.can_edit_products !== false);
+    const views = (u.can_view_reports !== false) || (u.can_view_journal !== false);
+    if (!edits && views && u.role === 'worker') return 'View only';
+    const parts = [];
+    if (canSell) parts.push('Till');
+    if (edits) parts.push('Products');
+    if (views) parts.push('Reports');
+    return parts.length ? parts.join(' · ') : 'Till only';
   };
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -101,7 +149,7 @@ export default function TeamManagement() {
   const [inviteStatus, setInviteStatus] = useState(null); // null | 'loading' | 'success' | 'error'
   const [inviteMessage, setInviteMessage] = useState('');
   const [editUser, setEditUser] = useState(null);
-  const [editForm, setEditForm] = useState({ first_name: '', last_name: '', role: 'worker', branch: '', can_view_all_branches: false });
+  const [editForm, setEditForm] = useState({ first_name: '', last_name: '', role: 'worker', branch: '', can_view_all_branches: false, perms: {} });
   const [editStatus, setEditStatus] = useState(null);
   const [editMessage, setEditMessage] = useState('');
 
@@ -179,7 +227,7 @@ export default function TeamManagement() {
     // Managers may only send the day-to-day fields — the server rejects the
     // whole PATCH if an owner-only key (role, branch, all-shops right) is
     // present, so don't include them unless this user is the owner.
-    const data = { first_name: editForm.first_name, last_name: editForm.last_name };
+    const data = { first_name: editForm.first_name, last_name: editForm.last_name, ...editForm.perms };
     if (user?.role === 'owner') {
       data.role = editForm.role;
       data.branch = editForm.branch === '' ? null : editForm.branch;
@@ -298,7 +346,8 @@ export default function TeamManagement() {
                 <tr style={{ borderBottom: '1px solid #e3e8e4' }}>
                   <th style={thS}>User</th>
                   <th style={thS}>Role</th>
-                  <th style={thS}>Module</th>
+                  <th style={thS}>Works at</th>
+                  <th style={thS}>Access</th>
                   <th style={thS}>Status</th>
                   <th style={thS}>Last Active</th>
                   <th style={thS}>Actions</th>
@@ -345,7 +394,15 @@ export default function TeamManagement() {
                           {roleLabel(u.role)}
                         </span>
                       </td>
-                      <td style={{ padding: '12px 8px', fontSize: 11, color: '#374151' }}>{moduleLabel}</td>
+                      <td style={{ padding: '12px 8px', fontSize: 11, color: '#374151' }}>
+                        {u.role === 'owner' || !u.branch
+                          ? <span style={{ color: '#68766c' }}>All shops</span>
+                          : (branches.find(b => String(b.id) === String(u.branch))?.name || u.branch_name || '—')}
+                        {u.can_view_all_branches === true && u.branch && (
+                          <span title="Can view all shops" style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, color: '#1a6b3a', background: '#e8f5ee', padding: '2px 6px', borderRadius: 999 }}>ALL-SHOPS VIEW</span>
+                        )}
+                      </td>
+                      <td style={{ padding: '12px 8px', fontSize: 11, color: '#374151' }}>{accessSummary(u)}</td>
                       <td style={{ padding: '12px 8px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <div style={{
@@ -374,7 +431,7 @@ export default function TeamManagement() {
                             color: '#374151',
                             cursor: 'pointer',
                             transition: 'all 0.15s',
-                          }} onClick={() => { setEditUser(u); setEditForm({ first_name: u.first_name || '', last_name: u.last_name || '', role: u.role || 'worker', branch: u.branch ? String(u.branch) : '', can_view_all_branches: u.can_view_all_branches === true }); setEditStatus(null); }} onMouseEnter={e => { e.currentTarget.style.background = '#f6f8f6'; e.currentTarget.style.borderColor = '#1a6b3a'; e.currentTarget.style.color = '#1a6b3a'; }} onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e3e8e4'; e.currentTarget.style.color = '#374151'; }}>
+                          }} onClick={() => { setEditUser(u); setEditForm({ first_name: u.first_name || '', last_name: u.last_name || '', role: u.role || 'worker', branch: u.branch ? String(u.branch) : '', can_view_all_branches: u.can_view_all_branches === true, perms: permsFromUser(u) }); setEditStatus(null); }} onMouseEnter={e => { e.currentTarget.style.background = '#f6f8f6'; e.currentTarget.style.borderColor = '#1a6b3a'; e.currentTarget.style.color = '#1a6b3a'; }} onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e3e8e4'; e.currentTarget.style.color = '#374151'; }}>
                             Edit
                           </button>
                         )}
@@ -780,6 +837,60 @@ export default function TeamManagement() {
                       Sees every branch&apos;s figures in reports and the branch
                       switcher, but still works and rings sales at their own shop.
                     </label>
+                  </div>
+                )}
+                {/* ── Access rights ──────────────────────────────────
+                    Toggle what this person can actually do. Managers can
+                    set these for their own shop's cashiers; role/shop
+                    stay owner-only (enforced server-side too). */}
+                {PRESETS.length > 0 && editUser?.role !== 'owner' && (
+                  <div style={{ marginBottom: 10 }}>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
+                      Quick profiles
+                    </label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {PRESETS.map(p => (
+                        <button
+                          key={p.name}
+                          type="button"
+                          onClick={() => setEditForm(prev => ({
+                            ...prev,
+                            role: user?.role === 'owner' ? p.role : prev.role,
+                            perms: { ...prev.perms, ...p.perms },
+                          }))}
+                          style={{ background: '#f6f8f6', border: '1px solid #e3e8e4', borderRadius: 999, padding: '6px 12px', fontSize: 11, fontWeight: 600, color: '#374151', cursor: 'pointer' }}
+                        >
+                          {p.name}
+                        </button>
+                      ))}
+                    </div>
+                    <div style={{ fontSize: 10.5, color: '#6b7280', marginTop: 5, lineHeight: 1.45 }}>
+                      A profile is a shortcut — it sets the toggles below{user?.role === 'owner' ? ' and the role' : ''}. Fine-tune afterwards if needed.
+                    </div>
+                  </div>
+                )}
+                {editUser?.role !== 'owner' && (
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
+                      Access rights
+                    </label>
+                    <div style={{ border: '1px solid #e3e8e4', borderRadius: 10, overflow: 'hidden' }}>
+                      {PERM_FIELDS.map((f, idx) => (
+                        <label key={f.key} htmlFor={`tm-perm-${f.key}`} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px', borderBottom: idx < PERM_FIELDS.length - 1 ? '1px solid #f0f4f1' : 'none', cursor: 'pointer', background: editForm.perms[f.key] !== false ? '#fff' : '#fafbfa' }}>
+                          <input
+                            id={`tm-perm-${f.key}`}
+                            type="checkbox"
+                            checked={editForm.perms[f.key] !== false}
+                            onChange={e => setEditForm(prev => ({ ...prev, perms: { ...prev.perms, [f.key]: e.target.checked } }))}
+                            style={{ marginTop: 2, width: 15, height: 15, accentColor: '#1a6b3a', cursor: 'pointer' }}
+                          />
+                          <span style={{ fontSize: 12.5, color: '#111827', fontWeight: 600, lineHeight: 1.4 }}>
+                            {f.label}
+                            {f.desc ? <span style={{ display: 'block', fontSize: 10.5, fontWeight: 500, color: '#6b7280' }}>{f.desc}</span> : null}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 )}
                 {editStatus === 'error' && <div style={{ color: '#c0392b', fontSize: 12, marginBottom: 12 }}>{editMessage || 'Failed to update user. Please try again.'}</div>}
