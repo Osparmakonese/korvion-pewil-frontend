@@ -13,6 +13,7 @@ import { fmt } from '../utils/format';
 import { M } from '../styles/mobileTokens';
 import haptics from '../utils/haptics';
 import BottomSheet from './mobile/BottomSheet';
+import { shopPrice } from '../utils/branchStock';
 
 const money = (v) => fmt(v, 'zwd');
 const FONT = "'Inter', system-ui, sans-serif";
@@ -250,7 +251,7 @@ export default function MobilePOS({
                   style={{ textAlign: 'left', border: `1px solid ${added ? T.green : T.line}`, background: added ? T.green3 : T.card, borderRadius: M.radius.lg, padding: 12, cursor: 'pointer', fontFamily: 'inherit', transform: added ? 'scale(0.97)' : 'scale(1)', transition: `transform ${M.motion.fast}, background ${M.motion.fast}, border-color ${M.motion.fast}`, minHeight: 78, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: T.ink, lineHeight: 1.25, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.name}</div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 8 }}>
-                    <span style={{ fontSize: 15, fontWeight: 800, color: T.green }}>{money(p.selling_price)}</span>
+                    <span style={{ fontSize: 15, fontWeight: 800, color: T.green }}>{money(shopPrice(p))}</span>
                     <span style={{ fontSize: 16, color: added ? T.green : T.ink3, fontWeight: 700 }}>{added ? '✓' : '+'}</span>
                   </div>
                 </button>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { listBranches } from '../api/retailApi';
 import { VIEW_BRANCH_KEY } from '../api/axios';
@@ -50,6 +50,20 @@ export default function BranchSwitcher() {
   const [viewing, setViewing] = useState(() => {
     try { return localStorage.getItem(VIEW_BRANCH_KEY) || ''; } catch (_) { return ''; }
   });
+
+  // A shop that has been closed leaves its id behind in localStorage. The
+  // dropdown then falls back to showing "All shops" while the interceptor
+  // keeps sending ?branch=<dead id> on every read — the server resolves it
+  // to nothing and answers chain-wide, so the numbers are right but the
+  // stored choice is a lie waiting to be misread. Clear it once the branch
+  // list has actually loaded and does not contain it.
+  useEffect(() => {
+    if (!viewing) return;
+    if (!Array.isArray(branches) || branches.length === 0) return;
+    if (branches.some((b) => String(b.id) === String(viewing))) return;
+    try { localStorage.removeItem(VIEW_BRANCH_KEY); } catch (_) { /* private mode */ }
+    setViewing('');
+  }, [branches, viewing]);
 
   const choose = (value) => {
     try {

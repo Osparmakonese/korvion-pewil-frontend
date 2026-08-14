@@ -23,6 +23,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { fmt } from '../utils/format';
 import { getProductIcon } from '../utils/productIcons';
+import { shopPrice, shopStock } from '../utils/branchStock';
 
 const T = {
   cream:   '#ffffff',
@@ -234,7 +235,7 @@ export default function MobileProducts({ onAddProduct, onEditProduct }) {
             }}>
               <span>SKU {p.sku || '—'}</span>
               <span>·</span>
-              <span>{p.quantity_in_stock ?? 0} in stock</span>
+              <span>{shopStock(p)} in stock</span>
             </div>
             <div style={{ marginTop: 6, display: 'flex', gap: 5, flexWrap: 'wrap' }}>
               {lowStockIds.has(p.id) && <Badge tone="warn">low stock</Badge>}
@@ -248,7 +249,7 @@ export default function MobileProducts({ onAddProduct, onEditProduct }) {
             fontSize: 16, fontWeight: 700, color: T.ink,
             flex: '0 0 auto',
           }}>
-            {fmt(parseFloat(p.selling_price) || 0, 'zwd')}
+            {fmt(shopPrice(p), 'zwd')}
           </div>
         </button>
         );

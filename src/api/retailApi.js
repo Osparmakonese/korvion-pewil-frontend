@@ -1,4 +1,4 @@
-import api from './axios';
+import api, { VIEW_BRANCH_KEY } from './axios';
 
 // ── Categories ──
 export const getCategories = () => api.get('/retail/categories/').then(r => r.data);
@@ -127,16 +127,51 @@ export const getProducts = (opts) => {
       : undefined;
   return api.get('/retail/products/', params ? { params } : undefined).then(r => r.data);
 };
-export const createProduct = (data) => api.post('/retail/products/', data).then(r => r.data);
+// The opening stock on a new product has to land SOMEWHERE, and the server
+// picks the shop from ?branch= (falling back to head office). The axios
+// interceptor only adds that to reads, so name the shop explicitly here —
+// otherwise an owner stepped into their second shop adds a product with 40
+// units and all 40 appear at head office (2026-08-14).
+export const createProduct = (data) => {
+  let branch = null;
+  try { branch = localStorage.getItem(VIEW_BRANCH_KEY); } catch (_) { branch = null; }
+  return api.post('/retail/products/', data,
+    branch ? { params: { branch } } : undefined).then(r => r.data);
+};
 export const updateProduct = (id, data) => api.patch(`/retail/products/${id}/`, data).then(r => r.data);
 export const deleteProduct = (id) => api.delete(`/retail/products/${id}/`);
 export const getLowStockProducts = () => api.get('/retail/products/low_stock/').then(r => r.data);
 export const getExpiringProducts = () => api.get('/retail/products/expiring_soon/').then(r => r.data);
-export const barcodeLookup = (barcode) => api.get('/retail/products/barcode_lookup/', { params: { barcode } }).then(r => r.data);
+// `branch` is optional and the till passes its OPEN SESSION's shop, so a
+// scan is resolved against the shop the sale will actually land in — and a
+// line that shop has switched off is refused at the scan rather than at
+// payment, four items later.
+export const barcodeLookup = (barcode, branch) =>
+  api.get('/retail/products/barcode_lookup/', {
+    params: branch ? { barcode, branch } : { barcode },
+  }).then(r => r.data);
 
 // ── Stock Adjustments ──
 export const getStockAdjustments = () => api.get('/retail/stock-adjustments/').then(r => r.data);
-export const createStockAdjustment = (data) => api.post('/retail/stock-adjustments/', data).then(r => r.data);
+
+// A stock adjustment MOVES REAL STOCK at one shop, so it has to name the
+// shop. The axios interceptor deliberately only adds ?branch= to reads —
+// a write must never be silently retargeted — so this one write says which
+// shop it is about explicitly, in the body.
+//
+// Without it the server had nothing to go on and fell back to head office:
+// an owner viewing "Avenu" who wrote off six broken bottles took them off
+// HQ's shelf instead, and both shops' stock was then wrong (2026-08-14). A
+// caller that passes `branch` itself always wins; a cashier pinned to a
+// shop is re-pinned server-side regardless of what is sent.
+export const createStockAdjustment = (data) => {
+  let branch = null;
+  try { branch = localStorage.getItem(VIEW_BRANCH_KEY); } catch (_) { branch = null; }
+  const body = (branch && !(data && data.branch))
+    ? { ...data, branch: parseInt(branch, 10) || undefined }
+    : data;
+  return api.post('/retail/stock-adjustments/', body).then(r => r.data);
+};
 
 // ── Cashier Sessions ──
 export const getCashierSessions = () => api.get('/retail/cashier-sessions/').then(r => r.data);

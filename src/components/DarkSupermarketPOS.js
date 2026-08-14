@@ -8,6 +8,7 @@
  */
 import React, { useMemo, useState } from 'react';
 import { fmt } from '../utils/format';
+import { shopPrice, shopStock } from '../utils/branchStock';
 
 const C = {
   green: '#34c172', green2: '#2aa862', ink: '#e9efe9', muted: '#8b988f',
@@ -74,13 +75,13 @@ export default function DarkSupermarketPOS({
             {visible.length === 0 ? (
               <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 50, color: C.muted }}>No products match.</div>
             ) : visible.map((p) => {
-              const out = (p.quantity_in_stock ?? p.stock ?? 1) <= 0;
+              const out = shopStock(p) <= 0;
               return (
                 <div key={p.id} onClick={() => !out && addToCart(p)} style={{ ...S.prod, opacity: out ? 0.45 : 1, cursor: out ? 'not-allowed' : 'pointer' }}>
                   <div style={S.thumb}>{(p.name || '?')[0].toUpperCase()}</div>
                   <div style={S.pname}>{p.name}</div>
-                  <div style={S.pprice}>${fmt(p.selling_price)}{p.is_weighable ? <span style={{ fontSize: 10, color: C.muted }}> /kg</span> : ''}</div>
-                  <div style={S.pstk}>{out ? 'Out of stock' : `${p.quantity_in_stock ?? p.stock ?? ''} in stock`}</div>
+                  <div style={S.pprice}>${fmt(shopPrice(p))}{p.is_weighable ? <span style={{ fontSize: 10, color: C.muted }}> /kg</span> : ''}</div>
+                  <div style={S.pstk}>{out ? 'Out of stock' : `${shopStock(p)} in stock`}</div>
                   {!out && <button type="button" style={S.add} onClick={(e) => { e.stopPropagation(); addToCart(p); }}>Add</button>}
                 </div>
               );

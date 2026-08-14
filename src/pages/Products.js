@@ -19,6 +19,7 @@ import { useAuth } from '../context/AuthContext';
 import { fmt } from '../utils/format';
 import { confirm } from '../utils/confirm';
 import { invalidateProductCaches } from '../utils/queryCache';
+import { shopPrice, shopStock } from '../utils/branchStock';
 
 /* ─── Modal Component ─── */
 // Blank product form. Includes the specialist flags (weighable, age-restricted,
@@ -954,10 +955,26 @@ export default function Products() {
                       {fmt(product.cost_price, 'zwd')}
                     </td>
                     <td style={S.td}>
-                      {fmt(product.selling_price, 'zwd')}
+                      {/* This shop's price when a shop is selected, with a
+                          marker where it differs from the chain price so the
+                          owner can see at a glance which lines are overridden. */}
+                      {fmt(shopPrice(product), 'zwd')}
+                      {product.branch_price != null
+                        && Number(product.branch_price) !== Number(product.selling_price) && (
+                        <span
+                          title={`Chain price ${fmt(product.selling_price, 'zwd')}`}
+                          style={{
+                            marginLeft: 6, fontSize: 10, fontWeight: 700,
+                            color: '#1a6b3a', background: '#e8f5ee',
+                            padding: '1px 5px', borderRadius: 8,
+                          }}
+                        >
+                          shop
+                        </span>
+                      )}
                     </td>
                     <td style={S.td}>
-                      {product.quantity_in_stock} {product.unit}
+                      {shopStock(product)} {product.unit}
                     </td>
                     <td style={S.td}>
                       {product.vat_percentage || '—'}

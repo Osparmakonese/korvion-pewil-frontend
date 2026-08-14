@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getProducts,
@@ -39,6 +39,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import { invalidateSaleCaches, invalidateProductCaches } from '../utils/queryCache';
 import { getProductIcon } from '../utils/productIcons';
+import { shopPrice, shopStock } from '../utils/branchStock';
 
 /* ─── Receipt Modal ─── */
 function ReceiptModal({ isOpen, onClose, receipt }) {
@@ -1274,6 +1275,32 @@ export default function POS() {
     }
   };
 
+  const { data: sessions = [] } = useQuery({
+    queryKey: ['retail-sessions-pos'],
+    queryFn: getCashierSessions,
+  });
+
+  // WHICH SHOP IS THIS TILL IN?
+  //
+  // The open cashier session is the only honest answer. The sale's branch,
+  // its receipt prefix and its stock deduction are all taken from the
+  // session server-side — so the prices and stock the cashier is shown have
+  // to come from the same place, or the screen and the books describe two
+  // different shops. In particular an owner left on "All shops" in the
+  // header switcher was being shown chain prices and chain stock while
+  // ringing up into a specific branch's session (2026-08-14).
+  //
+  // Falls back to undefined for a single-branch tenant or before the
+  // session loads, which asks for the chain view — the same thing it has
+  // always done.
+  const tillBranchId = useMemo(() => {
+    const mine = sessions.filter(
+      (s) => !s.closed_at
+        && (s.cashier_username || '').toLowerCase() === (user?.username || '').toLowerCase()
+    );
+    return mine.length ? (mine[0].branch || undefined) : undefined;
+  }, [sessions, user]);
+
   // Products. Tries the live endpoint first, falls back to the
   // IndexedDB catalog cache when the network is dead so the till
   // can still ring items mid-outage. On a successful live fetch
@@ -1285,10 +1312,13 @@ export default function POS() {
     isFetching: productsFetching,
     refetch: refetchProducts,
   } = useQuery({
-    queryKey: ['retail-products-pos'],
+    // Branch is part of the key: a different shop is a different catalogue,
+    // at different prices. Without it React Query would hand the second
+    // shop the first shop's cached list.
+    queryKey: ['retail-products-pos', tillBranchId || 'all'],
     queryFn: async () => {
       try {
-        const live = await getProducts();
+        const live = await getProducts(tillBranchId ? { branch: tillBranchId } : undefined);
         // Fire-and-forget — don't block render on the IndexedDB write.
         try {
           const { syncCatalog } = await import('../utils/productCatalogCache');
@@ -1305,11 +1335,6 @@ export default function POS() {
         throw err;
       }
     },
-  });
-
-  const { data: sessions = [] } = useQuery({
-    queryKey: ['retail-sessions-pos'],
-    queryFn: getCashierSessions,
   });
 
   // POS look-and-feel settings — per-tenant singleton.
@@ -1436,14 +1461,16 @@ export default function POS() {
   }, [qc]);
 
   const barcodeLookupMut = useMutation({
-    mutationFn: barcodeLookup,
+    // Resolve the scan against the shop this till's session belongs to, so
+    // the price and stock that come back are the ones the sale will use.
+    mutationFn: (code) => barcodeLookup(code, tillBranchId),
     onSuccess: (data) => {
       if (!data) return;
       setScanMiss(null);
       if (priceCheckMode) {
         setLastPriceCheck({
-          name: data.name, price: data.selling_price,
-          stock: data.quantity_in_stock, ts: Date.now(),
+          name: data.name, price: shopPrice(data),
+          stock: shopStock(data), ts: Date.now(),
         });
       } else {
         addToCart(data);
@@ -1458,6 +1485,11 @@ export default function POS() {
       setScanMiss({
         code: String(code || '').trim(),
         notFound: err?.response?.status === 404,
+        // The product exists in the business — this shop just doesn't carry
+        // it. Offering "Add product" there would create a duplicate line in
+        // the catalogue, which is the opposite of what is needed.
+        notCarried: err?.response?.data?.code === 'not_carried_here',
+        notCarriedMsg: err?.response?.data?.error || '',
         ts: Date.now(),
       });
       setBarcode('');
@@ -1473,7 +1505,8 @@ export default function POS() {
     const match =
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.sku.toLowerCase().includes(search.toLowerCase());
-    return match && p.quantity_in_stock > 0;
+    // Stock on THIS shop's shelf, not the chain's. See utils/branchStock.
+    return match && shopStock(p) > 0;
   });
 
   // Low-level: add a single product line with a known quantity. Used after
@@ -1482,13 +1515,15 @@ export default function POS() {
     setCart((prev) => {
       // For weighable items every capture is a new line — cashier might weigh
       // two bunches of bananas separately and should see both.
+      // unit_price is what the customer is charged and what gets written to
+      // the sale line — it MUST be this shop's price, not the chain's.
       if (product.is_weighable) {
         return [
           ...prev,
           {
             product_id: product.id,
             name: product.name,
-            unit_price: product.selling_price,
+            unit_price: shopPrice(product),
             quantity,
             product,
           },
@@ -1502,7 +1537,7 @@ export default function POS() {
               ...item,
               quantity: Math.min(
                 item.quantity + quantity,
-                product.quantity_in_stock
+                shopStock(product)
               ),
             }
             : item
@@ -1513,7 +1548,7 @@ export default function POS() {
         {
           product_id: product.id,
           name: product.name,
-          unit_price: product.selling_price,
+          unit_price: shopPrice(product),
           quantity,
           product,
         },
@@ -1542,12 +1577,16 @@ export default function POS() {
       removeFromCart(productId);
     } else {
       const product = products.find((p) => p.id === productId);
+      // If the product has dropped out of the cached list (offline, or a
+      // refetch mid-edit) take the cashier's number rather than clamping to
+      // a stock figure we no longer have — shopStock() of undefined is 0,
+      // and silently zeroing a line at the till is worse than trusting it.
       setCart((prev) =>
         prev.map((item) =>
           item.product_id === productId
             ? {
               ...item,
-              quantity: Math.min(qty, product.quantity_in_stock),
+              quantity: product ? Math.min(qty, shopStock(product)) : qty,
             }
             : item
         )
@@ -2392,11 +2431,20 @@ export default function POS() {
             <div style={{ marginTop: 6, padding: 10, background: '#fef2f2',
                           border: '1px solid #fecaca', borderRadius: 8 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#b91c1c' }}>
-                {scanMiss.notFound
-                  ? <>“{scanMiss.code}” is not in your catalog.</>
-                  : <>Lookup failed for “{scanMiss.code}”{offline ? ' — you are offline.' : '.'}</>}
+                {scanMiss.notCarried
+                  ? <>{scanMiss.notCarriedMsg || <>This shop does not sell “{scanMiss.code}”.</>}</>
+                  : scanMiss.notFound
+                    ? <>“{scanMiss.code}” is not in your catalog.</>
+                    : <>Lookup failed for “{scanMiss.code}”{offline ? ' — you are offline.' : '.'}</>}
               </div>
+              {scanMiss.notCarried && (
+                <div style={{ fontSize: 11, color: '#7f1d1d', marginTop: 4, lineHeight: 1.45 }}>
+                  It is in the business{'’'}s catalogue but switched off for this
+                  shop. An owner can turn it on under Products {'→'} Price per shop.
+                </div>
+              )}
               <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center' }}>
+                {!scanMiss.notCarried && (
                 <button
                   type="button"
                   disabled={offline}
@@ -2412,6 +2460,7 @@ export default function POS() {
                 >
                   ➕ Add product
                 </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setScanMiss(null)}
@@ -2456,7 +2505,7 @@ export default function POS() {
         <div style={S.productGrid}>
           {filteredProducts.length > 0 ? (
             filteredProducts.map((product) => {
-              const isOutOfStock = product.quantity_in_stock === 0;
+              const isOutOfStock = shopStock(product) <= 0;
               return (
                 <div
                   key={product.id}
@@ -2491,9 +2540,9 @@ export default function POS() {
                     );
                   })()}
                   <div style={S.productName}>{product.name}</div>
-                  <div style={S.productPrice}>{fmt(product.selling_price, 'zwd')}</div>
+                  <div style={S.productPrice}>{fmt(shopPrice(product), 'zwd')}</div>
                   <div style={S.productStock}>
-                    {product.quantity_in_stock} in stock
+                    {shopStock(product)} in stock
                   </div>
                   <button
                     onClick={() => !isOutOfStock && addToCart(product)}

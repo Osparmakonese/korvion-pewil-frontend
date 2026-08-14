@@ -8,6 +8,7 @@ import {
   createCashDrop, managerApprove,
   listBranches,
 } from '../api/retailApi';
+import { VIEW_BRANCH_KEY } from '../api/axios';
 import { fmt } from '../utils/format';
 import AIInsightCard from '../components/AIInsightCard';
 import MobileCashierSessions from '../components/MobileCashierSessions';
@@ -27,14 +28,27 @@ function OpenSessionModal({ isOpen, onClose, onSubmit, loading, branches = [] })
   const [notes, setNotes] = useState('');
   const [branchId, setBranchId] = useState('');
 
-  // Default-select HQ (or first) branch whenever the modal opens or the
-  // branches list arrives.
+  // Default-select the shop the user is actually looking at.
+  //
+  // This used to default to HQ unconditionally. Combined with the branch
+  // switcher that is a quiet trap: an owner steps into "Avenu", opens a
+  // session without re-reading the dropdown, and every sale of the day is
+  // recorded against head office. The receipt prefix, the branch P&L and
+  // the stock deduction all follow the session, so there is nothing on the
+  // till screen to give it away (2026-08-14).
+  //
+  // Order of preference: the switcher's current shop → HQ → first shop.
   useEffect(() => {
     if (!isOpen) return;
     if (branchId) return;
     if (!Array.isArray(branches) || branches.length === 0) return;
+    let viewing = '';
+    try { viewing = localStorage.getItem(VIEW_BRANCH_KEY) || ''; } catch (_) { viewing = ''; }
+    const viewed = viewing
+      ? branches.find((b) => b && String(b.id) === String(viewing))
+      : null;
     const hq = branches.find((b) => b && b.is_hq);
-    setBranchId(String((hq || branches[0]).id));
+    setBranchId(String((viewed || hq || branches[0]).id));
   }, [isOpen, branches, branchId]);
 
   const handleSubmit = (e) => {

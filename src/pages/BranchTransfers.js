@@ -54,6 +54,10 @@ const STATUS_PILL = {
 const formatApiError = (err, fallback = 'Save failed') => {
   const data = err?.response?.data;
   if (typeof data === 'string') return data;
+  // DRF renders `raise ValidationError('some sentence')` as a bare array.
+  // Without this the Object.entries branch below turned a perfectly good
+  // message into "0: some sentence".
+  if (Array.isArray(data)) return data.filter(Boolean).join('\n') || fallback;
   if (data?.detail) return data.detail;
   if (data && typeof data === 'object') {
     const lines = Object.entries(data).map(([k, v]) =>
@@ -358,6 +362,14 @@ function NewTransferModal({ branches, products, saving, onClose, onSubmit }) {
   const [lines, setLines] = useState([{ product: '', qty: 1, note: '' }]);
   const [err, setErr] = useState('');
 
+  // Only shops that share the chain catalogue can exchange stock. A shop set
+  // up as "a different business" sells its own products; moving stock into it
+  // produces a document its till can never receive against, so it must not be
+  // offered here at all. (The server refuses it too — this is so the owner
+  // never gets that far.)
+  const movable = branches.filter((b) => b.catalogue_mode !== 'own');
+  const separate = branches.length - movable.length;
+
   const addLine = () => setLines((ls) => [...ls, { product: '', qty: 1, note: '' }]);
   const removeLine = (i) => setLines((ls) => ls.filter((_, idx) => idx !== i));
   const updateLine = (i, k, v) => setLines((ls) =>
@@ -398,7 +410,7 @@ function NewTransferModal({ branches, products, saving, onClose, onSubmit }) {
           <Field label="From" required>
             <select required value={source} onChange={(e) => setSource(e.target.value)} style={inputStyle}>
               <option value="">— Select source —</option>
-              {branches.map((b) => (
+              {movable.map((b) => (
                 <option key={b.id} value={b.id}>{b.name}{b.code ? ` (${b.code})` : ''}{b.is_hq ? ' · HQ' : ''}</option>
               ))}
             </select>
@@ -406,12 +418,33 @@ function NewTransferModal({ branches, products, saving, onClose, onSubmit }) {
           <Field label="To" required>
             <select required value={dest} onChange={(e) => setDest(e.target.value)} style={inputStyle}>
               <option value="">— Select destination —</option>
-              {branches.filter((b) => String(b.id) !== String(source)).map((b) => (
+              {movable.filter((b) => String(b.id) !== String(source)).map((b) => (
                 <option key={b.id} value={b.id}>{b.name}{b.code ? ` (${b.code})` : ''}{b.is_hq ? ' · HQ' : ''}</option>
               ))}
             </select>
           </Field>
         </div>
+
+        {separate > 0 && (
+          <div style={{
+            fontSize: 11, color: T.muted, marginTop: -6, marginBottom: 14,
+            lineHeight: 1.45,
+          }}>
+            {separate} shop{separate === 1 ? '' : 's'} not listed — they run
+            their own separate catalogue, so stock isn{'’'}t shared with them.
+          </div>
+        )}
+
+        {movable.length < 2 && (
+          <div style={{
+            fontSize: 12, color: T.amber, background: T.amberT,
+            padding: '9px 11px', borderRadius: 8, marginBottom: 14,
+            lineHeight: 1.45,
+          }}>
+            You need at least two shops that share the chain catalogue before
+            stock can be transferred.
+          </div>
+        )}
 
         <div style={{
           fontSize: 11, fontWeight: 700, color: T.muted,

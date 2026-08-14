@@ -1,5 +1,6 @@
 import React from 'react';
 import { fmt } from '../utils/format';
+import { shopPrice } from '../utils/branchStock';
 
 /**
  * QuickTilesPanel — large tap-targets for unbarcoded items (produce, bread,
@@ -34,7 +35,7 @@ export default function QuickTilesPanel({ products = [], onSelect }) {
           >
             <div style={styles.tileName}>{p.name}</div>
             <div style={styles.tilePrice}>
-              {fmt(p.selling_price, 'zwd')}
+              {fmt(shopPrice(p), 'zwd')}
               {p.is_weighable && <span style={styles.perUnit}> / {p.unit_of_weight || 'kg'}</span>}
             </div>
             {p.is_age_restricted && <div style={styles.badge}>18+</div>}

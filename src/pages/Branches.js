@@ -67,6 +67,10 @@ const PLAN_CAPS = {
 const formatApiError = (err, fallback = 'Save failed') => {
   const data = err?.response?.data;
   if (typeof data === 'string') return data;
+  // `raise ValidationError('one sentence')` comes back as a bare array. The
+  // Object.entries branch below would render it as "0: one sentence", which
+  // is how the "this shop still holds stock" refusal would have read.
+  if (Array.isArray(data)) return data.filter(Boolean).join('\n') || fallback;
   if (data?.detail) return data.detail;
   if (data && typeof data === 'object') {
     const lines = Object.entries(data).map(([k, v]) =>
@@ -143,7 +147,14 @@ export default function Branches() {
     if (b.is_hq) return;
     const ok = await confirm({
       title: 'Archive branch',
-      message: `Archive "${b.name}"? Past sales and stock movements stay on the books, but the branch will stop appearing in pickers and reports. An owner can restore it later from the archive.`,
+      // Do not promise a restore. Archiving sets is_active=False and every
+      // branch query filters on is_active, so there is no screen that can
+      // bring it back — the old copy said "an owner can restore it later
+      // from the archive" and there is no such archive. The server now
+      // refuses to archive a shop that still holds stock, has an open till,
+      // or has a transfer in flight, so the only shop you can archive is an
+      // empty one.
+      message: `Archive "${b.name}"? Past sales and stock movements stay on the books, but the shop stops appearing in pickers, tills and reports — and this cannot be undone from here. Make sure its stock has been transferred out first.`,
       confirmText: 'Archive',
       danger: false,
     });
