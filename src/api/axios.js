@@ -1,5 +1,6 @@
 // Production: https://pewil-production.up.railway.app
 import axios from 'axios';
+import { toast } from '../utils/toast';
 
 const api = axios.create({
   baseURL: `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/api`,
@@ -125,6 +126,15 @@ api.interceptors.response.use(
         const body = error.response.data || {};
         if (body.code === 'subscription_expired'
             && typeof window !== 'undefined') {
+          // Say it plainly, right now, wherever the user is. Pages catch
+          // errors and show their own guesses ("no open session", generic
+          // save-failed text) — this toast guarantees the REAL reason is
+          // on screen before the lockout gate takes over.
+          toast({
+            message: body.detail
+              || 'Your subscription has expired. Pay your bill to continue.',
+            kind: 'error',
+          });
           window.dispatchEvent(new CustomEvent('pewil:payment-required', {
             detail: {
               reason: body.reason || null,
