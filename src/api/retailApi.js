@@ -110,7 +110,23 @@ export const topupWallet = (id, data) => api.post(`/retail/wallets/${id}/topup/`
 export const getWalletStatement = (id) => api.get(`/retail/wallets/${id}/statement/`).then(r => r.data);
 
 // ── Products ──
-export const getProducts = () => api.get('/retail/products/').then(r => r.data);
+// The till calls this bare, so it gets exactly what this shop sells: the
+// backend hides lines the branch has turned off (ProductBranchStock
+// .is_available = false). Catalogue-management screens pass
+// { include_unavailable: 1 } — otherwise a de-selected product vanishes from
+// the list and there is no way back in to switch it on again.
+export const getProducts = (opts) => {
+  // Fifteen screens pass this bare as `queryFn: getProducts`, and React Query
+  // invokes queryFn with ITS OWN context object ({ queryKey, signal, meta }).
+  // Accepting that blindly as params would serialise a queryKey array and an
+  // AbortSignal into the query string on every one of those screens. So only
+  // honour something that is clearly a deliberate options object.
+  const params =
+    opts && typeof opts === 'object' && !Array.isArray(opts) && !('queryKey' in opts)
+      ? opts
+      : undefined;
+  return api.get('/retail/products/', params ? { params } : undefined).then(r => r.data);
+};
 export const createProduct = (data) => api.post('/retail/products/', data).then(r => r.data);
 export const updateProduct = (id, data) => api.patch(`/retail/products/${id}/`, data).then(r => r.data);
 export const deleteProduct = (id) => api.delete(`/retail/products/${id}/`);

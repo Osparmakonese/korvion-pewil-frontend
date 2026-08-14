@@ -722,9 +722,12 @@ export default function Products() {
   const isOwnerOrManager = user?.role === 'owner' || user?.role === 'manager';
   const isWorker = user?.role === 'worker';
 
+  // Managing the catalogue means seeing the WHOLE catalogue, including lines
+  // this shop has turned off — otherwise you cannot turn one back on. The
+  // till (POS) calls getProducts() bare and gets only what this shop sells.
   const { data: products = [] } = useQuery({
-    queryKey: ['retail-products'],
-    queryFn: getProducts,
+    queryKey: ['retail-products', 'all'],
+    queryFn: () => getProducts({ include_unavailable: 1 }),
   });
 
   const { data: categories = [] } = useQuery({

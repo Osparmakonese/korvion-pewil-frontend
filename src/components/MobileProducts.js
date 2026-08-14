@@ -46,9 +46,13 @@ export default function MobileProducts({ onAddProduct, onEditProduct }) {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
 
+  // Owners/managers edit products from this screen, so it must show the whole
+  // catalogue — including lines this shop has turned off. Without
+  // include_unavailable a de-selected product disappears and there is no way
+  // back in to switch it on. The till gets the filtered list instead.
   const { data: products = [], isLoading } = useQuery({
-    queryKey: ['retail-products'],
-    queryFn: getProducts,
+    queryKey: ['retail-products', 'all'],
+    queryFn: () => getProducts({ include_unavailable: 1 }),
   });
   const { data: categories = [] } = useQuery({
     queryKey: ['retail-categories'],
