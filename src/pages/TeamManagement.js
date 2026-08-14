@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { getPasswordPolicy } from '../api/authApi';
 import { initials, avatarColor } from '../utils/format';
 import usePrimaryAction from '../hooks/usePrimaryAction';
+import useIsMobile from '../hooks/useIsMobile';
 import { listBranches } from '../api/retailApi';
+import TeamShopSection from '../components/TeamShopSection';
 
 // Generate a password that satisfies any tenant policy: always one of each
 // character class, length meets the policy minimum. Excludes look-alike
@@ -33,6 +35,10 @@ const pill = (bg, color) => ({ fontSize: 8, fontWeight: 700, padding: '2px 7px',
 const sLabel = { fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 };
 const btnS = (primary) => ({ padding: '6px 12px', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: primary ? 'none' : '1px solid #1a6b3a', background: primary ? '#1a6b3a' : '#fff', color: primary ? '#fff' : '#1a6b3a', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'all 0.15s' });
 const thS = { textAlign: 'left', padding: '7px 8px', fontSize: 8, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', background: '#f6f8f6' };
+// Person tile used inside a shop section.
+const personS = { border: '1px solid #e8ece9', borderRadius: 12, background: '#fff', padding: '12px 13px' };
+const miniSelectS = { width: '100%', padding: '7px 9px', border: '1px solid #e3e8e4', borderRadius: 8, fontSize: 12, background: '#fff', color: '#111827', boxSizing: 'border-box', cursor: 'pointer', outline: 'none' };
+const fieldLabelS = { fontSize: 9.5, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 4 };
 
 // Keyed by the stored role value. There is no 'cashier' role — retail simply
 // labels 'worker' as "Cashier" (see roleLabel below).
@@ -47,6 +53,10 @@ const roleBadgeBg = {
   'manager': '#EFF6FF',
   'worker': '#F3F4F6',
 };
+
+// Managers list above cashiers inside a shop — that is the order an owner
+// reads a branch roster in.
+const roleRank = { owner: 0, manager: 1, worker: 2 };
 
 function getUsers() {
   return api.get('/core/tenants/users/').then(res => res.data);
@@ -64,10 +74,8 @@ function updateUser(id, data) {
 }
 
 export default function TeamManagement() {
-  // Top-bar primary action — see hooks/usePrimaryAction.js.
-  usePrimaryAction(() => setShowInviteModal(true));
-
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   // Retail calls a 'worker' a "Cashier"; farm calls them a "Worker". This is a
   // LABEL only — the stored role value is 'worker' in both cases. There is no
@@ -141,6 +149,7 @@ export default function TeamManagement() {
     username: '',
     password: '',
     role: 'worker',
+    branch: '',
   });
   const { data: policy } = useQuery({ queryKey: ['passwordPolicy'], queryFn: getPasswordPolicy, staleTime: 60000 });
   const [autoPassword, setAutoPassword] = useState(true);
@@ -152,6 +161,10 @@ export default function TeamManagement() {
   const [editForm, setEditForm] = useState({ first_name: '', last_name: '', role: 'worker', branch: '', can_view_all_branches: false, perms: {} });
   const [editStatus, setEditStatus] = useState(null);
   const [editMessage, setEditMessage] = useState('');
+  // Inline (in-card) saves — shop picker and the all-shops toggle. Kept
+  // separate from the Edit modal's state so a failure shows against the
+  // person it belongs to instead of in a modal that isn't open.
+  const [quickError, setQuickError] = useState(null); // { id, msg }
 
   const { data: usersData = { count: 0, results: [] }, isLoading } = useQuery({
     queryKey: ['users'],
@@ -160,18 +173,96 @@ export default function TeamManagement() {
   });
 
   // Shops, for the "Works at" picker. Retail only — a farm tenant has no
-  // branches — and the picker itself stays hidden until there are 2+, so a
-  // single-shop owner never meets the concept.
+  // branches — and the shop layout itself stays hidden until there are 2+, so
+  // a single-shop owner never meets the concept.
   const { data: branchList = [] } = useQuery({
     queryKey: ['retail-branches'],
     queryFn: listBranches,
     enabled: isRetail,
     staleTime: 60000,
   });
-  const branches = Array.isArray(branchList) ? branchList : (branchList?.results || []);
+  // Memoised because the shop grouping below depends on them — a fresh array
+  // identity on every render would make that useMemo pointless (and CRA's
+  // exhaustive-deps rule says so, which fails the build under CI=true).
+  const branches = useMemo(
+    () => (Array.isArray(branchList) ? branchList : (Array.isArray(branchList?.results) ? branchList.results : [])),
+    [branchList]
+  );
+
+  const users = useMemo(
+    () => (Array.isArray(usersData?.results) ? usersData.results : []),
+    [usersData]
+  );
+
+  // 2026-07-30: seat-limit/pricing removed. Team size is not capped by
+  // plan and is not billed per-seat -- only certain features are
+  // plan-gated, not headcount.
+
+  // A second shop is the moment the flat list stops describing the business.
+  // Below that, keep the plain table — a single-shop tenant should never be
+  // asked "which shop?" about anything.
+  const multiShop = isRetail && branches.length > 1;
+  // Only the owner may move people between shops or grant the all-shops
+  // right; the server rejects those keys from a manager anyway.
+  const isOwner = user?.role === 'owner';
+  const canAssign = isOwner && multiShop;
+
+  // ── Group the team by shop ───────────────────────────────────────
+  // Driven by the SHOP list, not the people list, so a branch created five
+  // minutes ago shows up immediately with an empty state instead of being
+  // invisible until someone happens to be assigned to it.
+  const { shopSections, unassigned } = useMemo(() => {
+    const map = new Map();
+    const ordered = [...branches].sort((a, b) => {
+      if (!!a.is_hq !== !!b.is_hq) return a.is_hq ? -1 : 1;
+      return String(a.name || '').localeCompare(String(b.name || ''));
+    });
+    ordered.forEach(b => map.set(String(b.id), { branch: b, people: [] }));
+
+    const loose = [];
+    users.forEach(u => {
+      const key = (u.branch === null || u.branch === undefined || u.branch === '')
+        ? null
+        : String(u.branch);
+      if (key === null) { loose.push(u); return; }
+      if (!map.has(key)) {
+        // Pinned to a shop this viewer cannot list. Give it its own section
+        // rather than dropping the person into "sees every shop", which
+        // would be untrue.
+        map.set(key, { branch: { id: u.branch, name: u.branch_name || 'Other shop' }, people: [] });
+      }
+      map.get(key).people.push(u);
+    });
+
+    const byRoleThenName = (a, b) => {
+      const ra = roleRank[a.role] ?? 9;
+      const rb = roleRank[b.role] ?? 9;
+      if (ra !== rb) return ra - rb;
+      return String(a.first_name || a.username || '').localeCompare(String(b.first_name || b.username || ''));
+    };
+    const sections = Array.from(map.values());
+    sections.forEach(s => s.people.sort(byRoleThenName));
+    loose.sort(byRoleThenName);
+    return { shopSections: sections, unassigned: loose };
+  }, [branches, users]);
 
   const inviteMut = useMutation({
-    mutationFn: inviteUser,
+    // The invite endpoint has no shop field (it is a plain Serializer, so an
+    // extra key is silently dropped). Send the invite, then pin the new
+    // person to their shop with the id it returns — one action for the owner.
+    mutationFn: async (payload) => {
+      const { branch, ...invite } = payload;
+      const created = await inviteUser(invite);
+      if (branch && created?.id) {
+        try {
+          await updateUser(created.id, { branch });
+        } catch (_) {
+          // The account exists either way; it just lands in "works across all
+          // shops" and the owner can set the shop on the card.
+        }
+      }
+      return created;
+    },
     onSuccess: () => {
       setInviteStatus('success');
       setInviteMessage('User invited successfully!');
@@ -185,6 +276,7 @@ export default function TeamManagement() {
           username: '',
           password: '',
           role: 'worker',
+          branch: '',
         });
         setInviteStatus(null);
       }, 2000);
@@ -221,6 +313,66 @@ export default function TeamManagement() {
       setEditStatus('error');
     },
   });
+
+  // Same endpoint, used for the one-field saves on a person's card.
+  const quickMut = useMutation({
+    mutationFn: ({ id, data }) => updateUser(id, data),
+    onMutate: () => setQuickError(null),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: (err, vars) => {
+      const data = err?.response?.data;
+      let msg = 'Could not save that. Please try again.';
+      if (typeof data?.detail === 'string') {
+        msg = data.detail;
+      } else if (data && typeof data === 'object') {
+        const first = Object.values(data)[0];
+        if (typeof first === 'string') msg = first;
+        else if (Array.isArray(first) && typeof first[0] === 'string') msg = first[0];
+      }
+      setQuickError({ id: vars?.id, msg });
+    },
+  });
+
+  const assignToShop = (userId, branchValue) => {
+    quickMut.mutate({ id: userId, data: { branch: branchValue === '' ? null : branchValue } });
+  };
+
+  const setAllShops = (userId, checked) => {
+    quickMut.mutate({ id: userId, data: { can_view_all_branches: !!checked } });
+  };
+
+  const openInvite = (branchId = '') => {
+    setShowInviteModal(true);
+    setInviteStatus(null);
+    setShowPassword(false);
+    setPasswordCopied(false);
+    // Pre-generate so the auto password is visible + copyable before sending.
+    setFormData({
+      first_name: '', last_name: '', email: '', username: '',
+      password: autoPassword ? strongPassword(policy) : '',
+      role: 'worker',
+      branch: branchId ? String(branchId) : '',
+    });
+  };
+
+  // Top-bar primary action — see hooks/usePrimaryAction.js. Declared after
+  // openInvite so the handler is never referenced before it exists.
+  usePrimaryAction(() => openInvite());
+
+  const openEdit = (u) => {
+    setEditUser(u);
+    setEditForm({
+      first_name: u.first_name || '',
+      last_name: u.last_name || '',
+      role: u.role || 'worker',
+      branch: u.branch ? String(u.branch) : '',
+      can_view_all_branches: u.can_view_all_branches === true,
+      perms: permsFromUser(u),
+    });
+    setEditStatus(null);
+  };
 
   const handleEditSubmit = () => {
     if (!editUser) return;
@@ -272,6 +424,9 @@ export default function TeamManagement() {
       // (so the owner can copy it), only generating fresh if it's blank.
       password: autoPassword ? (formData.password || strongPassword(policy)) : formData.password,
       role: formData.role,
+      // Stripped out of the invite body by the mutation and applied as a
+      // follow-up PATCH — see inviteMut.
+      branch: canAssign ? formData.branch : '',
     };
 
     setInviteStatus('loading');
@@ -292,155 +447,342 @@ export default function TeamManagement() {
     } catch (_) { /* clipboard unavailable */ }
   };
 
-  const users = Array.isArray(usersData?.results) ? usersData.results : [];
-  const currentUserCount = users.length;
+  const fullName = (u) => `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.username || '—';
 
-  // 2026-07-30: seat-limit/pricing removed. Team size is not capped by
-  // plan and is not billed per-seat -- only certain features are
-  // plan-gated, not headcount.
+  // ── One person, as a card inside a shop section ──────────────────
+  const renderPerson = (u) => {
+    const ac = avatarColor(u.username || '');
+    const saving = quickMut.isPending && quickMut.variables?.id === u.id;
+    const rowError = quickError && quickError.id === u.id ? quickError.msg : '';
+    const isOnline = u.last_login ? (new Date() - new Date(u.last_login)) < 300000 : false;
+    // The all-shops right only means anything for someone pinned to a shop,
+    // and in practice it is a manager's grant — the owner already sees
+    // everything and a till cashier has no use for chain-wide figures.
+    const showAllShops = canAssign && u.role === 'manager' && !!u.branch;
+
+    return (
+      <div key={u.id} style={personS}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: '50%', background: ac.bg, color: '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 11, fontWeight: 700, flexShrink: 0,
+          }}>
+            {initials(u.username || '')}
+          </div>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <span style={{ fontWeight: 600, fontSize: 12.5, color: '#111827', wordBreak: 'break-word' }}>
+                {fullName(u)}
+              </span>
+              <span style={pill(roleBadgeBg[u.role] || '#f3f4f6', roleColors[u.role] || '#6b7280')}>
+                {roleLabel(u.role)}
+              </span>
+              {isOnline && (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, color: '#10b981', fontWeight: 600 }}>
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981' }} />
+                  Online
+                </span>
+              )}
+            </div>
+            <div style={{ fontSize: 10.5, color: '#6b7280', wordBreak: 'break-all' }}>{u.email || u.username}</div>
+            <div style={{ fontSize: 10.5, color: '#68766c', marginTop: 3 }}>Can do: {accessSummary(u)}</div>
+          </div>
+          {u.role !== 'owner' && (
+            <button
+              onClick={() => openEdit(u)}
+              style={{
+                background: '#fff', border: '1px solid #e3e8e4', borderRadius: 8,
+                padding: '4px 10px', fontSize: 10, fontWeight: 600, color: '#374151',
+                cursor: 'pointer', flexShrink: 0,
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#f6f8f6'; e.currentTarget.style.borderColor = '#1a6b3a'; e.currentTarget.style.color = '#1a6b3a'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e3e8e4'; e.currentTarget.style.color = '#374151'; }}
+            >
+              Edit
+            </button>
+          )}
+        </div>
+
+        {/* Which shop this person works at — the owner can move them straight
+            from the card, and it re-files them under the other shop. */}
+        {canAssign && u.role !== 'owner' && (
+          <div style={{ marginTop: 10 }}>
+            <label style={fieldLabelS} htmlFor={`tm-shop-${u.id}`}>Works at</label>
+            <select
+              id={`tm-shop-${u.id}`}
+              value={u.branch ? String(u.branch) : ''}
+              disabled={saving}
+              onChange={e => assignToShop(u.id, e.target.value)}
+              style={{ ...miniSelectS, opacity: saving ? 0.6 : 1 }}
+            >
+              <option value="">Works across all shops</option>
+              {branches.map(b => (
+                <option key={b.id} value={String(b.id)}>{b.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* The all-shops right used to exist only inside the Edit modal, so
+            nobody knew it was there. Plain words, on the card. */}
+        {showAllShops && (
+          <label
+            htmlFor={`tm-all-${u.id}`}
+            style={{
+              marginTop: 10, display: 'flex', alignItems: 'flex-start', gap: 9,
+              padding: '9px 11px', background: '#f6f8f6', border: '1px solid #e3e8e4',
+              borderRadius: 10, cursor: saving ? 'default' : 'pointer',
+            }}
+          >
+            <input
+              id={`tm-all-${u.id}`}
+              type="checkbox"
+              checked={u.can_view_all_branches === true}
+              disabled={saving}
+              onChange={e => setAllShops(u.id, e.target.checked)}
+              style={{ marginTop: 1, width: 15, height: 15, accentColor: '#1a6b3a', cursor: 'pointer', flexShrink: 0 }}
+            />
+            <span style={{ fontSize: 11.5, color: '#374151', lineHeight: 1.45 }}>
+              <strong style={{ color: '#111827' }}>Can see all shops</strong>
+              <span style={{ display: 'block', fontSize: 10.5, color: '#6b7280' }}>
+                {u.can_view_all_branches === true
+                  ? 'Sees every shop’s figures, still works at this shop.'
+                  : 'Off — sees only this shop’s figures and staff.'}
+              </span>
+            </span>
+          </label>
+        )}
+
+        {saving && <div style={{ fontSize: 10, color: '#6b7280', marginTop: 6 }}>Saving…</div>}
+        {rowError && <div style={{ fontSize: 10.5, color: '#c0392b', marginTop: 6 }}>{rowError}</div>}
+      </div>
+    );
+  };
+
+  // "Assign someone…" — the empty-shop nudge. Lists anyone the owner is
+  // allowed to move who isn't already at this shop.
+  const renderAssignPicker = (branchId) => {
+    const candidates = users.filter(
+      u => u.role !== 'owner' && String(u.branch || '') !== String(branchId)
+    );
+    if (!candidates.length) return null;
+    return (
+      <select
+        value=""
+        onChange={e => { if (e.target.value) assignToShop(Number(e.target.value), String(branchId)); }}
+        style={{ ...miniSelectS, maxWidth: 260, margin: '0 auto', display: 'block' }}
+      >
+        <option value="">Assign someone to this shop{'…'}</option>
+        {candidates.map(c => (
+          <option key={c.id} value={c.id}>
+            {fullName(c)} {'—'} {roleLabel(c.role)}
+          </option>
+        ))}
+      </select>
+    );
+  };
+
+  // ── The flat table (single-shop tenants, and farm) ───────────────
+  const renderTable = () => (
+    <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <thead>
+        <tr style={{ borderBottom: '1px solid #e3e8e4' }}>
+          <th style={thS}>User</th>
+          <th style={thS}>Role</th>
+          <th style={thS}>Works at</th>
+          <th style={thS}>Access</th>
+          <th style={thS}>Status</th>
+          <th style={thS}>Last Active</th>
+          <th style={thS}>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {users.map((u, i) => {
+          const initials_str = initials(u.username || '');
+          const ac = avatarColor(u.username || '');
+          const isOnline = u.last_login ? (new Date() - new Date(u.last_login)) < 300000 : false;
+          const lastActiveText = u.last_login
+            ? new Date(u.last_login).toLocaleDateString() + ' ' + new Date(u.last_login).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : 'Never';
+
+          return (
+            <tr key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
+              <td style={{ padding: '12px 8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: '50%',
+                    background: ac.bg,
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    flexShrink: 0,
+                  }}>
+                    {initials_str}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 12, color: '#111827' }}>
+                      {u.first_name} {u.last_name}
+                    </div>
+                    <div style={{ fontSize: 10, color: '#6b7280' }}>{u.email}</div>
+                  </div>
+                </div>
+              </td>
+              <td style={{ padding: '12px 8px' }}>
+                <span style={pill(roleBadgeBg[u.role] || '#f3f4f6', roleColors[u.role] || '#6b7280')}>
+                  {roleLabel(u.role)}
+                </span>
+              </td>
+              <td style={{ padding: '12px 8px', fontSize: 11, color: '#374151' }}>
+                {u.role === 'owner' || !u.branch
+                  ? <span style={{ color: '#68766c' }}>All shops</span>
+                  : (branches.find(b => String(b.id) === String(u.branch))?.name || u.branch_name || '—')}
+                {u.can_view_all_branches === true && u.branch && (
+                  <span title="Can view all shops" style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, color: '#1a6b3a', background: '#e8f5ee', padding: '2px 6px', borderRadius: 999 }}>ALL-SHOPS VIEW</span>
+                )}
+              </td>
+              <td style={{ padding: '12px 8px', fontSize: 11, color: '#374151' }}>{accessSummary(u)}</td>
+              <td style={{ padding: '12px 8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    background: isOnline ? '#10b981' : '#d1d5db',
+                  }} />
+                  <span style={{ fontSize: 11, color: '#374151' }}>
+                    {isOnline ? 'Online' : 'Offline'}
+                  </span>
+                </div>
+              </td>
+              <td style={{ padding: '12px 8px', fontSize: 11, color: '#6b7280' }}>
+                {lastActiveText}
+              </td>
+              <td style={{ padding: '12px 8px' }}>
+                {u.role !== 'owner' && (
+                  <button style={{
+                    background: '#fff',
+                    border: '1px solid #e3e8e4',
+                    borderRadius: 8,
+                    padding: '4px 10px',
+                    fontSize: 10,
+                    fontWeight: 600,
+                    color: '#374151',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }} onClick={() => openEdit(u)} onMouseEnter={e => { e.currentTarget.style.background = '#f6f8f6'; e.currentTarget.style.borderColor = '#1a6b3a'; e.currentTarget.style.color = '#1a6b3a'; }} onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e3e8e4'; e.currentTarget.style.color = '#374151'; }}>
+                    Edit
+                  </button>
+                )}
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table></div>
+  );
+
+  const emptyTeam = (
+    <div style={{ textAlign: 'center', padding: '40px 20px', color: '#6b7280' }}>
+      <p style={{ fontSize: 12, marginBottom: 12 }}>No team members yet. Invite your first user to get started!</p>
+      <button
+        onClick={() => openInvite()}
+        style={{ ...btnS(true), fontSize: 11, padding: '6px 12px' }}
+      >
+        {'\u002B'} Invite User
+      </button>
+    </div>
+  );
 
   return (
     <div>
       {/* Header with invite button */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
         <div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: '#111827', margin: 0 }}>Team & Users</h2>
-          <p style={{ fontSize: 12, color: '#6b7280', marginTop: 4, margin: 0 }}>Manage team members and permissions</p>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: '#111827', margin: 0 }}>Team &amp; Users</h2>
+          <p style={{ fontSize: 12, color: '#6b7280', marginTop: 4, margin: 0 }}>
+            {multiShop
+              ? `${users.length} ${users.length === 1 ? 'person' : 'people'} across ${branches.length} shops — who works where, and what they can see`
+              : 'Manage team members and permissions'}
+          </p>
         </div>
         <button
-          onClick={() => {
-            setShowInviteModal(true);
-            setInviteStatus(null);
-            setShowPassword(false);
-            setPasswordCopied(false);
-            // Pre-generate so the auto password is visible + copyable before sending.
-            setFormData({ first_name: '', last_name: '', email: '', username: '', password: autoPassword ? strongPassword(policy) : '', role: 'worker' });
-          }}
+          onClick={() => openInvite()}
           style={{ ...btnS(true), fontSize: 12, padding: '8px 14px' }}
         >
           {'\u002B'} Invite User
         </button>
       </div>
 
-      {/* Users table */}
       {isLoading ? (
         <div style={{ ...card, textAlign: 'center', padding: 40 }}>
           <div style={{ fontSize: 12, color: '#6b7280' }}>Loading team members...</div>
         </div>
+      ) : multiShop ? (
+        /* ── Shop-first layout ─────────────────────────────────────
+           One section per shop, straight off the branch list, then
+           everyone who isn't tied to a single shop. */
+        <div>
+          {shopSections.map(({ branch, people }) => (
+            <TeamShopSection
+              key={branch.id}
+              title={branch.name || 'Shop'}
+              code={branch.code || ''}
+              isHQ={!!branch.is_hq}
+              managerName={
+                branch.manager_name
+                || (people.find(p => p.role === 'manager') ? fullName(people.find(p => p.role === 'manager')) : '')
+              }
+              note={people.length ? 'Sees and sells at this shop only, unless given the all-shops view.' : ''}
+              count={people.length}
+              isMobile={isMobile}
+              emptyText={
+                canAssign
+                  ? 'No one assigned yet — assign someone to this shop, or invite a new person straight into it.'
+                  : 'No one assigned to this shop yet.'
+              }
+              emptyAction={canAssign ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                  {renderAssignPicker(branch.id)}
+                  <button
+                    onClick={() => openInvite(branch.id)}
+                    style={{ ...btnS(false), fontSize: 11 }}
+                  >
+                    {'\u002B'} Invite someone new here
+                  </button>
+                </div>
+              ) : null}
+            >
+              {people.map(renderPerson)}
+            </TeamShopSection>
+          ))}
+
+          <TeamShopSection
+            title="Works across all shops"
+            accent="#2563eb"
+            note="Not tied to one shop — these people see every shop's figures and can work at any till. Owners, area managers and office staff belong here."
+            count={unassigned.length}
+            isMobile={isMobile}
+            emptyText="Everyone is assigned to a shop."
+          >
+            {unassigned.map(renderPerson)}
+          </TeamShopSection>
+        </div>
       ) : (
+        /* ── Single-shop tenants (and farm): the flat list, as before ── */
         <div style={card}>
           <div style={sLabel}>Team Members</div>
-          {users.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#6b7280' }}>
-              <p style={{ fontSize: 12, marginBottom: 12 }}>No team members yet. Invite your first user to get started!</p>
-              <button
-                onClick={() => setShowInviteModal(true)}
-                style={{ ...btnS(true), fontSize: 11, padding: '6px 12px' }}
-              >
-                {'\u002B'} Invite User
-              </button>
-            </div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid #e3e8e4' }}>
-                  <th style={thS}>User</th>
-                  <th style={thS}>Role</th>
-                  <th style={thS}>Works at</th>
-                  <th style={thS}>Access</th>
-                  <th style={thS}>Status</th>
-                  <th style={thS}>Last Active</th>
-                  <th style={thS}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u, i) => {
-                  const initials_str = initials(u.username || '');
-                  const ac = avatarColor(u.username || '');
-                  const isOnline = u.last_login ? (new Date() - new Date(u.last_login)) < 300000 : false;
-                  const lastActiveText = u.last_login
-                    ? new Date(u.last_login).toLocaleDateString() + ' ' + new Date(u.last_login).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    : 'Never';
-
-                  return (
-                    <tr key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                      <td style={{ padding: '12px 8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <div style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: '50%',
-                            background: ac.bg,
-                            color: '#fff',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: 11,
-                            fontWeight: 700,
-                            flexShrink: 0,
-                          }}>
-                            {initials_str}
-                          </div>
-                          <div>
-                            <div style={{ fontWeight: 600, fontSize: 12, color: '#111827' }}>
-                              {u.first_name} {u.last_name}
-                            </div>
-                            <div style={{ fontSize: 10, color: '#6b7280' }}>{u.email}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td style={{ padding: '12px 8px' }}>
-                        <span style={pill(roleBadgeBg[u.role] || '#f3f4f6', roleColors[u.role] || '#6b7280')}>
-                          {roleLabel(u.role)}
-                        </span>
-                      </td>
-                      <td style={{ padding: '12px 8px', fontSize: 11, color: '#374151' }}>
-                        {u.role === 'owner' || !u.branch
-                          ? <span style={{ color: '#68766c' }}>All shops</span>
-                          : (branches.find(b => String(b.id) === String(u.branch))?.name || u.branch_name || '—')}
-                        {u.can_view_all_branches === true && u.branch && (
-                          <span title="Can view all shops" style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, color: '#1a6b3a', background: '#e8f5ee', padding: '2px 6px', borderRadius: 999 }}>ALL-SHOPS VIEW</span>
-                        )}
-                      </td>
-                      <td style={{ padding: '12px 8px', fontSize: 11, color: '#374151' }}>{accessSummary(u)}</td>
-                      <td style={{ padding: '12px 8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <div style={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: '50%',
-                            background: isOnline ? '#10b981' : '#d1d5db',
-                          }} />
-                          <span style={{ fontSize: 11, color: '#374151' }}>
-                            {isOnline ? 'Online' : 'Offline'}
-                          </span>
-                        </div>
-                      </td>
-                      <td style={{ padding: '12px 8px', fontSize: 11, color: '#6b7280' }}>
-                        {lastActiveText}
-                      </td>
-                      <td style={{ padding: '12px 8px' }}>
-                        {u.role !== 'owner' && (
-                          <button style={{
-                            background: '#fff',
-                            border: '1px solid #e3e8e4',
-                            borderRadius: 8,
-                            padding: '4px 10px',
-                            fontSize: 10,
-                            fontWeight: 600,
-                            color: '#374151',
-                            cursor: 'pointer',
-                            transition: 'all 0.15s',
-                          }} onClick={() => { setEditUser(u); setEditForm({ first_name: u.first_name || '', last_name: u.last_name || '', role: u.role || 'worker', branch: u.branch ? String(u.branch) : '', can_view_all_branches: u.can_view_all_branches === true, perms: permsFromUser(u) }); setEditStatus(null); }} onMouseEnter={e => { e.currentTarget.style.background = '#f6f8f6'; e.currentTarget.style.borderColor = '#1a6b3a'; e.currentTarget.style.color = '#1a6b3a'; }} onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e3e8e4'; e.currentTarget.style.color = '#374151'; }}>
-                            Edit
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table></div>
+          {users.length === 0 ? emptyTeam : (
+            isMobile ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10 }}>
+                {users.map(renderPerson)}
+              </div>
+            ) : renderTable()
           )}
         </div>
       )}
@@ -458,6 +800,8 @@ export default function TeamManagement() {
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 9999,
+          padding: 16,
+          overflowY: 'auto',
         }} onClick={() => { if (inviteStatus !== 'loading') setShowInviteModal(false); }}>
           <div style={{
             background: '#fff',
@@ -688,7 +1032,7 @@ export default function TeamManagement() {
                 </div>
 
                 {/* Role */}
-                <div style={{ marginBottom: 20 }}>
+                <div style={{ marginBottom: canAssign ? 16 : 20 }}>
                   <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>
                     Role
                   </label>
@@ -714,6 +1058,42 @@ export default function TeamManagement() {
                     {roleLabel('worker')}: Tills &amp; day-to-day work · Manager: Team management
                   </div>
                 </div>
+
+                {/* Which shop the new person works at. Only shown once there is
+                    more than one shop; sent as a follow-up PATCH because the
+                    invite endpoint itself has no shop field. */}
+                {canAssign && (
+                  <div style={{ marginBottom: 20 }}>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>
+                      Works at
+                    </label>
+                    <select
+                      value={formData.branch}
+                      onChange={e => setFormData({ ...formData, branch: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #e3e8e4',
+                        borderRadius: 8,
+                        fontSize: 14,
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                        background: '#fff',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <option value="">Works across all shops</option>
+                      {branches.map(b => (
+                        <option key={b.id} value={String(b.id)}>{b.name}</option>
+                      ))}
+                    </select>
+                    <div style={{ fontSize: 9, color: '#9ca3af', marginTop: 4 }}>
+                      {formData.branch
+                        ? 'Sees only this shop, and can only open a till here.'
+                        : 'Sees every shop. Right for owners and office staff.'}
+                    </div>
+                  </div>
+                )}
 
                 {/* Module-access checkboxes removed: the invite endpoint (/core/tenants/invite/) has no per-user module field in the API layer, so they were never saved. */}
               </>
@@ -757,6 +1137,7 @@ export default function TeamManagement() {
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999,
+          padding: 16, overflowY: 'auto',
         }} onClick={() => setEditUser(null)}>
           <div style={{
             background: '#fff', borderRadius: 16, padding: 28, width: 420, maxWidth: '90vw',
