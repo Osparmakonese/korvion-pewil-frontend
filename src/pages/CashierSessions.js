@@ -47,8 +47,16 @@ function OpenSessionModal({ isOpen, onClose, onSubmit, loading, branches = [] })
     const viewed = viewing
       ? branches.find((b) => b && String(b.id) === String(viewing))
       : null;
-    const hq = branches.find((b) => b && b.is_hq);
-    setBranchId(String((viewed || hq || branches[0]).id));
+    // Do NOT quietly fall back to HQ. On "All shops" there is no viewed
+    // branch, and pre-selecting head office made the modal look as though a
+    // choice had been made — so a day's takings opened against HQ while the
+    // owner believed they were opening the shop they were standing in.
+    // With one shop there is nothing to choose; with several, make them say.
+    if (branches.length === 1) {
+      setBranchId(String(branches[0].id));
+      return;
+    }
+    setBranchId(viewed ? String(viewed.id) : '');
   }, [isOpen, branches, branchId]);
 
   const handleSubmit = (e) => {
