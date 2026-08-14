@@ -380,9 +380,13 @@ function NewTransferModal({ branches, products, saving, onClose, onSubmit }) {
       setErr('Add at least one product line with quantity > 0.');
       return;
     }
+    // Field names must match BranchTransferOrderSerializer exactly — it
+    // takes `from_branch` / `to_branch`. This form shipped sending
+    // `source_branch` / `dest_branch`, so every create 400'd with
+    // "from_branch: This field is required" (fixed 2026-08-13).
     onSubmit({
-      source_branch: Number(source),
-      dest_branch: Number(dest),
+      from_branch: Number(source),
+      to_branch: Number(dest),
       items: cleaned,
     });
   };
