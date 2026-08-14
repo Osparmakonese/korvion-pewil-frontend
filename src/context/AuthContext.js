@@ -27,9 +27,15 @@ export function AuthProvider({ children }) {
     let business_types = [];
     let features = [];
     let setup_completed = true;
+    let branch_id = null;
+    let branch_name = '';
+    let can_view_all_branches = false;
     try {
       const payload = JSON.parse(atob(res.data.access.split('.')[1]));
       role = payload.role || 'owner';
+      branch_id = payload.branch_id || null;
+      branch_name = payload.branch_name || '';
+      can_view_all_branches = !!payload.can_view_all_branches;
       tenant_id = payload.tenant_id || null;
       tenant_slug = payload.tenant_slug || '';
       tenant_name = payload.tenant_name || '';
@@ -68,6 +74,10 @@ export function AuthProvider({ children }) {
       setup_completed: res.data.setup_completed !== undefined
         ? res.data.setup_completed !== false
         : setup_completed,
+      branch_id: res.data.branch_id !== undefined ? res.data.branch_id : branch_id,
+      branch_name: res.data.branch_name || branch_name,
+      can_view_all_branches: res.data.can_view_all_branches === true
+        ? true : can_view_all_branches,
     };
   }
 
