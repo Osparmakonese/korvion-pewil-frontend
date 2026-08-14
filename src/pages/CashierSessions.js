@@ -572,17 +572,17 @@ function CloseSessionModal({ isOpen, onClose, onSubmit, session, loading, blindC
 const S = {
   page: { maxWidth: 1200, margin: '0 auto', padding: 20 },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  title: { fontSize: 28, fontWeight: 700, color: '#111827', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", margin: 0 },
-  addBtn: { padding: '10px 18px', background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer' },
-  card: { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: '0', boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)', marginBottom: 20, overflow: 'hidden' },
+  title: { fontSize: 26, fontWeight: 800, letterSpacing: '-0.02em', color: '#111827', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", margin: 0 },
+  addBtn: { padding: '10px 18px', background: 'linear-gradient(135deg, #1a6b3a, #2d9e58)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: '0 6px 16px -6px rgba(26,107,58,0.5)' },
+  card: { background: '#fff', border: '1px solid #e7ece8', borderRadius: 14, padding: '0', boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)', marginBottom: 20, overflow: 'hidden' },
   table: { width: '100%', borderCollapse: 'collapse' },
   tableHead: { background: '#f6f8f6' },
-  tableHeaderCell: { padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', borderBottom: '1px solid #e3e8e4' },
-  tableBody: { fontSize: 13, color: '#374151' },
-  tableRow: { borderBottom: '1px solid #e3e8e4' },
+  tableHeaderCell: { padding: '12px 16px', textAlign: 'left', fontSize: 10.5, fontWeight: 700, letterSpacing: '0.08em', color: '#68766c', textTransform: 'uppercase', borderBottom: '1px solid #e3e8e4' },
+  tableBody: { fontSize: 13, color: '#374151', fontVariantNumeric: 'tabular-nums' },
+  tableRow: { borderBottom: '1px solid #f0f4f1' },
   tableRowHover: { background: '#f6f8f6' },
-  tableCell: { padding: '14px 16px', textAlign: 'left' },
-  sessionIdCell: { fontFamily: 'monospace', fontWeight: 600, color: '#1a6b3a' },
+  tableCell: { padding: '15px 16px', textAlign: 'left' },
+  sessionIdCell: { fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 12, fontWeight: 600, color: '#1a6b3a' },
   cashierCell: { fontWeight: 600 },
   emptyCell: { color: '#9ca3af' },
   pill: (type) => {
@@ -591,7 +591,7 @@ const S = {
       balanced: { background: '#e8f5ee', color: '#1a6b3a' },
       variance: { background: '#fef3e2', color: '#92400e' },
     };
-    return { display: 'inline-block', padding: '4px 12px', borderRadius: 12, fontSize: 11, fontWeight: 600, ...styles[type] };
+    return { display: 'inline-block', padding: '4px 12px', borderRadius: 999, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.03em', textTransform: 'uppercase', ...styles[type] };
   },
   varianceNegative: { color: '#c0392b', fontWeight: 700 },
   varianceZero: { color: '#1a6b3a', fontWeight: 700 },
