@@ -395,6 +395,10 @@ function BranchModal({ branch, onClose, onSubmit, saving }) {
     phone:   branch?.phone   || '',
     manager_name: branch?.manager_name || '',
     is_active:    branch?.is_active !== false,
+    // Asked once, at creation. Default 'own': a new shop starts carrying
+    // nothing and you tick lines on. An unexpectedly empty catalogue is a
+    // question; an unexpectedly full one is a mess to unpick on a live till.
+    catalogue_mode: branch?.catalogue_mode || 'own',
   });
   const [err, setErr] = useState('');
 
@@ -416,6 +420,9 @@ function BranchModal({ branch, onClose, onSubmit, saving }) {
       phone: form.phone.trim(),
       manager_name: form.manager_name.trim(),
       is_active: !!form.is_active,
+      // Only sent when creating. Changing it later would silently rewrite
+      // what an established shop sells, so it is not an edit-time control.
+      ...(isNew ? { catalogue_mode: form.catalogue_mode } : {}),
     });
   };
 
@@ -458,6 +465,62 @@ function BranchModal({ branch, onClose, onSubmit, saving }) {
               style={inputStyle}
             />
           </Field>
+
+          {/* Asked once, at creation only. "Branch" hides two different
+              things: another shop of the same chain, and a separate business
+              that happens to share an owner. Guessing wrong is what made a
+              new phone shop open with the grocery's entire catalogue on its
+              till, so we ask instead. */}
+          {isNew && (
+            <Field label="What kind of shop is this?">
+              <div style={{ display: 'grid', gap: 8 }}>
+                {[
+                  {
+                    v: 'own',
+                    t: 'A different business',
+                    d: 'Starts empty with its own products. Choose this for a phone shop, a bottle store, anything that sells different stock.',
+                  },
+                  {
+                    v: 'shared',
+                    t: 'Another shop of the same kind',
+                    d: 'Carries the same products as your other shops, and you can move stock between them. Prices can still differ per shop.',
+                  },
+                ].map((o) => {
+                  const on = form.catalogue_mode === o.v;
+                  return (
+                    <label
+                      key={o.v}
+                      style={{
+                        display: 'flex', gap: 10, alignItems: 'flex-start',
+                        padding: '11px 13px', borderRadius: 10, cursor: 'pointer',
+                        border: `1.5px solid ${on ? T.green : '#e5e7eb'}`,
+                        background: on ? '#f2f9f5' : '#fff',
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="catalogue_mode"
+                        value={o.v}
+                        checked={on}
+                        onChange={() => update('catalogue_mode', o.v)}
+                        style={{ marginTop: 3, accentColor: T.green }}
+                      />
+                      <span>
+                        <span style={{
+                          display: 'block', fontSize: 13.5, fontWeight: 700,
+                          color: T.ink, lineHeight: 1.3,
+                        }}>{o.t}</span>
+                        <span style={{
+                          display: 'block', fontSize: 11.5, color: T.muted,
+                          marginTop: 2, lineHeight: 1.45,
+                        }}>{o.d}</span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </Field>
+          )}
 
           <Field label="Code" required hint="3-8 uppercase letters or digits, e.g. AVE, BR01">
             <input
