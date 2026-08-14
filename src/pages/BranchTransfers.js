@@ -131,7 +131,7 @@ export default function BranchTransfers() {
 
   const onShip = async (t) => {
     const totalQty = (t.items || []).reduce((s, i) => s + Number(i.qty || 0), 0);
-    const sourceName = branchById[t.source_branch]?.name || t.source_branch_name || 'source';
+    const sourceName = branchById[t.from_branch]?.name || t.from_branch_name || 'source';
     const ok = await confirm({
       title: 'Ship transfer',
       message: `Ship transfer ${t.reference || `#${t.id}`}? This deducts ${totalQty} units from ${sourceName} immediately. Manager approval required.`,
@@ -236,8 +236,8 @@ export default function BranchTransfers() {
                   const totalUnits = (t.items || []).reduce((s, i) => s + Number(i.qty || 0), 0);
                   const itemCount = (t.items || []).length;
                   const isCancelled = t.status === 'cancelled';
-                  const fromName = branchById[t.source_branch]?.name || t.source_branch_name || '—';
-                  const toName = branchById[t.dest_branch]?.name || t.dest_branch_name || '—';
+                  const fromName = branchById[t.from_branch]?.name || t.from_branch_name || '—';
+                  const toName = branchById[t.to_branch]?.name || t.to_branch_name || '—';
                   return (
                     <tr key={t.id} style={{ borderTop: `1px solid ${T.line}` }}>
                       <Td style={{
