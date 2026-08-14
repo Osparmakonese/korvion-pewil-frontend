@@ -445,8 +445,9 @@ export const cancelBranchTransfer = (id, reason) =>
     .then(r => r.data);
 
 // HQ chain rollup — all branches side-by-side + chain totals
-export const getChainRollup = () =>
-  api.get('/retail/analytics/chain-rollup/').then(r => r.data);
+export const getChainRollup = (days) =>
+  api.get('/retail/analytics/chain-rollup/', days ? { params: { days } } : undefined)
+     .then(r => r.data);
 
 // ─── FORECOURT (May 2026) ─────────────────────────────────────
 // Fuel + service-station endpoints. Activated by creating at least one

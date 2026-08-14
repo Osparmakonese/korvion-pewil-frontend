@@ -1,28 +1,40 @@
 /**
  * ChainRollup — HQ-level dashboard showing every branch side-by-side.
  *
- * Owner-only chain dashboard. Surfaces today's revenue, transaction count,
- * product totals, low-stock alerts, and open tills across every branch
- * in the tenant's account, plus chain-wide totals at the top.
+ * Owner-only chain dashboard. Answers the question a multi-shop owner
+ * actually has — "which of my shops is the better business?" — which today's
+ * revenue alone cannot. Everything is over a selectable period (?days),
+ * with today shown as a detail rather than the headline.
  *
- * Backend shape (getChainRollup):
+ * Backend shape (getChainRollup(days)):
  *   {
+ *     period_days: number,
  *     totals: {
- *       today_revenue: number,
- *       today_transactions: number,
- *       products_count: number,
- *       low_stock_alerts: number,
- *       open_tills: number,
+ *       revenue, cost_of_goods_sold, gross_profit, margin_percent,
+ *       transactions, average_basket, discounts, refunds, stock_value,
+ *       today_revenue, today_transactions, low_stock_alerts, shop_count,
  *     },
  *     branches: [
  *       {
- *         id, name, code, is_hq,
- *         today_revenue, today_transactions,
- *         products_count, low_stock_alerts, open_tills,
+ *         branch_id, branch_name, branch_code, is_hq, catalogue_mode,
+ *         revenue, cost_of_goods_sold, gross_profit, margin_percent,
+ *         transactions, average_basket, discounts, refunds, refund_count,
+ *         share_of_chain_percent,
+ *         today_revenue, today_transactions, open_session_count,
+ *         stock_value, products_count, low_stock_alerts,
  *       },
  *       ...
  *     ],
+ *     best_by_revenue / worst_by_revenue /
+ *     best_by_margin  / worst_by_margin: { branch_id, branch_name } | null,
  *   }
+ *
+ * NOTE the branch key is `branch_id`, not `id`. Reading `b.id` here silently
+ * produced key={undefined} on every row and broke row selection.
+ *
+ * Gross profit uses the cost snapshotted onto each sale line at the time of
+ * sale (items_data.unit_cost), so re-pricing a product later cannot restate
+ * a month that has already closed.
  *
  * Click on a branch row to highlight it (placeholder until per-branch
  * detail pages land).
@@ -53,15 +65,20 @@ export default function ChainRollup() {
   const [selectedId, setSelectedId] = useState(null);
   const isMobile = useIsMobile();
 
+  // Today alone cannot answer "which shop is the better business" — that is
+  // the question this page exists for. Period first, today as a detail.
+  const [days, setDays] = useState(30);
+
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['chain-rollup'],
-    queryFn: getChainRollup,
+    queryKey: ['chain-rollup', days],
+    queryFn: () => getChainRollup(days),
     staleTime: 30_000,
   });
 
   const totals = data?.totals || {};
   const branches = Array.isArray(data?.branches) ? data.branches : [];
   const branchCount = branches.length;
+  const money = (v) => fmt(v || 0, 'zwd');
 
   return (
     <div style={{
@@ -78,9 +95,30 @@ export default function ChainRollup() {
           fontSize: 28, fontWeight: 700, color: T.ink, margin: 0,
         }}>Chain rollup</h1>
         <p style={{ color: T.muted, fontSize: 14, marginTop: 6, lineHeight: 1.55, maxWidth: 640 }}>
-          Every branch at a glance — today's revenue, transactions,
-          low-stock alerts, open tills.
+          Every shop side by side — what each one sold, what it actually made
+          after cost, and what it is holding in stock.
         </p>
+
+        <div style={{ display: 'flex', gap: 8, marginTop: 14, overflowX: 'auto', paddingBottom: 2 }}>
+          {[7, 30, 90, 365].map((d) => {
+            const on = days === d;
+            return (
+              <button
+                key={d} type="button" onClick={() => setDays(d)}
+                style={{
+                  padding: '7px 14px', borderRadius: 20, fontSize: 12.5, fontWeight: 700,
+                  cursor: 'pointer', whiteSpace: 'nowrap',
+                  border: `1px solid ${on ? T.green : T.line}`,
+                  background: on ? T.green : '#fff',
+                  color: on ? '#fff' : T.inkSoft,
+                }}
+              >
+                {d === 7 ? 'Last 7 days' : d === 30 ? 'Last 30 days'
+                  : d === 90 ? 'Last 3 months' : 'Last year'}
+              </button>
+            );
+          })}
+        </div>
 
         {isLoading && (
           <div style={{ color: T.muted, padding: 40, textAlign: 'center' }}>
@@ -112,23 +150,64 @@ export default function ChainRollup() {
               <div style={{
                 fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
                 textTransform: 'uppercase', opacity: 0.85,
-              }}>Today's chain revenue</div>
+              }}>Chain revenue · last {data?.period_days || days} days</div>
               <div style={{
                 fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
                 fontSize: 42, fontWeight: 700, marginTop: 6, lineHeight: 1.1,
               }}>
-                {fmt(totals.today_revenue || 0, 'zwd')}
+                {money(totals.revenue)}
               </div>
               <div style={{
-                marginTop: 10, fontSize: 13, opacity: 0.92,
-                lineHeight: 1.5,
+                display: 'flex', flexWrap: 'wrap', gap: 22, marginTop: 16,
+                paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.22)',
               }}>
-                {totals.today_transactions || 0} sales · {totals.products_count || 0} products
-                · {totals.low_stock_alerts || 0} low stock
-                {typeof totals.open_tills === 'number' ? ` · ${totals.open_tills} open tills` : ''}
-                · across {branchCount} branch{branchCount === 1 ? '' : 'es'}
+                {[
+                  ['Gross profit', money(totals.gross_profit)],
+                  ['Margin', `${(totals.margin_percent ?? 0).toFixed
+                    ? Number(totals.margin_percent || 0).toFixed(1) : 0}%`],
+                  ['Average basket', money(totals.average_basket)],
+                  ['Stock held', money(totals.stock_value)],
+                ].map(([k, v]) => (
+                  <div key={k}>
+                    <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 600,
+                      letterSpacing: '0.05em', textTransform: 'uppercase' }}>{k}</div>
+                    <div style={{ fontSize: 19, fontWeight: 700, marginTop: 2,
+                      fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>{v}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: 12, fontSize: 12.5, opacity: 0.9, lineHeight: 1.5 }}>
+                {totals.transactions || 0} sales across {branchCount} shop{branchCount === 1 ? '' : 's'}
+                {' · '}today {money(totals.today_revenue)} ({totals.today_transactions || 0} sales)
+                {' · '}{totals.low_stock_alerts || 0} low stock
               </div>
             </div>
+
+            {/* Lead with the finding. An owner should not have to scan a
+                table to work out which shop is carrying the business. */}
+            {branchCount > 1 && (data?.best_by_revenue || data?.best_by_margin) && (
+              <div style={{
+                display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 14,
+              }}>
+                {[
+                  ['Sells the most', data?.best_by_revenue, T.green, T.greenT],
+                  ['Sells the least', data?.worst_by_revenue, T.amber, T.amberT],
+                  ['Best margin', data?.best_by_margin, T.green, T.greenT],
+                  ['Thinnest margin', data?.worst_by_margin, T.amber, T.amberT],
+                ].filter(([, v]) => v).map(([label, v, c, bg]) => (
+                  <div key={label} style={{
+                    flex: '1 1 180px', background: bg, border: `1px solid ${c}22`,
+                    borderRadius: 10, padding: '10px 13px',
+                  }}>
+                    <div style={{ fontSize: 10.5, fontWeight: 700, color: T.muted,
+                      textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: c, marginTop: 3 }}>
+                      {v.branch_name}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Per-branch list */}
             {branches.length === 0 ? (
@@ -175,20 +254,28 @@ function BranchTable({ branches, selectedId, onSelect }) {
           <tr>
             <Th>Branch</Th>
             <Th>Code</Th>
-            <Th align="right">Today's revenue</Th>
-            <Th align="right">Today's tx</Th>
-            <Th align="right">Products</Th>
+            <Th align="right">Revenue</Th>
+            <Th align="right">Gross profit</Th>
+            <Th align="right">Margin</Th>
+            <Th align="right">Sales</Th>
+            <Th align="right">Avg basket</Th>
+            <Th align="right">Share</Th>
+            <Th align="right">Stock held</Th>
             <Th align="right">Low stock</Th>
             <Th align="right">Open tills</Th>
           </tr>
         </thead>
         <tbody>
           {branches.map((b) => {
-            const selected = selectedId === b.id;
+            // The API returns branch_id, not id. Keying on b.id meant every
+            // row had key={undefined} and row selection never matched.
+            const bid = b.branch_id;
+            const selected = selectedId === bid;
+            const margin = Number(b.margin_percent || 0);
             return (
               <tr
-                key={b.id}
-                onClick={() => onSelect(selected ? null : b.id)}
+                key={bid}
+                onClick={() => onSelect(selected ? null : bid)}
                 style={{
                   borderTop: `1px solid ${T.line}`,
                   cursor: 'pointer',
@@ -222,17 +309,35 @@ function BranchTable({ branches, selectedId, onSelect }) {
                   fontSize: 12,
                 }}>{b.code || '—'}</Td>
                 <Td align="right" style={{ fontWeight: 600, color: T.green }}>
-                  {fmt(b.today_revenue || 0, 'zwd')}
+                  {fmt(b.revenue || 0, 'zwd')}
                 </Td>
-                <Td align="right">{b.today_transactions || 0}</Td>
-                <Td align="right">{b.products_count || 0}</Td>
+                <Td align="right" style={{
+                  fontWeight: 600,
+                  color: (b.gross_profit || 0) < 0 ? T.red : T.ink,
+                }}>
+                  {fmt(b.gross_profit || 0, 'zwd')}
+                </Td>
+                <Td align="right" style={{
+                  fontWeight: 700,
+                  color: margin >= 30 ? T.green : margin >= 15 ? T.inkSoft : T.red,
+                }}>
+                  {margin.toFixed(1)}%
+                </Td>
+                <Td align="right">{b.transactions || 0}</Td>
+                <Td align="right">{fmt(b.average_basket || 0, 'zwd')}</Td>
+                <Td align="right" style={{ color: T.muted }}>
+                  {Number(b.share_of_chain_percent || 0).toFixed(1)}%
+                </Td>
+                <Td align="right">{fmt(b.stock_value || 0, 'zwd')}</Td>
                 <Td align="right" style={{
                   color: (b.low_stock_alerts || 0) > 0 ? T.amber : T.muted,
                   fontWeight: (b.low_stock_alerts || 0) > 0 ? 600 : 400,
                 }}>
                   {b.low_stock_alerts || 0}
                 </Td>
-                <Td align="right">{b.open_tills || 0}</Td>
+                {/* API sends open_session_count; open_tills never existed, so
+                    this column always read 0. */}
+                <Td align="right">{b.open_session_count || 0}</Td>
               </tr>
             );
           })}
@@ -246,11 +351,14 @@ function BranchCardList({ branches, selectedId, onSelect }) {
   return (
     <div style={{ marginTop: 22, display: 'flex', flexDirection: 'column', gap: 10 }}>
       {branches.map((b) => {
-        const selected = selectedId === b.id;
+        // branch_id, not id — see the note in BranchTable.
+        const bid = b.branch_id;
+        const selected = selectedId === bid;
+        const margin = Number(b.margin_percent || 0);
         return (
           <div
-            key={b.id}
-            onClick={() => onSelect(selected ? null : b.id)}
+            key={bid}
+            onClick={() => onSelect(selected ? null : bid)}
             style={{
               background: selected ? T.greenT : '#fff',
               border: `1px solid ${selected ? T.green : T.line}`,
@@ -286,13 +394,18 @@ function BranchCardList({ branches, selectedId, onSelect }) {
               display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)',
               gap: 8, fontSize: 12,
             }}>
-              <Stat label="Revenue today" value={fmt(b.today_revenue || 0, 'zwd')} accent={T.green} />
-              <Stat label="Transactions" value={b.today_transactions || 0} />
-              <Stat label="Products" value={b.products_count || 0} />
+              <Stat label="Revenue" value={fmt(b.revenue || 0, 'zwd')} accent={T.green} />
+              <Stat label="Gross profit" value={fmt(b.gross_profit || 0, 'zwd')}
+                accent={(b.gross_profit || 0) < 0 ? T.red : T.ink} />
+              <Stat label="Margin" value={`${margin.toFixed(1)}%`}
+                accent={margin >= 30 ? T.green : margin >= 15 ? T.inkSoft : T.red} />
+              <Stat label="Sales" value={b.transactions || 0} />
+              <Stat label="Avg basket" value={fmt(b.average_basket || 0, 'zwd')} />
+              <Stat label="Stock held" value={fmt(b.stock_value || 0, 'zwd')} />
               <Stat label="Low stock"
                 value={b.low_stock_alerts || 0}
                 accent={(b.low_stock_alerts || 0) > 0 ? T.amber : T.muted} />
-              <Stat label="Open tills" value={b.open_tills || 0} />
+              <Stat label="Open tills" value={b.open_session_count || 0} />
             </div>
           </div>
         );
