@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getStockAdjustments, createStockAdjustment, getProducts } from '../api/retailApi';
+import { getStockAdjustments, getProducts } from '../api/retailApi';
 import { invalidateProductCaches } from '../utils/queryCache';
 import { submitWithQueue } from '../utils/offlinePOS';
 import { confirm } from '../utils/confirm';
 import api from '../api/axios';
 import usePrimaryAction from '../hooks/usePrimaryAction';
+import { shopStock } from '../utils/branchStock';
 
 /* --- Add Adjustment Modal --- */
 function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
@@ -65,7 +66,13 @@ function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
             {selectedProduct ? (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', border: '1px solid #1a6b3a', background: '#f0fdf4', borderRadius: 10 }}>
                 <span style={{ fontSize: 12, color: '#0f172a' }}>
-                  <strong>{selectedProduct.name}</strong> ({selectedProduct.sku}) &mdash; Stock: {selectedProduct.quantity_in_stock}
+                  {/* The adjustment moves THIS shop's stock (the server
+                      resolves the branch from ?branch= / the user's own
+                      shop), so the figure beside it has to be this shop's
+                      too. It was the chain total, which meant an owner
+                      standing in one shop wrote off against another shop's
+                      number. */}
+                  <strong>{selectedProduct.name}</strong> ({selectedProduct.sku}) &mdash; Stock: {shopStock(selectedProduct)}
                 </span>
                 <button
                   type="button"
@@ -95,7 +102,7 @@ function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
                         onMouseLeave={(e) => (e.currentTarget.style.background = '#fff')}
                       >
                         <strong>{p.name}</strong> <span style={{ color: '#9ca3af' }}>({p.sku})</span>
-                        <span style={{ float: 'right', color: '#6b7280' }}>Stock: {p.quantity_in_stock}</span>
+                        <span style={{ float: 'right', color: '#6b7280' }}>Stock: {shopStock(p)}</span>
                       </div>
                     )) : (
                       <div style={{ padding: '10px 12px', fontSize: 12, color: '#9ca3af' }}>No products match &ldquo;{productSearch}&rdquo;</div>

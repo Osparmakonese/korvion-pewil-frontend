@@ -4,6 +4,7 @@ import { getCategories, createCategory, updateCategory, deleteCategory, getProdu
 import { confirm } from '../utils/confirm';
 import { invalidateCategoryCaches } from '../utils/queryCache';
 import usePrimaryAction from '../hooks/usePrimaryAction';
+import useViewBranch from '../hooks/useViewBranch';
 
 /* --- Category Modal --- */
 function CategoryModal({ isOpen, onClose, onSubmit, loading, editCategory }) {
@@ -84,6 +85,21 @@ export default function Categories() {
   const [showModal, setShowModal] = useState(false);
   const [editCategory, setEditCategory] = useState(null);
 
+  // A category is chain-wide ON PURPOSE and stays that way.
+  //
+  // The tempting change is to make Category belong to a branch, so a liquor
+  // category cannot appear in a phone shop. It is the wrong trade: the same
+  // word would then exist as several unrelated rows, "Beverages" at one shop
+  // could not be compared with "Beverages" at another, every report that
+  // groups by category would fragment, and a product — which IS chain-wide,
+  // so that transfers and the rollup work — could only point at one of them.
+  //
+  // What is genuinely per-shop is whether a shop carries anything in a
+  // category. That question is already answerable: `getProducts` is scoped
+  // to the shop in context by the axios interceptor, so the counts below are
+  // this shop's counts. All that was missing was saying so on screen.
+  const { inShop, branchName } = useViewBranch();
+
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ['retail-categories-page'],
     queryFn: getCategories,
@@ -155,7 +171,8 @@ export default function Categories() {
     }
   };
 
-  const getProductCount = (catId) => products.filter(p => p.category === catId).length;
+  const getProductCount = (catId) =>
+    (Array.isArray(products) ? products : []).filter(p => p.category === catId).length;
 
   return (
     <div style={S.page}>
@@ -165,6 +182,21 @@ export default function Categories() {
           {'\u{2795}'} Add Category
         </button>
       </div>
+
+      {/* Whose counts are these? Without this line, "0 products" under a
+          category reads as "this category is empty" rather than "this shop
+          does not carry anything in it" — two very different statements. */}
+      {inShop && (
+        <div style={{
+          fontSize: 11.5, color: '#374151', background: '#e8f5ee',
+          border: '1px solid #cfe8da', borderRadius: 10,
+          padding: '9px 12px', marginBottom: 14, lineHeight: 1.5,
+        }}>
+          Categories are shared across the whole business. The counts below are
+          for <strong>{branchName}</strong> — a category showing 0 simply
+          isn{'’'}t stocked at this shop.
+        </div>
+      )}
 
       {/* Summary */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 20 }}>
@@ -185,17 +217,22 @@ export default function Categories() {
         <div style={S.grid}>
           {categories.map(cat => {
             const count = getProductCount(cat.id);
+            const emptyHere = inShop && count === 0;
             return (
               <div
                 key={cat.id}
-                style={S.card}
+                style={emptyHere ? { ...S.card, opacity: 0.62 } : S.card}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = '#1a6b3a'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = '#e3e8e4'; }}
               >
                 <div style={S.cardTitle}>{cat.name}</div>
                 <div style={S.cardDesc}>{cat.description || 'No description'}</div>
                 <div style={S.cardFooter}>
-                  <span style={S.productCount}>{count} product{count !== 1 ? 's' : ''}</span>
+                  <span style={S.productCount}>
+                    {emptyHere
+                      ? `Not stocked at ${branchName}`
+                      : `${count} product${count !== 1 ? 's' : ''}${inShop ? ` here` : ''}`}
+                  </span>
                   <div>
                     <button onClick={() => handleEdit(cat)} style={S.actionBtn('green')}>Edit</button>
                     <button onClick={() => handleDelete(cat)} style={S.actionBtn('red')}>Remove</button>

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import useIsMobile from '../hooks/useIsMobile';
+import useViewBranch from '../hooks/useViewBranch';
 import ShopPricing from '../components/ShopPricing';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -19,7 +20,7 @@ import { useAuth } from '../context/AuthContext';
 import { fmt } from '../utils/format';
 import { confirm } from '../utils/confirm';
 import { invalidateProductCaches } from '../utils/queryCache';
-import { shopPrice, shopStock } from '../utils/branchStock';
+import { shopPrice, shopStock, shopStockIsError, shopCarries } from '../utils/branchStock';
 
 /* ─── Modal Component ─── */
 // Blank product form. Includes the specialist flags (weighable, age-restricted,
@@ -38,9 +39,18 @@ const BLANK_PRODUCT = {
   hs_code: '', is_vat_exempt: false,
 };
 
-function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initialData }) {
+function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initialData,
+                          isMultiBranch, inShop, branchName }) {
   const [form, setForm] = useState(BLANK_PRODUCT);
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // On a business with several shops, a single "Stock Quantity" box is a
+  // lie: the number it wrote was the CHAIN total while the header said one
+  // shop's name, so an owner correcting Avenu's shelf moved a figure that
+  // belongs to every shop and left Avenu's own untouched. Per-shop counts
+  // live in the panel below instead; this box is for opening stock on a
+  // brand-new line only.
+  const perShopStock = !!isMultiBranch && !!initialData;
 
   useEffect(() => {
     if (initialData) {
@@ -100,6 +110,10 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
       const v = payload[k];
       if (v === '' || v === null || v === undefined) delete payload[k];
     });
+    // Never send a chain-wide stock figure from a multi-shop edit — the
+    // per-shop panel owns that number. Sending it unchanged would be a
+    // no-op server-side, but sending it at all invites the old bug back.
+    if (perShopStock) delete payload.quantity_in_stock;
     onSubmit(payload);
     setForm(BLANK_PRODUCT);
   };
@@ -289,14 +303,22 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
             <div>
               <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>
-                Stock Quantity
+                {perShopStock
+                  ? 'Stock (all shops)'
+                  : (isMultiBranch && inShop
+                      ? `Opening Stock at ${branchName}`
+                      : 'Stock Quantity')}
               </label>
               <input
                 type="number"
                 name="quantity_in_stock"
                 value={form.quantity_in_stock}
                 onChange={handleChange}
-                required
+                required={!perShopStock}
+                disabled={perShopStock}
+                title={perShopStock
+                  ? 'This is the total across every shop. Set what each shop holds under "Stock and price per shop" below.'
+                  : undefined}
                 style={{
                   width: '100%',
                   padding: '8px 10px',
@@ -305,12 +327,26 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
                   fontSize: 12,
                   outline: 'none',
                   boxSizing: 'border-box',
+                  background: perShopStock ? '#f6f8f6' : '#fff',
+                  color: perShopStock ? '#6b7280' : '#111827',
                 }}
               />
+              {perShopStock && (
+                <div style={{ fontSize: 9.5, color: '#9ca3af', marginTop: 3, lineHeight: 1.4 }}>
+                  Total across every shop. Set each shop{'’'}s own count below.
+                </div>
+              )}
+              {!perShopStock && isMultiBranch && (
+                <div style={{ fontSize: 9.5, color: '#9ca3af', marginTop: 3, lineHeight: 1.4 }}>
+                  {inShop
+                    ? `Lands at ${branchName}. Other shops start at 0.`
+                    : 'Pick a shop in the header first — opening stock has to be somewhere.'}
+                </div>
+              )}
             </div>
             <div>
               <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>
-                Reorder Level
+                {isMultiBranch ? 'Reorder Level (default)' : 'Reorder Level'}
               </label>
               <input
                 type="number"
@@ -328,6 +364,11 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
                   boxSizing: 'border-box',
                 }}
               />
+              {perShopStock && (
+                <div style={{ fontSize: 9.5, color: '#9ca3af', marginTop: 3, lineHeight: 1.4 }}>
+                  Each shop can set its own below.
+                </div>
+              )}
             </div>
           </div>
 
@@ -421,6 +462,7 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
             <ShopPricing
               productId={initialData.id}
               chainPriceFallback={form.selling_price}
+              chainStockFallback={initialData.quantity_in_stock}
             />
           )}
 
@@ -720,6 +762,10 @@ export default function Products() {
   // same setShowModal / setEditingProduct state.
   const isMobile = useIsMobile();
 
+  // Which shop is on screen. Everything per-shop on this page is gated on
+  // isMultiBranch, so a single-shop business sees exactly what it saw before.
+  const { isMultiBranch, inShop, branchName } = useViewBranch();
+
   const isOwnerOrManager = user?.role === 'owner' || user?.role === 'manager';
   const isWorker = user?.role === 'worker';
 
@@ -807,12 +853,43 @@ export default function Products() {
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
-      const nameMatch = p.name.toLowerCase().includes(search.toLowerCase());
-      const skuMatch = p.sku.toLowerCase().includes(search.toLowerCase());
+      const nameMatch = (p.name || '').toLowerCase().includes(search.toLowerCase());
+      const skuMatch = (p.sku || '').toLowerCase().includes(search.toLowerCase());
       const catMatch = !categoryFilter || p.category === parseInt(categoryFilter);
       return (nameMatch || skuMatch) && catMatch;
     });
   }, [products, search, categoryFilter]);
+
+  // Categories a shop actually has something in.
+  //
+  // A category is chain-wide by design — "Liquor" is the same idea in every
+  // shop, and making it per-shop would mean the same word existing as three
+  // unrelated rows, which breaks reporting and gains nothing. What is per
+  // shop is whether the shop carries anything IN it: a liquor category is
+  // meaningless in a phone shop, and the honest way to say so is not to
+  // offer it as a filter there.
+  //
+  // Chain-wide view, and single-shop businesses, keep the full list.
+  const visibleCategories = useMemo(() => {
+    if (!Array.isArray(categories)) return [];
+    if (!isMultiBranch || !inShop) return categories;
+    const here = new Set(
+      products.filter((p) => shopCarries(p) && p.category != null)
+              .map((p) => p.category)
+    );
+    return categories.filter((c) => here.has(c.id));
+  }, [categories, products, isMultiBranch, inShop]);
+
+  // A category filter left selected while switching shops can strand the
+  // list on a category this shop does not carry — an empty page with no
+  // explanation. Drop back to "All Categories" instead.
+  useEffect(() => {
+    if (!categoryFilter) return;
+    if (!Array.isArray(visibleCategories) || visibleCategories.length === 0) return;
+    if (!visibleCategories.some((c) => String(c.id) === String(categoryFilter))) {
+      setCategoryFilter('');
+    }
+  }, [visibleCategories, categoryFilter]);
 
   const handleAddProduct = (formData) => {
     if (editingProduct) {
@@ -854,6 +931,9 @@ export default function Products() {
             categories={categories}
             loading={createMut.isPending || updateMut.isPending}
             initialData={editingProduct}
+            isMultiBranch={isMultiBranch}
+            inShop={inShop}
+            branchName={branchName}
           />
         )}
       </>
@@ -909,7 +989,7 @@ export default function Products() {
           style={S.select}
         >
           <option value="">All Categories</option>
-          {categories.map((cat) => (
+          {visibleCategories.map((cat) => (
             <option key={cat.id} value={cat.id}>
               {cat.name}
             </option>
@@ -926,8 +1006,11 @@ export default function Products() {
                 <th style={S.th}>Product</th>
                 <th style={S.th}>Category</th>
                 <th style={S.th}>Cost</th>
-                <th style={S.th}>Sell</th>
-                <th style={S.th}>Stock</th>
+                {/* Say WHOSE price and WHOSE stock these columns are. A
+                    number under a header that does not name its shop is how
+                    the chain total got read as one shop's shelf. */}
+                <th style={S.th}>{inShop ? `Sell · ${branchName}` : 'Sell'}</th>
+                <th style={S.th}>{inShop ? `Stock · ${branchName}` : 'Stock'}</th>
                 <th style={S.th}>VAT</th>
                 <th style={S.th}>Status</th>
                 {!isWorker && <th style={S.th}>Actions</th>}
@@ -939,9 +1022,14 @@ export default function Products() {
                 const isExpiring = expiringIds.has(product.id);
                 const catName =
                   categories.find((c) => c.id === product.category)?.name || 'N/A';
+                const stockHere = shopStock(product);
+                const stockError = shopStockIsError(product);
+                // Only meaningful with a shop on screen: chain-wide, "carried"
+                // is a per-shop answer with no single value.
+                const notCarriedHere = inShop && !shopCarries(product);
 
                 return (
-                  <tr key={product.id}>
+                  <tr key={product.id} style={notCarriedHere ? { opacity: 0.6 } : undefined}>
                     <td style={{ ...S.td, fontFamily: 'monospace', color: '#1a6b3a', fontWeight: 600 }}>
                       {product.sku}
                     </td>
@@ -974,7 +1062,27 @@ export default function Products() {
                       )}
                     </td>
                     <td style={S.td}>
-                      {shopStock(product)} {product.unit}
+                      {/* A negative figure is not a quantity — no shelf holds
+                          minus four bottles. It means this shop's opening
+                          count was never recorded, so its row was created at
+                          zero by the first sale and has been falling since.
+                          Shown, in red, as an error to fix — never clamped to
+                          zero, which would hide a wrong number instead of
+                          correcting it. */}
+                      {stockError ? (
+                        <span
+                          title={`${branchName || 'This shop'} has never had its count recorded, so more has been sold here than it was recorded as holding. Open Edit and set the shelf count under "Stock and price per shop".`}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 5,
+                            color: '#c0392b', fontWeight: 700,
+                          }}
+                        >
+                          {stockHere} {product.unit}
+                          <span style={{ ...S.badge('red'), fontSize: 8 }}>Check count</span>
+                        </span>
+                      ) : (
+                        <>{stockHere} {product.unit}</>
+                      )}
                       {/* On "All shops" the list is a merge, so a bare total
                           cannot say WHERE the stock is — 240 at one shop and
                           80 across three read identically. Break it down per
@@ -984,20 +1092,30 @@ export default function Products() {
                         <div style={{
                           marginTop: 3, display: 'flex', flexWrap: 'wrap', gap: 4,
                         }}>
-                          {product.shops.map((s) => (
-                            <span
-                              key={s.branch_id}
-                              title={`${s.name}${s.price ? ` · ${fmt(s.price, 'zwd')}` : ''}`}
-                              style={{
-                                fontSize: 9.5, fontWeight: 700, borderRadius: 7,
-                                padding: '1px 5px', whiteSpace: 'nowrap',
-                                color: s.quantity > 0 ? '#1a6b3a' : '#9ca3af',
-                                background: s.quantity > 0 ? '#e8f5ee' : '#f3f4f6',
-                              }}
-                            >
-                              {s.code || s.name} {s.quantity}
-                            </span>
-                          ))}
+                          {product.shops.map((s) => {
+                            // Three states, not two: holding some (green),
+                            // holding none (grey), and below zero (red) —
+                            // which is a book error, not an empty shelf, and
+                            // was previously coloured identically to "none".
+                            const bad = Number(s.quantity) < 0;
+                            const some = Number(s.quantity) > 0;
+                            return (
+                              <span
+                                key={s.branch_id}
+                                title={bad
+                                  ? `${s.name} is below zero — its shelf count has never been recorded. Open Edit to set it.`
+                                  : `${s.name}${s.price ? ` · ${fmt(s.price, 'zwd')}` : ''}`}
+                                style={{
+                                  fontSize: 9.5, fontWeight: 700, borderRadius: 7,
+                                  padding: '1px 5px', whiteSpace: 'nowrap',
+                                  color: bad ? '#c0392b' : (some ? '#1a6b3a' : '#9ca3af'),
+                                  background: bad ? '#fdecea' : (some ? '#e8f5ee' : '#f3f4f6'),
+                                }}
+                              >
+                                {s.code || s.name} {s.quantity}
+                              </span>
+                            );
+                          })}
                         </div>
                       )}
                     </td>
@@ -1005,6 +1123,20 @@ export default function Products() {
                       {product.vat_percentage || '—'}
                     </td>
                     <td style={S.td}>
+                      {/* This screen deliberately lists the whole catalogue
+                          (include_unavailable=1) so a line switched off can be
+                          switched back on. Until now nothing said WHICH lines
+                          those were, so a product this shop does not sell
+                          looked identical to one it does — and its stock and
+                          price columns read as if it were on the shelf. */}
+                      {notCarriedHere && (
+                        <span
+                          title={`${branchName} does not sell this. Open Edit to switch it on for this shop.`}
+                          style={{ ...S.badge('red'), marginRight: 6 }}
+                        >
+                          Not sold here
+                        </span>
+                      )}
                       {isExpiring && (
                         <span style={{ ...S.badge('amber'), marginRight: 6 }}>
                           Expiring
@@ -1015,7 +1147,7 @@ export default function Products() {
                           Low Stock
                         </span>
                       )}
-                      {!isExpiring && !isLowStock && (
+                      {!notCarriedHere && !isExpiring && !isLowStock && (
                         <span style={S.badge('green')}>
                           Active
                         </span>
@@ -1073,9 +1205,17 @@ export default function Products() {
             <div style={{ fontSize: 48, marginBottom: 10 }}>
               {products.length === 0 ? '\u{1F6D2}' : '\u{1F50D}'}
             </div>
-            <p>{products.length === 0 ? 'No products yet' : 'No products found'}</p>
+            <p>
+              {products.length === 0
+                ? (inShop ? `Nothing in the catalogue yet` : 'No products yet')
+                : 'No products found'}
+            </p>
             <p style={{ fontSize: 11, marginTop: 6 }}>
-              {products.length === 0 ? 'Add your first product to get started' : 'Try adjusting your search or filters'}
+              {products.length === 0
+                ? (inShop
+                    ? `${branchName} has no products. Add one, or switch it on for this shop from All shops.`
+                    : 'Add your first product to get started')
+                : 'Try adjusting your search or filters'}
             </p>
             {products.length === 0 && !isWorker && (
               <button onClick={() => setShowModal(true)} style={{ ...S.addBtn, marginTop: 12 }}>
@@ -1184,6 +1324,9 @@ export default function Products() {
           categories={categories}
           loading={createMut.isPending || updateMut.isPending}
           initialData={editingProduct}
+          isMultiBranch={isMultiBranch}
+          inShop={inShop}
+          branchName={branchName}
         />
       )}
     </div>

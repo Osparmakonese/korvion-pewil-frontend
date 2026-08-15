@@ -15,15 +15,16 @@
  *   - "Add product" FAB (owner/manager only) — opens the existing
  *     Products.js add modal via the prop callback.
  */
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   getProducts, getCategories, getLowStockProducts, getExpiringProducts,
 } from '../api/retailApi';
 import { useAuth } from '../context/AuthContext';
+import useViewBranch from '../hooks/useViewBranch';
 import { fmt } from '../utils/format';
 import { getProductIcon } from '../utils/productIcons';
-import { shopPrice, shopStock } from '../utils/branchStock';
+import { shopPrice, shopStock, shopStockIsError, shopCarries } from '../utils/branchStock';
 
 const T = {
   cream:   '#ffffff',
@@ -43,6 +44,9 @@ const T = {
 export default function MobileProducts({ onAddProduct, onEditProduct }) {
   const { user } = useAuth() || {};
   const isOwnerOrManager = user?.role === 'owner' || user?.role === 'manager';
+  // Same shop context the desktop table uses, so the two can never disagree
+  // about whose stock a number is.
+  const { isMultiBranch, inShop, branchName } = useViewBranch();
 
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -98,6 +102,33 @@ export default function MobileProducts({ onAddProduct, onEditProduct }) {
     return m;
   }, [categories]);
 
+  // Only offer chips for categories this shop actually carries something in
+  // — a liquor chip on a phone shop's screen is a filter that can only ever
+  // return nothing. Chain-wide and single-shop keep the full set.
+  const visibleCategories = useMemo(() => {
+    if (!Array.isArray(categories)) return [];
+    if (!isMultiBranch || !inShop) return categories;
+    const here = new Set(
+      products.filter((p) => shopCarries(p) && p.category != null)
+              .map((p) => p.category)
+    );
+    return categories.filter((c) => here.has(c.id));
+  }, [categories, products, isMultiBranch, inShop]);
+
+  // Don't strand the list on a chip that no longer exists after a shop switch.
+  useEffect(() => {
+    if (!categoryFilter) return;
+    if (!Array.isArray(visibleCategories) || visibleCategories.length === 0) return;
+    if (!visibleCategories.some((c) => String(c.id) === String(categoryFilter))) {
+      setCategoryFilter('');
+    }
+  }, [visibleCategories, categoryFilter]);
+
+  const negativeCount = useMemo(
+    () => products.filter((p) => shopStockIsError(p)).length,
+    [products]
+  );
+
   return (
     <div style={{
       padding: '12px 16px 0',
@@ -140,14 +171,14 @@ export default function MobileProducts({ onAddProduct, onEditProduct }) {
       </div>
 
       {/* Category chips */}
-      {categories.length > 0 && (
+      {visibleCategories.length > 0 && (
         <div style={{
           display: 'flex', gap: 6, overflowX: 'auto',
           paddingBottom: 4, marginBottom: 12,
           WebkitOverflowScrolling: 'touch',
         }}>
           <Chip label="All" active={!categoryFilter} onClick={() => setCategoryFilter('')} />
-          {categories.map((c) => (
+          {visibleCategories.map((c) => (
             <Chip
               key={c.id}
               label={c.name}
@@ -159,7 +190,10 @@ export default function MobileProducts({ onAddProduct, onEditProduct }) {
       )}
 
       {/* Summary chips */}
-      <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+        {/* Name the shop, so "43 products / 2 low stock" is never read as
+            the whole business's numbers while one shop is on screen. */}
+        {inShop && <Stat label={branchName} tone="shop" />}
         <Stat
           label={`${products.length} products`}
           tone="default"
@@ -174,6 +208,12 @@ export default function MobileProducts({ onAddProduct, onEditProduct }) {
           <Stat
             label={`${expiringIds.size} expiring`}
             tone="warn"
+          />
+        )}
+        {negativeCount > 0 && (
+          <Stat
+            label={`${negativeCount} below zero`}
+            tone="error"
           />
         )}
       </div>
@@ -191,10 +231,15 @@ export default function MobileProducts({ onAddProduct, onEditProduct }) {
         }}>
           {search || categoryFilter
             ? 'No products match your filter.'
-            : 'No products yet. Add one to start ringing up sales.'}
+            : (inShop
+                ? `${branchName} has no products yet. Add one, or switch existing lines on for this shop from All shops.`
+                : 'No products yet. Add one to start ringing up sales.')}
         </div>
       ) : filtered.map((p) => {
         const icon = getProductIcon(p, categoryNameById[String(p.category)]);
+        const stockHere = shopStock(p);
+        const stockError = shopStockIsError(p);
+        const notCarriedHere = inShop && !shopCarries(p);
         return (
         <button
           key={p.id}
@@ -203,7 +248,8 @@ export default function MobileProducts({ onAddProduct, onEditProduct }) {
           style={{
             width: '100%',
             background: '#fff',
-            border: `1px solid ${T.line}`,
+            opacity: notCarriedHere ? 0.62 : 1,
+            border: `1px solid ${stockError ? '#f5b7b1' : T.line}`,
             borderRadius: 16,
             padding: 14,
             marginBottom: 10,
@@ -235,9 +281,15 @@ export default function MobileProducts({ onAddProduct, onEditProduct }) {
             }}>
               <span>SKU {p.sku || '—'}</span>
               <span>·</span>
-              <span>{shopStock(p)} in stock</span>
+              {/* Below zero is a book error, not a quantity — see
+                  utils/branchStock.js. Shown red, never clamped. */}
+              <span style={stockError ? { color: T.red, fontWeight: 700 } : undefined}>
+                {stockHere} in stock{inShop ? ` at ${branchName}` : ''}
+              </span>
             </div>
             <div style={{ marginTop: 6, display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+              {notCarriedHere && <Badge tone="error">not sold here</Badge>}
+              {stockError && <Badge tone="error">check count</Badge>}
               {lowStockIds.has(p.id) && <Badge tone="warn">low stock</Badge>}
               {expiringIds.has(p.id) && <Badge tone="amber">expiring</Badge>}
               {p.is_age_restricted && <Badge tone="ink">18+</Badge>}
@@ -305,6 +357,8 @@ function Stat({ label, tone }) {
   const palette = {
     default: { bg: 'rgba(0,0,0,0.04)', fg: T.inkSoft },
     warn:    { bg: '#fff7e6',          fg: '#b25c00' },
+    error:   { bg: '#fdecea',          fg: T.red     },
+    shop:    { bg: '#e8f5ee',          fg: T.green   },
   }[tone] || { bg: 'rgba(0,0,0,0.04)', fg: T.inkSoft };
   return (
     <span style={{
@@ -319,6 +373,7 @@ function Badge({ tone, children }) {
   const palette = {
     warn:  { bg: '#fff7e6',     fg: '#b25c00', bd: '#fde68a' },
     amber: { bg: '#fef3c7',     fg: '#92400e', bd: '#fde68a' },
+    error: { bg: '#fdecea',     fg: T.red,     bd: '#f5b7b1' },
     ink:   { bg: T.cream2,      fg: T.ink,     bd: T.line   },
   }[tone] || { bg: T.cream2, fg: T.ink, bd: T.line };
   return (
