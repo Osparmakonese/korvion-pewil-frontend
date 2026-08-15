@@ -73,6 +73,21 @@ function updateUser(id, data) {
   return api.patch(`/core/tenants/users/${id}/permissions/`, data).then(res => res.data);
 }
 
+// DRF answers with either {detail: "..."} or a field map like {role: "..."} /
+// {role: ["..."]}. Pulling the real reason out matters on this screen: the
+// permissions endpoint reports its refusals per field, so a caller that reads
+// only `detail` shows identical generic text for every distinct failure.
+function apiErrorMessage(err, fallback) {
+  const data = err?.response?.data;
+  if (typeof data?.detail === 'string') return data.detail;
+  if (data && typeof data === 'object') {
+    const first = Object.values(data)[0];
+    if (typeof first === 'string') return first;
+    if (Array.isArray(first) && typeof first[0] === 'string') return first[0];
+  }
+  return fallback;
+}
+
 export default function TeamManagement() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
@@ -250,23 +265,43 @@ export default function TeamManagement() {
     // The invite endpoint has no shop field (it is a plain Serializer, so an
     // extra key is silently dropped). Send the invite, then pin the new
     // person to their shop with the id it returns — one action for the owner.
+    //
+    // Two calls means a partial outcome is possible: the account is created
+    // and the shop is NOT set. That failure used to be swallowed and the
+    // modal still went green. It is the worst way for this screen to fail —
+    // an unpinned account works across EVERY shop, so a cashier the owner
+    // believes is confined to Avenu can see the whole chain, reported as
+    // success. So it is carried out of the mutation and shown, and the modal
+    // stays open on the one fact the owner has to act on.
     mutationFn: async (payload) => {
       const { branch, ...invite } = payload;
       const created = await inviteUser(invite);
       if (branch && created?.id) {
         try {
           await updateUser(created.id, { branch });
-        } catch (_) {
-          // The account exists either way; it just lands in "works across all
-          // shops" and the owner can set the shop on the card.
+        } catch (err) {
+          const shop = branches.find(b => String(b.id) === String(branch));
+          return {
+            created,
+            assignError: `${created.username || 'The account'} was created, but could not be`
+              + ` put at ${shop?.name || 'the chosen shop'}: `
+              + apiErrorMessage(err, 'the shop could not be saved.'),
+          };
         }
       }
-      return created;
+      return { created };
     },
-    onSuccess: () => {
+    onSuccess: ({ assignError }) => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      if (assignError) {
+        // Deliberately no auto-close timer here — closing on a timer is how
+        // the old behaviour hid this in the first place.
+        setInviteStatus('partial');
+        setInviteMessage(assignError);
+        return;
+      }
       setInviteStatus('success');
       setInviteMessage('User invited successfully!');
-      queryClient.invalidateQueries({ queryKey: ['users'] });
       setTimeout(() => {
         setShowInviteModal(false);
         setFormData({
@@ -282,9 +317,8 @@ export default function TeamManagement() {
       }, 2000);
     },
     onError: (err) => {
-      const msg = err?.response?.data?.detail || 'Failed to invite user. Please try again.';
       setInviteStatus('error');
-      setInviteMessage(msg);
+      setInviteMessage(apiErrorMessage(err, 'Failed to invite user. Please try again.'));
     },
   });
 
@@ -297,19 +331,10 @@ export default function TeamManagement() {
       setTimeout(() => { setEditUser(null); setEditStatus(null); }, 1500);
     },
     onError: (err) => {
-      // DRF returns either {detail: "..."} or a field map like {role: "..."}.
       // The message was previously computed and then thrown away, so every
-      // failure looked identical to the owner.
-      const data = err?.response?.data;
-      let msg = 'Failed to update user. Please try again.';
-      if (typeof data?.detail === 'string') {
-        msg = data.detail;
-      } else if (data && typeof data === 'object') {
-        const first = Object.values(data)[0];
-        if (typeof first === 'string') msg = first;
-        else if (Array.isArray(first) && typeof first[0] === 'string') msg = first[0];
-      }
-      setEditMessage(msg);
+      // failure looked identical to the owner. See apiErrorMessage above —
+      // the new role validation answers {role: …}, not {detail: …}.
+      setEditMessage(apiErrorMessage(err, 'Failed to update user. Please try again.'));
       setEditStatus('error');
     },
   });
@@ -322,16 +347,10 @@ export default function TeamManagement() {
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },
     onError: (err, vars) => {
-      const data = err?.response?.data;
-      let msg = 'Could not save that. Please try again.';
-      if (typeof data?.detail === 'string') {
-        msg = data.detail;
-      } else if (data && typeof data === 'object') {
-        const first = Object.values(data)[0];
-        if (typeof first === 'string') msg = first;
-        else if (Array.isArray(first) && typeof first[0] === 'string') msg = first[0];
-      }
-      setQuickError({ id: vars?.id, msg });
+      setQuickError({
+        id: vars?.id,
+        msg: apiErrorMessage(err, 'Could not save that. Please try again.'),
+      });
     },
   });
 
@@ -845,6 +864,23 @@ export default function TeamManagement() {
               </div>
             )}
 
+            {/* Account created, shop NOT set. Amber rather than red because
+                nothing needs undoing — but it must not read as success: an
+                unassigned account works across every shop. */}
+            {inviteStatus === 'partial' && (
+              <div style={{ background: '#FEF3C7', border: '1px solid #F59E0B', borderRadius: 10, padding: '12px 16px', marginBottom: 16 }}>
+                <div style={{ fontWeight: 700, fontSize: 12, color: '#92400E', marginBottom: 5 }}>
+                  Account created {'—'} but not tied to a shop
+                </div>
+                <div style={{ fontSize: 11.5, color: '#92400E', lineHeight: 1.5 }}>
+                  {inviteMessage}
+                  <br />
+                  Until you set it, this person works across <strong>all</strong> shops.
+                  Close this and set {'“'}Works at{'”'} on their card.
+                </div>
+              </div>
+            )}
+
             {inviteStatus !== 'success' && (
               <>
                 {/* Full Name */}
@@ -1101,8 +1137,13 @@ export default function TeamManagement() {
 
             {/* Action buttons */}
             <div style={{ display: 'flex', gap: 10 }}>
+              {/* On a partial outcome the account already exists, so pressing
+                  Send again would only collide on the username. The primary
+                  button becomes the way out instead. */}
               <button
-                onClick={handleInviteSubmit}
+                onClick={inviteStatus === 'partial'
+                  ? () => { setShowInviteModal(false); setInviteStatus(null); }
+                  : handleInviteSubmit}
                 disabled={inviteStatus === 'loading' || inviteStatus === 'success'}
                 style={{
                   ...btnS(true),
@@ -1113,20 +1154,28 @@ export default function TeamManagement() {
                   opacity: (inviteStatus === 'loading' || inviteStatus === 'success') ? 0.6 : 1,
                 }}
               >
-                {inviteStatus === 'loading' ? 'Sending...' : inviteStatus === 'success' ? 'Done' : 'Send Invite'}
+                {inviteStatus === 'loading'
+                  ? 'Sending...'
+                  : inviteStatus === 'success'
+                    ? 'Done'
+                    : inviteStatus === 'partial'
+                      ? 'Close and set their shop'
+                      : 'Send Invite'}
               </button>
-              <button
-                onClick={() => setShowInviteModal(false)}
-                disabled={inviteStatus === 'loading'}
-                style={{
-                  ...btnS(false),
-                  justifyContent: 'center',
-                  padding: '10px 16px',
-                  fontSize: 13,
-                }}
-              >
-                Cancel
-              </button>
+              {inviteStatus !== 'partial' && (
+                <button
+                  onClick={() => setShowInviteModal(false)}
+                  disabled={inviteStatus === 'loading'}
+                  style={{
+                    ...btnS(false),
+                    justifyContent: 'center',
+                    padding: '10px 16px',
+                    fontSize: 13,
+                  }}
+                >
+                  Cancel
+                </button>
+              )}
             </div>
           </div>
         </div>
