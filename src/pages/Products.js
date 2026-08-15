@@ -975,6 +975,31 @@ export default function Products() {
                     </td>
                     <td style={S.td}>
                       {shopStock(product)} {product.unit}
+                      {/* On "All shops" the list is a merge, so a bare total
+                          cannot say WHERE the stock is — 240 at one shop and
+                          80 across three read identically. Break it down per
+                          shop. Only on the chain view: stepped into a shop,
+                          the number above is already that shop's. */}
+                      {Array.isArray(product.shops) && product.shops.length > 0 && (
+                        <div style={{
+                          marginTop: 3, display: 'flex', flexWrap: 'wrap', gap: 4,
+                        }}>
+                          {product.shops.map((s) => (
+                            <span
+                              key={s.branch_id}
+                              title={`${s.name}${s.price ? ` · ${fmt(s.price, 'zwd')}` : ''}`}
+                              style={{
+                                fontSize: 9.5, fontWeight: 700, borderRadius: 7,
+                                padding: '1px 5px', whiteSpace: 'nowrap',
+                                color: s.quantity > 0 ? '#1a6b3a' : '#9ca3af',
+                                background: s.quantity > 0 ? '#e8f5ee' : '#f3f4f6',
+                              }}
+                            >
+                              {s.code || s.name} {s.quantity}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </td>
                     <td style={S.td}>
                       {product.vat_percentage || '—'}
