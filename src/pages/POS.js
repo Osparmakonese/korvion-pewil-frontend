@@ -1562,7 +1562,12 @@ export default function POS() {
   const addToCart = async (product) => {
     if (product.is_weighable) {
       try {
-        const { weight } = await promptWeight({ product });
+        // Same price the cart line will carry — the modal shows the customer
+        // a running total, and it must not be the chain's price when the till
+        // is about to charge this shop's.
+        const { weight } = await promptWeight({
+          product, unitPrice: shopPrice(product),
+        });
         addLineToCart(product, weight);
       } catch (_) {
         // cashier cancelled weighing — nothing added, nothing to clean up.

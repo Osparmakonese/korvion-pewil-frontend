@@ -240,6 +240,14 @@ export default function RetailReport() {
             {' \u2014 '}
             {new Date(appliedEnd).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
             {' \u2022 '}{num(rev.transaction_count)} transactions
+            {/* This report is printed and handed to people. Name the shop on
+                its face \u2014 its inventory block used to be the whole chain's
+                while its sales were one shop's (fixed 2026-08-15), and the
+                only defence against that recurring is that every figure
+                arrives with its scope attached. */}
+            {report?.scope?.branch_id
+              ? <>{' \u2022 '}{'\u{1F4CD}'} {report.scope.branch_name}</>
+              : null}
           </div>
         </div>
         <div style={S.dateRow}>

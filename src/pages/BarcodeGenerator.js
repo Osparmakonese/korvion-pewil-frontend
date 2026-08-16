@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { getProducts } from '../api/retailApi';
+import { shopPrice } from '../utils/branchStock';
 import useIsMobile from '../hooks/useIsMobile';
 import usePrimaryAction from '../hooks/usePrimaryAction';
 
@@ -28,19 +29,25 @@ export default function BarcodeGenerator({ onTabChange }) {
   // to avoid "TypeError: x.toFixed is not a function" (Sentry MAKONESE-FARM-FRONTEND-4).
   const fmtPrice = (v) => `$${(Number(v) || 0).toFixed(2)}`;
 
-  const products = allProducts?.map(p => ({
+  // A shelf label is a price the customer is entitled to be charged, so it
+  // has to be the price of the shop the labels are being printed for — not
+  // the chain's. `shopPrice` falls back to `selling_price`, so single-branch
+  // labels are byte-identical to before.
+  const rows = Array.isArray(allProducts) ? allProducts : [];
+
+  const products = rows.map(p => ({
     sku: p.sku,
     name: p.name,
-    price: fmtPrice(p.selling_price)
-  })) || [];
+    price: fmtPrice(shopPrice(p))
+  }));
 
-  const productsWithoutBarcodes = allProducts?.filter(p => !p.barcode)?.map(p => ({
+  const productsWithoutBarcodes = rows.filter(p => !p.barcode).map(p => ({
     sku: p.sku,
     name: p.name,
     category: p.category || 'Uncategorized',
-    price: fmtPrice(p.selling_price),
+    price: fmtPrice(shopPrice(p)),
     status: p.barcode ? 'Generated' : 'None'
-  })) || [];
+  }));
 
   const firstProduct = products[0];
   const defaultSku = selectedProduct || firstProduct?.sku || '';

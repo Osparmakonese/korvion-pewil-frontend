@@ -10,12 +10,20 @@
  *      the browser doesn't support Web Serial (Firefox / Safari).
  *
  * Resolves with `{ weight, unit }` where weight is always in the product's
- * declared `unit_of_weight` (so the caller can multiply selling_price by
+ * declared `unit_of_weight` (so the caller can multiply the unit price by
  * weight without converting again). Rejects with `Error('cancelled')`.
+ *
+ * `unitPrice` — what THIS shop charges per unit of weight. The modal used to
+ * read `product.selling_price`, the CHAIN price, while POS.js put
+ * `shopPrice(product)` on the cart line. On a chain with per-shop pricing the
+ * cashier read one number off the screen to the customer and the till charged
+ * a different one. Optional, and it falls back to `selling_price`, so a
+ * single-branch tenant sees exactly what it saw before.
  *
  * Usage:
  *   const { weight } = await promptWeight({
  *     product: { name: 'Bananas', selling_price: 2.5, unit_of_weight: 'kg' },
+ *     unitPrice: shopPrice(product),
  *   });
  *   addToCart({ ...product, quantity: weight });
  */
@@ -24,7 +32,7 @@ import ReactDOM from 'react-dom/client';
 import { isSupported, connectScale } from './webSerialScale';
 import { fmt } from './format';
 
-export function promptWeight({ product }) {
+export function promptWeight({ product, unitPrice }) {
   return new Promise((resolve, reject) => {
     const host = document.createElement('div');
     host.setAttribute('data-pewil-weight-prompt', '');
@@ -39,6 +47,7 @@ export function promptWeight({ product }) {
     root.render(
       <WeightModal
         product={product}
+        unitPrice={unitPrice}
         onCaptured={(r) => { cleanup(); resolve(r); }}
         onCancel={() => { cleanup(); reject(new Error('cancelled')); }}
       />
@@ -46,7 +55,7 @@ export function promptWeight({ product }) {
   });
 }
 
-function WeightModal({ product, onCaptured, onCancel }) {
+function WeightModal({ product, unitPrice: unitPriceProp, onCaptured, onCancel }) {
   const targetUnit = product.unit_of_weight || 'kg';
   const [reading, setReading] = useState(null); // { weight, unit, stable }
   const [manual, setManual] = useState('');
@@ -114,7 +123,11 @@ function WeightModal({ product, onCaptured, onCancel }) {
     onCaptured({ weight: Number(n.toFixed(3)), unit: targetUnit });
   };
 
-  const unitPrice = parseFloat(product.selling_price) || 0;
+  // This shop's price when the caller supplied one, else the chain price —
+  // which is the same number for a single-branch tenant.
+  const unitPrice = parseFloat(
+    unitPriceProp != null ? unitPriceProp : product.selling_price
+  ) || 0;
   const liveWeight = reading ? convertFromKg(reading.weight) : null;
   const liveTotal = liveWeight != null ? liveWeight * unitPrice : null;
   const manualNum = parseFloat(manual);

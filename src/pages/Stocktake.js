@@ -4,6 +4,7 @@ import {
   getStocktakes, getStocktake, startStocktake, saveStocktakeCounts, finalizeStocktake,
 } from '../api/retailApi';
 import useIsMobile from '../hooks/useIsMobile';
+import useViewBranch from '../hooks/useViewBranch';
 import { fmt } from '../utils/format';
 
 const G = '#1a6b3a';
@@ -106,11 +107,30 @@ const signed = (v) => `${v > 0 ? '+' : ''}${fmt(v, 'zwd')}`;
 export default function Stocktake() {
   const qc = useQueryClient();
   const [activeId, setActiveId] = useState(null);
-  const { data: list = [] } = useQuery({ queryKey: ['stocktakes'], queryFn: getStocktakes });
+  const [startError, setStartError] = useState('');
+  // A stocktake counts ONE building's shelves. On a chain the server now
+  // refuses to start one from "All shops" rather than filling the sheet with
+  // the whole business's quantities — so the page has to say which shop it is
+  // about, and say plainly what to do when it refuses.
+  const { branchName, inShop, isMultiBranch } = useViewBranch();
+  const raw = useQuery({ queryKey: ['stocktakes'], queryFn: getStocktakes });
+  const list = Array.isArray(raw.data) ? raw.data : (raw.data?.results || []);
   const startMut = useMutation({
     mutationFn: () => startStocktake({}),
-    onSuccess: (st) => { qc.invalidateQueries({ queryKey: ['stocktakes'] }); setActiveId(st.id); },
+    onSuccess: (st) => {
+      setStartError('');
+      qc.invalidateQueries({ queryKey: ['stocktakes'] });
+      setActiveId(st.id);
+    },
+    onError: (e) => {
+      const d = e?.response?.data;
+      setStartError(
+        (typeof d?.detail === 'string' && d.detail)
+        || 'Could not start the stocktake. Please try again.'
+      );
+    },
   });
+  const blocked = isMultiBranch && !inShop;
 
   if (activeId) return <CountScreen id={activeId} onBack={() => { setActiveId(null); qc.invalidateQueries({ queryKey: ['stocktakes'] }); }} />;
 
@@ -119,12 +139,31 @@ export default function Stocktake() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
         <div>
           <h1 style={S.h1}>Stocktake</h1>
-          <p style={S.sub}>Count your physical stock, see the variance against the system, and reconcile in one click.</p>
+          <p style={S.sub}>
+            Count your physical stock, see the variance against the system, and reconcile in one click.
+            {isMultiBranch ? (inShop
+              ? ` Counting ${branchName}.`
+              : ' Pick a shop in the header — a count belongs to one shop.') : ''}
+          </p>
         </div>
-        <button style={S.btn} disabled={startMut.isPending} onClick={() => startMut.mutate()}>
-          {startMut.isPending ? 'Starting…' : '+ Start new stocktake'}
+        <button
+          style={{ ...S.btn, opacity: (startMut.isPending || blocked) ? 0.55 : 1,
+                   cursor: (startMut.isPending || blocked) ? 'not-allowed' : 'pointer' }}
+          disabled={startMut.isPending || blocked}
+          title={blocked ? 'Choose a shop in the header first.' : ''}
+          onClick={() => startMut.mutate()}
+        >
+          {startMut.isPending ? 'Starting…'
+            : blocked ? '+ Start new stocktake'
+            : `+ Start new stocktake${isMultiBranch ? ` — ${branchName}` : ''}`}
         </button>
       </div>
+      {startError ? (
+        <div style={{ background: '#fdecea', border: '1px solid #f2c4bf', color: '#b91c1c',
+                      borderRadius: 10, padding: '10px 12px', fontSize: 12, marginBottom: 12 }}>
+          {startError}
+        </div>
+      ) : null}
       <div style={S.card}>
         <div style={{ overflowX: 'auto' }}><table style={S.table}>
           <thead><tr><th style={S.th}>Reference</th><th style={S.th}>Started</th><th style={S.th}>Status</th><th style={S.th}>Counted</th><th style={S.th}>Value counted</th><th style={S.th}>Difference</th><th style={S.th}></th></tr></thead>

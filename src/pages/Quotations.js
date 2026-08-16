@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getQuotations, createQuotation, setQuotationStatus, deleteQuotation, getProducts } from '../api/retailApi';
 import { fmt } from '../utils/format';
+import { shopPrice } from '../utils/branchStock';
 import useIsMobile from '../hooks/useIsMobile';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
@@ -43,7 +44,11 @@ export default function Quotations() {
     setFormError('');
     const next = lines.slice();
     next[i] = { ...next[i], ...patch };
-    if (patch.product) { const p = products.find((x) => String(x.id) === String(patch.product)); if (p) { next[i].name = p.name; if (!next[i].unit_price) next[i].unit_price = p.selling_price; } }
+    // Quote at the price the shop will actually charge when the quote is
+    // accepted. `shopPrice` falls back to the chain price, so nothing moves
+    // for a single-branch tenant — but on a chain, quoting the chain price and
+    // then ringing up the branch price is an argument at the counter.
+    if (patch.product) { const p = products.find((x) => String(x.id) === String(patch.product)); if (p) { next[i].name = p.name; if (!next[i].unit_price) next[i].unit_price = shopPrice(p); } }
     setLines(next);
   };
   const subtotal = lines.reduce((a, l) => a + (Number(l.qty) || 0) * (Number(l.unit_price) || 0), 0);

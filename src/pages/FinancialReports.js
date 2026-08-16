@@ -5,6 +5,7 @@ import {
   exportFinancialsExcel,
 } from '../api/retailApi';
 import { fmt } from '../utils/format';
+import ReportScopeChip from '../components/ReportScopeChip';
 
 const G = '#1a6b3a';
 const money = (n) => fmt(Number(n || 0));
@@ -96,6 +97,11 @@ export default function FinancialReports() {
         <div style={S.card}>
           {PeriodPicker}
           {pnl.isLoading ? <Loading /> : pnl.data && (<>
+            <ReportScopeChip
+              scope={pnl.data.scope}
+              note={pnl.data.overheads_are_chain_wide
+                ? 'expenses and wages are the whole business' : ''}
+            />
             <Line label="Gross sales" value={pnl.data.gross_sales} />
             <Line label="Less: VAT" value={-pnl.data.vat} />
             <Line label="Less: discounts" value={-pnl.data.discounts} />
@@ -113,6 +119,11 @@ export default function FinancialReports() {
         <div style={S.card}>
           {PeriodPicker}
           {vat.isLoading ? <Loading /> : vat.data && (<>
+            {/* Always shown, even chain-wide: this is the one report on the
+                page that deliberately IGNORES the shop switcher, because a
+                VAT return is filed by the registered business. Saying so
+                stops an owner reading it as their branch's return. */}
+            <ReportScopeChip scope={vat.data.scope} hideWhenChainWide={false} />
             <Line label="Output VAT (on sales)" value={vat.data.output_vat} />
             <Line label="Input VAT (on purchases)" value={vat.data.input_vat} />
             <Line label="Net VAT payable to ZIMRA" value={vat.data.net_vat_payable} bold />
@@ -129,6 +140,11 @@ export default function FinancialReports() {
       {tab === 'bs' && (
         <div style={S.card}>
           {bs.isLoading ? <Loading /> : bs.data && (<>
+            <ReportScopeChip
+              scope={bs.data.scope}
+              note={bs.data.receivables_payables_are_chain_wide
+                ? 'debtors and creditors are the whole business' : ''}
+            />
             <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 4 }}>Assets</div>
             <Line label="Inventory (at cost)" value={bs.data.assets.inventory_at_cost} />
             <Line label="Accounts receivable" value={bs.data.assets.accounts_receivable} />
@@ -145,6 +161,7 @@ export default function FinancialReports() {
       {tab === 'ar' && (
         <div style={S.card}>
           {ar.isLoading ? <Loading /> : ar.data && (<>
+            <ReportScopeChip scope={ar.data.scope} hideWhenChainWide={false} />
             <div style={{ display: 'flex', gap: 16, marginBottom: 14, flexWrap: 'wrap' }}>
               <Stat label="Owed to us (debtors)" value={ar.data.total_owed_to_us} />
               <Stat label="We owe (creditors)" value={ar.data.total_we_owe} />
@@ -164,6 +181,7 @@ export default function FinancialReports() {
       {tab === 'stock' && (
         <div style={S.card}>
           {stock.isLoading ? <Loading /> : stock.data && (<>
+            <ReportScopeChip scope={stock.data.scope} />
             <div style={{ display: 'flex', gap: 16, marginBottom: 14, flexWrap: 'wrap' }}>
               <Stat label="Cost value" value={stock.data.total_cost_value} />
               <Stat label="Retail value" value={stock.data.total_retail_value} />

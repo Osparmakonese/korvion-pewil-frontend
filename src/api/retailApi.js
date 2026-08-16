@@ -127,17 +127,26 @@ export const getProducts = (opts) => {
       : undefined;
   return api.get('/retail/products/', params ? { params } : undefined).then(r => r.data);
 };
+// Name the shop on a WRITE.
+//
+// The axios interceptor deliberately adds ?branch= to reads only — a write
+// must never be silently retargeted at another shop by a leftover setting.
+// But a write that MOVES REAL STOCK still has to say where, or the server
+// falls back to head office and the goods land in the wrong building. So the
+// handful of writes that move stock opt in here, explicitly.
+const viewBranchParams = () => {
+  let branch = null;
+  try { branch = localStorage.getItem(VIEW_BRANCH_KEY); } catch (_) { branch = null; }
+  return branch ? { params: { branch } } : undefined;
+};
+
 // The opening stock on a new product has to land SOMEWHERE, and the server
 // picks the shop from ?branch= (falling back to head office). The axios
 // interceptor only adds that to reads, so name the shop explicitly here —
 // otherwise an owner stepped into their second shop adds a product with 40
 // units and all 40 appear at head office (2026-08-14).
-export const createProduct = (data) => {
-  let branch = null;
-  try { branch = localStorage.getItem(VIEW_BRANCH_KEY); } catch (_) { branch = null; }
-  return api.post('/retail/products/', data,
-    branch ? { params: { branch } } : undefined).then(r => r.data);
-};
+export const createProduct = (data) =>
+  api.post('/retail/products/', data, viewBranchParams()).then(r => r.data);
 export const updateProduct = (id, data) => api.patch(`/retail/products/${id}/`, data).then(r => r.data);
 export const deleteProduct = (id) => api.delete(`/retail/products/${id}/`);
 export const getLowStockProducts = () => api.get('/retail/products/low_stock/').then(r => r.data);
@@ -207,10 +216,17 @@ export const updateSupplier = (id, data) => api.patch(`/retail/suppliers/${id}/`
 export const deleteSupplier = (id) => api.delete(`/retail/suppliers/${id}/`);
 
 // ── Purchase Orders ──
+// Receiving a PO puts real goods on a real shelf. `received_at_branch` has
+// driven that restock since branches shipped, but nothing ever set it, so the
+// model's `or hq_branch_for(tenant)` fallback meant EVERY delivery on a chain
+// was booked into head office — the shop that signed for the pallet showed
+// none of it. Both the raise and the receive now name the shop.
 export const getPurchaseOrders = (params) => api.get('/retail/purchase-orders/', { params }).then(r => r.data);
-export const createPurchaseOrder = (data) => api.post('/retail/purchase-orders/', data).then(r => r.data);
+export const createPurchaseOrder = (data) =>
+  api.post('/retail/purchase-orders/', data, viewBranchParams()).then(r => r.data);
 export const updatePurchaseOrder = (id, data) => api.patch(`/retail/purchase-orders/${id}/`, data).then(r => r.data);
-export const receivePurchaseOrder = (id) => api.post(`/retail/purchase-orders/${id}/receive/`).then(r => r.data);
+export const receivePurchaseOrder = (id) =>
+  api.post(`/retail/purchase-orders/${id}/receive/`, {}, viewBranchParams()).then(r => r.data);
 
 // ── Discounts & Promotions ──
 export const getDiscounts = (params) => api.get('/retail/discounts/', { params }).then(r => r.data);
@@ -306,7 +322,12 @@ export const getOnboardingStatus = () => api.get('/retail/onboarding-status/').t
 // ── Stocktake ──
 export const getStocktakes = () => api.get('/retail/stocktakes/').then(r => r.data);
 export const getStocktake = (id) => api.get(`/retail/stocktakes/${id}/`).then(r => r.data);
-export const startStocktake = (data) => api.post('/retail/stocktakes/', data || {}).then(r => r.data);
+// A stocktake counts one building's shelves, so it has to name the building.
+// Without this the server had nothing to go on: the count sheet was filled
+// with the CHAIN's quantities and finalising it measured a shop's shelf
+// against the whole business's stock.
+export const startStocktake = (data) =>
+  api.post('/retail/stocktakes/', data || {}, viewBranchParams()).then(r => r.data);
 export const saveStocktakeCounts = (id, counts) => api.post(`/retail/stocktakes/${id}/save-counts/`, { counts }).then(r => r.data);
 export const finalizeStocktake = (id) => api.post(`/retail/stocktakes/${id}/finalize/`).then(r => r.data);
 

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { getProfitMargins } from '../api/retailApi';
 import AIInsightCard from '../components/AIInsightCard';
+import ReportScopeChip from '../components/ReportScopeChip';
 import { fmt } from '../utils/format';
 import useIsMobile from '../hooks/useIsMobile';
 
@@ -105,9 +106,16 @@ export default function ProfitMargins({ onTabChange }) {
     <div style={{ padding: isMobile ? 0 : 24, fontFamily: "'Inter', sans-serif", backgroundColor: isMobile ? 'transparent' : '#f6f8f6', minHeight: isMobile ? 0 : '100vh' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", margin: 0, color: '#111827' }}>
-          Profit Margins
-        </h1>
+        <div>
+          <h1 style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", margin: 0, color: '#111827' }}>
+            Profit Margins
+          </h1>
+          {/* The prices and the stock on this screen are now the shop's own,
+              so the shop has to be named — it used to answer chain-wide for
+              every branch, which is how a shop saw margins it does not earn
+              on stock it does not hold. */}
+          <ReportScopeChip scope={profitData?.scope} />
+        </div>
         {isOwner && (
           <button
             onClick={exportCsv}

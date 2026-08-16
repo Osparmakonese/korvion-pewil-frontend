@@ -54,8 +54,19 @@ export default function LowStockAlerts({ onTabChange }) {
   });
 
   const stockData = useMemo(() => {
-    return lowStockProducts.map(product => {
-      const percentage = product.quantity_in_stock / product.reorder_level;
+    // The server has picked the right PRODUCTS for the shop in context since
+    // 2026-08-14 (it compares the shop's row against the shop's own reorder
+    // level) — but this page then printed the CHAIN quantity and the CHAIN
+    // reorder level beside them. So a shop with 0 on the shelf and 300 across
+    // the business was listed as low and shown as "300 / 5", which reads as a
+    // bug in the alert rather than an empty shelf. Take the shop's figures
+    // where the server gave them; both fall back to the chain field, which is
+    // the same number for a single-branch tenant.
+    const rows = Array.isArray(lowStockProducts) ? lowStockProducts : [];
+    return rows.map(product => {
+      const current = Number(product.branch_quantity ?? product.quantity_in_stock) || 0;
+      const reorder = Number(product.branch_reorder_level ?? product.reorder_level) || 0;
+      const percentage = reorder ? current / reorder : 0;
       let status = 'Low';
       if (percentage < 0.25) {
         status = 'Critical';
@@ -65,10 +76,10 @@ export default function LowStockAlerts({ onTabChange }) {
         id: product.id,
         sku: product.sku || `SKU-${product.id}`,
         name: product.name,
-        current: product.quantity_in_stock,
-        reorder: product.reorder_level,
+        current,
+        reorder,
         status,
-        order: Math.ceil(product.reorder_level * 1.2),
+        order: Math.ceil(reorder * 1.2),
         supplier: product.supplier || 'N/A',
         category: product.category || 'N/A'
       };
@@ -85,9 +96,12 @@ export default function LowStockAlerts({ onTabChange }) {
   const criticalCount = stockData.filter(s => s.status === 'Critical').length;
   const lowCount = stockData.filter(s => s.status === 'Low').length;
   const healthyCount = useMemo(() => {
-    if (allProducts.length === 0) return 0;
-    const lowStockIds = new Set(lowStockProducts.map(p => p.id));
-    return allProducts.filter(p => !lowStockIds.has(p.id)).length;
+    // Guard both shapes — a paginated response has crashed pages before.
+    const all = Array.isArray(allProducts) ? allProducts : [];
+    const low = Array.isArray(lowStockProducts) ? lowStockProducts : [];
+    if (all.length === 0) return 0;
+    const lowStockIds = new Set(low.map(p => p.id));
+    return all.filter(p => !lowStockIds.has(p.id)).length;
   }, [allProducts, lowStockProducts]);
 
   const handleSaveConfig = () => {

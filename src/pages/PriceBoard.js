@@ -12,6 +12,7 @@ import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { listFuelGrades, getProducts } from '../api/retailApi';
 import { fmt } from '../utils/format';
+import { shopPrice } from '../utils/branchStock';
 
 const T = {
   bg: '#0b1410',         // deep forest near-black
@@ -54,7 +55,14 @@ export default function PriceBoard() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  // Match each grade to its fuel Product and pull selling_price.
+  // Match each grade to its fuel Product and pull the price THIS site charges.
+  //
+  // This board is bolted to a pole on the forecourt and read by the public, so
+  // it is the one screen where a wrong price is a promise to a customer. It
+  // was showing `selling_price` — the chain price — while the pump till
+  // charges `shopPrice()`. A two-site operator who prices diesel differently
+  // by town advertised one figure and charged another. `shopPrice` falls back
+  // to the chain price, so a single-site forecourt is unchanged.
   const rows = grades.map(g => {
     const prod = (products || []).find(p => p.is_fuel && Number(p.fuel_grade) === Number(g.id));
     return {
@@ -62,7 +70,7 @@ export default function PriceBoard() {
       name: g.name,
       code: g.code,
       color: g.color_hex || '#1f3d26',
-      price: prod ? Number(prod.selling_price || 0) : null,
+      price: prod ? shopPrice(prod) : null,
     };
   });
 
