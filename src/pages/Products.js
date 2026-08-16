@@ -686,6 +686,26 @@ function ImportProductsModal({ isOpen, onClose, onDone }) {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
   const [err, setErr] = useState('');
+
+  // Which shop the `quantity_in_stock` column belongs to (2026-08-16).
+  //
+  // The import wrote the CHAIN figure and created no per-shop row at all, so
+  // on a business with two shops every imported line showed the whole chain's
+  // stock at every till and went negative at the first sale. Bulk import is
+  // how a chain onboards, so it did that to the entire catalogue at once.
+  // The server now refuses a sheet with a stock column and no shop named.
+  const { branchId: viewBranchId, branches, isMultiBranch, pinned } = useViewBranch();
+  // One shop -> nothing to choose. Pinned staff -> the server forces their
+  // own shop whatever is sent.
+  const showBranchPicker = isMultiBranch && !pinned;
+  const [branchId, setBranchId] = useState('');
+  useEffect(() => {
+    if (!isOpen || !showBranchPicker) return;
+    // Follow the header switcher; leave it empty on "All shops" so the owner
+    // has to say. There is no honest default for "which shelf is this?".
+    setBranchId((prev) => viewBranchId || prev || '');
+  }, [isOpen, showBranchPicker, viewBranchId]);
+
   if (!isOpen) return null;
 
   const dl = async () => {
@@ -701,11 +721,18 @@ function ImportProductsModal({ isOpen, onClose, onDone }) {
     setErr(''); setBusy(true); setResult(null);
     try {
       const fd = new FormData(); fd.append('file', file);
+      // A POST never carries the switcher's ?branch= (the axios interceptor
+      // adds it to reads only, deliberately), so name the shop in the body.
+      if (branchId) fd.append('branch', branchId);
       const res = await importProducts(fd);
       setResult(res);
       onDone && onDone();
     } catch (e) {
-      setErr(e?.response?.data?.error || 'Import failed — make sure the file matches the template.');
+      // `detail` is what require_branch_for_write() sends back when a sheet
+      // carries stock and no shop was chosen — showing only `error` left that
+      // refusal reading as a generic "make sure the file matches the template".
+      setErr(e?.response?.data?.detail || e?.response?.data?.error
+             || 'Import failed — make sure the file matches the template.');
     } finally { setBusy(false); }
   };
 
@@ -724,12 +751,36 @@ function ImportProductsModal({ isOpen, onClose, onDone }) {
           <span onClick={dl} style={link}>⬇ Download the template</span>
           <span style={{ fontSize: 12, color: '#94a3b8' }}> — fill it in, then upload it below.</span>
         </div>
+        {showBranchPicker && (
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#64748b', marginBottom: 4, textTransform: 'uppercase' }}>
+              Shop this stock is at
+            </label>
+            <select
+              value={branchId}
+              onChange={(e) => { setBranchId(e.target.value); setErr(''); }}
+              style={{ width: '100%', padding: '9px 11px', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box', background: '#fff' }}
+            >
+              <option value="">Select a shop{'\u2026'}</option>
+              {branches.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.code ? `${b.code} \u2014 ${b.name}` : b.name}{b.is_hq ? ' (HQ)' : ''}
+                </option>
+              ))}
+            </select>
+            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
+              Only needed if your sheet has a <b>quantity_in_stock</b> column {'\u2014'} that is
+              the stock on one shop{'\u2019'}s shelf, not a total across the business.
+            </div>
+          </div>
+        )}
         <input type="file" accept=".xlsx,.xls,.csv" onChange={(e) => { setFile(e.target.files[0] || null); setErr(''); setResult(null); }}
           style={{ display: 'block', marginBottom: 14, fontSize: 13 }} />
         {err && <div style={{ color: '#b91c1c', fontSize: 12, marginBottom: 10 }}>{err}</div>}
         {result && (
           <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: 12, marginBottom: 12, fontSize: 13 }}>
             <b style={{ color: '#166534' }}>✓ Done.</b> {result.created} created, {result.updated} updated
+            {result.branch && <span> · stock booked at <b>{result.branch}</b></span>}
             {result.error_count > 0 && <span style={{ color: '#b45309' }}> · {result.error_count} row(s) skipped</span>}.
             {Array.isArray(result.errors) && result.errors.length > 0 && (
               <ul style={{ margin: '8px 0 0', paddingLeft: 18, color: '#b45309', fontSize: 12 }}>

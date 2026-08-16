@@ -8,7 +8,7 @@
  */
 import React, { useMemo, useState } from 'react';
 import { fmt } from '../utils/format';
-import { shopPrice, shopStock } from '../utils/branchStock';
+import { shopPrice, sellState } from '../utils/branchStock';
 
 const C = {
   green: '#34c172', green2: '#2aa862', ink: '#e9efe9', muted: '#8b988f',
@@ -17,6 +17,7 @@ const C = {
 };
 
 export default function DarkSupermarketPOS({
+  shopLabel = '',
   products, filteredProducts, addToCart,
   cart, removeFromCart, updateCartQty,
   barcode, setBarcode, handleBarcodeSubmit, barcodeInputRef,
@@ -75,13 +76,16 @@ export default function DarkSupermarketPOS({
             {visible.length === 0 ? (
               <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 50, color: C.muted }}>No products match.</div>
             ) : visible.map((p) => {
-              const out = shopStock(p) <= 0;
+              // Same helper as every other till surface, so this lane can
+              // never say a line is sellable when the next one says it is not.
+              const sell = sellState(p, shopLabel);
+              const out = !sell.sellable;
               return (
                 <div key={p.id} onClick={() => !out && addToCart(p)} style={{ ...S.prod, opacity: out ? 0.45 : 1, cursor: out ? 'not-allowed' : 'pointer' }}>
                   <div style={S.thumb}>{(p.name || '?')[0].toUpperCase()}</div>
                   <div style={S.pname}>{p.name}</div>
                   <div style={S.pprice}>${fmt(shopPrice(p))}{p.is_weighable ? <span style={{ fontSize: 10, color: C.muted }}> /kg</span> : ''}</div>
-                  <div style={S.pstk}>{out ? 'Out of stock' : `${shopStock(p)} in stock`}</div>
+                  <div style={{ ...S.pstk, ...(out ? { color: sell.kind === 'stock_error' ? C.danger : C.amber } : {}) }}>{sell.label}</div>
                   {!out && <button type="button" style={S.add} onClick={(e) => { e.stopPropagation(); addToCart(p); }}>Add</button>}
                 </div>
               );

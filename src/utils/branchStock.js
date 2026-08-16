@@ -70,3 +70,60 @@ export const shopStockIsError = (p) => shopStock(p) < 0;
  * never contradict what the till will actually let a cashier sell.
  */
 export const shopCarries = (p) => (p == null ? true : p.branch_available !== false);
+
+/**
+ * Can this shop sell this line right now, and what should the till say?
+ *
+ * Out of stock is SHOWN, never hidden. Filtering a finished product out of
+ * the search results does not stop a cashier looking for it -- it stops them
+ * finding out what happened. They search, get nothing, and conclude the till
+ * is broken. That is exactly how a paying shop's POS came to look as though
+ * it "refused" (2026-08-16): the product was there, the shelf was empty, and
+ * the screen said neither.
+ *
+ * So the line stays on screen, greyed and unsellable, and says WHERE the
+ * shelf is empty. `shopName` is blank on a single-shop business, and the copy
+ * then reads exactly as it always has -- naming a shop only means something
+ * once there are two.
+ *
+ * Every till surface (POS grid, quick tiles, mobile, dark supermarket) reads
+ * this, so they cannot disagree with each other about what is sellable.
+ *
+ * Returns:
+ *   sellable — may the cashier add it to the sale
+ *   kind     — 'in_stock' | 'out_of_stock' | 'not_carried' | 'stock_error'
+ *   label    — the full sentence for the tile
+ *   short    — a button-sized version
+ */
+export const sellState = (p, shopName = '') => {
+  const at = shopName ? ` at ${shopName}` : '';
+  if (!shopCarries(p)) {
+    return {
+      sellable: false,
+      kind: 'not_carried',
+      short: 'Not sold here',
+      label: `Not sold${at || ' at this shop'} \u2014 switch it on to sell`,
+    };
+  }
+  const qty = shopStock(p);
+  // Negative is never a shelf count -- it is the book error described above,
+  // and calling it "out of stock" would hide a fixable mistake behind a
+  // normal-looking state.
+  if (shopStockIsError(p)) {
+    return {
+      sellable: false,
+      kind: 'stock_error',
+      short: 'Stock error',
+      label: `Stock error${at}: ${qty} \u2014 count the shelf`,
+    };
+  }
+  if (qty <= 0) {
+    return {
+      sellable: false,
+      kind: 'out_of_stock',
+      short: 'Out of stock',
+      label: `Out of stock${at} \u2014 restock to sell`,
+    };
+  }
+  return { sellable: true, kind: 'in_stock', short: 'Add', label: `${qty} in stock` };
+};

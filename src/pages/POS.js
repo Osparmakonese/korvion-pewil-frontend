@@ -39,7 +39,8 @@ import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import { invalidateSaleCaches, invalidateProductCaches } from '../utils/queryCache';
 import { getProductIcon } from '../utils/productIcons';
-import { shopPrice, shopStock } from '../utils/branchStock';
+import { shopPrice, shopStock, sellState } from '../utils/branchStock';
+import useViewBranch from '../hooks/useViewBranch';
 
 /* ─── Receipt Modal ─── */
 function ReceiptModal({ isOpen, onClose, receipt }) {
@@ -1301,6 +1302,21 @@ export default function POS() {
     return mine.length ? (mine[0].branch || undefined) : undefined;
   }, [sessions, user]);
 
+  // ...and its NAME, because an out-of-stock line has to say WHERE the shelf
+  // is empty. "Out of stock" on its own sends a cashier hunting for goods
+  // that are sitting in another town. Session first (it is the shop the sale
+  // is actually booked against), then the header switcher. Deliberately
+  // blank on a single-shop business, so those tills read exactly as before.
+  const { branchName: viewBranchName, isMultiBranch } = useViewBranch();
+  const tillBranchName = useMemo(() => {
+    const mine = sessions.filter(
+      (s) => !s.closed_at
+        && (s.cashier_username || '').toLowerCase() === (user?.username || '').toLowerCase()
+    );
+    return mine.length ? (mine[0].branch_name || '') : '';
+  }, [sessions, user]);
+  const shopLabel = isMultiBranch ? (tillBranchName || viewBranchName || '') : '';
+
   // Products. Tries the live endpoint first, falls back to the
   // IndexedDB catalog cache when the network is dead so the till
   // can still ring items mid-outage. On a successful live fetch
@@ -1505,8 +1521,13 @@ export default function POS() {
     const match =
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.sku.toLowerCase().includes(search.toLowerCase());
-    // Stock on THIS shop's shelf, not the chain's. See utils/branchStock.
-    return match && shopStock(p) > 0;
+    // A finished product is SHOWN, greyed and unsellable -- never filtered
+    // out. Hiding it does not stop the cashier looking for it, it only stops
+    // them finding out why it is not there: they search, get an empty grid,
+    // and conclude the till is broken. That is what made a paying customer's
+    // POS look as though it "refused" (2026-08-16). What is sellable is
+    // decided once, in sellState(), so all four till surfaces agree.
+    return match;
   });
 
   // Low-level: add a single product line with a known quantity. Used after
@@ -2072,6 +2093,7 @@ export default function POS() {
     return (
       <>
         <MobilePOS
+          shopLabel={shopLabel}
           theme={settings.theme}
           cart={cart}
           removeFromCart={removeFromCart}
@@ -2233,6 +2255,7 @@ export default function POS() {
         )}
         <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
           <DarkSupermarketPOS
+            shopLabel={shopLabel}
             products={products}
             filteredProducts={filteredProducts}
             addToCart={addToCart}
@@ -2502,7 +2525,7 @@ export default function POS() {
 
         {/* Batch 3: Quick tiles for produce / unbarcoded items. */}
         {settings.show_quick_tiles && (
-          <QuickTilesPanel products={products} onSelect={addToCart} />
+          <QuickTilesPanel products={products} onSelect={addToCart} shopLabel={shopLabel} />
         )}
 
         {/* Product Grid — hidden for scan-only lanes (manager setting). */}
@@ -2510,7 +2533,10 @@ export default function POS() {
         <div style={S.productGrid}>
           {filteredProducts.length > 0 ? (
             filteredProducts.map((product) => {
-              const isOutOfStock = shopStock(product) <= 0;
+              // Greyed, unsellable, and it names the shop whose shelf is
+              // empty so someone can actually do something about it.
+              const sell = sellState(product, shopLabel);
+              const isOutOfStock = !sell.sellable;
               return (
                 <div
                   key={product.id}
@@ -2546,8 +2572,14 @@ export default function POS() {
                   })()}
                   <div style={S.productName}>{product.name}</div>
                   <div style={S.productPrice}>{fmt(shopPrice(product), 'zwd')}</div>
-                  <div style={S.productStock}>
-                    {shopStock(product)} in stock
+                  <div style={{
+                    ...S.productStock,
+                    ...(sell.sellable ? {} : {
+                      color: sell.kind === 'stock_error' ? '#b91c1c' : '#b45309',
+                      fontWeight: 700,
+                    }),
+                  }}>
+                    {sell.label}
                   </div>
                   <button
                     onClick={() => !isOutOfStock && addToCart(product)}
@@ -2566,7 +2598,7 @@ export default function POS() {
                       e.currentTarget.style.background = '#1a6b3a';
                     }}
                   >
-                    {isOutOfStock ? 'Out of Stock' : 'Add'}
+                    {sell.short}
                   </button>
                 </div>
               );

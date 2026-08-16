@@ -13,13 +13,14 @@ import { fmt } from '../utils/format';
 import { M } from '../styles/mobileTokens';
 import haptics from '../utils/haptics';
 import BottomSheet from './mobile/BottomSheet';
-import { shopPrice } from '../utils/branchStock';
+import { shopPrice, sellState } from '../utils/branchStock';
 
 const money = (v) => fmt(v, 'zwd');
 const FONT = "'Inter', system-ui, sans-serif";
 
 export default function MobilePOS({
   theme = 'light',
+  shopLabel = '',
   cart, removeFromCart, updateCartQty, addToCart,
   products = [], search, setSearch,
   barcode, setBarcode, handleBarcodeSubmit, barcodeInputRef,
@@ -51,7 +52,14 @@ export default function MobilePOS({
   const openCart = () => { if (cart.length) { haptics.select(); setSheet('cart'); } };
   const goPay = () => { haptics.select(); setSheet('pay'); };
   const complete = () => { haptics.success(); handleCompleteSale(); };
-  const list = useMemo(() => products.slice(0, 120), [products]);
+  // Out-of-stock lines are shown, not hidden -- but they must not push
+  // sellable ones past the 120-item cap, or the phone till would show a
+  // screen of things it cannot sell while the ones it can are off the end.
+  const list = useMemo(() => {
+    const can = products.filter((p) => sellState(p).sellable);
+    const cannot = products.filter((p) => !sellState(p).sellable);
+    return [...can, ...cannot].slice(0, 120);
+  }, [products]);
   const payDisabled = createSaleMutPending || cart.length === 0 || (splitMode && splitRemaining(grandTotal, splitPayments) > 0.001);
 
   const statusPill = (
@@ -246,14 +254,24 @@ export default function MobilePOS({
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
             {list.map((p) => {
               const added = justAdded === p.id;
+              // Shown, greyed, unsellable, and it says which shop's shelf is
+              // empty -- the same rule the desktop grid and the quick tiles
+              // use, from the same helper.
+              const sell = sellState(p, shopLabel);
               return (
-                <button key={p.id} type="button" onClick={() => tap(p)}
-                  style={{ textAlign: 'left', border: `1px solid ${added ? T.green : T.line}`, background: added ? T.green3 : T.card, borderRadius: M.radius.lg, padding: 12, cursor: 'pointer', fontFamily: 'inherit', transform: added ? 'scale(0.97)' : 'scale(1)', transition: `transform ${M.motion.fast}, background ${M.motion.fast}, border-color ${M.motion.fast}`, minHeight: 78, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <button key={p.id} type="button" onClick={() => sell.sellable && tap(p)}
+                  disabled={!sell.sellable}
+                  style={{ textAlign: 'left', border: `1px solid ${added ? T.green : T.line}`, background: added ? T.green3 : T.card, borderRadius: M.radius.lg, padding: 12, cursor: sell.sellable ? 'pointer' : 'not-allowed', opacity: sell.sellable ? 1 : 0.55, fontFamily: 'inherit', transform: added ? 'scale(0.97)' : 'scale(1)', transition: `transform ${M.motion.fast}, background ${M.motion.fast}, border-color ${M.motion.fast}`, minHeight: 78, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: T.ink, lineHeight: 1.25, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.name}</div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 8 }}>
                     <span style={{ fontSize: 15, fontWeight: 800, color: T.green }}>{money(shopPrice(p))}</span>
-                    <span style={{ fontSize: 16, color: added ? T.green : T.ink3, fontWeight: 700 }}>{added ? '✓' : '+'}</span>
+                    <span style={{ fontSize: 16, color: added ? T.green : T.ink3, fontWeight: 700 }}>{added ? '✓' : (sell.sellable ? '+' : '—')}</span>
                   </div>
+                  {!sell.sellable && (
+                    <div style={{ fontSize: 10, fontWeight: 700, marginTop: 4, lineHeight: 1.2, color: sell.kind === 'stock_error' ? T.red : '#b45309' }}>
+                      {sell.label}
+                    </div>
+                  )}
                 </button>
               );
             })}

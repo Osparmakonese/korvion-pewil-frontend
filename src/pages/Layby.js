@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getLaybys, createLayby, addLaybyPayment, collectLayby, cancelLayby, getLaybySummary,
 } from '../api/retailApi';
+import useViewBranch from '../hooks/useViewBranch';
 
 const G = '#1a6b3a';
 const money = (n) => `$${Number(n || 0).toFixed(2)}`;
@@ -109,6 +110,21 @@ export default function Layby() {
 function NewLaybyModal({ onClose, onSaved }) {
   const [f, setF] = useState({ customer_name: '', customer_phone: '', due_date: '', notes: '' });
   const [lines, setLines] = useState([{ product_name: '', qty: 1, unit_price: '' }]);
+
+  // Which shop is holding the goods (2026-08-16).
+  //
+  // `Layby.branch` existed and nothing ever set it, so on a chain every layby
+  // was written with no shop. Collection then released the goods against
+  // whoever happened to be collecting -- or head office -- and that shop's
+  // till totals, receipt prefix and P&L carried a sale it never made.
+  const { branchId: viewBranchId, branches, isMultiBranch, pinned } = useViewBranch();
+  const showBranchPicker = isMultiBranch && !pinned;
+  const [branchId, setBranchId] = useState('');
+  useEffect(() => {
+    if (!showBranchPicker) return;
+    setBranchId((prev) => viewBranchId || prev || '');
+  }, [showBranchPicker, viewBranchId]);
+
   const total = lines.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.unit_price) || 0), 0);
   const mut = useMutation({
     mutationFn: createLayby,
@@ -119,12 +135,32 @@ function NewLaybyModal({ onClose, onSaved }) {
       product_name: l.product_name, qty: Number(l.qty) || 1,
       unit_price: Number(l.unit_price) || 0, total: (Number(l.qty) || 1) * (Number(l.unit_price) || 0),
     }));
-    mut.mutate({ ...f, items_data, total_amount: total, status: 'active' });
+    mut.mutate({
+      ...f, items_data, total_amount: total, status: 'active',
+      ...(branchId ? { branch: Number(branchId) } : {}),
+    });
   };
   return (
     <div style={S.modalWrap} onClick={onClose}>
       <div style={S.modal} onClick={(e) => e.stopPropagation()}>
         <h2 style={{ fontSize: 17, fontWeight: 800, margin: '0 0 6px' }}>New layby</h2>
+        {showBranchPicker && (
+          <>
+            <label style={S.label}>Shop holding the goods</label>
+            <select style={S.input} value={branchId} onChange={(e) => setBranchId(e.target.value)} required>
+              <option value="" disabled>Select a shop{'\u2026'}</option>
+              {branches.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.code ? `${b.code} \u2014 ${b.name}` : b.name}{b.is_hq ? ' (HQ)' : ''}
+                </option>
+              ))}
+            </select>
+            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
+              Collection releases the goods from this shop, and the sale counts
+              towards its takings.
+            </div>
+          </>
+        )}
         <label style={S.label}>Customer name</label>
         <input style={S.input} value={f.customer_name} onChange={(e) => setF({ ...f, customer_name: e.target.value })} />
         <label style={S.label}>Phone</label>
@@ -146,7 +182,11 @@ function NewLaybyModal({ onClose, onSaved }) {
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
           <button style={{ ...S.btnSm, flex: 1 }} onClick={onClose}>Cancel</button>
-          <button style={{ ...S.btn, flex: 2, opacity: total > 0 ? 1 : 0.5 }} disabled={total <= 0 || mut.isPending} onClick={save}>{mut.isPending ? 'Saving…' : 'Create layby'}</button>
+          <button
+            style={{ ...S.btn, flex: 2, opacity: (total > 0 && (!showBranchPicker || branchId)) ? 1 : 0.5 }}
+            disabled={total <= 0 || mut.isPending || (showBranchPicker && !branchId)}
+            onClick={save}
+          >{mut.isPending ? 'Saving…' : 'Create layby'}</button>
         </div>
       </div>
     </div>

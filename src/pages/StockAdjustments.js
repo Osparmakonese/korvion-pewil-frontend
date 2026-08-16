@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getStockAdjustments, getProducts } from '../api/retailApi';
 import { invalidateProductCaches } from '../utils/queryCache';
@@ -7,9 +7,10 @@ import { confirm } from '../utils/confirm';
 import api from '../api/axios';
 import usePrimaryAction from '../hooks/usePrimaryAction';
 import { shopStock } from '../utils/branchStock';
+import useViewBranch from '../hooks/useViewBranch';
 
 /* --- Add Adjustment Modal --- */
-function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
+function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading, branches = [], showBranchPicker = false, branchId = '', onBranchChange, branchLabel = '' }) {
   const [form, setForm] = useState({ product: '', adjustment_type: 'damaged', quantity: '', notes: '', cost_price: '', selling_price: '' });
   const [productSearch, setProductSearch] = useState('');
   const [showProductList, setShowProductList] = useState(false);
@@ -34,6 +35,13 @@ function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     const payload = { ...form, quantity: parseInt(form.quantity) || 0 };
+    // Name the shop the stock actually moves at. Left off, the server has
+    // nothing to resolve from -- this POST goes through submitWithQueue, not
+    // createStockAdjustment, so it never carried the switcher's ?branch=
+    // either -- and require_branch_for_write() refuses the write outright on
+    // any tenant with two or more shops. With one shop there is nothing to
+    // choose and the server resolves it, so we deliberately send nothing.
+    if (branchId) payload.branch = parseInt(branchId, 10) || undefined;
     // Cost price is optional and only relevant for restocks. Omit it
     // entirely unless the owner actually typed a new price -- nothing
     // on the product changes unless they explicitly choose to update it.
@@ -61,6 +69,34 @@ function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#9ca3af' }}>{'\u00D7'}</button>
         </div>
         <form onSubmit={handleSubmit}>
+          {/* Which shop is this adjustment for?
+              Hidden entirely for a single-shop tenant (nothing to choose --
+              the server resolves it) and for staff pinned to a shop (the
+              server re-pins them regardless, so a picker would be a lie).
+              Otherwise required, and empty on "All shops": there is no
+              honest default there, and guessing head office is how a
+              write-off ends up on the wrong shop's books. */}
+          {showBranchPicker && (
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>Shop</label>
+              <select
+                value={branchId}
+                onChange={e => onBranchChange && onBranchChange(e.target.value)}
+                required
+                style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', boxSizing: 'border-box', background: '#fff' }}
+              >
+                <option value="" disabled>Select a shop{'\u2026'}</option>
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.code ? `${b.code} \u2014 ${b.name}` : b.name}{b.is_hq ? ' (HQ)' : ''}
+                  </option>
+                ))}
+              </select>
+              <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 4 }}>
+                The stock moves at this shop, and the figures below are this shop{'\u2019'}s.
+              </div>
+            </div>
+          )}
           <div style={{ marginBottom: 14, position: 'relative' }}>
             <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>Product</label>
             {selectedProduct ? (
@@ -72,7 +108,7 @@ function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading }) {
                       too. It was the chain total, which meant an owner
                       standing in one shop wrote off against another shop's
                       number. */}
-                  <strong>{selectedProduct.name}</strong> ({selectedProduct.sku}) &mdash; Stock: {shopStock(selectedProduct)}
+                  <strong>{selectedProduct.name}</strong> ({selectedProduct.sku}) &mdash; Stock{branchLabel ? ` at ${branchLabel}` : ''}: {shopStock(selectedProduct)}
                 </span>
                 <button
                   type="button"
@@ -223,15 +259,51 @@ export default function StockAdjustments() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
 
+  // Which shop the adjustment lands on (2026-08-16).
+  //
+  // This page never asked. The backend's require_branch_for_write() is
+  // right to refuse a stock movement that does not name a shop -- "All
+  // shops" is a report, not a shop -- but the UI offered no way to answer
+  // it, so on a multi-shop business "Log Adjustment" simply failed. Worse
+  // than the "All shops" case: the POST goes through submitWithQueue, which
+  // posts the body as-is, so it never picked up the switcher's ?branch=
+  // either. Standing IN a shop with that shop selected in the header, the
+  // write still failed.
+  const { branchId: viewBranchId, branches, isMultiBranch, pinned } = useViewBranch();
+  // One shop -> nothing to choose. Pinned staff -> perform_create() forces
+  // their own shop whatever the payload says, so a picker would be a lie.
+  const showBranchPicker = isMultiBranch && !pinned;
+  const [adjBranchId, setAdjBranchId] = useState('');
+
+  // Follow the switcher: if the header says Avenu, the modal says Avenu.
+  // On "All shops" there is no honest default -- leave it empty and let
+  // `required` make the owner say which shop, exactly as the Open Session
+  // modal does. A previous choice is kept in that case so logging several
+  // adjustments in a row does not mean re-picking each time.
+  useEffect(() => {
+    if (!showModal || !showBranchPicker) return;
+    setAdjBranchId((prev) => viewBranchId || prev || '');
+  }, [showModal, showBranchPicker, viewBranchId]);
+
+  const adjBranchName = useMemo(() => {
+    if (!showBranchPicker || !adjBranchId) return '';
+    const b = branches.find((x) => String(x.id) === String(adjBranchId));
+    return b ? b.name : '';
+  }, [branches, adjBranchId, showBranchPicker]);
+
   const { data: adjustments = [], isLoading } = useQuery({
     queryKey: ['retail-stock-adjustments'],
     queryFn: getStockAdjustments,
     staleTime: 30000,
   });
 
+  // Scope the catalogue to the shop being adjusted, not the shop being
+  // viewed. Otherwise an owner on "All shops" picks a product showing the
+  // CHAIN total and writes six units off against one shop's shelf, having
+  // read a number that belongs to the whole business.
   const { data: products = [] } = useQuery({
-    queryKey: ['retail-products-adj'],
-    queryFn: getProducts,
+    queryKey: ['retail-products-adj', adjBranchId || viewBranchId || 'all'],
+    queryFn: () => getProducts(adjBranchId ? { branch: adjBranchId } : undefined),
   });
 
   // Phase 2B.2 — routed through submitWithQueue so offline writes
@@ -365,6 +437,11 @@ export default function StockAdjustments() {
         onSubmit={data => createMut.mutate(data)}
         products={products}
         loading={createMut.isPending}
+        branches={branches}
+        showBranchPicker={showBranchPicker}
+        branchId={adjBranchId}
+        onBranchChange={setAdjBranchId}
+        branchLabel={adjBranchName}
       />
     </div>
   );

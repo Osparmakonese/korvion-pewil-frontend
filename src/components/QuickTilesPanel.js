@@ -1,6 +1,6 @@
 import React from 'react';
 import { fmt } from '../utils/format';
-import { shopPrice } from '../utils/branchStock';
+import { shopPrice, sellState } from '../utils/branchStock';
 
 /**
  * QuickTilesPanel — large tap-targets for unbarcoded items (produce, bread,
@@ -12,7 +12,7 @@ import { shopPrice } from '../utils/branchStock';
  *     the same add-to-cart pipeline as a barcode scan, so the existing
  *     age-gate / weight-prompt logic applies uniformly.
  */
-export default function QuickTilesPanel({ products = [], onSelect }) {
+export default function QuickTilesPanel({ products = [], onSelect, shopLabel = '' }) {
   const tiles = products.filter((p) => p.is_quick_tile && p.is_active !== false);
   if (tiles.length === 0) return null;
 
@@ -25,23 +25,39 @@ export default function QuickTilesPanel({ products = [], onSelect }) {
         <span style={{ fontSize: 11, color: '#6b7280' }}>{tiles.length} item{tiles.length === 1 ? '' : 's'}</span>
       </div>
       <div style={styles.grid}>
-        {tiles.map((p) => (
+        {tiles.map((p) => {
+          // A quick tile for a finished line stays on the panel, greyed and
+          // unsellable, rather than silently ringing up stock that is not
+          // there. Same rule as the main grid -- one helper, so the two
+          // cannot disagree about what this shop can sell.
+          const sell = sellState(p, shopLabel);
+          return (
           <button
             key={p.id}
             type="button"
-            onClick={() => onSelect?.(p)}
-            style={styles.tile}
-            title={p.name}
+            onClick={() => sell.sellable && onSelect?.(p)}
+            disabled={!sell.sellable}
+            style={{ ...styles.tile, ...(sell.sellable ? {} : styles.tileBlocked) }}
+            title={sell.sellable ? p.name : `${p.name} \u2014 ${sell.label}`}
           >
             <div style={styles.tileName}>{p.name}</div>
             <div style={styles.tilePrice}>
               {fmt(shopPrice(p), 'zwd')}
               {p.is_weighable && <span style={styles.perUnit}> / {p.unit_of_weight || 'kg'}</span>}
             </div>
+            {!sell.sellable && (
+              <div style={{
+                ...styles.blockedNote,
+                color: sell.kind === 'stock_error' ? '#b91c1c' : '#b45309',
+              }}>
+                {sell.label}
+              </div>
+            )}
             {p.is_age_restricted && <div style={styles.badge}>18+</div>}
             {p.is_weighable && <div style={{ ...styles.badge, right: 34, background: '#1a6b3a' }}>⚖️</div>}
           </button>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -72,6 +88,11 @@ const styles = {
     WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
   },
   tilePrice: { fontSize: 14, fontWeight: 800, color: '#1a6b3a', marginTop: 6 },
+  tileBlocked: {
+    background: '#f9fafb', border: '1px solid #e5e7eb',
+    opacity: 0.55, cursor: 'not-allowed',
+  },
+  blockedNote: { fontSize: 10, fontWeight: 700, marginTop: 4, lineHeight: 1.2 },
   perUnit: { fontSize: 10, fontWeight: 600, color: '#6b7280' },
   badge: {
     position: 'absolute', top: 4, right: 4,
