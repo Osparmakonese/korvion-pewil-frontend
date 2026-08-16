@@ -276,14 +276,19 @@ export default function Layout({
             <BranchSwitcher />
             {showMobileInstallBtn && (
               <button
+                className="mobile-install-btn"
+                aria-label="Install app"
                 onClick={handleMobileInstallClick}
-                style={{ background: 'transparent', border: '1px solid #1a6b3a', color: '#1a6b3a', borderRadius: 20, padding: '6px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ background: 'transparent', border: '1px solid #1a6b3a', color: '#1a6b3a', borderRadius: 20, padding: '6px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flex: '0 0 auto', whiteSpace: 'nowrap' }}
               >
-                Install App
+                {'\u2B07'} <span className="mh-label">Install App</span>
               </button>
             )}
-            <button className="mobile-wa-btn" onClick={() => window.open('https://wa.me/', '_blank')}>
-              {'\u{1F4F1}'} WhatsApp
+            {/* The words drop out below 480px (see index.css) so the row
+                always fits a cheap Android phone. The glyphs stay, and the
+                aria-labels mean the control is still named for a reader. */}
+            <button className="mobile-wa-btn" aria-label="WhatsApp" onClick={() => window.open('https://wa.me/', '_blank')}>
+              {'\u{1F4F1}'} <span className="mh-label">WhatsApp</span>
             </button>
             <div className="mobile-avatar" style={{ background: ac.bg }}>
               {initials(user?.username || '')}

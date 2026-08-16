@@ -814,3 +814,75 @@ body.pewil-pos-focus main.page-content-mobile {
 @media (prefers-reduced-motion: reduce) {
   .mobile-more-sheet { animation: none; }
 }
+
+/* ── MOBILE HEADER: fits the phone, whatever is in it (2026-08-16) ──────
+   The shop switcher joined a row that already held Install App, WhatsApp
+   and the avatar. Nothing here set `min-width: 0`, and a flex item's
+   default `min-width: auto` means it will not shrink below its content —
+   for a <select>, that is the width of its LONGEST option. On a 360px
+   phone the row needed ~420px, and since .mobile-header is a SIBLING of
+   <main> (which does clip its own overflow) the page itself started
+   scrolling sideways.
+
+   Two independent guards, because either alone can be defeated by an
+   inline style or a long shop name:
+     1. every item may shrink (min-width: 0) and the chip is capped,
+     2. the bar clips whatever is left over.
+
+   `overflow: hidden` is safe HERE — this is a one-line flex bar with no
+   tables and no dropdown panels inside it. It must NOT be copied to
+   `main.page-content-mobile` or to table wrappers; see the note by the
+   table rules above, which this deliberately does not touch. */
+@media (max-width: 768px) {
+  .mobile-header {
+    max-width: 100vw;
+    overflow: hidden;
+    gap: 10px;
+  }
+  /* The logo keeps its size; everything else gives way first. */
+  .mobile-header > *:first-child { flex: 0 0 auto; }
+
+  .mobile-header .mh-right {
+    min-width: 0;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    overflow: hidden;
+  }
+
+  /* The shop chip becomes a pill. `!important` because the width is set
+     inline on the element (190px, which is right on desktop). */
+  .mobile-header .branch-chip {
+    max-width: 112px !important;
+    min-width: 0 !important;
+    flex: 0 1 112px !important;
+    padding: 6px 9px !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-wa-btn,
+  .mobile-install-btn { flex: 0 0 auto; white-space: nowrap; }
+  .mobile-avatar { flex: 0 0 auto; }
+}
+
+/* Narrow phones — the two action buttons drop their words and keep their
+   glyphs. That frees ~130px, which is the difference between the row
+   fitting a 360px screen and not. The controls stay tappable at 44px and
+   stay named via aria-label. */
+@media (max-width: 480px) {
+  .mobile-header .mh-label { display: none; }
+  .mobile-wa-btn,
+  .mobile-install-btn { padding: 7px 10px !important; }
+}
+
+/* Phone: the brand mark alone in the header, no wordmark. Scoped to
+   .mobile-header so the landing page, login and the drawer keep the full
+   lockup. This is the last ~85px the header needs to fit a 360px screen
+   with a shop chip in it. */
+@media (max-width: 480px) {
+  /* `!important`: Logo.js sets `display:flex` inline on this div, and an
+     inline style beats a plain rule. Caught by rendering the header at
+     360px rather than reasoning about it. */
+  .mobile-header .logo-wordmark { display: none !important; }
+}

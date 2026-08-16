@@ -59,7 +59,12 @@ export default function Logo({
         />
       </svg>
       {showText && (
-        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
+        // `logo-wordmark` so a cramped surface can drop the word and keep the
+        // mark. The mobile header does exactly that below 480px: the sprout
+        // says Pewil well enough on a phone, and the ~85px it frees is what
+        // lets the shop chip, the two action buttons and the avatar all fit
+        // a 360px screen without the row overflowing (2026-08-16).
+        <div className="logo-wordmark" style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
           <div
             style={{
               fontFamily: "'Playfair Display', Georgia, serif",

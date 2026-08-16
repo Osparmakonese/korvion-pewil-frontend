@@ -82,10 +82,13 @@ export default function BranchSwitcher() {
   // Assigned staff without the all-shops right: show the shop, no control.
   if (ownBranchName && !canViewAll) {
     return (
-      <span style={{
+      <span className="branch-chip" title={ownBranchName} style={{
         fontSize: 12, fontWeight: 600, color: '#1a6b3a',
         background: '#e8f5ee', padding: '5px 11px', borderRadius: 20,
         whiteSpace: 'nowrap',
+        // Same shrink rules as the dropdown below — a long shop name in a
+        // rigid pill is what pushed the mobile header past the viewport.
+        minWidth: 0, maxWidth: 190, overflow: 'hidden', textOverflow: 'ellipsis',
       }}>
         {ownBranchName}
       </span>
@@ -99,6 +102,7 @@ export default function BranchSwitcher() {
 
   return (
     <select
+      className="branch-chip"
       value={viewing}
       onChange={(e) => choose(e.target.value)}
       title="Choose which shop you are looking at"
@@ -109,6 +113,14 @@ export default function BranchSwitcher() {
         border: `1px solid ${current ? '#1a6b3a' : '#e3e8e4'}`,
         borderRadius: 20, padding: '6px 12px', cursor: 'pointer',
         maxWidth: 190, fontFamily: 'inherit',
+        // A <select> is sized by its LONGEST <option>, and a flex item
+        // defaults to min-width:auto — so it refuses to shrink below that.
+        // On a 360px phone one long shop name in this control pushed the
+        // whole mobile header past the viewport and the page started
+        // scrolling sideways (2026-08-16). Let it shrink and truncate; the
+        // 768px rules in index.css cap it to a pill.
+        minWidth: 0, flex: '0 1 auto',
+        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
       }}
     >
       <option value="">All shops</option>
