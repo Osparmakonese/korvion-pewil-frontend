@@ -107,7 +107,15 @@ export default function OfflineBanner() {
     <div
       role="status"
       aria-live="polite"
+      className="offline-banner"
       style={{
+        // `pointerEvents: none` because this is a notice, never a control.
+        // Fixed to the bottom of a phone it sat directly over the bottom
+        // navigation and, inside POS, over the Charge button itself — so a
+        // cashier tapping to take money was tapping the banner instead.
+        // index.css lifts it clear of the nav on phones and hides it in the
+        // POS, which has its own offline pill and pending counter.
+        pointerEvents: "none",
         position: "fixed", bottom: "16px", left: "50%",
         transform: "translateX(-50%)", zIndex: 9999,
         background,

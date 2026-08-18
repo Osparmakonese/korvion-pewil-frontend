@@ -886,3 +886,27 @@ body.pewil-pos-focus main.page-content-mobile {
      360px rather than reasoning about it. */
   .mobile-header .logo-wordmark { display: none !important; }
 }
+
+/* ── OFFLINE BANNER: a notice, never an obstacle (2026-08-18) ──────────
+   Found on a real phone: the fixed bottom banner covered the bottom
+   navigation, and inside the POS it covered the Charge button — the one
+   control a cashier must be able to hit. It is a notice, so it never takes
+   a tap (`pointer-events: none`, set inline on the element too), and on a
+   phone it sits ABOVE the 76px bottom nav rather than on it.
+
+   In the POS it is hidden outright: that screen already has its own offline
+   pill and queued-sales counter in the header, so the banner was both
+   duplicate information and the thing in the way. `body.pewil-pos-focus` is
+   set by POS.js while the till is on screen. */
+.offline-banner { pointer-events: none; }
+
+@media (max-width: 768px) {
+  .offline-banner {
+    /* 88px = 76px bottom-nav + 12px clearance, the same figure the mobile
+       page padding uses above. Plus the iOS home-indicator inset. */
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+    max-width: 92vw;
+  }
+}
+
+body.pewil-pos-focus .offline-banner { display: none !important; }

@@ -22,7 +22,7 @@ import { promptCashDrop, submitCashDrop } from '../utils/cashDrop';
 import { claimSessionLock } from '../utils/posSessionLock';
 import {
   submitSaleOnline, installOfflineSync, getPendingCount,
-  onPendingChange, isOffline as posIsOffline,
+  onPendingChange, isOffline as posIsOffline, OFFLINE_QUEUE_LIMIT,
 } from '../utils/offlinePOS';
 import { promptWeight } from '../utils/weightPrompt';
 import { requireAgeVerification } from '../utils/ageVerify';
@@ -41,6 +41,9 @@ import { invalidateSaleCaches, invalidateProductCaches } from '../utils/queryCac
 import { getProductIcon } from '../utils/productIcons';
 import { shopPrice, shopStock, sellState } from '../utils/branchStock';
 import { toast } from '../utils/toast';
+import {
+  rememberOpenSessions, recallOpenSessions,
+} from '../utils/posSessionMemory';
 import useViewBranch from '../hooks/useViewBranch';
 
 /* ─── Receipt Modal ─── */
@@ -1277,10 +1280,35 @@ export default function POS() {
     }
   };
 
-  const { data: sessions = [] } = useQuery({
+  const { data: sessionsLive = [], isError: sessionsFailed } = useQuery({
     queryKey: ['retail-sessions-pos'],
     queryFn: getCashierSessions,
   });
+
+  // DOES THIS CASHIER HAVE A SESSION OPEN? (2026-08-18)
+  //
+  // Reported from a real phone in aeroplane mode: a cashier with an open
+  // session closed the app, reopened it offline, and the till refused to
+  // sell — "You don't have an open cashier session" — in a shop where the
+  // session had never been closed.
+  //
+  // The request had simply failed, React Query handed the component its
+  // default `[]`, and an EMPTY LIST IS NOT AN ANSWER: it looks identical to
+  // "every session is closed". So the till drew a conclusion from silence.
+  //
+  // Now the open sessions are written to the device whenever the live list
+  // arrives, and read back ONLY when the request errored. A genuinely empty
+  // list from a server that answered still means closed — otherwise a
+  // cashier could ring sales into a session that no longer exists.
+  useEffect(() => {
+    if (!sessionsFailed) rememberOpenSessions(sessionsLive);
+  }, [sessionsLive, sessionsFailed]);
+
+  const sessions = useMemo(() => {
+    if (sessionsLive && sessionsLive.length) return sessionsLive;
+    if (sessionsFailed) return recallOpenSessions();
+    return sessionsLive;
+  }, [sessionsLive, sessionsFailed]);
 
   // WHICH SHOP IS THIS TILL IN?
   //
@@ -1821,6 +1849,18 @@ export default function POS() {
   // Search terms that look like scanned codes prefill Barcode, not Name.
   const looksLikeBarcode = (s) => /^\d{4,}$/.test(s);
 
+  // Opening a session needs the server: the sale carries `session: <id>`,
+  // that id is minted server-side, and CashierSession — unlike Sale,
+  // StockAdjustment, Return and CashDrop — has no client-side idempotency
+  // key to mint one against. So offline, "open one" is advice the cashier
+  // cannot act on, and telling them that plainly beats repeating it.
+  const noSessionMessage = () => (
+    offline
+      ? 'No open till session on this device, and one cannot be opened '
+        + 'without internet. Reconnect, open your session, then sell.'
+      : 'You do not have an open till session. Open one before selling.'
+  );
+
   const handleCashDrop = async () => {
     if (!isLockOwner) {
       alert('This tab is read-only — POS is already active in another tab. Cash drop not allowed here.');
@@ -1828,7 +1868,7 @@ export default function POS() {
     }
     const activeSessions = sessions.filter((s) => !s.closed_at && (s.cashier_username || '').toLowerCase() === (user?.username || '').toLowerCase());
     if (activeSessions.length === 0) {
-      alert("You don't have an open cashier session. Please open one before continuing.");
+      toast({ message: noSessionMessage(), kind: 'error' });
       return;
     }
     const sessionId = activeSessions[0].id;
@@ -1851,7 +1891,11 @@ export default function POS() {
     }
     const activeSessions = sessions.filter((s) => !s.closed_at && (s.cashier_username || '').toLowerCase() === (user?.username || '').toLowerCase());
     if (activeSessions.length === 0) {
-      alert("You don't have an open cashier session. Please open one before continuing.");
+      // NOT alert(). A browser dialog blocks the JavaScript thread, so the
+      // till freezes behind it — which is how a Charge button was left
+      // reading "Processing…" with a modal sitting on top of it. A toast
+      // says the same thing without stopping the app.
+      toast({ message: noSessionMessage(), kind: 'error' });
       return;
     }
 
@@ -2403,7 +2447,8 @@ export default function POS() {
         {(offline || pendingCount > 0) && (
           <div
             title={offline
-              ? `Offline — ${pendingCount} sale${pendingCount === 1 ? '' : 's'} queued. Will sync on reconnect.`
+              ? `Offline — ${pendingCount} of ${OFFLINE_QUEUE_LIMIT} sales saved on this till. `
+                + `They sync when you reconnect; the till stops taking new ones at ${OFFLINE_QUEUE_LIMIT}.`
               : `Syncing ${pendingCount} queued sale${pendingCount === 1 ? '' : 's'}…`}
             style={{ padding: '6px 12px', borderRadius: 8,
                      border: '1px solid ' + (offline ? '#fecaca' : '#fed7aa'),
