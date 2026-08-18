@@ -11,8 +11,10 @@
  *   - 2026-04-28: re-enabled with the strategy below.
  *
  * Strategy (the rules that keep us out of the previous trap):
- *   1. NEVER precache. Workbox's precacheAndRoute is what caused the 2026-04-23
- *      bug. We deliberately ignore self.__WB_MANIFEST.
+ *   1. NEVER precache-and-ROUTE. Workbox's precacheAndRoute is what caused the
+ *      2026-04-23 bug, and it is still not used. The build manifest is read
+ *      once, at install, only to warm the fallback cache (see warmShell);
+ *      nothing is ever SERVED from it ahead of the network.
  *   2. Network-first for navigation, JS, CSS — always try the network; cache
  *      is only used as the offline fallback. So a fresh deploy with rotated
  *      hashes will be served immediately on the next online load.
@@ -29,10 +31,19 @@
  * precache — it's to bump CACHE_VERSION below.
  */
 
-// CRA's Workbox plugin still injects this manifest into the build. We
-// deliberately ignore it — keeping the reference here only so the build
-// pipeline is happy.
-const ignored = self.__WB_MANIFEST; // eslint-disable-line no-unused-vars
+// CRA's Workbox plugin injects the build manifest here — the list of this
+// build's hashed assets.
+//
+// READ IT EXACTLY ONCE. `InjectManifest` splits the compiled source on this
+// injection point and fails the build if it does not find precisely one
+// occurrence ("Multiple instances of the injection point were found in your
+// SW source"). That is what broke the build on 2026-08-18: `warmShell()` read it
+// a second time. Capture it in this constant and use the constant everywhere
+// else.
+//
+// We still never ROUTE from it — see rule 1 above. It is used only to know
+// which files to fetch into the fallback cache at install.
+const BUILD_MANIFEST = self.__WB_MANIFEST || [];
 
 // 2026-04-30 — bumped to v4 to force every existing client to wipe any
 // pre-substring-matcher build still pinned in their cache. Combined with
@@ -75,7 +86,7 @@ async function warmShell() {
     // '/' is what a navigation actually asks for, and what networkFirst
     // falls back to for a deep link like /pos that was never visited online.
     const urls = new Set(['/']);
-    for (const entry of (self.__WB_MANIFEST || [])) {
+    for (const entry of BUILD_MANIFEST) {
       const raw = typeof entry === 'string' ? entry : (entry && entry.url);
       if (!raw) continue;
       if (/\.map$/i.test(raw)) continue;              // source maps: never
