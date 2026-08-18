@@ -7,7 +7,7 @@
  * at 3, Starter at 1.
  *
  * Owners can:
- *   - Add a new branch (subject to plan caps)
+ *   - Add a new branch (the server decides whether the plan allows it)
  *   - Edit branch details (name, code, address, manager)
  *   - Promote a branch to HQ (only one HQ at a time — backend swaps)
  *   - Archive (soft-delete) a non-HQ branch
@@ -40,29 +40,32 @@ const T = {
   surface: '#f6f8f6',
 };
 
-// Per-receipt retail (2026-05-17): every retail tenant gets unlimited
-// branches. The cap is the $999/mo billing cap, not a branch ceiling.
-// Legacy 'starter' / 'growth' / 'enterprise' tier names still appear on
-// Subscription.plan rows from before the pricing revolution — those map
-// to Infinity now because they're billed via pricing_mode='usage'.
-// Client-side shop caps are DELIBERATELY not enforced here.
+// THERE IS NO CLIENT-SIDE SHOP CAP. Deliberately, and permanently.
 //
-// This table used to read { starter: 1, growth: 3, enterprise: Infinity } and
-// then drifted to Infinity for every tier, which meant `atCap` was permanently
-// false: the "+ Add Branch" button was never disabled, the cap notice never
-// appeared, and the owner only discovered the limit after filling in the whole
-// form — as a browser alert() carrying the backend's 403, with no way to act
-// on it.
+// This file used to keep a `PLAN_CAPS` table and disable "+ Add branch" from
+// it. Every version of that table was wrong in a different direction, because
+// the rule it duplicated lives on the server:
 //
-// Duplicating the rule client-side is what let it drift. The backend
-// (retail/views.py::_enforce_branch_cap) is the single source of truth and its
-// refusal is caught in createMut.onError, which opens AddShopModal. Leave these
-// at Infinity: the UI stays permissive and the server decides.
-const PLAN_CAPS = {
-  starter:    Infinity,
-  growth:     Infinity,
-  enterprise: Infinity,
-};
+//   * first  { starter: 1, growth: 3, enterprise: Infinity } — stale the day
+//     pricing changed to per-shop billing;
+//   * then   Infinity for every tier, so the button was never disabled and the
+//     owner only met the limit after filling in the whole form;
+//   * and last { starter, growth, enterprise } looked up with the plan SLUG
+//     (`'retail-growth'`), which is not one of those keys — so it fell through
+//     to a default cap of ONE and disabled the button for EVERY PAYING
+//     CUSTOMER the moment they had a single shop (found 2026-08-18).
+//
+// That last one was invisible on a laptop, because the top-bar primary action
+// (usePrimaryAction, below) opens the form without consulting the cap at all.
+// On a phone the top bar is hidden at <=768px, so the greyed in-page button
+// was the ONLY control there was — a paying owner simply could not add a shop
+// from their phone.
+//
+// The backend (retail/views.py::_enforce_branch_cap) is the single source of
+// truth: unlimited shops for anyone paying or in a live trial, one shop for a
+// tenant that has never paid. Its refusal is caught in createMut.onError,
+// which opens AddShopModal — the thing that actually resolves it. So the UI
+// stays permissive and both buttons behave identically.
 
 const formatApiError = (err, fallback = 'Save failed') => {
   const data = err?.response?.data;
@@ -96,17 +99,6 @@ export default function Branches() {
     queryFn: listBranches,
     staleTime: 30_000,
   });
-
-  // Determine plan cap. Cap is "soft" client-side — backend enforces hard.
-  // NOTE: `user.plan` holds the plan SLUG ('retail-growth'), not the bare tier,
-  // so match on the suffix rather than an exact key — the same slug-vs-tier
-  // mismatch that was silently giving every paying tenant free-tier AI credits.
-  const plan = (user?.plan || 'starter').toLowerCase();
-  const cap = PLAN_CAPS[plan] ?? 1;
-  const atCap = branches.length >= cap;
-  const capTooltip = atCap
-    ? 'Branch cap reached — contact support.'
-    : '';
 
   const createMut = useMutation({
     mutationFn: createBranch,
@@ -197,23 +189,22 @@ export default function Branches() {
             </p>
           </div>
           {isOwner && (
-            <div title={capTooltip}>
-              <button
-                onClick={() => !atCap && setEditing({})}
-                disabled={atCap}
-                style={{
-                  background: atCap ? '#9ca3af' : T.green,
-                  color: '#fff', border: 'none',
-                  padding: '10px 18px', borderRadius: 8,
-                  fontSize: 13, fontWeight: 600,
-                  cursor: atCap ? 'not-allowed' : 'pointer',
-                  opacity: atCap ? 0.7 : 1,
-                  fontFamily: 'inherit',
-                }}
-              >
-                + Add branch
-              </button>
-            </div>
+            <button
+              onClick={() => setEditing({})}
+              style={{
+                background: T.green,
+                color: '#fff', border: 'none',
+                padding: '10px 18px', borderRadius: 8,
+                fontSize: 13, fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                // Big enough to hit on a phone, and it must never be the
+                // narrow leftovers of a wrapped flex row.
+                minHeight: 44, flex: '0 0 auto', whiteSpace: 'nowrap',
+              }}
+            >
+              + Add branch
+            </button>
           )}
         </div>
 
