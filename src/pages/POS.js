@@ -21,7 +21,7 @@ import { promptDiscountReason } from '../utils/discountReason';
 import { promptCashDrop, submitCashDrop } from '../utils/cashDrop';
 import { claimSessionLock } from '../utils/posSessionLock';
 import {
-  submitSaleOnline, installOfflineSync, getPendingCount,
+  submitSaleOnline, installOfflineSync, getPendingCount, getPendingSales,
   onPendingChange, isOffline as posIsOffline, OFFLINE_QUEUE_LIMIT,
 } from '../utils/offlinePOS';
 import { promptWeight } from '../utils/weightPrompt';
@@ -1854,6 +1854,62 @@ export default function POS() {
   // StockAdjustment, Return and CashDrop — has no client-side idempotency
   // key to mint one against. So offline, "open one" is advice the cashier
   // cannot act on, and telling them that plainly beats repeating it.
+  // ── THE CHARGE BUTTON MUST NEVER STRAND THE TILL (2026-08-18) ──────
+  //
+  // Reported twice from a real phone in aeroplane mode: the Charge button
+  // sits on "Processing…" and never comes back, so the cashier cannot
+  // finish the sale and cannot start another.
+  //
+  // I could not reproduce it from the source. `submitSaleOnline` queues the
+  // sale and returns without awaiting anything, so `isPending` should clear
+  // within a tick — which means either the deployed bundle differs from this
+  // source, or something in the mutation lifecycle is not settling. Either
+  // way, a till is not a place to leave a state machine that CAN wedge just
+  // because the current reading of the code says it should not.
+  //
+  // So: the queue is the source of truth, not the mutation. If the button is
+  // still pending after 8 seconds, look in the queue and answer honestly.
+  //
+  //   * the sale IS there  → it is saved and will sync. Finish the sale on
+  //     screen and clear the cart, so the cashier is not left guessing and
+  //     CANNOT ring the same customer twice.
+  //   * the sale is NOT there → nothing was recorded. Say so plainly and
+  //     leave the cart alone so it can be rung again.
+  //
+  // Eight seconds because a queued sale is instant and even a slow live POST
+  // is bounded by the 15s axios timeout — long enough never to fire on a
+  // healthy sale, short enough that a cashier is not stuck through it.
+  const saleIsPending = createSaleMut.isPending;
+  const resetSaleMut = createSaleMut.reset;
+  // Latest-ref so the timer does not restart on every render while pending.
+  const resetCartRef = useRef(resetCart);
+  resetCartRef.current = resetCart;
+  useEffect(() => {
+    if (!saleIsPending) return undefined;
+    const timer = setTimeout(() => {
+      let queue = [];
+      try { queue = getPendingSales() || []; } catch (_) { queue = []; }
+      const saved = queue.length > 0;
+      resetSaleMut();
+      setPendingCount(queue.length);
+      if (saved) {
+        try { resetCartRef.current(); } catch (_) { /* best effort */ }
+        toast({
+          message: `Sale saved on this till — ${queue.length} waiting to sync. `
+                 + `Do NOT ring it again.`,
+          kind: 'success',
+        });
+      } else {
+        toast({
+          message: 'The till did not finish that sale and nothing was saved. '
+                 + 'Ring it again.',
+          kind: 'error',
+        });
+      }
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, [saleIsPending, resetSaleMut]);
+
   const noSessionMessage = () => (
     offline
       ? 'No open till session on this device, and one cannot be opened '
