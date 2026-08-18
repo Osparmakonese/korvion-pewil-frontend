@@ -1438,6 +1438,20 @@ export default function POS() {
   // link payment ↔ sale once the sale is confirmed (for reconciliation).
   const pendingMmTxnRef = useRef(null);
   const createSaleMut = useMutation({
+    // ALWAYS run, even when the browser says there is no network.
+    //
+    // This is the single most important line in the offline till. React
+    // Query's default (`networkMode: 'online'`) does not call the
+    // mutationFn at all while offline — it PAUSES the mutation, leaving
+    // `isPending` true indefinitely. So the Charge button sat on
+    // "Processing…" for ever, `submitSaleOnline` was never reached, and
+    // nothing was ever queued: the offline sales queue could not receive a
+    // sale because the code that fills it was never called (2026-08-18).
+    //
+    // `'always'` rather than 'offlineFirst' because this function is
+    // designed to work with no network — it writes to the local queue and
+    // returns — so there is no case in which not running it is correct.
+    networkMode: 'always',
     mutationFn: (saleData) => submitSaleOnline(api, saleData),
     onSuccess: ({ sale, source }) => {
       // Link the mobile-money payment to the sale it settled (best-effort).

@@ -53,7 +53,30 @@ if (SENTRY_DSN) {
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { retry: 1, staleTime: 30000 },
+    queries: {
+      retry: 1,
+      staleTime: 30000,
+      // ── WHY networkMode IS SET (2026-08-18) ────────────────────────
+      //
+      // React Query's default is `networkMode: 'online'`, which means it
+      // will not run a query function at all when `navigator.onLine` is
+      // false. The query does not fail — it is PAUSED. `status` stays
+      // 'pending' and `fetchStatus` becomes 'paused', for as long as the
+      // device is offline.
+      //
+      // That single default is why the whole offline effort appeared to do
+      // nothing. Every screen was empty in aeroplane mode not because the
+      // requests failed, but because THEY WERE NEVER MADE — so axios was
+      // never called, so the saved-copy fallback in `offlineReadCache`
+      // never got the chance to answer. We had built a cache that could
+      // not be reached.
+      //
+      // 'offlineFirst' makes the first attempt regardless of what the
+      // browser thinks of the network. It fails, axios serves the saved
+      // copy, and the screen fills. Retries are still paused while
+      // offline, so a dead network does not turn into a retry storm.
+      networkMode: 'offlineFirst',
+    },
     // Safety net for write failures.
     //
     // An audit on 5 Aug found 135 of 155 write mutations had no onError of
@@ -66,6 +89,20 @@ const queryClient = new QueryClient({
     // (ReceiptCustomization, TeamManagement, Billing…) are untouched and
     // nothing double-reports.
     mutations: {
+      // Same default, worse consequence. A PAUSED mutation reports
+      // `isPending: true` and never calls its mutationFn, so every save
+      // button in the app spins forever with no error and no timeout the
+      // moment the device goes offline — including the till's Charge
+      // button, which is how "it sticks on Processing" happened on
+      // desktop and mobile alike.
+      //
+      // Pausing exists so a mutation can resume when the network returns.
+      // That is the wrong trade here: a cashier watching a spinner has no
+      // idea whether the customer has been charged. Run it, let it fail,
+      // and say so — the sale path has its own durable queue for the
+      // offline case, and every other write is read-only-offline by
+      // design and should report that plainly.
+      networkMode: 'offlineFirst',
       onError: (err) => {
         // 401 is handled by the axios interceptor (redirects to login) and
         // 402 flips the billing gate — don't shout over either of those.
