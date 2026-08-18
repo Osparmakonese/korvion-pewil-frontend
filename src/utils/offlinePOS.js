@@ -339,19 +339,23 @@ function queueSale(payload) {
  * Drain the queue. Returns { sent, failed, remaining }.
  * Called automatically on window 'online' event, and on a periodic timer.
  *
- * SEQUENTIAL ON PURPOSE, and it must stay that way (2026-08-18). Posting
- * several at once would obviously be faster — a thousand sales at a second
- * each is a quarter of an hour — but `Sale.save()` deducts stock through
- * `apply_stock_delta`, which reads the current figure into Python, adds the
- * delta and writes it back. Two sales of the same product landing at once
- * can therefore lose one of the deductions, and a lost deduction is stock
- * that walks out of the shop with the books saying it is still on the shelf.
+ * Sequential. A thousand sales at a second each is a quarter of an hour,
+ * so this is the obvious thing to speed up — read this before you do.
  *
- * That is not a theoretical worry: it is the same read-modify-write shape
- * behind the drift already found on the demo tenant. The drain runs in the
- * background and never blocks the till, so slow is fine. If this ever needs
- * to be fast, the answer is a bulk endpoint that does the arithmetic in ONE
- * database statement — not concurrency on this side.
+ * The original reason was a hard one: `Sale.save()` deducted stock by
+ * reading the figure into Python, adding the delta and writing it back, so
+ * two sales of the same product landing at once could lose a deduction —
+ * stock walking out of the shop with the books saying it is still there.
+ * **That reason is gone**: `apply_stock_delta` now does the arithmetic in a
+ * single `UPDATE ... SET quantity = quantity + %s` (2026-08-18), so
+ * concurrent posts queue on the row lock and every delta lands.
+ *
+ * It stays sequential for smaller reasons — one till hammering the API with
+ * a thousand parallel writes is not kind to the other shops on the same
+ * server, and the drain runs in the background and never blocks the till,
+ * so slow costs nobody a sale. When you do make it concurrent, a small
+ * fixed width (four or six) is the whole change; the idempotency key makes
+ * retries safe. A bulk endpoint would be better still.
  */
 export async function drainPendingSales(api) {
   if (isOffline()) return { sent: 0, failed: 0, remaining: read().length };
