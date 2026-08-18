@@ -274,3 +274,19 @@ serviceWorkerRegistration.register({
     try { waiting.postMessage({ type: 'SKIP_WAITING' }); } catch (_) { /* swallow */ }
   },
 });
+
+// Ask the browser to KEEP our offline data (2026-08-18).
+//
+// IndexedDB is "best-effort" storage by default: when an Android phone runs
+// low on space the browser may evict the whole origin, without asking, and
+// that would take the product catalogue AND any sales still queued on a till
+// with it. Granting persistence means the browser has to ask the user first.
+//
+// Chrome grants this silently to an installed PWA the user actually uses, so
+// there is no prompt to time carefully — we just ask once per load, after
+// first paint, and carry on regardless of the answer.
+try {
+  import('./utils/offlineReadCache')
+    .then(({ requestPersistentStorage }) => requestPersistentStorage())
+    .catch(() => {});
+} catch (_) { /* best effort */ }

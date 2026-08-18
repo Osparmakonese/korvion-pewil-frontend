@@ -1,6 +1,7 @@
 // Production: https://pewil-production.up.railway.app
 import axios from 'axios';
 import { toast } from '../utils/toast';
+import { rememberRead, recallRead, isCacheable } from '../utils/offlineReadCache';
 
 const api = axios.create({
   baseURL: `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/api`,
@@ -67,9 +68,53 @@ api.interceptors.request.use((config) => {
 //   (refresh token genuinely expired or revoked) — that's a real
 //   logged-out state, not a transient outage.
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Keep the last good answer to every retail/farm read so the same screen
+    // can be opened with no internet at all. Fire-and-forget on purpose: the
+    // caller already has its data and must never wait on, or fail because
+    // of, our bookkeeping.
+    try {
+      if (isCacheable(response.config)) rememberRead(response.config, response.data);
+    } catch (_) { /* never break a good response */ }
+    return response;
+  },
   async (error) => {
     const original = error.config;
+
+    // ── Offline read fallback (2026-08-18) ────────────────────────────
+    // A GET that came back with NO response at all is a dead network — the
+    // server never spoke. If we are holding the last good answer to this
+    // exact request (same tenant, same shop, same filters — all of it is in
+    // the key) serve that instead of an empty screen, flagged so the UI can
+    // say how old it is.
+    //
+    // A 4xx or 5xx is a real answer and is NEVER replaced by a saved copy:
+    // "you may not see this" and "that is gone" have to keep meaning what
+    // they say. Cancelled requests are skipped too — React Query cancels on
+    // unmount, and that is not a failure to paper over.
+    const isCancelled = (axios.isCancel && axios.isCancel(error))
+      || error?.code === 'ERR_CANCELED';
+    if (!error.response && !isCancelled && original && isCacheable(original)) {
+      const hit = await recallRead(original);
+      if (hit) {
+        try {
+          window.dispatchEvent(new CustomEvent('pewil:offline-read', {
+            detail: { url: original.url, saved_at: hit.saved_at },
+          }));
+        } catch (_) { /* best effort */ }
+        return {
+          data: hit.data,
+          status: 200,
+          statusText: 'OK (saved copy)',
+          headers: {},
+          config: original,
+          request: null,
+          __fromOfflineCache: true,
+          __cachedAt: hit.saved_at,
+        };
+      }
+    }
+
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true;
       // Don't even attempt refresh while offline — the request would

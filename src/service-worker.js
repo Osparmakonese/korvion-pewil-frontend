@@ -38,14 +38,64 @@ const ignored = self.__WB_MANIFEST; // eslint-disable-line no-unused-vars
 // pre-substring-matcher build still pinned in their cache. Combined with
 // the onUpdate callback in src/index.js, returning users will auto-reload
 // the moment the new SW activates.
-const CACHE_VERSION = 'pewil-v4-2026-04-30';
+const CACHE_VERSION = 'pewil-v5-2026-08-18';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
-self.addEventListener('install', () => {
-  // No precache. Just install fast.
+self.addEventListener('install', (event) => {
+  // WARM the shell — deliberately not the same thing as precaching it.
+  //
+  // The rule above still stands: we never SERVE from a precache manifest,
+  // because routing from a stale manifest is exactly what pinned phones to
+  // old bundles on 2026-04-23. Every serving strategy below is unchanged —
+  // navigation and hashed JS/CSS stay network-first, so a fresh deploy is
+  // still served the instant the device is online.
+  //
+  // What was missing is that the cache only ever contained what THAT phone
+  // had already fetched. Install the app, never open it online, and there
+  // was nothing to fall back to; open a page you had not visited before and
+  // there was nothing for that route either. The shop opens at 6am with no
+  // data bundle and the app will not start.
+  //
+  // So at install time we fetch this build's shell once and put it in the
+  // runtime cache as a FALLBACK. Network still wins whenever it answers.
+  event.waitUntil(warmShell());
   self.skipWaiting();
 });
+
+/**
+ * Fetch this build's HTML/JS/CSS into the runtime cache.
+ *
+ * Every failure is swallowed per-URL: a shell that is 90% warmed is far
+ * better than an install that fails and leaves the old worker in place.
+ */
+async function warmShell() {
+  try {
+    const cache = await caches.open(RUNTIME_CACHE);
+    // '/' is what a navigation actually asks for, and what networkFirst
+    // falls back to for a deep link like /pos that was never visited online.
+    const urls = new Set(['/']);
+    for (const entry of (self.__WB_MANIFEST || [])) {
+      const raw = typeof entry === 'string' ? entry : (entry && entry.url);
+      if (!raw) continue;
+      if (/\.map$/i.test(raw)) continue;              // source maps: never
+      if (!/\.(js|css|html)$/i.test(raw)) continue;   // icons are cache-first already
+      urls.add(raw);
+    }
+    await Promise.all([...urls].map(async (u) => {
+      try {
+        // `cache: 'reload'` so we warm from the network, not from an HTTP
+        // cache entry belonging to the build we are replacing.
+        const res = await fetch(u, { cache: 'reload' });
+        if (!res || !res.ok) return;
+        await cache.put(u, res.clone());
+        // index.html is the document behind every route. Store it under '/'
+        // as well, which is the key the navigation fallback looks for.
+        if (/index\.html$/i.test(u)) await cache.put('/', res.clone());
+      } catch (_) { /* one asset short is not a failed install */ }
+    }));
+  } catch (_) { /* never fail the install */ }
+}
 
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {

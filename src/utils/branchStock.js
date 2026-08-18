@@ -31,6 +31,8 @@
  * reading the raw fields at any till surface.
  */
 
+import { pendingUnitsFor } from './offlineStockLedger';
+
 export const shopPrice = (p) => {
   const v = p == null ? null : (p.branch_price ?? p.selling_price);
   const n = Number(v);
@@ -41,7 +43,21 @@ export const shopStock = (p) => {
   // `?? p.stock` keeps the dark-supermarket lane's older shape working.
   const v = p == null ? null : (p.branch_quantity ?? p.quantity_in_stock ?? p.stock);
   const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
+  const onServer = Number.isFinite(n) ? n : 0;
+
+  // Minus what this device has already sold and not yet told the server
+  // about (2026-08-18). Every figure above comes from the server — or from
+  // the saved copy of a server answer — so while sales sit in the offline
+  // queue it is the number from BEFORE them. Without this subtraction a
+  // cashier with no internet sells the last bottle, still sees "1 in stock",
+  // and sells it again; a hundred times, up to the queue limit.
+  //
+  // That is precisely how per-shop figures went negative in the first place:
+  // units leaving while the number stayed still. Subtracting here means the
+  // tile counts down as they sell and `sellState()` refuses at zero all by
+  // itself — no offline special case anywhere in the till.
+  const pending = p == null ? 0 : pendingUnitsFor(p.id);
+  return pending ? onServer - pending : onServer;
 };
 
 /**

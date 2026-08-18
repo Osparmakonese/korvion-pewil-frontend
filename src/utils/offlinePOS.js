@@ -24,19 +24,75 @@
  */
 
 import axios from 'axios';
+import { noteSaleQueued, clearSale } from './offlineStockLedger';
 
 const KEY = 'pewil_offline_sales';
 const MAX_ATTEMPTS = 20;
+
+/**
+ * How many sales this till may take before it has to see the internet.
+ *
+ * Raised from 100 to 1000 on 2026-08-18, for a real reason: a busy shop runs
+ * ~300 sales in one cashier session, so 100 would stop the till mid-shift on
+ * an ordinary morning outage. 1000 is about three full sessions.
+ *
+ * NOTE — this is PER TILL, not per business. Each device keeps its own queue
+ * in its own browser storage, so a chain with fifteen branches has fifteen
+ * separate queues of up to 1000 each. Branch count does not eat into this
+ * number at all.
+ *
+ * Measured before choosing it, on a realistic Zimbabwean basket (six lines,
+ * product names around 24 characters):
+ *
+ *     one queued sale ......  ~1.0 KB   (12-line basket: ~1.6 KB)
+ *     1000 queued sales .....  ~1.0 MB   (12-line basket: ~1.5 MB)
+ *     localStorage budget ...   ~5 MB
+ *     re-serialising the whole queue, per sale, at 1000 queued:
+ *                              ~6 ms on a laptop, so tens of ms on a cheap
+ *                              Android — a hitch at the very top of the
+ *                              queue, not a freeze.
+ *
+ * That measurement is why the queue stays in localStorage instead of moving
+ * to IndexedDB: at these sizes the move buys nothing and would mean
+ * refactoring the till's sale path for no gain.
+ *
+ * What the number really trades is TRUST. Every queued sale is stock that
+ * left the shelf with only one device knowing, so a lost, stolen or wiped
+ * phone now costs up to 1000 sales instead of 100. That is a deliberate
+ * choice: a till that refuses a customer standing at the counter costs the
+ * shop money today, and the owner would rather carry the risk. The banner
+ * escalates well before the ceiling so it is never a surprise.
+ */
+export const OFFLINE_QUEUE_LIMIT = 1000;
 
 // ── storage ──────────────────────────────────────────────
 function read() {
   try { return JSON.parse(localStorage.getItem(KEY) || '[]'); }
   catch (_) { return []; }
 }
+/**
+ * Persist the queue. Returns whether it actually stuck.
+ *
+ * It used to swallow the failure and carry on (2026-08-18). At a 100-sale
+ * cap that was unreachable; at 1000 it is not, and a storage failure that
+ * nobody hears about means the cashier is shown "Sale Complete" for a sale
+ * that exists nowhere — not on the server, not on the device. Money taken,
+ * stock gone, no record. Callers that are ADDING a sale must check this and
+ * refuse rather than lie.
+ *
+ * Callers that are REMOVING a sale can ignore a false: the sale stays queued
+ * and gets posted again, and the backend's `client_receipt_number` key makes
+ * that a no-op.
+ */
 function write(arr) {
-  try { localStorage.setItem(KEY, JSON.stringify(arr)); }
-  catch (_) {}
+  let ok = true;
+  try {
+    localStorage.setItem(KEY, JSON.stringify(arr));
+  } catch (_) {
+    ok = false;
+  }
   fireChange();
+  return ok;
 }
 
 // ── idempotency key ──────────────────────────────────────
@@ -76,6 +132,10 @@ export function removePendingSale(clientReceiptNumber) {
   const next = q.filter((item) => item.client_receipt_number !== clientReceiptNumber);
   if (next.length !== q.length) {
     write(next);
+    // The units stop being "sold but untold" the moment the sale leaves this
+    // queue — whether it synced or the cashier voided it. Leaving the ledger
+    // entry behind would keep the shelf reading low forever.
+    clearSale(clientReceiptNumber);
     return true;
   }
   return false;
@@ -102,6 +162,9 @@ export function retryDeadLetter(clientReceiptNumber) {
       last_error: null,
     });
     write(q);
+    // Back in the queue means back off the shelf, so the till stops offering
+    // stock this sale already took.
+    noteSaleQueued(item.client_receipt_number, item.payload?.items_data);
     // Drop from dead-letter list.
     failed.splice(idx, 1);
     localStorage.setItem('pewil_offline_sales_failed', JSON.stringify(failed));
@@ -156,6 +219,20 @@ function isRetryableNetworkError(err) {
  *          whether the sale is confirmed or still pending.
  */
 export async function submitSaleOnline(api, saleData) {
+  // The ceiling. Checked before anything else so the cashier is told BEFORE
+  // they take the customer's money, not after. The message is the whole
+  // instruction — a cashier should never have to work out what to do next.
+  const queued = read().length;
+  if (queued >= OFFLINE_QUEUE_LIMIT) {
+    const err = new Error(
+      `${queued} sales are still waiting to be sent. Connect to the internet `
+      + `so they can sync, then carry on selling.`
+    );
+    err.code = 'offline_queue_full';
+    err.pending = queued;
+    throw err;
+  }
+
   const crn = saleData.client_receipt_number || newClientReceiptNumber();
   const payload = {
     client_sold_at: saleData.client_sold_at || new Date().toISOString(),
@@ -175,7 +252,20 @@ export async function submitSaleOnline(api, saleData) {
   // ('online') sale. Since every sale now queues first, those should be
   // triggered on successful background/drain sync instead of here -- not
   // yet wired up. Cash/card/on-account completion itself is unaffected.
-  queueSale(payload);
+  // If the queue could not be written, the sale exists NOWHERE. Say so
+  // instead of handing back a receipt for it. This is the one failure in the
+  // whole offline path that could take a customer's money and leave no trace.
+  if (!queueSale(payload)) {
+    const err = new Error(
+      'This device has run out of room to save the sale. Connect to the '
+      + 'internet so the saved sales can be sent, then try again.'
+    );
+    err.code = 'offline_queue_write_failed';
+    throw err;
+  }
+  // Take the units off the shelf locally, right now. Until this sale reaches
+  // the server, this device is the only thing that knows they are gone.
+  noteSaleQueued(payload.client_receipt_number, payload.items_data);
   const optimistic = optimisticReceipt(payload);
 
   // Best-effort background sync, fire-and-forget. If there IS a live
@@ -242,12 +332,26 @@ function queueSale(payload) {
     attempts: 0,
     last_error: null,
   });
-  write(q);
+  return write(q);
 }
 
 /**
  * Drain the queue. Returns { sent, failed, remaining }.
  * Called automatically on window 'online' event, and on a periodic timer.
+ *
+ * SEQUENTIAL ON PURPOSE, and it must stay that way (2026-08-18). Posting
+ * several at once would obviously be faster — a thousand sales at a second
+ * each is a quarter of an hour — but `Sale.save()` deducts stock through
+ * `apply_stock_delta`, which reads the current figure into Python, adds the
+ * delta and writes it back. Two sales of the same product landing at once
+ * can therefore lose one of the deductions, and a lost deduction is stock
+ * that walks out of the shop with the books saying it is still on the shelf.
+ *
+ * That is not a theoretical worry: it is the same read-modify-write shape
+ * behind the drift already found on the demo tenant. The drain runs in the
+ * background and never blocks the till, so slow is fine. If this ever needs
+ * to be fast, the answer is a bulk endpoint that does the arithmetic in ONE
+ * database statement — not concurrency on this side.
  */
 export async function drainPendingSales(api) {
   if (isOffline()) return { sent: 0, failed: 0, remaining: read().length };
@@ -262,7 +366,10 @@ export async function drainPendingSales(api) {
     try {
       await api.post('/retail/sales/', item.payload);
       sent++;
-      // Success (either 201 new or 200 existing idempotent). Drop from queue.
+      // Success (either 201 new or 200 existing idempotent). Drop from queue,
+      // and stop subtracting its units locally — the server's own figure now
+      // includes them, and doing both would count the sale twice.
+      clearSale(item.client_receipt_number);
     } catch (err) {
       const retryable = isRetryableNetworkError(err);
       item.attempts = (item.attempts || 0) + 1;
@@ -283,6 +390,12 @@ export async function drainPendingSales(api) {
 }
 
 function stashDeadLetter(item) {
+  // A sale the server has permanently refused never deducted anything there,
+  // so this device must stop deducting it either — otherwise the shelf reads
+  // low forever for a sale that does not exist. It is not lost: it sits on
+  // the sync-queue screen for a person to deal with, which is the only thing
+  // that can decide what a rejected sale means.
+  try { clearSale(item.client_receipt_number); } catch (_) {}
   try {
     const key = 'pewil_offline_sales_failed';
     const arr = JSON.parse(localStorage.getItem(key) || '[]');

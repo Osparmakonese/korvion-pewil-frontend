@@ -296,6 +296,24 @@ export function AuthProvider({ children }) {
         .then(({ clearCatalog }) => clearCatalog())
         .catch(() => {});
     } catch (_) { /* best effort */ }
+    // Same reasoning for the saved API answers behind the offline screens.
+    // The cache key carries the tenant id, so a different business could not
+    // read these anyway — but leaving one tenant's figures on the disk of a
+    // shared till is not something to rely on a key prefix for.
+    try {
+      import('../utils/offlineReadCache')
+        .then(({ clearOfflineReads }) => clearOfflineReads())
+        .catch(() => {});
+    } catch (_) { /* best effort */ }
+    // And the record of what this till sold before it last synced. NOT the
+    // sales queue itself — those are real sales and must survive a sign-out
+    // to be delivered. Only the local stock subtraction goes, because it is
+    // meaningless against another business's catalogue.
+    try {
+      import('../utils/offlineStockLedger')
+        .then(({ clearLedger }) => clearLedger())
+        .catch(() => {});
+    } catch (_) { /* best effort */ }
     setUser(null);
   }
 

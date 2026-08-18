@@ -40,6 +40,7 @@ import api from '../api/axios';
 import { invalidateSaleCaches, invalidateProductCaches } from '../utils/queryCache';
 import { getProductIcon } from '../utils/productIcons';
 import { shopPrice, shopStock, sellState } from '../utils/branchStock';
+import { toast } from '../utils/toast';
 import useViewBranch from '../hooks/useViewBranch';
 
 /* ─── Receipt Modal ─── */
@@ -1448,6 +1449,19 @@ export default function POS() {
           currency: localStorage.getItem('currency') || 'USD',
         });
       }
+    },
+    // Until now this mutation had no onError at all: every failure path
+    // inside submitSaleOnline was swallowed by the queue, so nothing could
+    // throw. The offline queue limit can (2026-08-18), and a till that
+    // silently does nothing when the cashier presses Complete Sale is the
+    // worst possible way to deliver that news. Say it, and leave the cart
+    // exactly as it is so the sale can be completed once they reconnect.
+    onError: (err) => {
+      pendingMmTxnRef.current = null;
+      toast({
+        message: err?.message || 'Could not complete the sale. Try again.',
+        kind: 'error',
+      });
     },
   });
 
