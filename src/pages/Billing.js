@@ -812,9 +812,39 @@ function ModuleSubCard({ title, sub, onManage }) {
     );
   }
   const cycleLabel = sub.billing_cycle === 'yearly' ? 'yearly' : 'monthly';
-  const amount = sub.billing_cycle === 'yearly'
-    ? sub.plan?.price_yearly || (sub.plan?.price_monthly || 0) * 12
-    : sub.plan?.price_monthly || 0;
+
+  // WHAT THEY WILL ACTUALLY PAY (2026-08-18).
+  //
+  // This card used to render `plan.price_monthly` — the PER-SHOP unit rate.
+  // Every retail tier is billed per shop, so a two-shop Starter tenant was
+  // shown "$10 / monthly" on the billing page and then charged $20 by the
+  // payment button. The page and the charge were computing the bill in two
+  // different places, so they drifted the moment a second shop was added.
+  //
+  // `next_charge` comes from billing/pricing.py::subscription_charge, which
+  // is the SAME function the checkout uses. Falling back to the old
+  // calculation only covers a payload from a backend that predates it.
+  const charge = sub.next_charge || null;
+  const amount = charge
+    ? Number(charge.amount)
+    : (sub.billing_cycle === 'yearly'
+        ? sub.plan?.price_yearly || (sub.plan?.price_monthly || 0) * 12
+        : sub.plan?.price_monthly || 0);
+  const symbol = charge?.currency_symbol || '$';
+
+  // When money is next needed, and how close it is. `days_until_due` is
+  // decided server-side from trial_end or current_period_end, so this cannot
+  // disagree with the countdown banner.
+  const days = (sub.days_until_due === null || sub.days_until_due === undefined)
+    ? null : Number(sub.days_until_due);
+  const dueOn = sub.due_on || sub.current_period_end || sub.trial_end;
+  const dueText = dueOn
+    ? new Date(dueOn).toLocaleDateString(undefined,
+        { day: 'numeric', month: 'short', year: 'numeric' })
+    : null;
+  const dueSoon = days !== null && days <= 5;
+  const overdue = days !== null && days < 0;
+
   return (
     <div style={card}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 8 }}>
@@ -827,9 +857,36 @@ function ModuleSubCard({ title, sub, onManage }) {
         </span>
       </div>
       <div style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", fontSize: 22, fontWeight: 700, color: '#1a6b3a', marginBottom: 4 }}>
-        ${Number(amount).toFixed(2)}
+        {symbol}{Number(amount).toFixed(2)}
         <span style={{ fontSize: 11, color: '#6b7280', fontFamily: 'Inter', fontWeight: 400 }}>/{cycleLabel}</span>
       </div>
+      {/* The arithmetic, not just the total. An owner who reads
+          "2 shops x $10 per shop / month" never has to write in and ask why
+          the bill changed when they opened a second shop. */}
+      {charge?.explanation && (
+        <div style={{ fontSize: 11.5, color: '#6b7280', marginBottom: 6, lineHeight: 1.45 }}>
+          {charge.explanation}
+        </div>
+      )}
+      {dueText && (
+        <div style={{
+          fontSize: 12, fontWeight: dueSoon ? 700 : 500,
+          color: overdue ? '#b91c1c' : (dueSoon ? '#92400e' : '#374151'),
+          background: overdue ? '#fef2f2' : (dueSoon ? '#fffbea' : 'transparent'),
+          border: `1px solid ${overdue ? '#fecaca' : (dueSoon ? '#fde68a' : 'transparent')}`,
+          borderRadius: 8,
+          padding: (overdue || dueSoon) ? '7px 10px' : '0',
+          marginBottom: 4, lineHeight: 1.45,
+        }}>
+          {overdue
+            ? `Payment was due ${dueText}`
+            : days === 0
+              ? `Next payment due today, ${dueText}`
+              : days === 1
+                ? `Next payment due tomorrow, ${dueText}`
+                : `Next payment ${dueText}${days === null ? '' : ` — ${days} days`}`}
+        </div>
+      )}
       <button style={{ ...btnS(false), marginTop: 8 }} onClick={onManage}>Manage</button>
     </div>
   );

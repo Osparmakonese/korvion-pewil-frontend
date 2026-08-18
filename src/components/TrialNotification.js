@@ -1,6 +1,21 @@
 /**
- * TrialNotification — show a one-time-per-login toast telling the user
- * how many days are left in their free trial.
+ * TrialNotification — a one-time-per-login toast counting down to the next
+ * time money is needed: the end of a free trial, OR the end of a paid
+ * subscription period.
+ *
+ * RENEWALS ADDED 2026-08-18. Subscriptions are paid in advance and renewed by
+ * hand — nothing debits a card automatically — and when a period lapsed the
+ * sweep flipped the row to `past_due` and the middleware locked writes. The
+ * complete warning a PAYING shop got before losing the ability to save
+ * anything was: none. The first they knew was a till that would not take a
+ * sale. This component already had the whole countdown mechanism for trials
+ * and simply skipped `status === 'active'`, so extending it was the smallest
+ * honest fix — and it means one toast, not two competing ones.
+ *
+ * It also now shows the AMOUNT, taken from `next_charge` on the subscription,
+ * which is computed by billing/pricing.py::subscription_charge — the same
+ * function the payment button uses. Every retail tier is billed per shop, so
+ * a second shop changes this figure the moment it is added.
  *
  * Why this exists
  * ---------------
@@ -94,19 +109,33 @@ export default function TrialNotification() {
           const sub = res.data;
           // Remember that this tenant is paying for at least one module, so
           // the tenant-level trial fallback below can't override it.
-          if (sub && sub.status === 'active') hasPaidSub = true;
-          if (!sub || sub.status !== 'trialing') continue;
-          const days = Number(sub.trial_days_remaining ?? 0);
+          if (!sub) continue;
+          if (sub.status === 'active') hasPaidSub = true;
+          // Trials AND paid periods both count down; only the wording differs.
+          if (sub.status !== 'trialing' && sub.status !== 'active') continue;
+          // `days_until_due` is decided server-side (SubscriptionSerializer)
+          // from trial_end or current_period_end as appropriate, so the toast
+          // cannot disagree with the billing page about which date applies.
+          // It is null on a usage-priced row, which has no deadline at all.
+          const raw = sub.days_until_due;
+          if (raw === null || raw === undefined) continue;
+          const days = Number(raw);
+          if (!Number.isFinite(days)) continue;
           // Only interrupt when it's actually close. Anything further out is
           // noise the shop will dismiss and stop reading.
           if (days > REMIND_WITHIN_DAYS) continue;
           const planName = sub.plan_name || sub.plan_display || 'Pewil';
+          const charge = sub.next_charge || null;
           const candidate = {
             module: mod,
+            kind: sub.status === 'trialing' ? 'trial' : 'renewal',
             days_remaining: days,
             expired: days < 0,
             plan_name: planName,
             trial_end: sub.trial_end,
+            due_on: sub.due_on || sub.current_period_end || sub.trial_end,
+            amount: charge ? `${charge.currency_symbol}${charge.amount}` : null,
+            explanation: charge ? charge.explanation : null,
           };
           if (!best || candidate.days_remaining < best.days_remaining) {
             best = candidate;
@@ -134,10 +163,14 @@ export default function TrialNotification() {
             if (days > REMIND_WITHIN_DAYS) return;
             best = {
               module: (tn.modules && tn.modules[0]) || 'pewil',
+              kind: 'trial',
               days_remaining: days,
               expired: days < 0,
               plan_name: tn.plan || 'Trial',
               trial_end: tn.trial_ends_at,
+              due_on: tn.trial_ends_at,
+              amount: null,
+              explanation: null,
             };
           }
         } catch (_) { /* swallow */ }
@@ -154,7 +187,8 @@ export default function TrialNotification() {
 
   if (skip || !trial || dismissed) return null;
 
-  const { days_remaining, expired } = trial;
+  const { days_remaining, expired, amount, explanation } = trial;
+  const isRenewal = trial.kind === 'renewal';
 
   // Once the trial has actually expired, <BillingLockoutGate /> takes over
   // and renders a full-screen lockout. The "trial ended N days ago" toast
@@ -165,13 +199,23 @@ export default function TrialNotification() {
 
   const isUrgent = days_remaining <= 3;
 
+  const subject = isRenewal ? 'Your payment is due' : 'Your free trial ends';
   const message = days_remaining === 0
-    ? 'Your free trial ends today.'
+    ? `${subject} today.`
     : days_remaining === 1
-      ? 'Your free trial ends tomorrow.'
-      : `Your free trial ends in ${days_remaining} days.`;
+      ? `${subject} tomorrow.`
+      : `${subject} in ${days_remaining} days.`;
 
-  const cta = 'Upgrade now';
+  // The amount, and the arithmetic behind it. A shop owner who reads
+  // "$20 — 2 shops x $10 per shop / month" has no reason to write in and ask
+  // why the bill changed when they opened a second shop.
+  const detail = isRenewal
+    ? (amount
+        ? `${amount}${explanation ? ` — ${explanation}` : ''}. Pay before then and nothing is interrupted.`
+        : 'Pay before then and nothing is interrupted.')
+    : 'Pick a plan anytime — Pewil keeps every record you\'ve added so far.';
+
+  const cta = isRenewal ? 'Pay now' : 'Upgrade now';
 
   const palette = isUrgent
     ? { bg: '#fef2f2', border: '#fecaca', accent: '#b91c1c', accentBg: '#b91c1c' }
@@ -212,9 +256,7 @@ export default function TrialNotification() {
         <div style={{
           fontSize: 12, color: '#6b7280', marginTop: 3, lineHeight: 1.4,
         }}>
-          {expired
-            ? 'Saving is paused until you pick a plan. You can still browse your data.'
-            : 'Pick a plan anytime — Pewil keeps every record you\'ve added so far.'}
+          {detail}
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'center' }}>
           {/* The app has ONE authenticated route (/app) with the active page in
