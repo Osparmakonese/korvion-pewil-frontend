@@ -188,7 +188,13 @@ export const createCashierSession = (data) => api.post('/retail/cashier-sessions
 export const closeCashierSession = (id, data) => api.post(`/retail/cashier-sessions/${id}/close/`, data).then(r => r.data);
 
 // ── Sales ──
-export const getSales = () => api.get('/retail/sales/').then(r => r.data);
+// The sales list is BOUNDED server-side (retail/views.py SaleViewSet) — it
+// used to hand back every sale the shop had ever made, which on a real till
+// exceeded the 15s axios timeout and left Sales History blank. Pass
+// { days, limit } or { start, end } to choose the window.
+export const getSales = (params) =>
+  api.get('/retail/sales/', { params: params || undefined }).then(r => r.data);
+export const getSale = (id) => api.get(`/retail/sales/${id}/`).then(r => r.data);
 export const createSale = (data) => api.post('/retail/sales/', data).then(r => r.data);
 export const getDailySummary = () => api.get('/retail/sales/daily_summary/').then(r => r.data);
 export const getReceipt = (id) => api.get(`/retail/sales/${id}/receipt/`).then(r => r.data);

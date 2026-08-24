@@ -1,13 +1,16 @@
+import { useState } from 'react';
 import useIsMobile from '../hooks/useIsMobile';
 import { useQuery } from '@tanstack/react-query';
 import {
   getRetailDashboard,
   getOnboardingStatus,
+  getSale,
 } from '../api/retailApi';
 import { fmt } from '../utils/format';
 import { useAuth } from '../context/AuthContext';
 import AIInsightCard from '../components/AIInsightCard';
 import MobileRetailDashboard from '../components/MobileRetailDashboard';
+import ReceiptDetailModal from '../components/ReceiptDetailModal';
 
 /* ─── Skeleton Loader ─── */
 function Skeleton({ w, h, r, mb }) {
@@ -353,6 +356,30 @@ const S = {
 };
 
 export default function RetailDashboard({ onTabChange }) {
+  // OPENING A RECEIPT FROM THE DASHBOARD (2026-08-24)
+  //
+  // The Recent Transactions rows had no click handler at all — there was no
+  // way to open a receipt from this screen, reported as "you can't even open
+  // the receipt". The activity payload is a summary (no line items), so the
+  // full sale is fetched by id before the receipt is shown.
+  const [receiptSale, setReceiptSale] = useState(null);
+  const [receiptLoadingId, setReceiptLoadingId] = useState(null);
+  const [receiptError, setReceiptError] = useState('');
+  const openReceipt = async (saleId) => {
+    if (!saleId) return;
+    setReceiptError('');
+    setReceiptLoadingId(saleId);
+    try {
+      setReceiptSale(await getSale(saleId));
+    } catch (err) {
+      setReceiptError(
+        err?.response?.data?.detail
+        || 'That receipt could not be opened. It may have been voided.'
+      );
+    } finally {
+      setReceiptLoadingId(null);
+    }
+  };
   const { user } = useAuth() || {};
   const isOwnerOrMgr = user?.role === 'owner' || user?.role === 'manager' || user?.is_staff;
   const { data: onboarding } = useQuery({
@@ -574,7 +601,7 @@ export default function RetailDashboard({ onTabChange }) {
       <div style={S.quickActionsGrid}>
         <div
           style={S.quickAction}
-          onClick={() => window.dispatchEvent(new CustomEvent('pewil:navigate', { detail: { tab: 'pos' } }))}
+          onClick={() => onTabChange && onTabChange('POS')}
           role="button"
           tabIndex={0}
         >
@@ -583,7 +610,7 @@ export default function RetailDashboard({ onTabChange }) {
         </div>
         <div
           style={S.quickAction}
-          onClick={() => window.dispatchEvent(new CustomEvent('pewil:navigate', { detail: { tab: 'purchase-orders' } }))}
+          onClick={() => onTabChange && onTabChange('Suppliers')}
           role="button"
           tabIndex={0}
         >
@@ -592,7 +619,7 @@ export default function RetailDashboard({ onTabChange }) {
         </div>
         <div
           style={S.quickAction}
-          onClick={() => window.dispatchEvent(new CustomEvent('pewil:navigate', { detail: { tab: 'products' } }))}
+          onClick={() => onTabChange && onTabChange('Products')}
           role="button"
           tabIndex={0}
         >
@@ -601,7 +628,7 @@ export default function RetailDashboard({ onTabChange }) {
         </div>
         <div
           style={S.quickAction}
-          onClick={() => window.dispatchEvent(new CustomEvent('pewil:navigate', { detail: { tab: 'customers' } }))}
+          onClick={() => onTabChange && onTabChange('Customers')}
           role="button"
           tabIndex={0}
         >
@@ -740,9 +767,17 @@ export default function RetailDashboard({ onTabChange }) {
           </thead>
           <tbody>
             {recentActivityData.slice(0, 10).map((activity) => (
-              <tr key={activity.id}>
+              <tr
+                key={activity.id}
+                onClick={() => openReceipt(activity.id)}
+                title="Open this receipt"
+                style={{ cursor: 'pointer' }}
+              >
                 <td style={S.td}>
-                  <strong>{activity.receipt || '-'}</strong>
+                  <strong style={{ color: '#1a6b3a' }}>{activity.receipt || '-'}</strong>
+                  {receiptLoadingId === activity.id && (
+                    <span style={{ marginLeft: 8, fontSize: 10, color: '#9ca3af' }}>opening…</span>
+                  )}
                 </td>
                 <td style={S.td}>{activity.items_count || activity.line_count || '—'}</td>
                 <td style={S.td}>
@@ -756,12 +791,38 @@ export default function RetailDashboard({ onTabChange }) {
                       : 'Unknown'}
                   </span>
                 </td>
-                <td style={S.td}>{timeAgo(activity.created_at || activity.time)}</td>
+                <td style={S.td}>
+                  {timeAgo(activity.created_at || activity.time)}
+                  {activity.was_offline && (
+                    <div
+                      style={{ fontSize: 9.5, color: '#c97d1a', marginTop: 2 }}
+                      title={'Rung up at the till while offline, reached us later'}
+                    >
+                      rung offline · synced {timeAgo(activity.synced_at)}
+                    </div>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
         </table></div>
+        {recentActivityData.length === 0 && (
+          <div style={{ padding: '18px 4px', fontSize: 12, color: '#6b7280' }}>
+            No sales recorded yet for this shop. If tills have been selling,
+            check the offline queue on the POS screen — sales wait there until
+            the device reconnects.
+          </div>
+        )}
+        {receiptError && (
+          <div style={{ marginTop: 10, fontSize: 12, color: '#c0392b' }}>{receiptError}</div>
+        )}
       </div>
+
+      <ReceiptDetailModal
+        isOpen={!!receiptSale}
+        onClose={() => setReceiptSale(null)}
+        sale={receiptSale}
+      />
 
       {/* AI Dashboard Summary */}
       <div style={{ marginTop: 16 }}>
