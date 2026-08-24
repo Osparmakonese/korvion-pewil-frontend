@@ -6,11 +6,12 @@
  * only the layout differs. See mobile-mockups/PEWIL_MOBILE_PREVIEW_2026-04-26.html
  * Frame 3 for the visual reference.
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
-import { getRetailDashboard } from '../api/retailApi';
+import { getRetailDashboard, getSale } from '../api/retailApi';
 import { fmt } from '../utils/format';
+import ReceiptDetailModal from './ReceiptDetailModal';
 
 const T = {
   cream:   '#ffffff',
@@ -31,7 +32,42 @@ export default function MobileRetailDashboard() {
     queryKey: ['retail-dashboard'],
     queryFn: getRetailDashboard,
     staleTime: 30000,
+    // WHY THIS POLLS (2026-08-24)
+    //
+    // Reported: the mobile dashboard is slow to update, unlike the desktop.
+    // Cache invalidation after a sale only ever reaches the BROWSER THAT
+    // MADE THE SALE. An owner watching this screen on their own phone,
+    // while a cashier rings up on a till across the shop, gets no signal at
+    // all — it refreshed only when the screen was reopened. A dashboard is
+    // a "what is happening right now" screen, so it has to ask.
+    //
+    // Not while the app is in the background: a phone in someone's pocket
+    // must not spend their airtime all day.
+    refetchInterval: 45000,
+    refetchIntervalInBackground: false,
   });
+
+  // Opening a receipt from the phone. The activity payload is a summary
+  // with no line items, so the full sale is fetched by id first — the same
+  // thing the desktop dashboard does.
+  const [receiptSale, setReceiptSale] = useState(null);
+  const [receiptBusyId, setReceiptBusyId] = useState(null);
+  const [receiptError, setReceiptError] = useState('');
+  const openReceipt = async (saleId) => {
+    if (!saleId) return;
+    setReceiptError('');
+    setReceiptBusyId(saleId);
+    try {
+      setReceiptSale(await getSale(saleId));
+    } catch (err) {
+      setReceiptError(
+        err?.response?.data?.detail
+        || 'That receipt could not be opened. It may have been voided.'
+      );
+    } finally {
+      setReceiptBusyId(null);
+    }
+  };
 
   const username = user?.first_name || user?.username || 'there';
   const greeting = new Date().getHours() < 12
@@ -167,11 +203,21 @@ export default function MobileRetailDashboard() {
             No sales yet today. Open a cashier session to ring up the first one.
           </div>
         ) : recentActivity.slice(0, 6).map((act, idx) => (
-          <div key={act.id || idx} style={{
-            display: 'flex', alignItems: 'center', gap: 12,
-            padding: '12px 14px',
-            borderBottom: idx < Math.min(recentActivity.length, 6) - 1 ? '1px solid #f4ecd8' : 'none',
-          }}>
+          <div
+            key={act.id || idx}
+            onClick={() => openReceipt(act.id)}
+            role="button"
+            tabIndex={0}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              padding: '12px 14px',
+              borderBottom: idx < Math.min(recentActivity.length, 6) - 1 ? '1px solid #f4ecd8' : 'none',
+              cursor: 'pointer',
+              // A finger needs to see that it landed on something.
+              opacity: receiptBusyId === act.id ? 0.55 : 1,
+              WebkitTapHighlightColor: 'rgba(26,107,58,0.10)',
+            }}
+          >
             <div style={{
               width: 36, height: 36, borderRadius: 12,
               background: T.cream2,
@@ -188,11 +234,28 @@ export default function MobileRetailDashboard() {
                 : act.method === 'mixed' ? 'Split'
                 : (act.method || 'cash')}{' '}
                 {act.time && `· ${act.time}`}
+                {receiptBusyId === act.id && ' · opening…'}
               </div>
+              {act.was_offline && (
+                <div style={{ fontSize: 10, color: T.orange, marginTop: 1 }}>
+                  rung offline, synced later
+                </div>
+              )}
             </div>
           </div>
         ))}
+        {receiptError && (
+          <div style={{ padding: '10px 14px', fontSize: 12, color: '#c0392b' }}>
+            {receiptError}
+          </div>
+        )}
       </div>
+
+      <ReceiptDetailModal
+        isOpen={!!receiptSale}
+        onClose={() => setReceiptSale(null)}
+        sale={receiptSale}
+      />
     </div>
   );
 }

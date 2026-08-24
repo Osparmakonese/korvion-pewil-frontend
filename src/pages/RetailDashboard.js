@@ -398,6 +398,12 @@ export default function RetailDashboard({ onTabChange }) {
     queryKey: ['retail-dashboard'],
     queryFn: getRetailDashboard,
     staleTime: 30000,
+    // Invalidating after a sale only reaches the browser that made the
+    // sale. An owner watching this while cashiers ring up on other tills
+    // gets no signal at all, so the screen has to ask. Paused while the
+    // tab is in the background.
+    refetchInterval: 45000,
+    refetchIntervalInBackground: false,
   });
 
   // Mobile branch — phones get the locked Frame 3 layout. Returns AFTER
