@@ -1416,13 +1416,31 @@ export default function TeamManagement() {
                     <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
                       Access rights
                     </label>
+                    {/* An accountant's limits come from the ROLE, not from
+                        these toggles — the server refuses a till and refuses
+                        stock edits whatever is ticked here. Saying so is the
+                        difference between a screen that is honest and one
+                        that lets an owner believe they granted something. */}
+                    {editForm.role === 'accountant' && (
+                      <div style={{ marginBottom: 8, padding: '10px 12px', background: '#F5F3FF', border: '1px solid #ddd6fe', borderRadius: 10, fontSize: 11.5, color: '#5b21b6', lineHeight: 1.5 }}>
+                        An accountant can never open a till or change stock,
+                        prices or products — that is enforced when the record
+                        is saved, not by these boxes. What is left below is
+                        what they may <strong>read</strong>.
+                      </div>
+                    )}
                     <div style={{ border: '1px solid #e3e8e4', borderRadius: 10, overflow: 'hidden' }}>
-                      {PERM_FIELDS.map((f, idx) => (
-                        <label key={f.key} htmlFor={`tm-perm-${f.key}`} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px', borderBottom: idx < PERM_FIELDS.length - 1 ? '1px solid #f0f4f1' : 'none', cursor: 'pointer', background: editForm.perms[f.key] !== false ? '#fff' : '#fafbfa' }}>
+                      {PERM_FIELDS.map((f, idx) => {
+                        // Product/stock rights cannot apply to an accountant.
+                        const blockedByRole = editForm.role === 'accountant'
+                          && (f.key === 'can_add_products' || f.key === 'can_edit_products');
+                        return (
+                        <label key={f.key} htmlFor={`tm-perm-${f.key}`} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px', borderBottom: idx < PERM_FIELDS.length - 1 ? '1px solid #f0f4f1' : 'none', cursor: blockedByRole ? 'not-allowed' : 'pointer', background: blockedByRole ? '#f6f6f7' : (editForm.perms[f.key] !== false ? '#fff' : '#fafbfa'), opacity: blockedByRole ? 0.55 : 1 }}>
                           <input
                             id={`tm-perm-${f.key}`}
                             type="checkbox"
-                            checked={editForm.perms[f.key] !== false}
+                            disabled={blockedByRole}
+                            checked={blockedByRole ? false : editForm.perms[f.key] !== false}
                             onChange={e => setEditForm(prev => ({ ...prev, perms: { ...prev.perms, [f.key]: e.target.checked } }))}
                             style={{ marginTop: 2, width: 15, height: 15, accentColor: '#1a6b3a', cursor: 'pointer' }}
                           />
@@ -1431,7 +1449,8 @@ export default function TeamManagement() {
                             {f.desc ? <span style={{ display: 'block', fontSize: 10.5, fontWeight: 500, color: '#6b7280' }}>{f.desc}</span> : null}
                           </span>
                         </label>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}

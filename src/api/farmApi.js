@@ -89,7 +89,12 @@ export const updateAdminUser = (data) => api.patch('/admin-panel/update_user/', 
 export const resetAdminPassword = (userId, newPassword) => api.post('/admin-panel/reset_password/', { user_id: userId, new_password: newPassword }).then(r => r.data);
 export const deactivateUser = (userId) => api.post('/admin-panel/deactivate_user/', { user_id: userId }).then(r => r.data);
 export const reactivateUser = (userId) => api.post('/admin-panel/reactivate_user/', { user_id: userId }).then(r => r.data);
-export const getAuditTrail = () => api.get('/admin-panel/audit_trail/').then(r => r.data);
+// v=2 asks for the paged, readable shape (results + count + pickers).
+// Without it the endpoint still returns the old flat list, so a backend
+// deploy that lands before the frontend does not blank the screen.
+export const getAuditTrail = (params) =>
+  api.get('/admin-panel/audit_trail/', { params: { v: 2, ...(params || {}) } })
+     .then(r => r.data);
 
 export const deleteWorker = (id) => api.delete(`/workers/${id}/`);
 export const deleteField = (id) => api.delete(`/fields/${id}/`);

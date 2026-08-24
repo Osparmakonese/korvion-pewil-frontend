@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getAdminUsers, createAdminUser, updateAdminUser,
@@ -10,7 +10,7 @@ import PasswordPolicyPanel from '../components/PasswordPolicyPanel';
 import PasswordInput from '../components/PasswordInput';
 
 const TABS = ['Users', 'Permissions', 'Audit Trail', 'Password Policy'];
-const ROLES = ['owner', 'manager', 'worker'];
+const ROLES = ['owner', 'manager', 'worker', 'accountant'];
 // Per-module permission flags. `module: 'any'` is always shown; 'farm' or
 // 'retail' entries are shown only when the tenant subscribes to that module.
 // Retail-only tenants thus never see the farm-specific toggles.
@@ -143,8 +143,18 @@ export default function AdminPanel() {
   const [resetPw, setResetPw] = useState({});       // { [userId]: 'newPass' }
   const [showResetFor, setShowResetFor] = useState(null);
   const [savedFlash, setSavedFlash] = useState(null); // userId for perm flash
+  // Audit filters live here and are sent to the SERVER. They used to filter
+  // the newest 200 rows in the browser, which meant "what did Vero do last
+  // Tuesday" stopped working about a day and a half into a shop's life.
   const [auditFilter, setAuditFilter] = useState('');
+  const [auditAction, setAuditAction] = useState('');
+  const [auditKind, setAuditKind] = useState('');
+  const [auditQuery, setAuditQuery] = useState('');
+  const [auditStart, setAuditStart] = useState('');
+  const [auditEnd, setAuditEnd] = useState('');
+  const [auditPage, setAuditPage] = useState(0);
   const [expandedRow, setExpandedRow] = useState(null);
+  const AUDIT_PAGE = 100;
 
   // django-auditlog stores `changes` as { field: [old, new] } (dict or JSON
   // string). Normalise to a list of {field, old, new} for the details panel.
@@ -167,11 +177,35 @@ export default function AdminPanel() {
     queryFn: getAdminUsers,
     enabled: role === 'owner',
   });
-  const { data: auditData = [] } = useQuery({
-    queryKey: ['auditTrail'],
-    queryFn: getAuditTrail,
+  const auditParams = {
+    user: auditFilter || undefined,
+    action: auditAction || undefined,
+    model: auditKind || undefined,
+    q: auditQuery || undefined,
+    start: auditStart || undefined,
+    end: auditEnd || undefined,
+    limit: AUDIT_PAGE,
+    offset: auditPage * AUDIT_PAGE,
+  };
+  const { data: auditPayload, isFetching: auditLoading } = useQuery({
+    queryKey: ['auditTrail', auditParams],
+    queryFn: () => getAuditTrail(auditParams),
     enabled: role === 'owner' && activeTab === 'Audit Trail',
+    keepPreviousData: true,
   });
+  // Tolerate BOTH shapes: the new paged object, and the old flat list if the
+  // frontend happens to be ahead of the backend.
+  const auditData = Array.isArray(auditPayload)
+    ? auditPayload
+    : (auditPayload?.results || []);
+  const auditCount = Array.isArray(auditPayload)
+    ? auditData.length : (auditPayload?.count ?? auditData.length);
+  const auditHasMore = Array.isArray(auditPayload)
+    ? false : !!auditPayload?.has_more;
+  const auditPeople = Array.isArray(auditPayload)
+    ? [...new Set(auditData.map(a => a.user))].sort()
+    : (auditPayload?.people || []);
+  const auditKinds = Array.isArray(auditPayload) ? [] : (auditPayload?.kinds || []);
 
   const createMut = useMutation({
     mutationFn: createAdminUser,
@@ -198,15 +232,8 @@ export default function AdminPanel() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['adminUsers'] }),
   });
 
-  const filteredAudit = useMemo(() => {
-    if (!auditFilter) return auditData;
-    return auditData.filter(a => a.user === auditFilter);
-  }, [auditData, auditFilter]);
-
-  const auditUsers = useMemo(() => {
-    const set = new Set(auditData.map(a => a.user));
-    return [...set].sort();
-  }, [auditData]);
+  // Filtering is done in SQL now — see auditParams above.
+  const filteredAudit = auditData;
 
   if (role !== 'owner') {
     return <div style={S.locked}><div style={{ fontSize: 32, marginBottom: 8 }}>🔒</div><p>Admin Panel is only available to the tenant owner.</p></div>;
@@ -221,14 +248,6 @@ export default function AdminPanel() {
     const link = document.createElement('a');
     link.href = url; link.download = 'audit_trail.csv'; link.click();
     URL.revokeObjectURL(url);
-  };
-
-  const actionBg = (action) => {
-    const a = (action || '').toLowerCase();
-    if (a.includes('create')) return '#f0fdf4';
-    if (a.includes('delete')) return '#fef2f2';
-    if (a.includes('update')) return '#fffbeb';
-    return 'transparent';
   };
 
   return (
@@ -447,103 +466,176 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* ═══════ TAB 3: Audit Trail ═══════ */}
+      {/* ═══════ TAB 3: Audit Trail ═══════
+          Rebuilt 2026-08-24. It used to print django-auditlog's raw shape —
+          UTC timestamps, model names like "productbranchstock", and change
+          dicts keyed on database columns — and filter the newest 200 rows in
+          the browser. An audit trail nobody can read is not an audit trail.
+          Every row is now a sentence, and the filters run in SQL so they
+          reach the whole history. */}
       {activeTab === 'Audit Trail' && (
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
             <select
-              style={{ ...S.input, width: 200 }}
+              style={{ ...S.input, width: 150 }}
               value={auditFilter}
-              onChange={e => setAuditFilter(e.target.value)}
+              onChange={e => { setAuditFilter(e.target.value); setAuditPage(0); }}
             >
-              <option value="">All users</option>
-              {auditUsers.map(u => <option key={u} value={u}>{u}</option>)}
+              <option value="">Everyone</option>
+              {auditPeople.map(u => <option key={u} value={u}>{u}</option>)}
             </select>
-            <button style={S.btn()} onClick={exportCSV}>📥 Export to CSV</button>
-            <span style={{ fontSize: 11, color: '#9ca3af' }}>{filteredAudit.length} entries</span>
+            <select
+              style={{ ...S.input, width: 130 }}
+              value={auditAction}
+              onChange={e => { setAuditAction(e.target.value); setAuditPage(0); }}
+            >
+              <option value="">Any action</option>
+              <option value="create">Added</option>
+              <option value="update">Changed</option>
+              <option value="delete">Deleted</option>
+            </select>
+            {auditKinds.length > 0 && (
+              <select
+                style={{ ...S.input, width: 160 }}
+                value={auditKind}
+                onChange={e => { setAuditKind(e.target.value); setAuditPage(0); }}
+              >
+                <option value="">Anything</option>
+                {auditKinds.map(k => <option key={k.key} value={k.key}>{k.label}</option>)}
+              </select>
+            )}
+            <input
+              type="date" style={{ ...S.input, width: 145 }} value={auditStart}
+              onChange={e => { setAuditStart(e.target.value); setAuditPage(0); }}
+              title="From"
+            />
+            <input
+              type="date" style={{ ...S.input, width: 145 }} value={auditEnd}
+              onChange={e => { setAuditEnd(e.target.value); setAuditPage(0); }}
+              title="To"
+            />
+            <input
+              type="text" placeholder="Search a product, receipt, person…"
+              style={{ ...S.input, flex: 1, minWidth: 180 }}
+              value={auditQuery}
+              onChange={e => { setAuditQuery(e.target.value); setAuditPage(0); }}
+            />
+            {(auditFilter || auditAction || auditKind || auditQuery || auditStart || auditEnd) && (
+              <button
+                style={{ ...S.btn(), background: '#fff', color: '#6b7280' }}
+                onClick={() => {
+                  setAuditFilter(''); setAuditAction(''); setAuditKind('');
+                  setAuditQuery(''); setAuditStart(''); setAuditEnd(''); setAuditPage(0);
+                }}
+              >Clear</button>
+            )}
+            <button style={S.btn()} onClick={exportCSV}>📥 CSV</button>
+          </div>
+
+          <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 10 }}>
+            {auditLoading ? 'Loading…' : `${auditCount} entr${auditCount === 1 ? 'y' : 'ies'}`}
+            {auditCount > 0 && ` · showing ${auditPage * AUDIT_PAGE + 1}–${auditPage * AUDIT_PAGE + filteredAudit.length}`}
           </div>
 
           <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e3e8e4', overflow: 'hidden' }}>
-            <div style={{ overflowX: 'auto' }}><table style={S.table}>
-              <thead>
-                <tr>
-                  <th style={{ ...S.th, width: 28 }}></th>
-                  <th style={S.th}>Timestamp</th>
-                  <th style={S.th}>User</th>
-                  <th style={S.th}>Action</th>
-                  <th style={S.th}>Model</th>
-                  <th style={S.th}>Record</th>
-                  <th style={S.th}>What Changed</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredAudit.map(a => {
-                  const fields = parseChanges(a.changes);
-                  const open = expandedRow === a.id;
-                  const hasDetails = fields.length > 0;
-                  return (
-                    <React.Fragment key={a.id}>
-                      <tr
-                        style={{ background: actionBg(a.action), cursor: hasDetails ? 'pointer' : 'default' }}
-                        onClick={() => hasDetails && setExpandedRow(open ? null : a.id)}
-                      >
-                        <td style={{ ...S.td, textAlign: 'center', color: '#9ca3af' }}>
-                          {hasDetails ? (
-                            <span style={{ display: 'inline-block', transition: 'transform 0.15s', transform: open ? 'rotate(90deg)' : 'none' }}>▶</span>
-                          ) : ''}
-                        </td>
-                        <td style={S.td}>{a.timestamp}</td>
-                        <td style={{ ...S.td, fontWeight: 600 }}>{a.user}</td>
-                        <td style={S.td}>
-                          <span style={{
-                            fontWeight: 600,
-                            color: (a.action || '').toLowerCase().includes('create') ? '#1a6b3a'
-                              : (a.action || '').toLowerCase().includes('delete') ? '#c0392b' : '#c97d1a',
-                          }}>
-                            {a.action}
+            {filteredAudit.length === 0 && !auditLoading && (
+              <div style={{ padding: 22, fontSize: 12.5, color: '#6b7280' }}>
+                Nothing matches those filters.
+                <div style={{ marginTop: 6, fontSize: 11.5, color: '#9ca3af' }}>
+                  Stock movements do not appear here — they are recorded on the
+                  sale, adjustment or purchase order that moved them, which is
+                  the document you would want to see anyway.
+                </div>
+              </div>
+            )}
+            {filteredAudit.map((a2, idx) => {
+              const fields = a2.fields || parseChanges(a2.changes).map(f => ({
+                field: f.field, label: String(f.field).replace(/_/g, ' '),
+                from: showVal(f.old), to: showVal(f.new), sensitive: false,
+              }));
+              const open = expandedRow === a2.id;
+              const hasDetails = fields.length > 0;
+              const verb = (a2.verb || a2.action || '').toLowerCase();
+              const tone = verb.includes('add') || verb.includes('create') ? '#1a6b3a'
+                : verb.includes('delete') ? '#c0392b' : '#c97d1a';
+              return (
+                <div
+                  key={a2.id}
+                  style={{
+                    borderBottom: idx < filteredAudit.length - 1 ? '1px solid #f1f3f2' : 'none',
+                    background: a2.sensitive ? '#fffdf5' : '#fff',
+                  }}
+                >
+                  <div
+                    onClick={() => hasDetails && setExpandedRow(open ? null : a2.id)}
+                    style={{ display: 'flex', gap: 12, padding: '11px 14px', cursor: hasDetails ? 'pointer' : 'default', alignItems: 'flex-start' }}
+                  >
+                    <div style={{
+                      width: 7, height: 7, borderRadius: '50%', background: tone,
+                      marginTop: 6, flexShrink: 0,
+                    }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12.5, color: '#111827', lineHeight: 1.5 }}>
+                        {a2.summary || `${a2.user} ${a2.action} ${a2.model} ${a2.object}`}
+                        {a2.sensitive && (
+                          <span style={{ marginLeft: 7, fontSize: 8.5, fontWeight: 700, letterSpacing: '0.04em', color: '#92400e', background: '#fef3c7', padding: '2px 6px', borderRadius: 20 }}>
+                            WORTH A LOOK
                           </span>
-                        </td>
-                        <td style={{ ...S.td, textTransform: 'capitalize' }}>{a.model}</td>
-                        <td style={S.td}>{a.object}</td>
-                        <td style={{ ...S.td, fontSize: 10, color: '#6b7280' }}>
-                          {hasDetails ? `${fields.length} field${fields.length === 1 ? '' : 's'} changed` : '—'}
-                        </td>
-                      </tr>
-                      {open && (
-                        <tr>
-                          <td colSpan={7} style={{ padding: 0, borderBottom: '1px solid #f3f4f6', background: '#fafafa' }}>
-                            <div style={{ padding: '10px 16px 12px' }}>
-                              <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
-                                <thead>
-                                  <tr>
-                                    <th style={{ ...S.th, background: 'transparent', width: '28%' }}>Field</th>
-                                    <th style={{ ...S.th, background: 'transparent' }}>From</th>
-                                    <th style={{ ...S.th, background: 'transparent' }}>To</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {fields.map((f) => (
-                                    <tr key={f.field}>
-                                      <td style={{ ...S.td, fontWeight: 600, textTransform: 'capitalize' }}>{f.field.replace(/_/g, ' ')}</td>
-                                      <td style={{ ...S.td, color: '#c0392b' }}>{showVal(f.old)}</td>
-                                      <td style={{ ...S.td, color: '#1a6b3a' }}>{showVal(f.new)}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table></div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-                {filteredAudit.length === 0 && (
-                  <tr><td style={S.td} colSpan={7}>No audit entries found.</td></tr>
-                )}
-              </tbody>
-            </table></div>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 10.5, color: '#9ca3af', marginTop: 3 }}>
+                        {a2.when_local || a2.timestamp}
+                        {a2.who_role ? ` · ${a2.who_role}` : ''}
+                        {hasDetails ? ` · ${fields.length} field${fields.length === 1 ? '' : 's'}` : ''}
+                      </div>
+                    </div>
+                    {hasDetails && (
+                      <span style={{ color: '#9ca3af', fontSize: 11, transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}>▶</span>
+                    )}
+                  </div>
+                  {open && (
+                    <div style={{ padding: '0 14px 12px 33px', background: '#fafbfa' }}>
+                      <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+                        <thead>
+                          <tr>
+                            <th style={{ ...S.th, background: 'transparent', width: '30%' }}>What</th>
+                            <th style={{ ...S.th, background: 'transparent' }}>From</th>
+                            <th style={{ ...S.th, background: 'transparent' }}>To</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {fields.map((f) => (
+                            <tr key={f.field}>
+                              <td style={{ ...S.td, fontWeight: 600, textTransform: 'capitalize' }}>
+                                {f.label || f.field}
+                              </td>
+                              <td style={{ ...S.td, color: '#c0392b' }}>{f.from}</td>
+                              <td style={{ ...S.td, color: '#1a6b3a', fontWeight: f.sensitive ? 700 : 400 }}>{f.to}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table></div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
+
+          {(auditPage > 0 || auditHasMore) && (
+            <div style={{ display: 'flex', gap: 8, marginTop: 12, alignItems: 'center' }}>
+              <button
+                style={{ ...S.btn(), background: '#fff', color: '#1a6b3a', opacity: auditPage === 0 ? 0.4 : 1 }}
+                disabled={auditPage === 0}
+                onClick={() => setAuditPage(p => Math.max(0, p - 1))}
+              >← Newer</button>
+              <button
+                style={{ ...S.btn(), background: '#fff', color: '#1a6b3a', opacity: auditHasMore ? 1 : 0.4 }}
+                disabled={!auditHasMore}
+                onClick={() => setAuditPage(p => p + 1)}
+              >Older →</button>
+            </div>
+          )}
         </div>
       )}
 
