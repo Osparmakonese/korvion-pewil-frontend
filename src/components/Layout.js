@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { subscribe, promptInstall, isStandalone } from '../utils/pwaInstall';
 import { invalidateSaleCaches } from '../utils/queryCache';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import Sidebar, { NAV_ITEMS } from './Sidebar';
+import Sidebar, { NAV_ITEMS, itemVisibleToRole } from './Sidebar';
 import Topbar from './Topbar';
 import Logo from './Logo';
 import { initials, avatarColor } from '../utils/format';
@@ -217,7 +217,9 @@ export default function Layout({
   };
   const navDrawerSections = NAV_ITEMS
     .filter((s) => {
-      if (s.ownerOnly && role !== 'owner') return false;
+      // Mirrors Sidebar.js: an accountant is filtered per item, not per
+      // section, or the sections holding their reports disappear.
+      if (s.ownerOnly && role !== 'owner' && role !== 'accountant') return false;
       if (s.superOnly && !isSuperAdmin) return false;
       // Super-admin-only shell: hide all tenant sections for the platform
       // admin account (mirrors Sidebar.js, 2026-07-02).
@@ -232,7 +234,7 @@ export default function Layout({
     .map((s) => ({
       label: s.section,
       items: s.items.filter((it) =>
-        (!it.ownerOnly || role === 'owner' || (it.managerOk && role === 'manager')) && meetsShowWhen(it.showWhen) && hasFeature(it.feature)
+        itemVisibleToRole(it, role) && meetsShowWhen(it.showWhen) && hasFeature(it.feature)
       ),
     }))
     .filter((s) => s.items.length > 0);
@@ -462,7 +464,7 @@ export default function Layout({
                 Single-module rule: DRAWER_SECTIONS already filtered by module. */}
             {DRAWER_SECTIONS.map((section, sIdx) => {
               const visibleItems = section.items.filter(t =>
-                (!t.ownerOnly || role === 'owner') && hasFeature(t.feature)
+                itemVisibleToRole(t, role) && hasFeature(t.feature)
               );
               if (visibleItems.length === 0) return null;
               return (

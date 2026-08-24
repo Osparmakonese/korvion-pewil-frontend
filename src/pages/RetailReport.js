@@ -186,8 +186,11 @@ export default function RetailReport() {
 
   const handleApply = () => { setAppliedStart(startDate); setAppliedEnd(endDate); };
 
-  /* Owner-only gate */
-  if (role !== 'owner') {
+  /* Owner + accountant. The endpoint behind this is IsAuthenticated +
+     HasRetailModule and always was, so this is a nav gate, not a security
+     boundary — the security boundary is the shop scoping in
+     retail/branch_access.py, which applies to everyone including here. */
+  if (role !== 'owner' && role !== 'accountant') {
     return (
       <div style={S.locked}>
         <div style={{ fontSize: 40, marginBottom: 12 }}>{'\u{1F512}'}</div>

@@ -11,7 +11,8 @@ export default function ProfitMargins({ onTabChange }) {
   // Managers see this screen too (see managerOk in Sidebar/Layout). The
   // backend never restricted it — the endpoint is IsAuthenticated +
   // HasRetailModule, so this was only ever a nav gate.
-  const isOwner = user?.role === 'owner' || user?.role === 'manager';
+  const isOwner = user?.role === 'owner' || user?.role === 'manager'
+    || user?.role === 'accountant';
   const isMobile = useIsMobile();
 
   const { data: profitData, isLoading } = useQuery({

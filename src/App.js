@@ -7,6 +7,7 @@ import { useAuth } from './context/AuthContext';
 import { getDashboard, getLowStock } from './api/farmApi';
 import { getRetailDashboard, getLowStockProducts } from './api/retailApi';
 import Layout from './components/Layout';
+import { itemVisibleToRole } from './components/Sidebar';
 import CookieConsent from './components/CookieConsent';
 import OnboardingWalkthrough from './components/OnboardingWalkthrough';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
@@ -518,7 +519,18 @@ function FarmApp() {
     : (activeModule === 'retail' ? 'Retail' : 'Dashboard');
   const [searchParams, setSearchParams] = useSearchParams();
   const urlTab = searchParams.get('t');
-  const activeTab = (urlTab && PAGES[urlTab]) ? urlTab : defaultTab;
+  // The sidebar already hides what an accountant may not open, but a
+  // bookmark, a remembered ?t= or a shared link goes straight round it —
+  // and landing on a half-working till is a worse answer than being told
+  // plainly. Same whitelist the nav uses, so the two cannot disagree.
+  const roleAllowsTab = (tab) => (
+    user?.role !== 'accountant'
+    || itemVisibleToRole({ key: tab }, 'accountant')
+  );
+  const requestedTab = (urlTab && PAGES[urlTab]) ? urlTab : defaultTab;
+  const activeTab = roleAllowsTab(requestedTab)
+    ? requestedTab
+    : (activeModule === 'retail' ? 'Retail' : 'Dashboard');
   const setActiveTab = (tab) => {
     if (!PAGES[tab] || tab === activeTab) return;
     setSearchParams({ t: tab }); // pushes a history entry (Back returns here)

@@ -85,7 +85,9 @@ export default function Report() {
   const { data: broilerExpenses = [] } = useQuery({ queryKey: ['broilerExpenses'], queryFn: () => getBroilerExpenses() });
   const { data: layerExpenses = [] } = useQuery({ queryKey: ['layerExpenses'], queryFn: () => getLayerExpenses() });
 
-  if (role !== 'owner') {
+  // The accountant reads the books; that is the role. Locking them out of
+  // the report they exist to read would make the role decorative.
+  if (role !== 'owner' && role !== 'accountant') {
     return <div style={S.locked}><div style={{ fontSize: 32, marginBottom: 8 }}>🔒</div><p>Reports are only available to the farm owner.</p></div>;
   }
   if (dLoad || fLoad) return <p style={{ color: '#9ca3af', padding: 40, textAlign: 'center' }}>Loading report...</p>;

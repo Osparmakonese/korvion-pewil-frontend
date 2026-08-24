@@ -40,7 +40,10 @@ export default function JournalEntries({ onTabChange }) {
 
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const canCreate = user?.role === 'owner' || user?.role === 'manager';
+  // Posting journal entries IS the accountant's job — the one place the
+  // role writes rather than reads.
+  const canCreate = user?.role === 'owner' || user?.role === 'manager'
+    || user?.role === 'accountant';
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({
     entry_date: new Date().toISOString().split('T')[0],

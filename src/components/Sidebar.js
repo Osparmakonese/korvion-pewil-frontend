@@ -139,6 +139,40 @@ const S = {
   },
 };
 
+// ── What an accountant is allowed to open ────────────────────────────
+// A WHITELIST, deliberately, not a list of things to hide. Pewil grows a
+// new page most months; with a blocklist every one of them would be
+// visible to the accountant by default and somebody would have to
+// remember. With this, a new page is invisible to them until it is put
+// here on purpose — which is the right way round for the one role defined
+// by what it cannot reach.
+//
+// Everything here is read-only except Journal Entries, which is the
+// accountant's actual work. No till, no products, no stock, no staff, no
+// settings, no billing.
+const ACCOUNTANT_TABS = new Set([
+  'Retail',                 // dashboard
+  'Customers',
+  'Sales History',
+  'Cashier Sessions',
+  'Returns',
+  'End of Day',
+  'Retail Report',
+  'Financial Reports',
+  'Profit Margins',
+  'Profit Analysis',
+  'Journal Entries',
+  'Recurring Invoices',
+  'Cashier Performance',
+  'Report',                 // farm P&L
+]);
+
+export function itemVisibleToRole(item, role) {
+  if (role === 'accountant') return ACCOUNTANT_TABS.has(item.key);
+  return (!item.ownerOnly || role === 'owner'
+          || (item.managerOk && role === 'manager'));
+}
+
 export const NAV_ITEMS = [
   { section: 'MAIN', collapsible: false, items: [
     { key: 'Dashboard', emoji: '\u{1F4CA}', label: 'Dashboard' },
@@ -169,7 +203,8 @@ export const NAV_ITEMS = [
     { key: 'Hours & Pay', emoji: '\u23F1', label: 'Hours & Pay' },
   ]},
   // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-  // RETAIL \u2014 sidebar redesign 2026-05-19. Eleven sections collapsed
+
+// RETAIL \u2014 sidebar redesign 2026-05-19. Eleven sections collapsed
   // to six themed groups so a tenant doesn't see a wall of nav on
   // first load. Section keys: MAIN, DAILY, STOCK, OPERATIONS,
   // MONEY & INSIGHTS, LOSS PREVENTION, SETUP. Everything except DAILY
@@ -440,7 +475,10 @@ export default function Sidebar({ activeTab, onTabChange, user, onLogout, lowSto
       {/* Navigation */}
       <nav style={S.nav}>
         {NAV_ITEMS.map((section, idx) => {
-          if (section.ownerOnly && role !== 'owner') return null;
+          // An accountant is filtered per ITEM, not per section — the
+          // sections they need (MONEY & INSIGHTS) are marked ownerOnly, and
+          // dropping the whole section would leave them a blank sidebar.
+          if (section.ownerOnly && role !== 'owner' && role !== 'accountant') return null;
           if (section.superOnly && !isSuperAdmin) return null;
           // SUPER-ADMIN-ONLY SHELL (2026-07-02): the platform admin account
           // sees ONLY the super-admin surface — no tenant (farm/retail)
@@ -451,7 +489,7 @@ export default function Sidebar({ activeTab, onTabChange, user, onLogout, lowSto
           // Filter items by ownerOnly + item-level showWhen so the
           // section knows its real visible count for the badge.
           const visibleItems = section.items.filter(item =>
-            (!item.ownerOnly || role === 'owner' || (item.managerOk && role === 'manager'))
+            itemVisibleToRole(item, role)
             && meetsShowWhen(item.showWhen)
             && hasFeature(item.feature)
           );

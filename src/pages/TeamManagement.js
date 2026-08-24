@@ -46,17 +46,19 @@ const roleColors = {
   'owner': '#1a6b3a',
   'manager': '#2563eb',
   'worker': '#9ca3af',
+  'accountant': '#7c3aed',
 };
 
 const roleBadgeBg = {
   'owner': '#e8f5ee',
   'manager': '#EFF6FF',
   'worker': '#F3F4F6',
+  'accountant': '#F5F3FF',
 };
 
 // Managers list above cashiers inside a shop — that is the order an owner
 // reads a branch roster in.
-const roleRank = { owner: 0, manager: 1, worker: 2 };
+const roleRank = { owner: 0, manager: 1, accountant: 2, worker: 3 };
 
 function getUsers() {
   return api.get('/core/tenants/users/').then(res => res.data);
@@ -104,13 +106,19 @@ export default function TeamManagement() {
     if (role === 'worker') return isRetail ? 'Cashier' : 'Worker';
     if (role === 'manager') return 'Manager';
     if (role === 'owner') return 'Owner';
+    if (role === 'accountant') return 'Accountant';
     return role;
   };
   // ── Access rights ────────────────────────────────────────────────
   // These map 1:1 to the backend's permission booleans on the user row.
-  // There are deliberately NO new roles here: a "cashier", "accountant"
-  // or "view-only member" is role=worker plus a toggle combination —
-  // the DB roles stay owner / manager / worker (see 4 Aug repair notes).
+  //
+  // 2026-08-24: "accountant" used to be a LIE told here — a preset that set
+  // role=worker with the edit toggles off. It looked like a role in the list
+  // and was not one: anybody could flip can_edit_products back on and be a
+  // cashier holding chain-wide sight of the books. Accountant is now a real
+  // role (farm.models.User.ROLE_ACCOUNTANT) that cannot hold a till at all,
+  // refused at the write and not merely hidden in the menu. "Cashier" is
+  // still a LABEL on role=worker, which is honest — it is the same job.
   const PERM_FIELDS = isRetail
     ? [
         { key: 'can_add_products', label: 'Add products', desc: 'Create new catalogue items' },
@@ -139,13 +147,29 @@ export default function TeamManagement() {
       perms: { can_add_products: true, can_edit_products: true, can_view_reports: false, can_view_journal: false } },
     { name: 'Shop manager', role: 'manager',
       perms: { can_add_products: true, can_edit_products: true, can_view_reports: true, can_view_journal: true } },
-    { name: 'View only — accountant', role: 'worker',
+    { name: 'Accountant — books only', role: 'accountant',
       perms: { can_add_products: false, can_edit_products: false, can_view_reports: true, can_view_journal: true } },
+    { name: 'View only', role: 'worker',
+      perms: { can_add_products: false, can_edit_products: false, can_view_reports: true, can_view_journal: false } },
   ] : [];
+  // "Avondale +2" — a manager over several shops must read as such at a
+  // glance, or the owner has no way of knowing who covers what.
+  const extraShopCount = (u) => (
+    Array.isArray(u.extra_branches) ? u.extra_branches.length : 0
+  );
+  const shopsSentence = (u) => {
+    const home = branches.find(b => String(b.id) === String(u.branch))?.name
+      || u.branch_name || '';
+    const names = Array.isArray(u.extra_branch_names) ? u.extra_branch_names : [];
+    if (!names.length) return home;
+    return [home, ...names].join(', ');
+  };
   // Human summary of what a person can actually do, for the team list.
   const accessSummary = (u) => {
     if (u.role === 'owner') return 'Everything';
     if (!isRetail) return roleLabel(u.role);
+    // An accountant is defined by what they cannot do, so say it.
+    if (u.role === 'accountant') return 'Books & reports · no till';
     const canSell = u.role === 'worker' || u.role === 'manager';
     const edits = (u.can_add_products !== false) || (u.can_edit_products !== false);
     const views = (u.can_view_reports !== false) || (u.can_view_journal !== false);
@@ -173,7 +197,7 @@ export default function TeamManagement() {
   const [inviteStatus, setInviteStatus] = useState(null); // null | 'loading' | 'success' | 'error'
   const [inviteMessage, setInviteMessage] = useState('');
   const [editUser, setEditUser] = useState(null);
-  const [editForm, setEditForm] = useState({ first_name: '', last_name: '', role: 'worker', branch: '', can_view_all_branches: false, perms: {} });
+  const [editForm, setEditForm] = useState({ first_name: '', last_name: '', role: 'worker', branch: '', can_view_all_branches: false, extra_branches: [], perms: {} });
   const [editStatus, setEditStatus] = useState(null);
   const [editMessage, setEditMessage] = useState('');
   // Inline (in-card) saves — shop picker and the all-shops toggle. Kept
@@ -274,9 +298,14 @@ export default function TeamManagement() {
     // success. So it is carried out of the mutation and shown, and the modal
     // stays open on the one fact the owner has to act on.
     mutationFn: async (payload) => {
-      const { branch, ...invite } = payload;
-      const created = await inviteUser(invite);
-      if (branch && created?.id) {
+      // The shop now goes in the invite itself — the endpoint takes it
+      // (core.serializers.InviteUserSerializer) so the account and its shop
+      // are one transaction. The PATCH below is kept as a belt-and-braces
+      // re-assert, which is harmless when the invite already did it and is
+      // what saves this screen if the frontend deploys ahead of the backend.
+      const { branch } = payload;
+      const created = await inviteUser(payload);
+      if (branch && created?.id && String(created.branch || '') !== String(branch)) {
         try {
           await updateUser(created.id, { branch });
         } catch (err) {
@@ -388,6 +417,8 @@ export default function TeamManagement() {
       role: u.role || 'worker',
       branch: u.branch ? String(u.branch) : '',
       can_view_all_branches: u.can_view_all_branches === true,
+      extra_branches: Array.isArray(u.extra_branches)
+        ? u.extra_branches.map(String) : [],
       perms: permsFromUser(u),
     });
     setEditStatus(null);
@@ -403,6 +434,12 @@ export default function TeamManagement() {
       data.role = editForm.role;
       data.branch = editForm.branch === '' ? null : editForm.branch;
       data.can_view_all_branches = editForm.can_view_all_branches === true;
+      // Only a manager with a home shop can cover others. Sending [] for
+      // anyone else is what CLEARS the list when they are demoted or
+      // unpinned — leaving it out would strand shops on a cashier.
+      data.extra_branches = (editForm.role === 'manager' && editForm.branch !== '')
+        ? editForm.extra_branches.map(Number)
+        : [];
     }
     updateUserMut.mutate({ id: editUser.id, data });
   };
@@ -506,6 +543,11 @@ export default function TeamManagement() {
             </div>
             <div style={{ fontSize: 10.5, color: '#6b7280', wordBreak: 'break-all' }}>{u.email || u.username}</div>
             <div style={{ fontSize: 10.5, color: '#68766c', marginTop: 3 }}>Can do: {accessSummary(u)}</div>
+            {extraShopCount(u) > 0 && (
+              <div style={{ fontSize: 10.5, color: '#7c3aed', marginTop: 2 }}>
+                Runs {extraShopCount(u) + 1} shops: {shopsSentence(u)}
+              </div>
+            )}
           </div>
           {u.role !== 'owner' && (
             <button
@@ -661,6 +703,14 @@ export default function TeamManagement() {
                 {u.role === 'owner' || !u.branch
                   ? <span style={{ color: '#68766c' }}>All shops</span>
                   : (branches.find(b => String(b.id) === String(u.branch))?.name || u.branch_name || '—')}
+                {extraShopCount(u) > 0 && u.branch && (
+                  <span
+                    title={shopsSentence(u)}
+                    style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, color: '#7c3aed', background: '#F5F3FF', padding: '2px 6px', borderRadius: 999 }}
+                  >
+                    +{extraShopCount(u)} MORE
+                  </span>
+                )}
                 {u.can_view_all_branches === true && u.branch && (
                   <span title="Can view all shops" style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, color: '#1a6b3a', background: '#e8f5ee', padding: '2px 6px', borderRadius: 999 }}>ALL-SHOPS VIEW</span>
                 )}
@@ -1089,16 +1139,22 @@ export default function TeamManagement() {
                   >
                     <option value="worker">{roleLabel('worker')}</option>
                     <option value="manager">Manager</option>
+                    <option value="accountant">Accountant</option>
                   </select>
                   <div style={{ fontSize: 9, color: '#9ca3af', marginTop: 4 }}>
-                    {roleLabel('worker')}: Tills &amp; day-to-day work · Manager: Team management
+                    {formData.role === 'accountant'
+                      ? 'Reads the books and reports across the business. Cannot open a till, touch stock or manage staff.'
+                      : `${roleLabel('worker')}: Tills & day-to-day work · Manager: Team management`}
                   </div>
                 </div>
 
-                {/* Which shop the new person works at. Only shown once there is
-                    more than one shop; sent as a follow-up PATCH because the
-                    invite endpoint itself has no shop field. */}
-                {canAssign && (
+                {/* Which shop the new person works at. Only shown once there
+                    is more than one shop. Sent in the invite itself since
+                    2026-08-24 — it used to be a second PATCH, which could
+                    leave an account created and UNPINNED, i.e. able to see
+                    every shop, reported as success. An accountant is not
+                    asked: reading the books is a whole-business job. */}
+                {canAssign && formData.role !== 'accountant' && (
                   <div style={{ marginBottom: 20 }}>
                     <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>
                       Works at
@@ -1125,7 +1181,7 @@ export default function TeamManagement() {
                     </select>
                     <div style={{ fontSize: 9, color: '#9ca3af', marginTop: 4 }}>
                       {formData.branch
-                        ? 'Sees only this shop, and can only open a till here.'
+                        ? 'Sees only this shop, and can only open a till here. If they run more than one shop, add the others after inviting them.'
                         : 'Sees every shop. Right for owners and office staff.'}
                     </div>
                   </div>
@@ -1222,7 +1278,15 @@ export default function TeamManagement() {
                     <select value={editForm.role} onChange={e => setEditForm({ ...editForm, role: e.target.value })} style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 8, fontSize: 14, background: '#fff', boxSizing: 'border-box' }}>
                       <option value="manager">Manager</option>
                       <option value="worker">{roleLabel('worker')}</option>
+                      <option value="accountant">Accountant</option>
                     </select>
+                    {editForm.role === 'accountant' && (
+                      <div style={{ fontSize: 11, color: '#6b7280', marginTop: 5, lineHeight: 1.45 }}>
+                        Reads sales, reports and the accounting journal for the
+                        whole business. Cannot open a till, change stock or
+                        prices, or manage staff.
+                      </div>
+                    )}
                   </div>
                 )}
                 {/* Which shop this person works at. Only worth showing once
@@ -1250,6 +1314,54 @@ export default function TeamManagement() {
                     </div>
                   </div>
                 )}
+                {/* The OTHER shops a manager also runs. Only for a manager
+                    who already has a home shop: "also runs Borrowdale" means
+                    nothing for somebody who is of no shop — they already see
+                    the whole business. Hidden entirely once "can view all
+                    shops" is on, because then the list changes nothing. */}
+                {user?.role === 'owner' && isRetail && branches.length > 1
+                  && editForm.role === 'manager' && editForm.branch !== ''
+                  && editForm.can_view_all_branches !== true && (
+                  <div style={{ marginBottom: 14 }}>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
+                      Also runs these shops
+                    </label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 10, background: '#fff' }}>
+                      {branches.filter(b => String(b.id) !== String(editForm.branch)).length === 0 && (
+                        <div style={{ fontSize: 11.5, color: '#9ca3af' }}>
+                          No other shops yet.
+                        </div>
+                      )}
+                      {branches
+                        .filter(b => String(b.id) !== String(editForm.branch))
+                        .map(b => {
+                          const on = editForm.extra_branches.includes(String(b.id));
+                          return (
+                            <label key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13, color: '#374151', cursor: 'pointer' }}>
+                              <input
+                                type="checkbox"
+                                checked={on}
+                                onChange={e => setEditForm({
+                                  ...editForm,
+                                  extra_branches: e.target.checked
+                                    ? [...editForm.extra_branches, String(b.id)]
+                                    : editForm.extra_branches.filter(x => x !== String(b.id)),
+                                })}
+                                style={{ width: 16, height: 16, accentColor: '#1a6b3a', cursor: 'pointer' }}
+                              />
+                              {b.name}
+                            </label>
+                          );
+                        })}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#6b7280', marginTop: 5, lineHeight: 1.45 }}>
+                      {editForm.extra_branches.length > 0
+                        ? `Sees and manages ${editForm.extra_branches.length + 1} shops, and no others. Sales they ring up still land at their home shop.`
+                        : 'Leave empty for a manager who runs one shop.'}
+                    </div>
+                  </div>
+                )}
+
                 {/* All-shops viewing right — only meaningful for someone
                     pinned to a shop. Lets the owner pin a manager to their
                     branch and still allow chain-wide figures. */}
