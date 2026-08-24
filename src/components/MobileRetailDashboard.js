@@ -26,6 +26,27 @@ const T = {
   orange2: '#e09a2b',
 };
 
+// The time a sale happened, in the PHONE'S OWN timezone.
+//
+// The payload carries two things: `created_at`, a full ISO timestamp with an
+// offset, and `time`, a bare "HH:MM" the server formatted. Only the first
+// can be trusted. Django stores UTC, and a bare strftime on the server
+// printed UTC — so the phone showed every sale two hours behind Harare while
+// the desktop, which formats the ISO value in the browser, was right
+// (reported 2026-08-24). The server side is fixed too, but formatting here
+// means this screen is correct for a shop in any timezone, and stays correct
+// if that string is ever wrong again.
+function saleClock(act) {
+  const iso = act && (act.created_at || act.sold_at);
+  if (iso) {
+    const d = new Date(iso);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+  }
+  return act && act.time ? act.time : '';
+}
+
 export default function MobileRetailDashboard() {
   const { user } = useAuth() || {};
   const { data: dashboard, isLoading, error } = useQuery({
@@ -233,7 +254,7 @@ export default function MobileRetailDashboard() {
                 {act.method === 'mobile_money' ? 'EcoCash'
                 : act.method === 'mixed' ? 'Split'
                 : (act.method || 'cash')}{' '}
-                {act.time && `· ${act.time}`}
+                {saleClock(act) && `· ${saleClock(act)}`}
                 {receiptBusyId === act.id && ' · opening…'}
               </div>
               {act.was_offline && (
