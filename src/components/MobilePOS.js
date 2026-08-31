@@ -311,7 +311,7 @@ function Totals({ t = M, subtotal, discountAmount, taxAmount, grandTotal }) {
     <div style={{ padding: '10px 0', borderTop: `1px dashed ${t.line}` }}>
       <div style={row}><span>Subtotal</span><span>{money(subtotal)}</span></div>
       {discountAmount > 0 && <div style={row}><span>Discount</span><span>− {money(discountAmount)}</span></div>}
-      <div style={row}><span>Tax</span><span>{money(taxAmount)}</span></div>
+      <div style={row}><span>VAT incl.</span><span>{money(taxAmount)}</span></div>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 19, fontWeight: 800, marginTop: 6, paddingTop: 8, borderTop: `1px dashed ${t.line}`, color: t.ink }}>
         <span>Total</span><span>{money(grandTotal)}</span>
       </div>

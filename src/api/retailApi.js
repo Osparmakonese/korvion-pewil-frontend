@@ -382,6 +382,10 @@ export const getProfitMargins = () => api.get('/retail/analytics/profit_margins/
 
 // ── POS Settings (singleton per tenant) ──
 export const getPOSSettings = () => api.get('/retail/pos-settings/').then(r => r.data);
+// Tenant-wide retail settings (vat_rate lives here). The till reads the
+// SERVER's VAT rate so every device charges the same books, whether or not
+// anyone ever opened the Settings page on it (2026-08-31).
+export const getRetailTenantSettings = () => api.get('/retail/tenant-settings/').then(r => r.data);
 export const updatePOSSettings = (data) => api.put('/retail/pos-settings/', data).then(r => r.data);
 
 // ── Cashier session advanced controls (Batch 5/6) ──

@@ -6,6 +6,9 @@ import {
   getCategories,
   barcodeLookup,
   getOpenCashierSessions,
+  getRetailTenantSettings,
+  createQuotation,
+  setQuotationStatus,
   getPOSSettings,
   linkPaymentToSale,
   getCreditAccounts,
@@ -405,7 +408,7 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
               borderBottom: '1px solid #e5e7eb',
             }}
           >
-            <span style={{ color: '#6b7280' }}>Tax:</span>
+            <span style={{ color: '#6b7280' }}>VAT (included):</span>
             <strong>{fmt(receipt.tax, 'zwd')}</strong>
           </div>
 
@@ -1219,7 +1222,10 @@ export default function POS() {
   const [barcode, setBarcode] = useState('');
   const [cart, setCart] = useState([]);
   const [discount, setDiscount] = useState('');
-  const [tax, setTax] = useState('');
+  // (The manual per-sale tax field was removed 5 Aug; the VAT figure is now
+  // COMPUTED — see taxAmount below. Zimbabwe shelf prices are VAT-inclusive,
+  // so VAT is backed OUT of the total for the receipt and the books, never
+  // added on top of it.)
   const [paymentMethod, setPaymentMethod] = useState('cash');
   // On-account tender: the credit account the sale is charged to.
   const [accountId, setAccountId] = useState('');
@@ -1261,10 +1267,63 @@ export default function POS() {
         return { ...cur, ...confirmed, _offline_pending: false };
       });
       setLastReceiptId((cur) => cur || confirmed.id || null);
+      // A sale rung from a loaded quote: the server has confirmed it, so
+      // mark that quote converted and link the real sale. The pending map
+      // survives reloads, so a sale that syncs tomorrow still closes its
+      // quote the next time the till hears the event.
+      try {
+        const map = JSON.parse(localStorage.getItem('pewil_quote_convert') || '{}');
+        const quoteId = map[crn];
+        if (quoteId && confirmed.id) {
+          setQuotationStatus(quoteId, { status: 'converted', sale: confirmed.id })
+            .catch(() => {});
+          delete map[crn];
+          localStorage.setItem('pewil_quote_convert', JSON.stringify(map));
+        }
+      } catch (_) {}
     };
     window.addEventListener('pewil:sale-synced', onSynced);
     return () => window.removeEventListener('pewil:sale-synced', onSynced);
   }, []);
+
+  // ── Quote → till (2026-08-31) ─────────────────────────────────────────
+  // The Quotations page's "To till" button parks the accepted quote in
+  // localStorage and opens the POS; we pick it up here, fill the cart at
+  // the QUOTED prices, and remember which quote this basket belongs to so
+  // the finished sale converts it automatically.
+  const [loadedQuote, setLoadedQuote] = useState(null);
+  useEffect(() => {
+    if (!products.length) return;
+    let pending = null;
+    try { pending = JSON.parse(localStorage.getItem('pewil_pending_quote') || 'null'); } catch (_) {}
+    if (!pending || !Array.isArray(pending.items_data)) return;
+    localStorage.removeItem('pewil_pending_quote');
+    const missing = [];
+    const cartLines = [];
+    for (const it of pending.items_data) {
+      const prod = products.find((x) => x.id === Number(it.product));
+      if (!prod) { missing.push(it.name || `#${it.product}`); continue; }
+      cartLines.push({
+        product_id: prod.id,
+        name: prod.name,
+        unit_price: Number(it.unit_price) || 0,   // the QUOTED price, deliberately
+        quantity: Number(it.qty) || 1,
+        product: prod,
+      });
+    }
+    if (!cartLines.length) {
+      toast({ message: 'None of the quoted products exist in the catalogue any more.', kind: 'error' });
+      return;
+    }
+    setCart(cartLines);
+    setLoadedQuote({ id: pending.id, quote_number: pending.quote_number, customer_name: pending.customer_name });
+    toast({
+      message: `Quote ${pending.quote_number} loaded at quoted prices for ${pending.customer_name}.`
+        + (missing.length ? ` Skipped (no longer in catalogue): ${missing.join(', ')}.` : ''),
+      kind: missing.length ? 'error' : 'success',
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products.length]);
   const [focusMode, setFocusMode] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -1489,6 +1548,13 @@ export default function POS() {
     queryKey: ['pos-settings'],
     queryFn: getPOSSettings,
     staleTime: 60000,
+  });
+  // Tenant-wide settings — the VAT rate the whole business runs at.
+  const { data: tenantSettings } = useQuery({
+    queryKey: ['retail-tenant-settings'],
+    queryFn: getRetailTenantSettings,
+    staleTime: 300000,
+    retry: 1,
   });
   const settings = {
     theme: 'light',
@@ -1802,14 +1868,45 @@ export default function POS() {
 
   const subtotal = cart.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
   const discountAmount = parseFloat(discount) || 0;
-  const taxAmount = parseFloat(tax) || 0;
-  const grandTotal = subtotal - discountAmount + taxAmount;
+  // ── VAT, the Zimbabwe way (2026-08-31) ────────────────────────────────
+  // Shelf prices are VAT-INCLUSIVE, so the customer pays the shelf price
+  // and VAT is the 15/115 slice already inside it — it is never added on
+  // top. The 5-Aug change removed the hand-typed tax box and promised
+  // "applied automatically", but nothing was ever computed: every sale
+  // stored tax = 0, receipts printed with no VAT line, and the X/Z and
+  // EOD reports said the shop collected no VAT at all — while the ZIMRA
+  // fiscal service (which does its own inclusive maths) said otherwise.
+  // Rate comes from Settings (vat_rate; 0 for non-VAT-registered shops,
+  // which keeps their receipts plain). Exempt lines contribute nothing;
+  // a manual discount reduces the VAT-able base pro-rata.
+  const vatRatePct = (() => {
+    // Server first (per-tenant truth on every till), the Settings page's
+    // localStorage mirror as offline fallback. NO hard-coded 15: a shop
+    // that is not VAT-registered runs at vat_rate 0 and must never have
+    // VAT invented onto its receipts by a default.
+    const server = parseFloat(tenantSettings?.vat_rate);
+    if (Number.isFinite(server) && server >= 0) return server;
+    const mirrored = parseFloat(localStorage.getItem('vat_rate'));
+    return Number.isFinite(mirrored) && mirrored >= 0 ? mirrored : 0;
+  })();
+  const vatableBase = cart.reduce((sum, item) => {
+    const p = item.product || products.find((x) => x.id === item.product_id);
+    return sum + ((p && p.is_vat_exempt) ? 0 : item.unit_price * item.quantity);
+  }, 0);
+  const taxAmount = (() => {
+    if (!(vatRatePct > 0) || vatableBase <= 0) return 0;
+    const discounted = subtotal > 0
+      ? vatableBase * (1 - Math.min(1, discountAmount / subtotal))
+      : vatableBase;
+    return Math.round((discounted * vatRatePct / (100 + vatRatePct)) * 100) / 100;
+  })();
+  const grandTotal = subtotal - discountAmount;
   const change = (parseFloat(amountTendered) || 0) - grandTotal;
 
   const resetCart = () => {
     setCart([]);
+    setLoadedQuote(null);
     setDiscount('');
-    setTax('');
     setPaymentMethod('cash');
     setAccountId('');
     setAmountTendered('');
@@ -1890,6 +1987,39 @@ export default function POS() {
   };
 
   // Suspend / resume park-sale (supermarket convention: pause for a forgotten item).
+  // ── Save the basket as a quotation (2026-08-31) ──────────────────────
+  // For the customer who says "give me a quote" mid-ring: the cart becomes
+  // a QT-numbered quotation at today's till prices, the cart clears, and
+  // the Quotations page takes it from there (send, accept, load back into
+  // the till). Nothing touches stock or fiscal.
+  const handleSaveAsQuote = async () => {
+    if (cart.length === 0) { toast({ message: 'Cart is empty — nothing to quote.', kind: 'error' }); return; }
+    if (offline) { toast({ message: 'Quotes need the internet to save. Reconnect and try again.', kind: 'error' }); return; }
+    const customer = window.prompt('Quote for (customer name):', loadedQuote?.customer_name || loyaltyMember?.customer_name || '');
+    if (customer == null || !customer.trim()) return;
+    const phone = window.prompt('Customer phone (optional, for WhatsApp):', loyaltyMember?.customer_phone || '') || '';
+    try {
+      const validUntil = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
+      const q = await createQuotation({
+        customer_name: customer.trim(),
+        customer_phone: phone.trim(),
+        valid_until: validUntil,
+        items_data: cart.map((item) => ({
+          product: item.product_id,
+          name: item.name,
+          qty: item.quantity,
+          unit_price: item.unit_price,
+          total: Math.round(item.unit_price * item.quantity * 100) / 100,
+        })),
+      });
+      resetCart();
+      qc.invalidateQueries({ queryKey: ['quotations'] });
+      toast({ message: `Quote ${q.quote_number} saved for ${q.customer_name} — valid to ${validUntil}. Find it under Quotations.`, kind: 'success' });
+    } catch (e) {
+      toast({ message: e?.response?.data?.detail || 'Could not save the quote.', kind: 'error' });
+    }
+  };
+
   const handleSuspendSale = async () => {
     if (cart.length === 0) return;
     const ticket = {
@@ -1898,7 +2028,7 @@ export default function POS() {
         ? `${loyaltyMember.customer_name || loyaltyMember.customer_phone || 'Member'} · ${cart.length} item${cart.length > 1 ? 's' : ''}`
         : `${cart.length} item${cart.length > 1 ? 's' : ''} · ${fmt(grandTotal, 'zwd')}`,
       ts: Date.now(),
-      cart, discount, tax, paymentMethod, amountTendered,
+      cart, discount, paymentMethod, amountTendered,
       loyaltyMember, discountReason, discountNotes, discountApprovalToken,
     };
     setSuspendedSales((prev) => [ticket, ...prev].slice(0, 20));
@@ -1907,7 +2037,6 @@ export default function POS() {
   const handleResumeSale = (ticket) => {
     setCart(ticket.cart || []);
     setDiscount(ticket.discount || '');
-    setTax(ticket.tax || '');
     setPaymentMethod(ticket.paymentMethod || 'cash');
     setAmountTendered(ticket.amountTendered || '');
     setLoyaltyMember(ticket.loyaltyMember || null);
@@ -2127,6 +2256,7 @@ export default function POS() {
     // says the same thing without stopping the app.
     const mySession = await resolveMySession('complete_sale');
     if (!mySession) return;
+    const quoteForThisSale = loadedQuote;   // captured before the cart resets
 
     if (cart.length === 0) {
       alert('Cart is empty');
@@ -2344,7 +2474,7 @@ export default function POS() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cart, priceCheckMode, suspendDrawerOpen, showHotkeys, discount, tax, loyaltyMember]);
+  }, [cart, priceCheckMode, suspendDrawerOpen, showHotkeys, discount, loyaltyMember]);
 
   // Theme overrides — applied when the manager picks Dark or Pick n Pay.
   // Light theme is the default (keeps existing styles untouched).
@@ -2654,6 +2784,13 @@ export default function POS() {
           {loyaltyMember
             ? `👤 ${loyaltyMember.customer_name || loyaltyMember.customer_phone || 'Member'} · ${loyaltyMember.points_balance ?? 0} pts`
             : '👤 Loyalty'}
+        </button>
+        <button type="button" onClick={handleSaveAsQuote}
+          title="Save the current cart as a quotation (does not touch stock)"
+          style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #d1d5db',
+                   background: loadedQuote ? '#1a6b3a' : '#fff', color: loadedQuote ? '#fff' : '#111827',
+                   fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+          {loadedQuote ? `📄 ${loadedQuote.quote_number}` : '📄 Quote'}
         </button>
         <button type="button" onClick={() => setSuspendDrawerOpen(true)}
           title="Suspended sales"
