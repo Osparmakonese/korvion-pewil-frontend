@@ -21,6 +21,24 @@ export const dispensePrescription = (id, data) => api.post(`/retail/prescription
 export const getControlledLog = (params) => api.get('/retail/controlled-log/', { params }).then(r => r.data);
 export const createControlledLog = (data) => api.post('/retail/controlled-log/', data).then(r => r.data);
 
+// ── Pharmacy Phase 3 (2026-08-31): patients, medical aid, expiry money ──
+export const getPatients = (q) => api.get('/retail/patients/', { params: q ? { q } : {} }).then(r => r.data);
+export const createPatient = (data) => api.post('/retail/patients/', data).then(r => r.data);
+export const updatePatient = (id, data) => api.patch(`/retail/patients/${id}/`, data).then(r => r.data);
+export const deletePatient = (id) => api.delete(`/retail/patients/${id}/`);
+
+export const getMedicalAidProviders = () => api.get('/retail/medical-aid-providers/').then(r => r.data);
+export const createMedicalAidProvider = (data) => api.post('/retail/medical-aid-providers/', data).then(r => r.data);
+export const updateMedicalAidProvider = (id, data) => api.patch(`/retail/medical-aid-providers/${id}/`, data).then(r => r.data);
+
+export const getMedicalAidClaims = (params) => api.get('/retail/medical-aid-claims/', { params }).then(r => r.data);
+export const setClaimStatus = (id, data) => api.post(`/retail/medical-aid-claims/${id}/set-status/`, data).then(r => r.data);
+export const getClaimsOutstanding = () => api.get('/retail/medical-aid-claims/outstanding/').then(r => r.data);
+export const exportClaimsCsv = (params) => api.get('/retail/medical-aid-claims/export-csv/', { params, responseType: 'blob' }).then(r => r.data);
+
+export const getExpirySummary = () => api.get('/retail/product-batches/expiry-summary/').then(r => r.data);
+export const writeOffBatch = (id, data) => api.post(`/retail/product-batches/${id}/write-off/`, data).then(r => r.data);
+
 // ── Restaurant: tables / modifiers / kitchen orders (Phase 2) ──
 export const getRestaurantTables = () => api.get('/retail/restaurant-tables/').then(r => r.data);
 export const createRestaurantTable = (data) => api.post('/retail/restaurant-tables/', data).then(r => r.data);

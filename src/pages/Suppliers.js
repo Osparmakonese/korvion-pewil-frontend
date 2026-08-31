@@ -79,7 +79,7 @@ function SupplierModal({ open, onClose, onSubmit, initialData, submitting }) {
 }
 
 /* ---------- Purchase Order form modal ---------- */
-function POModal({ open, onClose, onSubmit, suppliers, products, submitting }) {
+function POModal({ open, onClose, onSubmit, suppliers, products, submitting, showBatch }) {
   const today = new Date().toISOString().split('T')[0];
   const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
   const [form, setForm] = useState({
@@ -114,7 +114,7 @@ function POModal({ open, onClose, onSubmit, suppliers, products, submitting }) {
     setForm({ ...form, items });
   };
 
-  const addItem = () => setForm({ ...form, items: [...form.items, { product: products[0]?.id || '', quantity: 1, unit_price: 0 }] });
+  const addItem = () => setForm({ ...form, items: [...form.items, { product: products[0]?.id || '', quantity: 1, unit_price: 0, batch_number: '', expiry_date: '' }] });
   const removeItem = (i) => setForm({ ...form, items: form.items.filter((_, idx) => idx !== i) });
 
   const handle = (e) => {
@@ -122,7 +122,14 @@ function POModal({ open, onClose, onSubmit, suppliers, products, submitting }) {
     if (!form.supplier) { setFormError('Select a supplier.'); return; }
     const items_data = form.items
       .filter((it) => it.product && it.quantity > 0)
-      .map((it) => ({ product: Number(it.product), quantity: Number(it.quantity), unit_price: Number(it.unit_price) }));
+      .map((it) => ({
+        product: Number(it.product), quantity: Number(it.quantity), unit_price: Number(it.unit_price),
+        // Pharmacy (Phase 3): the lot number and expiry travel on the PO line
+        // so goods-received books the batch — the only moment the lot number
+        // is in the receiver's hand.
+        ...(it.batch_number ? { batch_number: String(it.batch_number).trim() } : {}),
+        ...(it.expiry_date ? { expiry_date: it.expiry_date } : {}),
+      }));
     if (items_data.length === 0) { setFormError('Add at least one line item.'); return; }
     setFormError('');
     onSubmit({
@@ -177,6 +184,14 @@ function POModal({ open, onClose, onSubmit, suppliers, products, submitting }) {
               placeholder="Unit price" style={{ padding: '6px 8px', fontSize: 11, border: '1px solid #d1d5db', borderRadius: 5 }} />
             <button type="button" onClick={() => removeItem(i)} disabled={form.items.length === 1}
               style={{ padding: '6px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: 5, cursor: 'pointer', fontSize: 11 }}>×</button>
+            {showBatch && (
+              <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, marginTop: -4 }}>
+                <input value={it.batch_number || ''} onChange={(e) => updateItem(i, 'batch_number', e.target.value)}
+                  placeholder="Batch / lot no. (optional)" style={{ flex: 2, padding: '5px 8px', fontSize: 11, border: '1px dashed #d1d5db', borderRadius: 5 }} />
+                <input type="date" value={it.expiry_date || ''} onChange={(e) => updateItem(i, 'expiry_date', e.target.value)}
+                  title="Expiry date" style={{ flex: 1, padding: '5px 8px', fontSize: 11, border: '1px dashed #d1d5db', borderRadius: 5 }} />
+              </div>
+            )}
           </div>
         ))}
         <button type="button" onClick={addItem} style={{ marginTop: 4, padding: '6px 12px', background: '#fff', color: '#1a6b3a', border: '1px solid #1a6b3a', borderRadius: 5, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>+ Add line</button>
@@ -313,6 +328,7 @@ export default function Suppliers({ onTabChange }) {
         suppliers={suppliers}
         products={products}
         submitting={createPOMutation.isPending}
+        showBatch={Array.isArray(user?.features) && user.features.includes('batch_tracking')}
       />
 
       {/* Delete confirmation modal */}

@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getProductBatches, createProductBatch, deleteProductBatch, getProducts } from '../api/retailApi';
+import {
+  getProductBatches, createProductBatch, deleteProductBatch, getProducts,
+  getExpirySummary, writeOffBatch, listBranches,
+} from '../api/retailApi';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
 const card = { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: 16, marginBottom: 16 };
@@ -15,12 +18,24 @@ function daysTo(d) {
   return Math.round((new Date(d) - new Date()) / 86400000);
 }
 
+const BUCKET_LABELS = { expired: 'Already expired', d30: 'Next 30 days', d60: '31–60 days', d90: '61–90 days' };
+
 export default function ProductBatches() {
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ['product-batches'], queryFn: () => getProductBatches() });
   const { data: prodData } = useQuery({ queryKey: ['products'], queryFn: getProducts });
+  // Phase 3 (2026-08-31): the money view — what was PAID for stock that
+  // dies in 30/60/90 days. Cost, not price: the number that makes an owner
+  // discount, return to the supplier, or stop over-ordering.
+  const { data: summary } = useQuery({ queryKey: ['expiry-summary'], queryFn: getExpirySummary });
+  const { data: branchData } = useQuery({ queryKey: ['branches'], queryFn: listBranches });
   const batches = arr(data);
   const products = arr(prodData);
+  const branches = arr(branchData);
+  const [writingOff, setWritingOff] = useState(null);   // batch id being confirmed
+  const [woBranch, setWoBranch] = useState('');
+  const [woReason, setWoReason] = useState('expired');
+  const [woError, setWoError] = useState('');
   const empty = { product: '', batch_number: '', expiry_date: '', quantity_received: '', cost_price: '' };
   const [form, setForm] = useState(empty);
 
@@ -31,6 +46,18 @@ export default function ProductBatches() {
   const del = useMutation({
     mutationFn: deleteProductBatch,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['product-batches'] }),
+  });
+  const writeOff = useMutation({
+    mutationFn: ({ id, branch, reason }) => writeOffBatch(id, { branch, reason }),
+    onSuccess: () => {
+      setWritingOff(null); setWoError('');
+      qc.invalidateQueries({ queryKey: ['product-batches'] });
+      qc.invalidateQueries({ queryKey: ['expiry-summary'] });
+    },
+    onError: (err) => {
+      const d = err?.response?.data;
+      setWoError((d && (d.quantity || d.branch || d.detail)) || 'Write-off failed.');
+    },
   });
 
   const submit = (e) => {
@@ -46,6 +73,20 @@ export default function ProductBatches() {
 
   return (
     <div className="vtl-stack" style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 320px', gap: 16 }}>
+      <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
+        {['expired', 'd30', 'd60', 'd90'].map((k) => {
+          const b = summary?.[k];
+          const bad = k === 'expired' && b && Number(b.value) > 0;
+          return (
+            <div key={k} style={{ ...card, marginBottom: 0, textAlign: 'center', borderColor: bad ? '#fca5a5' : '#e3e8e4' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' }}>{BUCKET_LABELS[k]}</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: bad ? '#991b1b' : '#111827' }}>{b ? b.value : '—'}</div>
+              <div style={{ fontSize: 10, color: '#6b7280' }}>{b ? `${b.batches} batch(es) at cost` : ''}</div>
+            </div>
+          );
+        })}
+      </div>
+
       <div style={card}>
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Batches & expiry</h3>
         <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -63,7 +104,39 @@ export default function ProductBatches() {
                     {b.expiry_date || '—'}{d !== null && ` (${d}d)`}
                   </td>
                   <td style={td}>{b.quantity_remaining}</td>
-                  <td style={td}><button onClick={() => del.mutate(b.id)} style={{ background: 'none', border: 'none', color: '#991b1b', cursor: 'pointer' }}>Remove</button></td>
+                  <td style={td}>
+                    {writingOff === b.id ? (
+                      <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <select value={woBranch} onChange={(e) => setWoBranch(e.target.value)}
+                                style={{ padding: '4px 6px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 11 }}>
+                          <option value="">Shop…</option>
+                          {branches.map((br) => <option key={br.id} value={br.id}>{br.name}</option>)}
+                        </select>
+                        <select value={woReason} onChange={(e) => setWoReason(e.target.value)}
+                                style={{ padding: '4px 6px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 11 }}>
+                          <option value="expired">Expired</option>
+                          <option value="damaged">Damaged</option>
+                          <option value="broken">Broken</option>
+                        </select>
+                        <button disabled={!woBranch || writeOff.isPending}
+                                onClick={() => writeOff.mutate({ id: b.id, branch: woBranch, reason: woReason })}
+                                style={{ padding: '4px 8px', background: '#991b1b', color: '#fff', border: 'none', borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                          {writeOff.isPending ? '…' : 'Confirm'}
+                        </button>
+                        <button onClick={() => { setWritingOff(null); setWoError(''); }}
+                                style={{ padding: '4px 8px', background: 'none', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 11, cursor: 'pointer' }}>✕</button>
+                        {woError && <span style={{ fontSize: 10, color: '#991b1b', flexBasis: '100%' }}>{woError}</span>}
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        {Number(b.quantity_remaining) > 0 && (
+                          <button onClick={() => { setWritingOff(b.id); setWoError(''); setWoBranch(branches.length === 1 ? String(branches[0].id) : ''); }}
+                                  style={{ background: 'none', border: 'none', color: '#92400e', cursor: 'pointer', fontSize: 12 }}>Write off</button>
+                        )}
+                        <button onClick={() => del.mutate(b.id)} style={{ background: 'none', border: 'none', color: '#991b1b', cursor: 'pointer', fontSize: 12 }}>Remove</button>
+                      </div>
+                    )}
+                  </td>
                 </tr>
               );
             })}

@@ -7,7 +7,7 @@
  * received; this file only changes the look. (Light twin of DarkSupermarketPOS.)
  */
 import React, { useMemo, useState } from 'react';
-import { fmt } from '../utils/format';
+import { fmt, qty } from '../utils/format';
 
 const C = {
   green: '#1a6b3a', green2: '#22844a', ink: '#0f172a', muted: '#6b7280',
@@ -80,7 +80,7 @@ export default function CounterPOS({
                   <div style={S.thumb}>{(p.name || '?')[0].toUpperCase()}</div>
                   <div style={S.pname}>{p.name}</div>
                   <div style={S.pprice}>${fmt(p.selling_price)}{p.is_weighable ? <span style={{ fontSize: 10, color: C.muted }}> /kg</span> : ''}</div>
-                  <div style={S.pstk}>{out ? 'Out of stock' : `${p.quantity_in_stock ?? p.stock ?? ''} in stock`}</div>
+                  <div style={S.pstk}>{out ? 'Out of stock' : `${qty(p.quantity_in_stock ?? p.stock)} in stock`}</div>
                   {!out && <button type="button" style={S.add} onClick={(e) => { e.stopPropagation(); addToCart(p); }}>Add</button>}
                 </div>
               );

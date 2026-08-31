@@ -263,7 +263,7 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
                 name="cost_price"
                 value={form.cost_price}
                 onChange={handleChange}
-                step="0.01"
+                step="0.0001"
                 required
                 style={{
                   width: '100%',

@@ -12,6 +12,8 @@ import {
   getPOSSettings,
   linkPaymentToSale,
   getCreditAccounts,
+  getMedicalAidProviders,
+  dispensePrescription,
   getReceiptTemplates,
   emailReceipt,
 } from '../api/retailApi';
@@ -30,6 +32,7 @@ import * as Sentry from '@sentry/react';
 import {
   submitSaleOnline, installOfflineSync, getPendingCount, getPendingSales,
   onPendingChange, isOffline as posIsOffline, OFFLINE_QUEUE_LIMIT,
+  newClientReceiptNumber,
 } from '../utils/offlinePOS';
 import { promptWeight } from '../utils/weightPrompt';
 import { requireAgeVerification } from '../utils/ageVerify';
@@ -1217,6 +1220,8 @@ const S = {
 export default function POS() {
   const qc = useQueryClient();
   const { user } = useAuth();
+  // Pharmacy Phase 3: only pharmacy tenants get the Medical Aid tender leg.
+  const hasMedicalAid = Array.isArray(user?.features) && user.features.includes('medical_aid');
   const barcodeInputRef = useRef(null);
   const [search, setSearch] = useState('');
   const [barcode, setBarcode] = useState('');
@@ -1281,6 +1286,19 @@ export default function POS() {
           localStorage.setItem('pewil_quote_convert', JSON.stringify(map));
         }
       } catch (_) {}
+      // A sale rung from a loaded prescription: count the dispense against
+      // its repeats and link the sale, exactly like quote conversion. The
+      // map survives reloads, so an offline pharmacy sale that syncs later
+      // still closes its Rx.
+      try {
+        const rxMap = JSON.parse(localStorage.getItem('pewil_rx_dispense') || '{}');
+        const rxId = rxMap[crn];
+        if (rxId && confirmed.id) {
+          dispensePrescription(rxId, { sale: confirmed.id }).catch(() => {});
+          delete rxMap[crn];
+          localStorage.setItem('pewil_rx_dispense', JSON.stringify(rxMap));
+        }
+      } catch (_) {}
     };
     window.addEventListener('pewil:sale-synced', onSynced);
     return () => window.removeEventListener('pewil:sale-synced', onSynced);
@@ -1291,6 +1309,15 @@ export default function POS() {
   // localStorage and opens the POS; we pick it up here, fill the cart at
   // the QUOTED prices, and remember which quote this basket belongs to so
   // the finished sale converts it automatically.
+  const { data: medAidProvidersData } = useQuery({
+    queryKey: ['medaid-providers-pos'],
+    queryFn: getMedicalAidProviders,
+    enabled: hasMedicalAid,
+    staleTime: 5 * 60 * 1000,
+  });
+  const medAidProviders = Array.isArray(medAidProvidersData)
+    ? medAidProvidersData : (medAidProvidersData?.results || []);
+
   const [loadedQuote, setLoadedQuote] = useState(null);
   useEffect(() => {
     if (!products.length) return;
@@ -1321,6 +1348,51 @@ export default function POS() {
       message: `Quote ${pending.quote_number} loaded at quoted prices for ${pending.customer_name}.`
         + (missing.length ? ` Skipped (no longer in catalogue): ${missing.join(', ')}.` : ''),
       kind: missing.length ? 'error' : 'success',
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products.length]);
+
+  // ── Prescription → till (Pharmacy Phase 3, 2026-08-31) ────────────────
+  // Mirrors the quote loader above, with two pharmacy differences: lines
+  // ring at CURRENT shelf prices (an Rx is a clinical document, not a price
+  // agreement), and the patient's allergies are shown to the cashier the
+  // moment the basket loads.
+  const [loadedRx, setLoadedRx] = useState(null);
+  useEffect(() => {
+    if (!products.length) return;
+    let pending = null;
+    try { pending = JSON.parse(localStorage.getItem('pewil_pending_rx') || 'null'); } catch (_) {}
+    if (!pending || !Array.isArray(pending.items_data)) return;
+    localStorage.removeItem('pewil_pending_rx');
+    const missing = [];
+    const cartLines = [];
+    for (const it of pending.items_data) {
+      const prod = products.find((x) => x.id === Number(it.product));
+      if (!prod) { missing.push(it.name || `#${it.product}`); continue; }
+      cartLines.push({
+        product_id: prod.id,
+        name: prod.name,
+        unit_price: Number(prod.selling_price) || 0,   // TODAY'S shelf price
+        quantity: Number(it.qty) || 1,
+        product: prod,
+      });
+    }
+    if (!cartLines.length) {
+      toast({ message: 'None of the prescribed medicines exist in the catalogue.', kind: 'error' });
+      return;
+    }
+    setCart(cartLines);
+    setLoadedRx({
+      id: pending.id, patient: pending.patient, patient_name: pending.patient_name,
+      medical_aid: pending.medical_aid || null,
+      member_number: pending.member_number || '',
+      member_suffix: pending.member_suffix || '',
+    });
+    toast({
+      message: `Rx for ${pending.patient_name} loaded.`
+        + (pending.allergies ? ` ⚠ ALLERGIES: ${pending.allergies}.` : '')
+        + (missing.length ? ` Skipped (not in catalogue): ${missing.join(', ')}.` : ''),
+      kind: (pending.allergies || missing.length) ? 'error' : 'success',
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [products.length]);
@@ -1906,6 +1978,7 @@ export default function POS() {
   const resetCart = () => {
     setCart([]);
     setLoadedQuote(null);
+    setLoadedRx(null);
     setDiscount('');
     setPaymentMethod('cash');
     setAccountId('');
@@ -2300,6 +2373,7 @@ export default function POS() {
           method: p.method,
           amount: parseFloat(p.amount) || 0,
           reference: (p.reference || '').trim(),
+          provider: p.provider || '',
         }))
         .filter((p) => p.amount > 0 && p.method);
       if (cleanedLegs.length === 0) {
@@ -2316,6 +2390,16 @@ export default function POS() {
       payments_data_payload = cleanedLegs.map((p) => {
         const leg = { method: p.method, amount: p.amount };
         if (p.reference) leg.reference = p.reference;
+        if (p.method === 'medical_aid') {
+          // Who to claim from: the leg's own society pick, else the loaded
+          // prescription's patient membership. The backend books the claim
+          // from these fields the moment the sale lands.
+          const provider = p.provider || loadedRx?.medical_aid || null;
+          if (provider) leg.provider = Number(provider);
+          if (loadedRx?.patient) leg.patient = loadedRx.patient;
+          if (loadedRx?.member_number) leg.member_number = loadedRx.member_number;
+          if (loadedRx?.member_suffix) leg.member_suffix = loadedRx.member_suffix;
+        }
         return leg;
       });
       // Distinct methods → backend will auto-set 'mixed'. We pre-set it here
@@ -2395,6 +2479,28 @@ export default function POS() {
       // need to be persisted on the sale — age_verified_method='manager'
       // plus the approval row is enough for audit.
     }
+
+    // Mint the idempotency key HERE (submitSaleOnline would otherwise make
+    // its own) so the quote/Rx this basket came from can be linked to the
+    // confirmed sale whenever it lands — seconds from now, or days later
+    // when an offline queue drains. This is also what finally makes quote
+    // conversion fire: the convert map was being read on sale-synced but
+    // nothing ever wrote it.
+    const crn = newClientReceiptNumber();
+    saleData.client_receipt_number = crn;
+    const rxForThisSale = loadedRx;
+    try {
+      if (quoteForThisSale?.id) {
+        const qmap = JSON.parse(localStorage.getItem('pewil_quote_convert') || '{}');
+        qmap[crn] = quoteForThisSale.id;
+        localStorage.setItem('pewil_quote_convert', JSON.stringify(qmap));
+      }
+      if (rxForThisSale?.id) {
+        const rmap = JSON.parse(localStorage.getItem('pewil_rx_dispense') || '{}');
+        rmap[crn] = rxForThisSale.id;
+        localStorage.setItem('pewil_rx_dispense', JSON.stringify(rmap));
+      }
+    } catch (_) {}
 
     createSaleMut.mutate(saleData);
   };
@@ -2792,6 +2898,12 @@ export default function POS() {
                    fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
           {loadedQuote ? `📄 ${loadedQuote.quote_number}` : '📄 Quote'}
         </button>
+        {loadedRx && (
+          <span style={{ padding: '6px 10px', background: '#e8f5ee', color: '#1a6b3a',
+                         border: '1px solid #bde3cc', borderRadius: 10, fontSize: 11, fontWeight: 700 }}>
+            💊 Rx: {loadedRx.patient_name}
+          </span>
+        )}
         <button type="button" onClick={() => setSuspendDrawerOpen(true)}
           title="Suspended sales"
           style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #d1d5db',
@@ -3328,7 +3440,33 @@ export default function POS() {
                         <option value="mobile_money">EcoCash / Mobile</option>
                         <option value="card">Card</option>
                         <option value="bank_transfer">Bank Transfer</option>
+                        {hasMedicalAid && <option value="medical_aid">Medical Aid</option>}
                       </select>
+                      {leg.method === 'medical_aid' && (
+                        <select
+                          value={leg.provider || ''}
+                          onChange={(e) =>
+                            setSplitPayments((legs) =>
+                              legs.map((l, i) =>
+                                i === idx ? { ...l, provider: e.target.value } : l
+                              )
+                            )
+                          }
+                          style={{
+                            flex: '1 1 100px',
+                            padding: '6px 4px',
+                            border: '1px solid #d1d5db',
+                            borderRadius: 6,
+                            fontSize: 12,
+                            background: '#fff',
+                          }}
+                        >
+                          <option value="">Society…</option>
+                          {medAidProviders.map((mp) => (
+                            <option key={mp.id} value={mp.id}>{mp.short_code || mp.name}</option>
+                          ))}
+                        </select>
+                      )}
                       <input
                         type="number"
                         step="0.01"

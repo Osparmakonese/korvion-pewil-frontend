@@ -120,7 +120,7 @@ function write(arr) {
 }
 
 // ── idempotency key ──────────────────────────────────────
-function newClientReceiptNumber() {
+export function newClientReceiptNumber() {
   try {
     return 'OFF-' + crypto.randomUUID();
   } catch (_) {
@@ -416,8 +416,19 @@ async function _drainPendingSalesLocked(api) {
     }
     _inFlight.add(key);
     try {
-      await api.post('/retail/sales/', item.payload);
+      const res = await api.post('/retail/sales/', item.payload);
       sent++;
+      // Same signal submitSaleOnline's background POST sends: the server has
+      // confirmed this sale, so the receipt on screen can swap to the real
+      // number, and anything keyed on this sale (a quote to convert, a
+      // prescription to mark dispensed) can now link the real sale id.
+      // Without this, sales that synced via the DRAIN — a till that rang
+      // offline and reconnected later — never fired it at all.
+      try {
+        window.dispatchEvent(new CustomEvent('pewil:sale-synced', {
+          detail: { client_receipt_number: key, sale: (res && res.data) || null },
+        }));
+      } catch (_) {}
       // Success (either 201 new or 200 existing idempotent). Drop from queue,
       // and stop subtracting its units locally — the server's own figure now
       // includes them, and doing both would count the sale twice.

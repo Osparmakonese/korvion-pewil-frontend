@@ -30,6 +30,7 @@
  * and the "All shops" view — behave exactly as before. Use these instead of
  * reading the raw fields at any till surface.
  */
+import { qty as fmtQty } from './format';
 
 import { pendingUnitsFor } from './offlineStockLedger';
 
@@ -141,5 +142,5 @@ export const sellState = (p, shopName = '') => {
       label: `Out of stock${at} \u2014 restock to sell`,
     };
   }
-  return { sellable: true, kind: 'in_stock', short: 'Add', label: `${qty} in stock` };
+  return { sellable: true, kind: 'in_stock', short: 'Add', label: `${fmtQty(qty)} in stock` };
 };
