@@ -7,6 +7,11 @@ import {
 } from '../api/retailApi';
 import AIInsightCard from '../components/AIInsightCard';
 import usePrimaryAction from '../hooks/usePrimaryAction';
+import { buildTestBytes } from '../utils/escposReceipt';
+import {
+  pairBluetoothPrinter, printViaWebBluetooth, printViaRawBT,
+  isWebBluetoothSupported, isAndroid, lastPrinterName,
+} from '../utils/btPrinter';
 
 export default function DeviceConfiguration({ onTabChange }) {
   // Top-bar primary action — see hooks/usePrimaryAction.js.
@@ -147,6 +152,35 @@ export default function DeviceConfiguration({ onTabChange }) {
   // ── Delete confirm ──
   const [delConfirm, setDelConfirm] = useState(null);
 
+  // ── Bluetooth pair & REAL test print (2026-08-31) ──
+  // The server's test can only vouch for the Print Bridge; a Bluetooth
+  // printer can only be proven from THIS device, by putting ink on paper.
+  const [btTest, setBtTest] = useState(null);   // 'working' | { ok, message }
+  const btPairAndTest = async () => {
+    setBtTest('working');
+    try {
+      await pairBluetoothPrinter();
+      await printViaWebBluetooth(buildTestBytes('PEWIL PRINTER TEST'));
+      setBtTest({ ok: true, message: `Test page sent to ${lastPrinterName() || 'the printer'}. If it printed, you are ready.` });
+    } catch (e) {
+      const base = e?.message || 'Could not reach the printer.';
+      setBtTest({
+        ok: false,
+        message: isAndroid()
+          ? `${base} If it is a classic-Bluetooth printer, use the RawBT button instead.`
+          : base,
+      });
+    }
+  };
+  const btTestViaRawBT = () => {
+    try {
+      printViaRawBT(buildTestBytes('PEWIL PRINTER TEST'));
+      setBtTest({ ok: true, message: 'Test page handed to RawBT. If nothing printed, install RawBT from the Play Store and select your printer inside it.' });
+    } catch (e) {
+      setBtTest({ ok: false, message: e?.message || 'RawBT hand-off failed.' });
+    }
+  };
+
   // ── Styles ──
   const card = { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 2px rgba(15,23,18,0.04), 0 12px 28px -18px rgba(15,23,18,0.14)' };
   const sectionLabel = { fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 };
@@ -195,6 +229,40 @@ export default function DeviceConfiguration({ onTabChange }) {
                 {val.has_online && <span style={{ ...statusDot('online'), marginTop: 4 }} />}
               </div>
             ))}
+          </div>
+
+          {/* Bluetooth printer — pair and PROVE it with a test page */}
+          <div style={{ ...card, marginBottom: 20 }}>
+            <div style={sectionLabel}>{'\u{1F4F6}'} Bluetooth printer</div>
+            <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 10, lineHeight: 1.6 }}>
+              Pair the till{'\u2019'}s Bluetooth thermal printer and print a real test page.
+              A test that puts ink on paper is the only test that counts.
+              {lastPrinterName() ? <> Last paired: <b>{lastPrinterName()}</b>.</> : null}
+            </div>
+            {btTest && btTest !== 'working' && (
+              <div role="status" style={{
+                fontSize: 12, lineHeight: 1.5, borderRadius: 8, padding: '8px 10px', marginBottom: 10,
+                background: btTest.ok ? '#e8f5ee' : '#fef2f2',
+                border: `1px solid ${btTest.ok ? '#bbe3cd' : '#fecaca'}`,
+                color: btTest.ok ? '#166534' : '#991b1b',
+              }}>
+                {btTest.message}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {isWebBluetoothSupported() ? (
+                <button style={greenBtn} onClick={btPairAndTest} disabled={btTest === 'working'}>
+                  {btTest === 'working' ? 'Printing\u2026' : 'Pair & print test page'}
+                </button>
+              ) : (
+                <span style={{ fontSize: 12, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '8px 10px' }}>
+                  This browser has no Web Bluetooth {'\u2014'} use Chrome{isAndroid() ? '' : ' on Android or desktop'}.
+                </span>
+              )}
+              {isAndroid() && (
+                <button style={grayBtn} onClick={btTestViaRawBT}>Test via RawBT (classic Bluetooth)</button>
+              )}
+            </div>
           </div>
 
           {/* Add Device Button */}

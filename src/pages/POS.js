@@ -20,6 +20,8 @@ import { promptLoyaltyMember } from '../utils/loyaltyLookup';
 import { promptDiscountReason } from '../utils/discountReason';
 import { promptCashDrop, submitCashDrop } from '../utils/cashDrop';
 import { claimSessionLock } from '../utils/posSessionLock';
+import { buildReceiptBytes } from '../utils/escposReceipt';
+import { printBytes as btPrintBytes, isWebBluetoothSupported, isAndroid, lastPrinterName } from '../utils/btPrinter';
 import { findMyOpenSession, describeSessions } from '../utils/tillSession';
 import * as Sentry from '@sentry/react';
 import {
@@ -59,6 +61,8 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
   // The email field is revealed on demand rather than sitting open on every
   // completed sale — most cashiers never use it.
   const [emailOpen, setEmailOpen] = useState(false);
+  // Bluetooth print state: 'printing' | { ok, message } | null
+  const [btState, setBtState] = useState(null);
   if (!isOpen || !receipt) return null;
 
   const sendEmail = async () => {
@@ -93,6 +97,9 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
   const items = receipt.items_data || receipt.items || [];
   const taxCodeFor = (it) => (it && it.is_vat_exempt) ? 'B' : 'A';
   const qrText = receipt.fiscal_qr_code || '';
+  // Whether this sale WILL carry fiscal data once the device syncs — used
+  // only to print the honest "FISCAL PENDING" line on Bluetooth receipts.
+  const qrTextExpected = receipt.fiscal_submitted === false && Number(receipt.tax) > 0;
   const vcode = receipt.fiscal_verification_code || '';
   const fday = receipt.fiscal_day_no != null ? receipt.fiscal_day_no : '';
   const gno = receipt.fiscal_global_no != null ? receipt.fiscal_global_no : '';
@@ -125,6 +132,46 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
       '</body></html>'
     );
     w.document.close();
+  };
+
+  // ── Bluetooth thermal printing (2026-08-31) ─────────────────────────
+  // Most tills here run a Bluetooth 58mm thermal printer off an Android
+  // phone; the browser print dialog cannot reach those at all. This builds
+  // the receipt as raw ESC/POS bytes and sends them over Web Bluetooth,
+  // falling back to RawBT for classic-Bluetooth printers. The QR is printed
+  // natively by the printer; the verification code is always printed as
+  // text too, so the fiscal facts survive a printer that ignores QR bytes.
+  const bluetoothCapable = isWebBluetoothSupported() || isAndroid();
+  const printBluetooth = async () => {
+    if (btState === 'printing') return;
+    setBtState('printing');
+    try {
+      const bytes = buildReceiptBytes({
+        storeName, addr, phone, vatNo, tinNo,
+        isFiscal: Number(receipt.tax) > 0,
+        receiptNo: receipt.receipt_number,
+        date: new Date(receipt.created_at || Date.now()).toLocaleString(),
+        items: items.map((it) => ({ ...it, taxCode: taxCodeFor(it) })),
+        subtotal: receipt.subtotal, discount: receipt.discount, tax: receipt.tax,
+        total: receipt.total, tendered: receipt.amount_tendered,
+        change: (parseFloat(receipt.amount_tendered) || 0) - (parseFloat(receipt.total) || 0),
+        payLabel: payLabel(),
+        footer: footerMsg,
+        fiscalPending: !fiscalised && !!qrTextExpected,
+        fiscal: fiscalised
+          ? { qrText, vcode, fday, gno, authority: FAUTH }
+          : { authority: FAUTH },
+      }, { width: (template && template.paper_width === '80mm') ? 48 : 32 });
+      const res = await btPrintBytes(bytes);
+      setBtState({
+        ok: true,
+        message: res.via === 'rawbt'
+          ? 'Sent to RawBT. If nothing printed, install the RawBT app from the Play Store and set your printer in it.'
+          : `Printed via Bluetooth${res.printer ? ` (${res.printer})` : ''}${lastPrinterName() ? '' : ''}.`,
+      });
+    } catch (e) {
+      setBtState({ ok: false, message: e?.message || 'Bluetooth print failed.' });
+    }
   };
 
   const fiscalThermal = () => fiscalised
@@ -449,7 +496,38 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
             {'\u{1F9FE}'} Account sale — give the customer the A4 fiscal invoice.
           </div>
         )}
+        {btState && btState !== 'printing' && (
+          <div role="status" style={{
+            fontSize: 11, lineHeight: 1.5, borderRadius: 7, padding: '7px 10px', marginBottom: 8,
+            background: btState.ok ? '#f0fdf4' : '#fef2f2',
+            border: `1px solid ${btState.ok ? '#bbf7d0' : '#fecaca'}`,
+            color: btState.ok ? '#166534' : '#991b1b',
+          }}>
+            {btState.message}
+          </div>
+        )}
         <div style={{ display: 'flex', gap: 8 }}>
+          {bluetoothCapable && (
+            <button
+              onClick={printBluetooth}
+              disabled={btState === 'printing'}
+              title={lastPrinterName() ? `Bluetooth printer: ${lastPrinterName()}` : 'Print to a Bluetooth thermal printer'}
+              style={{
+                flex: 1,
+                padding: '10px',
+                background: '#1a6b3a',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 7,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                opacity: btState === 'printing' ? 0.6 : 1,
+              }}
+            >
+              {btState === 'printing' ? 'Printing\u2026' : '\u{1F4F6} Print (Bluetooth)'}
+            </button>
+          )}
           <button
             onClick={printThermal}
             style={{
