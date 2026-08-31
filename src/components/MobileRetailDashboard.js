@@ -47,7 +47,7 @@ function saleClock(act) {
   return act && act.time ? act.time : '';
 }
 
-export default function MobileRetailDashboard() {
+export default function MobileRetailDashboard({ onTabChange } = {}) {
   const { user } = useAuth() || {};
   const { data: dashboard, isLoading, error } = useQuery({
     queryKey: ['retail-dashboard'],
@@ -126,7 +126,17 @@ export default function MobileRetailDashboard() {
   const txCount = dashboard?.transaction_count || 0;
   const productCount = dashboard?.products_count || 0;
   const activeSessions = dashboard?.active_sessions || 0;
-  const lowStock = (dashboard?.low_stock_alerts || []).length;
+  // `low_stock_alerts` is a COUNT. `(count || []).length` was `undefined`,
+  // so this tile has been blank on every phone since it shipped (fixed
+  // 2026-08-31). `low_stock_items` names the worst few.
+  const lowStock = (() => {
+    const v = dashboard?.low_stock_alerts;
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+    if (Array.isArray(v)) return v.length;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  })();
+  const lowStockItems = Array.isArray(dashboard?.low_stock_items) ? dashboard.low_stock_items : [];
   const recentActivity = Array.isArray(dashboard?.recent_activity) ? dashboard.recent_activity : [];
 
   return (
@@ -197,8 +207,11 @@ export default function MobileRetailDashboard() {
         <Tile
           label="Low stock"
           value={lowStock}
-          pill="below reorder level"
+          pill={lowStock > 0
+            ? (lowStockItems[0] ? `${lowStockItems[0].name}${lowStock > 1 ? ` +${lowStock - 1} more` : ''}` : 'below reorder level')
+            : 'All stocked'}
           warn={lowStock > 0}
+          onClick={onTabChange ? () => onTabChange('Low Stock Alerts') : undefined}
         />
         <Tile label="Products" value={productCount} pill="in catalogue" />
         <Tile label="Open sessions" value={activeSessions} pill={activeSessions === 0 ? 'No active till' : 'Active'} />
@@ -281,14 +294,20 @@ export default function MobileRetailDashboard() {
   );
 }
 
-function Tile({ label, value, pill, warn }) {
+function Tile({ label, value, pill, warn, onClick }) {
   return (
-    <div style={{
-      background: warn ? '#fff7e6' : '#fff',
-      border: `1px solid ${warn ? 'rgba(255,150,0,0.3)' : T.line}`,
-      borderRadius: 16,
-      padding: 14,
-    }}>
+    <div
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
+      style={{
+        background: warn ? '#fff7e6' : '#fff',
+        border: `1px solid ${warn ? 'rgba(255,150,0,0.3)' : T.line}`,
+        borderRadius: 16,
+        padding: 14,
+        cursor: onClick ? 'pointer' : 'default',
+      }}>
       <div style={{
         fontSize: 11, color: warn ? '#b25c00' : T.muted, fontWeight: 600,
       }}>{label}</div>

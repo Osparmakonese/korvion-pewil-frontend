@@ -552,11 +552,22 @@ function FarmApp() {
     staleTime: 30000,
   });
 
+  // The retail dashboard payload already carries the low-stock COUNT for the
+  // shop in view. Use it for the badge and skip the full low-stock product
+  // list (~100 KB on a busy shop) that was fetched on every app load just to
+  // be `.length`-ed - the same class of heavy read that starved the till of
+  // its session list on a phone (2026-08-31). Farm keeps its own list.
+  const dashboardLowCount = isRetail && typeof dashboardData?.low_stock_alerts === 'number'
+    ? dashboardData.low_stock_alerts : null;
   const { data: lowStockData = [] } = useQuery({
     queryKey: isRetail ? ['retail-low-stock'] : ['lowStock'],
     queryFn: isRetail ? getLowStockProducts : getLowStock,
     staleTime: 60000,
+    enabled: dashboardLowCount === null,
   });
+  const lowStockCount = dashboardLowCount !== null
+    ? dashboardLowCount
+    : (Array.isArray(lowStockData) ? lowStockData.length : 0);
 
   const Page = PAGES[activeTab] || Dashboard;
   const meta = PAGE_META[activeTab] || PAGE_META['Dashboard'];
@@ -576,7 +587,7 @@ function FarmApp() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }}
       dashboardData={dashboardData}
-      lowStockCount={lowStockData.length}
+      lowStockCount={lowStockCount}
       activeModule={activeModule}
     >
       <DemoBanner />

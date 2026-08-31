@@ -6,7 +6,7 @@ import {
   getOnboardingStatus,
   getSale,
 } from '../api/retailApi';
-import { fmt } from '../utils/format';
+import { fmt, qty } from '../utils/format';
 import { useAuth } from '../context/AuthContext';
 import AIInsightCard from '../components/AIInsightCard';
 import MobileRetailDashboard from '../components/MobileRetailDashboard';
@@ -408,7 +408,7 @@ export default function RetailDashboard({ onTabChange }) {
 
   // Mobile branch — phones get the locked Frame 3 layout. Returns AFTER
   // the useQuery above so hooks fire in the same order every render.
-  if (isMobile) return <MobileRetailDashboard />;
+  if (isMobile) return <MobileRetailDashboard onTabChange={onTabChange} />;
 
   // Safely extract data from dashboard API response
   const summary = dashboard ? {
@@ -424,7 +424,19 @@ export default function RetailDashboard({ onTabChange }) {
   // below would throw "x.slice is not a function" and crash the whole
   // page via the error boundary. Array.isArray() guards against any
   // shape the API returns, regardless of account/role/permissions.
-  const lowStock = Array.isArray(dashboard?.low_stock_alerts) ? dashboard.low_stock_alerts : [];
+  // `low_stock_alerts` is a COUNT from the server (it always was); the
+  // Array.isArray guard above turned it into [] every time, so this page
+  // said "0 low-stock alerts / All clear" on a shop with a hundred lines
+  // below reorder level (REAPING TIME, 2026-08-31). Count and list are now
+  // two fields: the number, and `low_stock_items` naming the worst few.
+  const lowStockCount = (() => {
+    const v = dashboard?.low_stock_alerts;
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+    if (Array.isArray(v)) return v.length;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  })();
+  const lowStock = Array.isArray(dashboard?.low_stock_items) ? dashboard.low_stock_items : [];
   const recentActivityData = Array.isArray(dashboard?.recent_activity) ? dashboard.recent_activity : [];
   const revenueTrend = Array.isArray(dashboard?.revenue_trend) ? dashboard.revenue_trend : [];
 
@@ -469,13 +481,17 @@ export default function RetailDashboard({ onTabChange }) {
     });
 
     // Add low stock alerts
-    lowStock.slice(0, 2).forEach((product) => {
+    lowStock.slice(0, 3).forEach((product) => {
+      const onHand = product.quantity ?? product.branch_quantity ?? product.quantity_in_stock;
+      const reorder = product.reorder_level;
       items.push({
         id: `product-${product.id}`,
         type: 'product',
-        dot: '#2563eb',
+        dot: onHand <= 0 ? '#c0392b' : '#c97d1a',
         title: `${product.name || 'Product'}`,
-        desc: `Low stock: ${product.quantity_in_stock} units`,
+        desc: onHand <= 0
+          ? 'Out of stock'
+          : `Low stock: ${qty(onHand)} left${reorder != null ? ` (reorder at ${qty(reorder)})` : ''}`,
         time: product.updated_at || new Date().toISOString(),
       });
     });
@@ -597,7 +613,7 @@ export default function RetailDashboard({ onTabChange }) {
         <div style={S.bannerSub}>
           <span style={S.bannerSubItem}>{productCount} products</span>
           <span style={S.bannerSubItem}>{'\u2022'}</span>
-          <span style={S.bannerSubItem}>{lowStock.length} low-stock alerts</span>
+          <span style={S.bannerSubItem}>{lowStockCount} low-stock alerts</span>
           <span style={S.bannerSubItem}>{'\u2022'}</span>
           <span style={S.bannerSubItem}>{recentActivityData.length} tx today</span>
         </div>
@@ -686,17 +702,41 @@ export default function RetailDashboard({ onTabChange }) {
           </div>
         </div>
 
-        {/* Alerts Card */}
-        <div style={S.metricCard}>
+        {/* Alerts Card — tap through to the full list */}
+        <div
+          style={{ ...S.metricCard, cursor: 'pointer' }}
+          role="button"
+          tabIndex={0}
+          title="Open Low Stock Alerts"
+          onClick={() => onTabChange && onTabChange('Low Stock Alerts')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTabChange && onTabChange('Low Stock Alerts'); } }}
+        >
           <div style={S.iconCircle('#c0392b')}>
             {'\u{26A0}'}
           </div>
-          <div style={S.metricLabel}>Alerts</div>
-          <div style={S.metricValue}>{lowStock.length}</div>
-          <div style={S.metricTrend}>{lowStock.length > 0 ? `${lowStock.length} items need attention` : 'All clear'}</div>
-          <div style={S.progressBar}>
-            <div style={S.progressFill(lowStock.length > 0 ? 28 : 0, '#c0392b')} />
+          <div style={S.metricLabel}>Low stock</div>
+          <div style={S.metricValue}>{lowStockCount}</div>
+          <div style={S.metricTrend}>
+            {lowStockCount > 0
+              ? `${lowStockCount} item${lowStockCount === 1 ? '' : 's'} at or below reorder level`
+              : 'All clear'}
           </div>
+          <div style={S.progressBar}>
+            <div style={S.progressFill(lowStockCount > 0 ? Math.min(100, 28 + lowStockCount) : 0, '#c0392b')} />
+          </div>
+          {lowStock.length > 0 && (
+            <div style={{ marginTop: 8, fontSize: 11, color: '#6b7280', lineHeight: 1.5 }}>
+              {lowStock.slice(0, 3).map((p) => (
+                <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+                  <span style={{ color: (p.quantity ?? 0) <= 0 ? '#c0392b' : '#c97d1a', fontWeight: 600, flexShrink: 0 }}>
+                    {(p.quantity ?? 0) <= 0 ? 'out' : `${qty(p.quantity)} left`}
+                  </span>
+                </div>
+              ))}
+              {lowStockCount > 3 && <div style={{ color: '#1a6b3a', fontWeight: 600 }}>View all {lowStockCount} →</div>}
+            </div>
+          )}
         </div>
       </div>
 

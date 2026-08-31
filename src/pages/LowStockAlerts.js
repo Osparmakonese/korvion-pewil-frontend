@@ -68,7 +68,11 @@ export default function LowStockAlerts({ onTabChange }) {
       const reorder = Number(product.branch_reorder_level ?? product.reorder_level) || 0;
       const percentage = reorder ? current / reorder : 0;
       let status = 'Low';
-      if (percentage < 0.25) {
+      if (current < 0) {
+        // Below zero is never a shelf count - it is a booking error (a sale or
+        // write-off against a shop that did not hold the goods). Say so.
+        status = 'Stock error';
+      } else if (current <= 0 || percentage < 0.25) {
         status = 'Critical';
       }
 
@@ -83,17 +87,25 @@ export default function LowStockAlerts({ onTabChange }) {
         supplier: product.supplier || 'N/A',
         category: product.category || 'N/A'
       };
+    }).sort((a, b) => {
+      // Most urgent first: errors, then empty shelves, then by how far below
+      // the reorder point. The server returns them in catalogue order.
+      const rank = (r) => (r.status === 'Stock error' ? 0 : r.current <= 0 ? 1 : 2);
+      if (rank(a) !== rank(b)) return rank(a) - rank(b);
+      const pa = a.reorder ? a.current / a.reorder : 0;
+      const pb = b.reorder ? b.current / b.reorder : 0;
+      return pa - pb || a.name.localeCompare(b.name);
     });
   }, [lowStockProducts]);
 
   const getStockPercentage = (current, reorder) => Math.min((current / reorder) * 100, 100);
   const getProgressColor = (status) => {
-    if (status === 'Critical') return '#c0392b';
+    if (status === 'Critical' || status === 'Stock error') return '#c0392b';
     if (status === 'Low') return '#c97d1a';
     return '#1a6b3a';
   };
 
-  const criticalCount = stockData.filter(s => s.status === 'Critical').length;
+  const criticalCount = stockData.filter(s => s.status === 'Critical' || s.status === 'Stock error').length;
   const lowCount = stockData.filter(s => s.status === 'Low').length;
   const healthyCount = useMemo(() => {
     // Guard both shapes — a paginated response has crashed pages before.
@@ -290,7 +302,7 @@ export default function LowStockAlerts({ onTabChange }) {
             <tbody>
               {stockData.map((item) => {
                 const percentage = getStockPercentage(item.current, item.reorder);
-                const badgeClass = item.status === 'Critical' ? S.badgeRed : S.badgeAmber;
+                const badgeClass = (item.status === 'Critical' || item.status === 'Stock error') ? S.badgeRed : S.badgeAmber;
                 return (
                   <tr key={item.id}>
                     <td style={{ ...S.td, ...S.skuId }}>{item.sku}</td>
