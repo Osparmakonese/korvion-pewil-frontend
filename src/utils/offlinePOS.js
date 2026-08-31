@@ -29,6 +29,30 @@ import { noteSaleQueued, clearSale } from './offlineStockLedger';
 const KEY = 'pewil_offline_sales';
 const MAX_ATTEMPTS = 20;
 
+// ─── ONE COPY OF EACH SALE IN FLIGHT, EVER (2026-08-30) ─────────────
+//
+// What went wrong: `submitSaleOnline` queues the sale and fires a
+// background POST; `installOfflineSync` runs a drain every 30 s and once
+// on install; and it was installed TWICE (OfflineIndicator in the layout
+// and POS.js) with a fresh interval each time. Two drains ticking in the
+// same instant both read the queue and both POSTed every sale still in it
+// — including one whose first POST had not come back yet. The server's
+// duplicate check was a read-then-insert, so two copies arriving together
+// both got in. On REAPING TIME that was 55 sales saved twice in a month,
+// each one deducting the basket from stock a second time and adding it to
+// the day's takings a second time, always 0.0–0.7 s apart.
+//
+// The server now has a unique index and answers the second copy with the
+// first row, so the books are safe whatever we send. This side stops
+// sending it: one shared timer, one drain at a time, and a key that is
+// currently on the wire is skipped by everyone else.
+const _inFlight = new Set();          // client_receipt_number / client_key
+let _draining = false;                // a drain (sales + aux) is running
+let _syncInstalls = 0;                // how many components hold the timer
+let _syncTimer = null;
+let _syncOnline = null;
+const _syncCallbacks = new Set();
+
 /**
  * How many sales this till may take before it has to see the internet.
  *
@@ -274,6 +298,7 @@ export async function submitSaleOnline(api, saleData) {
   // the existing periodic/online-triggered drain (installOfflineSync)
   // retries it automatically -- nothing is lost either way.
   if (!isOffline()) {
+    _inFlight.add(payload.client_receipt_number);
     api.post('/retail/sales/', payload)
       .then((res) => {
         removePendingSale(payload.client_receipt_number);
@@ -297,7 +322,8 @@ export async function submitSaleOnline(api, saleData) {
           }));
         } catch (_) {}
       })
-      .catch(() => { /* leave it queued -- the normal drain will retry it */ });
+      .catch(() => { /* leave it queued -- the normal drain will retry it */ })
+      .finally(() => { _inFlight.delete(payload.client_receipt_number); });
   }
 
   return { sale: optimistic, source: 'offline-queued' };
@@ -359,6 +385,19 @@ function queueSale(payload) {
  */
 export async function drainPendingSales(api) {
   if (isOffline()) return { sent: 0, failed: 0, remaining: read().length };
+  // One drain at a time. A second caller (another timer, the 'online'
+  // event, the sync-queue page) gets "nothing to report" rather than a
+  // second copy of every POST. See the note at the top of this file.
+  if (_draining) return { sent: 0, failed: 0, remaining: read().length };
+  _draining = true;
+  try {
+    return await _drainPendingSalesLocked(api);
+  } finally {
+    _draining = false;
+  }
+}
+
+async function _drainPendingSalesLocked(api) {
   const q = read();
   if (q.length === 0) return { sent: 0, failed: 0, remaining: 0 };
 
@@ -367,13 +406,22 @@ export async function drainPendingSales(api) {
   let failed = 0;
 
   for (const item of q) {
+    const key = item.client_receipt_number;
+    if (_inFlight.has(key)) {
+      // submitSaleOnline's own POST for this sale is still on the wire.
+      // It will remove the item itself on success; if it fails, the next
+      // drain picks it up. Never send a second copy alongside it.
+      keep.push(item);
+      continue;
+    }
+    _inFlight.add(key);
     try {
       await api.post('/retail/sales/', item.payload);
       sent++;
       // Success (either 201 new or 200 existing idempotent). Drop from queue,
       // and stop subtracting its units locally — the server's own figure now
       // includes them, and doing both would count the sale twice.
-      clearSale(item.client_receipt_number);
+      clearSale(key);
     } catch (err) {
       const retryable = isRetryableNetworkError(err);
       item.attempts = (item.attempts || 0) + 1;
@@ -387,10 +435,29 @@ export async function drainPendingSales(api) {
         // Permanent failure — stash in a dead-letter slot so it's not lost.
         stashDeadLetter(item);
       }
+    } finally {
+      _inFlight.delete(key);
     }
   }
-  write(keep);
-  return { sent, failed, remaining: keep.length };
+  // Merge, don't overwrite. The queue moved while this loop was awaiting:
+  // `removePendingSale` may have dropped a sale whose background POST
+  // completed (a blind `write(keep)` would put it back, to be posted
+  // again), and the cashier may have rung NEW sales (a blind `write(keep)`
+  // would silently throw them out of the queue — money taken, no record,
+  // if their own POST then failed). Keep what we kept, keep what arrived,
+  // drop what we sent or what someone else already removed.
+  const final = _mergeQueue(read(), q, keep, (it) => it.client_receipt_number);
+  write(final);
+  return { sent, failed, remaining: final.length };
+}
+
+function _mergeQueue(current, seen, keep, keyOf) {
+  const seenKeys = new Set(seen.map(keyOf));
+  const kept = new Map(keep.map((it) => [keyOf(it), it]));
+  return current
+    .map((it) => (kept.has(keyOf(it)) ? kept.get(keyOf(it))
+      : (seenKeys.has(keyOf(it)) ? null : it)))
+    .filter(Boolean);
 }
 
 function stashDeadLetter(item) {
@@ -421,25 +488,48 @@ export function clearDeadLetters() {
  * Install reconnect + periodic drain. Returns an unsubscribe fn.
  */
 export function installOfflineSync(api, { onDrain } = {}) {
-  const run = async () => {
-    const result = await drainPendingSales(api);
-    const aux = await drainAllAuxQueues(api);
-    const combined = {
-      sent: result.sent + aux.sent,
-      failed: result.failed + aux.failed,
-      remaining: result.remaining + aux.remaining,
+  // A SINGLETON, refcounted. Every caller shares one interval and one
+  // 'online' listener; the timer is torn down only when the last caller
+  // has gone. It used to make a new interval per call, and with two
+  // callers on the till (OfflineIndicator + POS) that was two drains
+  // ticking together — the source of the duplicated sales. The `onDrain`
+  // callbacks are kept per caller so each screen still hears the result.
+  if (onDrain) _syncCallbacks.add(onDrain);
+  _syncInstalls += 1;
+
+  if (!_syncTimer) {
+    const run = async () => {
+      const result = await drainPendingSales(api);
+      const aux = await drainAllAuxQueues(api);
+      const combined = {
+        sent: result.sent + aux.sent,
+        failed: result.failed + aux.failed,
+        remaining: result.remaining + aux.remaining,
+      };
+      if (combined.sent || combined.failed) {
+        _syncCallbacks.forEach((cb) => { try { cb(combined); } catch (_) {} });
+      }
+      return combined;
     };
-    if ((combined.sent || combined.failed) && onDrain) onDrain(combined);
-    return combined;
-  };
-  const onOnline = () => { run(); };
-  window.addEventListener('online', onOnline);
-  const timer = setInterval(run, 30_000);
-  // Kick once at install in case we came back before the listener attached.
-  run();
+    _syncOnline = () => { run(); };
+    window.addEventListener('online', _syncOnline);
+    _syncTimer = setInterval(run, 30_000);
+    // Kick once at install in case we came back before the listener attached.
+    run();
+  }
+
+  let released = false;
   return () => {
-    window.removeEventListener('online', onOnline);
-    clearInterval(timer);
+    if (released) return;
+    released = true;
+    if (onDrain) _syncCallbacks.delete(onDrain);
+    _syncInstalls = Math.max(0, _syncInstalls - 1);
+    if (_syncInstalls === 0 && _syncTimer) {
+      clearInterval(_syncTimer);
+      _syncTimer = null;
+      window.removeEventListener('online', _syncOnline);
+      _syncOnline = null;
+    }
   };
 }
 
@@ -546,6 +636,7 @@ export async function submitWithQueue(api, queueName, payload) {
     return { ...body, _offline_pending: true, id: null };
   }
 
+  _inFlight.add(key);
   try {
     const res = await api.post(cfg.endpoint, body);
     return res.data;
@@ -555,6 +646,8 @@ export async function submitWithQueue(api, queueName, payload) {
       return { ...body, _offline_pending: true, id: null };
     }
     throw err;
+  } finally {
+    _inFlight.delete(key);
   }
 }
 
@@ -588,6 +681,9 @@ export async function drainAuxQueue(api, queueName) {
   let failed = 0;
 
   for (const item of q) {
+    const key = item.client_key;
+    if (_inFlight.has(key)) { keep.push(item); continue; }   // already on the wire
+    _inFlight.add(key);
     try {
       await api.post(cfg.endpoint, item.payload);
       sent++;
@@ -603,10 +699,13 @@ export async function drainAuxQueue(api, queueName) {
         failedList.push({ ...item, failed_at: Date.now() });
         _writeFailed(queueName, failedList);
       }
+    } finally {
+      _inFlight.delete(key);
     }
   }
-  _writeQueue(queueName, keep);
-  return { sent, failed, remaining: keep.length };
+  const final = _mergeQueue(_readQueue(queueName), q, keep, (it) => it.client_key);
+  _writeQueue(queueName, final);
+  return { sent, failed, remaining: final.length };
 }
 
 /** Drain all aux queues at once. Used by the global online listener. */

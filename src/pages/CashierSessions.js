@@ -23,7 +23,7 @@ import usePrimaryAction from '../hooks/usePrimaryAction';
  * (or the first branch if no HQ flag) so the cashier can just hit
  * "Open Session" without thinking about it.
  */
-function OpenSessionModal({ isOpen, onClose, onSubmit, loading, branches = [] }) {
+function OpenSessionModal({ isOpen, onClose, onSubmit, loading, branches = [], error = '' }) {
   const [openingFloat, setOpeningFloat] = useState('');
   const [notes, setNotes] = useState('');
   const [branchId, setBranchId] = useState('');
@@ -114,6 +114,11 @@ function OpenSessionModal({ isOpen, onClose, onSubmit, loading, branches = [] })
             <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>Notes (optional)</label>
             <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Any notes for this session..." style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', boxSizing: 'border-box', fontFamily: 'Inter, sans-serif' }} />
           </div>
+          {error && (
+            <div role="alert" style={{ marginBottom: 12, padding: '10px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, color: '#991b1b', fontSize: 12, lineHeight: 1.5 }}>
+              {error}
+            </div>
+          )}
           <div style={{ display: 'flex', gap: 8 }}>
             <button type="submit" disabled={loading} style={{ flex: 1, padding: 10, background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', opacity: loading ? 0.6 : 1 }}>
               {loading ? 'Opening...' : 'Open Session'}
@@ -666,6 +671,30 @@ export default function CashierSessions() {
     },
   });
 
+  // Say WHY the till would not open (2026-08-30).
+  //
+  // This mutation had no error handling at all: a refused open (the shop's
+  // till allowance is used up, an accountant trying to open, a shop not
+  // chosen on a chain) just put the button back to "Open Session" with no
+  // message. REAPING TIME's cashiers pressed it again and again — the logs
+  // show three refusals nine seconds apart — with no way of knowing that
+  // the server had already told them exactly who holds the till and since
+  // when. The server's `detail` is written for a person; show it verbatim.
+  const openError = (() => {
+    const err = openMut.error;
+    if (!err) return '';
+    const data = err?.response?.data;
+    if (data && typeof data === 'object') {
+      if (typeof data.detail === 'string') return data.detail;
+      if (typeof data.error === 'string') return data.error;
+      const first = Object.values(data).find((v) => typeof v === 'string' || Array.isArray(v));
+      if (typeof first === 'string') return first;
+      if (Array.isArray(first) && first.length) return String(first[0]);
+    }
+    if (err?.response?.status === 402) return 'Your subscription needs attention before a till can be opened.';
+    return err?.message || 'The till could not be opened. Please try again.';
+  })();
+
   const closeMut = useMutation({
     mutationFn: ({ id, data, token }) => closeCashierSessionAdvanced(id, data, token),
     onSuccess: () => {
@@ -717,9 +746,10 @@ export default function CashierSessions() {
         />
         <OpenSessionModal
           isOpen={showOpenModal}
-          onClose={() => setShowOpenModal(false)}
+          onClose={() => { openMut.reset(); setShowOpenModal(false); }}
           onSubmit={(data) => openMut.mutate(data)}
           loading={openMut.isPending}
+          error={openError}
           branches={branches}
         />
         <CloseSessionModal
@@ -859,7 +889,7 @@ export default function CashierSessions() {
         <AIInsightCard feature="retail_cashier_monitor" title="AI Cashier Analysis" />
       </div>
 
-      <OpenSessionModal isOpen={showOpenModal} onClose={() => setShowOpenModal(false)} onSubmit={data => openMut.mutate(data)} loading={openMut.isPending} branches={branches} />
+      <OpenSessionModal isOpen={showOpenModal} onClose={() => { openMut.reset(); setShowOpenModal(false); }} onSubmit={data => openMut.mutate(data)} loading={openMut.isPending} branches={branches} error={openError} />
       <CloseSessionModal
         isOpen={!!closingSession}
         onClose={() => setClosingSession(null)}
