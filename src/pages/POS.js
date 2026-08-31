@@ -110,7 +110,13 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
     if (!w) { alert('Allow pop-ups to print the receipt.'); return; }
     w.document.write(
       '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Receipt ' + esc(receipt.receipt_number) + '</title>' +
-      '<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>' +
+      // The QR library ships WITH the app (public/qrcode.min.js), so a
+      // fiscalised receipt renders its ZIMRA QR with no internet at all -
+      // it used to come from a CDN, which meant an offline shop printed
+      // legally-required receipts with the QR quietly missing (2026-08-31).
+      // The CDN stays as a fallback for the odd cache miss.
+      '<script src="' + window.location.origin + '/qrcode.min.js" ' +
+        'onerror="var f=document.createElement(\'script\');f.src=\'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js\';document.head.appendChild(f);"><\/script>' +
       '<style>*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;color:#0f172a;background:#fff}</style>' +
       '</head><body>' + bodyHtml +
       '<script>(function(){var t=' + JSON.stringify(qrText) + ';var el=document.getElementById("qr");var n=0;' +
@@ -1548,10 +1554,30 @@ export default function POS() {
     };
   }, [qc]);
 
+  // A scan must not need the internet (2026-08-31). The till already holds
+  // the whole catalogue in memory for the product grid, so an exact barcode
+  // or SKU match is answered from RIGHT HERE - instant at the lane, and it
+  // works with the network down. The server lookup below remains only for
+  // codes the loaded list does not know (a product added minutes ago on
+  // another machine), and its failure now means "genuinely unknown or truly
+  // offline", not "every scan needs a round trip".
+  const findScannedLocally = (code) => {
+    const c = String(code || '').trim();
+    if (!c) return null;
+    const lc = c.toLowerCase();
+    return products.find((p) => (p.barcode || '').toLowerCase() === lc)
+        || products.find((p) => (p.sku || '').toLowerCase() === lc)
+        || null;
+  };
+
   const barcodeLookupMut = useMutation({
     // Resolve the scan against the shop this till's session belongs to, so
     // the price and stock that come back are the ones the sale will use.
-    mutationFn: (code) => barcodeLookup(code, tillBranchId),
+    mutationFn: async (code) => {
+      const local = findScannedLocally(code);
+      if (local) return local;
+      return barcodeLookup(code, tillBranchId);
+    },
     onSuccess: (data) => {
       if (!data) return;
       setScanMiss(null);

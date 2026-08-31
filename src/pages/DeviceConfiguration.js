@@ -59,7 +59,25 @@ export default function DeviceConfiguration({ onTabChange }) {
     mutationFn: deleteDeviceProfile,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['deviceProfiles'] }); qc.invalidateQueries({ queryKey: ['deviceSummary'] }); },
   });
-  const testMut = useMutation({ mutationFn: testDevice, onSuccess: () => qc.invalidateQueries({ queryKey: ['deviceProfiles'] }) });
+  // The server now answers honestly (bridge checked for real; till-attached
+  // devices say they must be tested at the till) - so SHOW the answer, per
+  // device, instead of a silent green flash on every row (2026-08-31).
+  const [testResult, setTestResult] = useState(null);   // { id, success, message }
+  const testMut = useMutation({
+    mutationFn: testDevice,
+    onSuccess: (data) => {
+      setTestResult({ id: data?.device_id, success: data?.success, message: data?.message || '' });
+      qc.invalidateQueries({ queryKey: ['deviceProfiles'] });
+      qc.invalidateQueries({ queryKey: ['deviceSummary'] });
+    },
+    onError: (err, id) => {
+      setTestResult({
+        id,
+        success: false,
+        message: err?.response?.data?.detail || err?.message || 'Could not reach the server to test.',
+      });
+    },
+  });
   const defaultMut = useMutation({ mutationFn: setDefaultDevice, onSuccess: () => qc.invalidateQueries({ queryKey: ['deviceProfiles'] }) });
 
   // ── Device type icons ──
@@ -218,9 +236,19 @@ export default function DeviceConfiguration({ onTabChange }) {
                     {d.connection_type.replace(/_/g, ' ')} {'\u00B7'} {d.driver_profile.replace(/_/g, ' ')}
                     {d.paper_width ? ` \u00B7 ${d.paper_width}` : ''}
                   </div>
+                  {testResult && testResult.id === d.id && (
+                    <div role="status" style={{
+                      marginBottom: 10, padding: '8px 10px', borderRadius: 8, fontSize: 11, lineHeight: 1.5,
+                      background: testResult.success === true ? '#e8f5ee' : testResult.success === false ? '#fef2f2' : '#fffbeb',
+                      border: `1px solid ${testResult.success === true ? '#bbe3cd' : testResult.success === false ? '#fecaca' : '#fde68a'}`,
+                      color: testResult.success === true ? '#166534' : testResult.success === false ? '#991b1b' : '#92400e',
+                    }}>
+                      {testResult.message}
+                    </div>
+                  )}
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    <button style={{ ...grayBtn, fontSize: 11, padding: '5px 10px' }} onClick={() => testMut.mutate(d.id)}>
-                      {testMut.isPending ? 'Testing...' : '\u{1F50D} Test'}
+                    <button style={{ ...grayBtn, fontSize: 11, padding: '5px 10px' }} onClick={() => { setTestResult(null); testMut.mutate(d.id); }}>
+                      {testMut.isPending && testMut.variables === d.id ? 'Testing...' : '\u{1F50D} Test'}
                     </button>
                     <button style={{ ...grayBtn, fontSize: 11, padding: '5px 10px' }} onClick={() => openEdit(d)}>{'\u270F\uFE0F'} Edit</button>
                     {!d.is_default && (
