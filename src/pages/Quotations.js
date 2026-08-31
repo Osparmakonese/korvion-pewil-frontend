@@ -13,6 +13,7 @@ const btn = { padding: '9px 16px', background: '#1a6b3a', color: '#fff', border:
 const th = { textAlign: 'left', padding: '7px 8px', fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', background: '#f6f8f6' };
 const td = { padding: '7px 8px', fontSize: 12, borderBottom: '1px solid #f3f4f6' };
 const pill = (c) => ({ fontSize: 8, fontWeight: 700, padding: '2px 7px', borderRadius: 20, textTransform: 'uppercase', background: c.bg, color: c.fg });
+const miniBtn = { padding: '3px 8px', borderRadius: 7, border: '1px solid #d1d5db', background: '#fff', color: '#111827', fontSize: 10, fontWeight: 700, cursor: 'pointer', marginLeft: 4 };
 
 const STATUS_COLORS = {
   draft: { bg: '#f3f4f6', fg: '#6b7280' }, sent: { bg: '#EFF6FF', fg: '#1d4ed8' },
@@ -20,7 +21,7 @@ const STATUS_COLORS = {
   expired: { bg: '#fef3e2', fg: '#c97d1a' }, converted: { bg: '#e8f5ee', fg: '#1a6b3a' },
 };
 
-export default function Quotations() {
+export default function Quotations({ onTabChange }) {
   const isMobile = useIsMobile();
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ['quotations'], queryFn: () => getQuotations() });
@@ -28,7 +29,7 @@ export default function Quotations() {
   const quotes = arr(data);
   const products = arr(prodData);
 
-  const empty = { customer_name: '', customer_phone: '', valid_until: '', notes: '', tax: '' };
+  const empty = { customer_name: '', customer_phone: '', valid_until: '', notes: '' };
   const [form, setForm] = useState(empty);
   const [lines, setLines] = useState([{ product: '', name: '', qty: 1, unit_price: '' }]);
   const [formError, setFormError] = useState('');
@@ -64,7 +65,69 @@ export default function Quotations() {
       return;
     }
     setFormError('');
-    create.mutate({ ...form, tax: Number(form.tax) || 0, items_data: items });
+    create.mutate({ ...form, items_data: items });
+  };
+
+  // A quote past its validity date that was never accepted/converted reads
+  // as expired — display truth, without a background job mutating rows.
+  const effectiveStatus = (q) => {
+    if (q.status === 'converted' || q.status === 'declined') return q.status;
+    if (q.valid_until && new Date(q.valid_until) < new Date(new Date().toDateString())) return 'expired';
+    return q.status;
+  };
+
+  // Load into the till at the QUOTED prices; the POS picks this up on mount,
+  // and converts the quote automatically when the sale confirms.
+  const toTill = (q) => {
+    try { localStorage.setItem('pewil_pending_quote', JSON.stringify(q)); } catch (_) {}
+    if (onTabChange) onTabChange('POS');
+  };
+
+  const esc = (x) => String(x == null ? '' : x).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const money = (n) => '$' + (parseFloat(n) || 0).toFixed(2);
+
+  const printQuote = (q) => {
+    const store = localStorage.getItem('trading_name') || 'Your Store';
+    const w = window.open('', '_blank', 'width=760,height=900');
+    if (!w) { alert('Allow pop-ups to print the quote.'); return; }
+    const rows = (q.items_data || []).map((it) =>
+      `<tr><td style="padding:8px 10px;border-bottom:1px solid #eef0f3">${esc(it.name)}</td>` +
+      `<td style="padding:8px 10px;border-bottom:1px solid #eef0f3;text-align:right">${esc(it.qty)}</td>` +
+      `<td style="padding:8px 10px;border-bottom:1px solid #eef0f3;text-align:right">${money(it.unit_price)}</td>` +
+      `<td style="padding:8px 10px;border-bottom:1px solid #eef0f3;text-align:right;font-weight:600">${money(it.total)}</td></tr>`).join('');
+    w.document.write(
+      `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(q.quote_number)}</title></head>` +
+      `<body style="margin:0;font-family:Inter,system-ui,Arial,sans-serif;color:#0f172a">` +
+      `<div style="max-width:680px;margin:0 auto;padding:32px 28px">` +
+      `<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px">` +
+      `<div><div style="font-size:22px;font-weight:800">${esc(store)}</div></div>` +
+      `<div style="text-align:right"><div style="font-size:15px;font-weight:800;letter-spacing:.08em">QUOTATION</div>` +
+      `<div style="font-size:11px;color:#64748b;margin-top:6px">No: <b>${esc(q.quote_number)}</b><br>` +
+      `Date: ${esc(String(q.created_at || '').slice(0, 10))}<br>Valid until: <b>${esc(q.valid_until || '—')}</b></div></div></div>` +
+      `<div style="border:1px solid #e6eaef;border-radius:10px;padding:12px 15px;margin-bottom:18px;max-width:320px">` +
+      `<div style="font-size:9px;letter-spacing:.1em;color:#64748b;font-weight:800;margin-bottom:6px">QUOTED TO</div>` +
+      `<div style="font-size:14px;font-weight:700">${esc(q.customer_name)}</div>` +
+      (q.customer_phone ? `<div style="font-size:11px;color:#64748b;margin-top:3px">${esc(q.customer_phone)}</div>` : '') + `</div>` +
+      `<table style="width:100%;border-collapse:collapse;font-size:12px">` +
+      `<thead><tr style="background:#f8fafc"><th style="text-align:left;padding:9px 10px">Description</th>` +
+      `<th style="text-align:right;padding:9px 10px">Qty</th><th style="text-align:right;padding:9px 10px">Unit</th>` +
+      `<th style="text-align:right;padding:9px 10px">Amount</th></tr></thead><tbody>${rows}</tbody></table>` +
+      `<div style="display:flex;justify-content:flex-end;margin-top:14px"><div style="width:240px">` +
+      (Number(q.tax) > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;color:#64748b;padding:4px 0"><span>VAT (included)</span><b style="color:#0f172a">${money(q.tax)}</b></div>` : '') +
+      `<div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;border-top:2px solid #0f172a;padding-top:8px;margin-top:4px"><span>TOTAL</span><span>${money(q.total)}</span></div></div></div>` +
+      `<div style="margin-top:26px;font-size:10px;color:#94a3b8">This is a quotation, not a fiscal tax invoice. Prices are valid to the date shown and subject to stock availability.</div>` +
+      `</div><script>setTimeout(function(){window.focus();window.print();},250);<\/script></body></html>`);
+    w.document.close();
+  };
+
+  const sendWhatsApp = (q) => {
+    const phone = String(q.customer_phone || '').replace(/[^0-9]/g, '');
+    const lines = (q.items_data || []).map((it) => `- ${it.name} x${it.qty} @ ${money(it.unit_price)} = ${money(it.total)}`).join('%0A');
+    const msg = `*QUOTATION ${q.quote_number}*%0A${esc(localStorage.getItem('trading_name') || '')}%0A%0A${lines}%0A%0A*TOTAL: ${money(q.total)}*` +
+      (Number(q.tax) > 0 ? ` (VAT incl. ${money(q.tax)})` : '') +
+      (q.valid_until ? `%0AValid until ${q.valid_until}` : '');
+    window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+    setStatus.mutate({ id: q.id, status: 'sent' });
   };
 
   return (
@@ -82,16 +145,24 @@ export default function Quotations() {
                 <td style={td}>{q.customer_name}</td>
                 <td style={{ ...td, fontWeight: 600 }}>{fmt(q.total || 0, 'zwd')}</td>
                 <td style={td}>{q.valid_until || '—'}</td>
-                <td style={td}><span style={pill(STATUS_COLORS[q.status] || STATUS_COLORS.draft)}>{q.status}</span></td>
-                <td style={td}>
+                <td style={td}><span style={pill(STATUS_COLORS[effectiveStatus(q)] || STATUS_COLORS.draft)}>{effectiveStatus(q)}</span></td>
+                <td style={{ ...td, whiteSpace: 'nowrap' }}>
                   {q.status !== 'converted' && (
-                    <select style={{ ...input, width: 'auto', padding: '3px 6px', fontSize: 10 }} value="" onChange={(e) => e.target.value && setStatus.mutate({ id: q.id, status: e.target.value })}>
+                    <button onClick={() => toTill(q)} title="Load this quote into the till at the quoted prices"
+                      style={{ ...miniBtn, background: '#1a6b3a', color: '#fff', border: 'none' }}>To till</button>
+                  )}
+                  <button onClick={() => printQuote(q)} title="Print / save as PDF" style={miniBtn}>🖨</button>
+                  {q.customer_phone && (
+                    <button onClick={() => sendWhatsApp(q)} title="Send via WhatsApp" style={miniBtn}>📲</button>
+                  )}
+                  {q.status !== 'converted' && (
+                    <select style={{ ...input, width: 'auto', padding: '3px 6px', fontSize: 10, marginLeft: 4 }} value="" onChange={(e) => e.target.value && setStatus.mutate({ id: q.id, status: e.target.value })}>
                       <option value="">Set…</option>
                       <option value="sent">Sent</option><option value="accepted">Accepted</option>
-                      <option value="declined">Declined</option><option value="converted">Converted</option>
+                      <option value="declined">Declined</option>
                     </select>
                   )}
-                  <button onClick={() => del.mutate(q.id)} style={{ marginLeft: 6, background: 'none', border: 'none', color: '#c0392b', cursor: 'pointer', fontSize: 11 }}>✕</button>
+                  <button onClick={() => del.mutate(q.id)} style={{ marginLeft: 4, background: 'none', border: 'none', color: '#c0392b', cursor: 'pointer', fontSize: 11 }}>✕</button>
                 </td>
               </tr>
             ))}
@@ -118,11 +189,10 @@ export default function Quotations() {
             </div>
           ))}
           <button type="button" onClick={() => setLines([...lines, { product: '', name: '', qty: 1, unit_price: '' }])} style={{ background: 'none', border: 'none', color: '#1a6b3a', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>+ Add line</button>
-          <label style={label}>Tax</label>
-          <input style={input} type="number" min={0} step="0.01" value={form.tax} onChange={(e) => setForm({ ...form, tax: e.target.value })} />
           <label style={label}>Valid until</label>
           <input style={input} type="date" value={form.valid_until} onChange={(e) => setForm({ ...form, valid_until: e.target.value })} />
-          <div style={{ marginTop: 8, fontSize: 12, fontWeight: 700 }}>Subtotal: {fmt(subtotal, 'zwd')}</div>
+          <div style={{ marginTop: 8, fontSize: 12, fontWeight: 700 }}>Total: {fmt(subtotal, 'zwd')}</div>
+          <div style={{ fontSize: 10, color: '#9ca3af' }}>Prices are VAT-inclusive — the VAT slice is computed and shown on the printed quote automatically.</div>
           {formError && <div style={{ marginTop: 6, color: '#c0392b', fontSize: 12 }}>{formError}</div>}
           <button style={btn} disabled={create.isPending}>{create.isPending ? 'Saving…' : 'Create quote'}</button>
         </form>
