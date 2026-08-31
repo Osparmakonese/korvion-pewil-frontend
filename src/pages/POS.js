@@ -5,7 +5,7 @@ import {
   createProduct,
   getCategories,
   barcodeLookup,
-  getCashierSessions,
+  getOpenCashierSessions,
   getPOSSettings,
   linkPaymentToSale,
   getCreditAccounts,
@@ -20,6 +20,8 @@ import { promptLoyaltyMember } from '../utils/loyaltyLookup';
 import { promptDiscountReason } from '../utils/discountReason';
 import { promptCashDrop, submitCashDrop } from '../utils/cashDrop';
 import { claimSessionLock } from '../utils/posSessionLock';
+import { findMyOpenSession, describeSessions } from '../utils/tillSession';
+import * as Sentry from '@sentry/react';
 import {
   submitSaleOnline, installOfflineSync, getPendingCount, getPendingSales,
   onPendingChange, isOffline as posIsOffline, OFFLINE_QUEUE_LIMIT,
@@ -1280,10 +1282,28 @@ export default function POS() {
     }
   };
 
-  const { data: sessionsLive = [], isError: sessionsFailed } = useQuery({
+  // OPEN sessions only, a few hundred bytes (2026-08-31). This used to be
+  // the business's entire session history - 84 KB on REAPING TIME and
+  // growing daily - fetched next to a 300 KB catalogue on every POS mount.
+  // On a shop phone that hit the 15 s timeout, the offline layer answered
+  // with the last SAVED copy of the list, taken before the cashier opened
+  // her till, and this screen told her "no cashier session open" for a
+  // week while a colleague whose old session WAS in the saved copy sold
+  // normally. `fromSavedCopy` is kept so a refusal can say what it is
+  // based on instead of presenting old news as fact.
+  const {
+    data: sessionsAnswer,
+    isError: sessionsFailed,
+    refetch: refetchSessions,
+  } = useQuery({
     queryKey: ['retail-sessions-pos'],
-    queryFn: getCashierSessions,
+    queryFn: getOpenCashierSessions,
   });
+  const sessionsLive = useMemo(
+    () => (Array.isArray(sessionsAnswer?.sessions) ? sessionsAnswer.sessions : []),
+    [sessionsAnswer],
+  );
+  const sessionsFromSavedCopy = !!sessionsAnswer?.fromSavedCopy;
 
   // DOES THIS CASHIER HAVE A SESSION OPEN? (2026-08-18)
   //
@@ -1301,8 +1321,10 @@ export default function POS() {
   // list from a server that answered still means closed — otherwise a
   // cashier could ring sales into a session that no longer exists.
   useEffect(() => {
-    if (!sessionsFailed) rememberOpenSessions(sessionsLive);
-  }, [sessionsLive, sessionsFailed]);
+    // A saved copy is not the server answering - never let it overwrite
+    // what the device last heard for real.
+    if (!sessionsFailed && !sessionsFromSavedCopy) rememberOpenSessions(sessionsLive);
+  }, [sessionsLive, sessionsFailed, sessionsFromSavedCopy]);
 
   const sessions = useMemo(() => {
     if (sessionsLive && sessionsLive.length) return sessionsLive;
@@ -1324,11 +1346,8 @@ export default function POS() {
   // session loads, which asks for the chain view — the same thing it has
   // always done.
   const tillBranchId = useMemo(() => {
-    const mine = sessions.filter(
-      (s) => !s.closed_at
-        && (s.cashier_username || '').toLowerCase() === (user?.username || '').toLowerCase()
-    );
-    return mine.length ? (mine[0].branch || undefined) : undefined;
+    const mine = findMyOpenSession(sessions, user);
+    return mine ? (mine.branch || undefined) : undefined;
   }, [sessions, user]);
 
   // ...and its NAME, because an out-of-stock line has to say WHERE the shelf
@@ -1338,11 +1357,8 @@ export default function POS() {
   // blank on a single-shop business, so those tills read exactly as before.
   const { branchName: viewBranchName, isMultiBranch } = useViewBranch();
   const tillBranchName = useMemo(() => {
-    const mine = sessions.filter(
-      (s) => !s.closed_at
-        && (s.cashier_username || '').toLowerCase() === (user?.username || '').toLowerCase()
-    );
-    return mine.length ? (mine[0].branch_name || '') : '';
+    const mine = findMyOpenSession(sessions, user);
+    return mine ? (mine.branch_name || '') : '';
   }, [sessions, user]);
   const shopLabel = isMultiBranch ? (tillBranchName || viewBranchName || '') : '';
 
@@ -1407,7 +1423,7 @@ export default function POS() {
   // running POS for the same session, this tab flips to read-only so we can't
   // double-ring sales or race stock deductions.
   useEffect(() => {
-    const active = sessions.find((s) => !s.closed_at && (s.cashier_username || '').toLowerCase() === (user?.username || '').toLowerCase());
+    const active = findMyOpenSession(sessions, user);
     const sid = active?.id || null;
     if (sid === activeSessionId) return;
 
@@ -1924,24 +1940,66 @@ export default function POS() {
     return () => clearTimeout(timer);
   }, [saleIsPending, resetSaleMut]);
 
-  const noSessionMessage = () => (
-    offline
-      ? 'No open till session on this device, and one cannot be opened '
-        + 'without internet. Reconnect, open your session, then sell.'
-      : 'You do not have an open till session. Open one before selling.'
-  );
+  const noSessionMessage = (fromSavedCopy = sessionsFromSavedCopy) => {
+    if (offline) {
+      return 'No open till session on this device, and one cannot be opened '
+        + 'without internet. Reconnect, open your session, then sell.';
+    }
+    if (fromSavedCopy) {
+      return 'Could not reach the server to confirm your till session - this '
+        + 'screen is working from a saved copy. Check the internet and try again.';
+    }
+    return 'You do not have an open till session. Open one before selling.';
+  };
+
+  // WHICH TILL IS MINE - decided once, and never from stale data alone.
+  //
+  // If the list on screen has no open session for this cashier, ask the
+  // server ONE more time, live, before refusing. The list could be a saved
+  // copy from before the till was opened (see the sessions query above),
+  // or simply not have refetched yet after the Sessions page opened it.
+  // Every refusal is reported with the evidence - who, which sessions the
+  // till could see, where they came from - so the next "it says no cashier
+  // open" is a lookup, not a week of guessing (2026-08-31).
+  const resolveMySession = async (action) => {
+    let mine = findMyOpenSession(sessions, user);
+    if (mine) return mine;
+    let fromSavedCopy = sessionsFromSavedCopy;
+    let seen = sessions;
+    if (!offline) {
+      try {
+        const fresh = await refetchSessions();
+        const answer = fresh?.data;
+        if (answer && Array.isArray(answer.sessions)) {
+          seen = answer.sessions;
+          fromSavedCopy = !!answer.fromSavedCopy;
+          mine = findMyOpenSession(seen, user);
+          if (mine) return mine;
+        }
+      } catch (_) { /* the refusal below says so */ }
+    }
+    try {
+      Sentry.captureMessage('pos_refused_no_session', {
+        level: 'warning',
+        tags: { action, from_saved_copy: String(fromSavedCopy), offline: String(!!offline) },
+        extra: {
+          user_id: user?.user_id, username: user?.username,
+          sessions_seen: describeSessions(seen),
+        },
+      });
+    } catch (_) { /* telemetry must never block a till */ }
+    toast({ message: noSessionMessage(fromSavedCopy), kind: 'error' });
+    return null;
+  };
 
   const handleCashDrop = async () => {
     if (!isLockOwner) {
       alert('This tab is read-only — POS is already active in another tab. Cash drop not allowed here.');
       return;
     }
-    const activeSessions = sessions.filter((s) => !s.closed_at && (s.cashier_username || '').toLowerCase() === (user?.username || '').toLowerCase());
-    if (activeSessions.length === 0) {
-      toast({ message: noSessionMessage(), kind: 'error' });
-      return;
-    }
-    const sessionId = activeSessions[0].id;
+    const mySession = await resolveMySession('cash_drop');
+    if (!mySession) return;
+    const sessionId = mySession.id;
     const dropData = await promptCashDrop({ sessionId });
     if (!dropData) return;
     try {
@@ -1959,15 +2017,12 @@ export default function POS() {
       alert('This tab is read-only — POS is already active in another tab. Complete the sale there, or close the other tab and retry.');
       return;
     }
-    const activeSessions = sessions.filter((s) => !s.closed_at && (s.cashier_username || '').toLowerCase() === (user?.username || '').toLowerCase());
-    if (activeSessions.length === 0) {
-      // NOT alert(). A browser dialog blocks the JavaScript thread, so the
-      // till freezes behind it — which is how a Charge button was left
-      // reading "Processing…" with a modal sitting on top of it. A toast
-      // says the same thing without stopping the app.
-      toast({ message: noSessionMessage(), kind: 'error' });
-      return;
-    }
+    // NOT alert(). A browser dialog blocks the JavaScript thread, so the
+    // till freezes behind it — which is how a Charge button was left
+    // reading "Processing…" with a modal sitting on top of it. A toast
+    // says the same thing without stopping the app.
+    const mySession = await resolveMySession('complete_sale');
+    if (!mySession) return;
 
     if (cart.length === 0) {
       alert('Cart is empty');
@@ -2066,7 +2121,7 @@ export default function POS() {
     }
 
     const saleData = {
-      session: activeSessions[0].id,
+      session: mySession.id,
       customer_name: loyaltyMember
         ? (loyaltyMember.customer_name || loyaltyMember.customer_phone || `Member #${loyaltyMember.id}`)
         : undefined,
@@ -2284,8 +2339,8 @@ export default function POS() {
   // Reuses the same cart state and handlers as the default view.
   // ──────────────────────────────────────────────────────────────────
   if (settings.theme === 'pnp') {
-    const laneLabel = sessions.find((s) => !s.closed_at && (s.cashier_username || '').toLowerCase() === (user?.username || '').toLowerCase())
-      ? `Lane #${sessions.find((s) => !s.closed_at && (s.cashier_username || '').toLowerCase() === (user?.username || '').toLowerCase()).id}`
+    const laneLabel = findMyOpenSession(sessions, user)
+      ? `Lane #${findMyOpenSession(sessions, user).id}`
       : 'No session';
     return (
       <div
@@ -2357,8 +2412,8 @@ export default function POS() {
   // Selected when the manager picks "Dark supermarket" in POS Settings.
   // ──────────────────────────────────────────────────────────────────
   if (settings.theme === 'dark') {
-    const laneLabel = sessions.find((s) => !s.closed_at && (s.cashier_username || '').toLowerCase() === (user?.username || '').toLowerCase())
-      ? `Lane #${sessions.find((s) => !s.closed_at && (s.cashier_username || '').toLowerCase() === (user?.username || '').toLowerCase()).id}`
+    const laneLabel = findMyOpenSession(sessions, user)
+      ? `Lane #${findMyOpenSession(sessions, user).id}`
       : 'No session';
     return (
       <div

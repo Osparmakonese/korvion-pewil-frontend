@@ -184,6 +184,17 @@ export const createStockAdjustment = (data) => {
 
 // ── Cashier Sessions ──
 export const getCashierSessions = () => api.get('/retail/cashier-sessions/').then(r => r.data);
+// The till's question is "which tills are open right now?" - a few rows, not
+// the business's whole history (84 KB and growing, which is what used to
+// time out on a shop phone and hand the POS a stale saved copy). The result
+// carries `fromSavedCopy` when the offline layer answered instead of the
+// server, so the caller can say so rather than refuse a sale on old news.
+export const getOpenCashierSessions = () =>
+  api.get('/retail/cashier-sessions/', { params: { status: 'open' } })
+    .then((r) => {
+      const data = Array.isArray(r.data) ? r.data : (r.data?.results || []);
+      return { sessions: data, fromSavedCopy: !!r.__fromOfflineCache, savedAt: r.__cachedAt || null };
+    });
 export const createCashierSession = (data) => api.post('/retail/cashier-sessions/', data).then(r => r.data);
 export const closeCashierSession = (id, data) => api.post(`/retail/cashier-sessions/${id}/close/`, data).then(r => r.data);
 

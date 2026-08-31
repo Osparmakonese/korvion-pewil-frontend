@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from 'react';
+import * as Sentry from '@sentry/react';
 import api from '../api/axios';
 
 const AuthContext = createContext(null);
@@ -55,7 +56,10 @@ export function AuthProvider({ children }) {
     } catch { /* fallback */ }
 
     return {
-      username: username || res.data.username,
+      // The SERVER's spelling, not what was typed in the login box. The till
+      // used to compare this against the session's cashier name, so any
+      // difference between the two meant "no cashier session open" (2026-08-31).
+      username: res.data.username || username,
       user_id: res.data.user_id,
       role: res.data.role || role,
       tenant_id: res.data.tenant_id || tenant_id,
@@ -87,6 +91,9 @@ export function AuthProvider({ children }) {
     const userData = _extractUserData(res, username);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
+    // So a Sentry event from a till can be tied to the person at it. No
+    // email, no PII beyond the login name the business already chose.
+    try { Sentry.setUser({ id: String(userData.user_id || ''), username: userData.username }); } catch (_) {}
     return userData;
   }
 
@@ -275,6 +282,7 @@ export function AuthProvider({ children }) {
   }
 
   function logout() {
+    try { Sentry.setUser(null); } catch (_) {}
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
