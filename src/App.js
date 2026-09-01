@@ -135,6 +135,7 @@ const Butchery = React.lazy(() => import('./pages/Butchery'));
 const StylesVariants = React.lazy(() => import('./pages/StylesVariants'));
 const Production = React.lazy(() => import('./pages/Production'));
 const Accounting = React.lazy(() => import('./pages/Accounting'));
+const Station = React.lazy(() => import('./pages/Station'));
 const ControlledRegister = React.lazy(() => import('./pages/ControlledRegister'));
 const RestaurantTables = React.lazy(() => import('./pages/RestaurantTables'));
 const KitchenOrders = React.lazy(() => import('./pages/KitchenOrders'));
@@ -264,6 +265,7 @@ const PAGES = {
   'Styles & Variants': StylesVariants,
   'Production': Production,
   'The Books': Accounting,
+  'Station': Station,
   'Controlled Register': ControlledRegister,
   // Restaurant
   'Tables': RestaurantTables,
@@ -325,6 +327,7 @@ const PAGE_META = {
   'Retail': { title: 'Retail Dashboard', sub: 'Store overview and daily metrics' },
   'Products': { title: 'Products', sub: 'Product catalog and inventory' },
   'POS': { title: 'Point of Sale', sub: 'Process sales and manage cart' },
+  'Station': { title: 'Station', sub: 'Dispensary / counter — build a ticket and send it to the till' },
   'Sales History': { title: 'Sales History', sub: 'View all retail transactions and receipts' },
   'Cashier Sessions': { title: 'Cashier Sessions', sub: 'Open, close, and manage cashier sessions' },
   'Stock Adjustments': { title: 'Stock Adjustments', sub: 'Log damaged, stolen, or restocked items' },

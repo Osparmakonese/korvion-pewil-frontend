@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getPrescriptions, createPrescription, dispensePrescription,
-  getPatients, createPatient, getProducts,
+  getPatients, createPatient, getProducts, createTicket, readyTicket,
 } from '../api/retailApi';
 import useIsMobile from '../hooks/useIsMobile';
 
@@ -116,19 +116,40 @@ export default function Prescriptions({ onTabChange }) {
 
   // Park the Rx for the POS: cart fills with its lines at CURRENT shelf
   // prices, and the completed sale calls dispense with the real sale id.
-  const toTill = (rx) => {
-    try {
-      localStorage.setItem('pewil_pending_rx', JSON.stringify({
-        id: rx.id, patient: rx.patient || null, patient_name: rx.patient_name,
-        allergies: rx.patient_detail?.allergies || '',
-        medical_aid: rx.patient_detail?.medical_aid || null,
-        member_number: rx.patient_detail?.member_number || '',
-        member_suffix: rx.patient_detail?.member_suffix || '',
-        items_data: rx.items_data || [],
+  // "To till" (2026-09-01): creates a TICKET on the server, so ANY till in the
+  // shop sees it on its board — the dispensary and the front counter no longer
+  // need to be the same device. Falls back to the local hand-off if the
+  // ticket API is unavailable (e.g. offline), so the button always works.
+  const toTill = useMutation({
+    mutationFn: async (rx) => {
+      const lines = (rx.items_data || []).filter((it) => it.product).map((it) => ({
+        product: Number(it.product), qty: it.qty || 1, notes: it.dosage || '',
       }));
-    } catch (_) {}
-    if (onTabChange) onTabChange('POS');
-  };
+      const tk = await createTicket({
+        station: 'dispensary', patient: rx.patient || null, prescription: rx.id,
+        customer_name: rx.patient_name, customer_phone: rx.patient_phone || rx.patient_detail?.phone || '',
+        lines, client_key: `RX-${rx.id}-${Date.now().toString(36)}`,
+      });
+      return readyTicket(tk.id);
+    },
+    onSuccess: (tk) => {
+      qc.invalidateQueries({ queryKey: ['prescriptions'] });
+      window.alert(`Ticket ${tk.number} is on the till board. The customer pays at the front.`);
+    },
+    onError: (err, rx) => {
+      try {
+        localStorage.setItem('pewil_pending_rx', JSON.stringify({
+          id: rx.id, patient: rx.patient || null, patient_name: rx.patient_name,
+          allergies: rx.patient_detail?.allergies || '',
+          medical_aid: rx.patient_detail?.medical_aid || null,
+          member_number: rx.patient_detail?.member_number || '',
+          member_suffix: rx.patient_detail?.member_suffix || '',
+          items_data: rx.items_data || [],
+        }));
+      } catch (_) {}
+      if (onTabChange) onTabChange('POS');
+    },
+  });
 
   return (
     <div className="vtl-stack" style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 340px', gap: 16 }}>
@@ -160,7 +181,7 @@ export default function Prescriptions({ onTabChange }) {
                 </div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {canDispense && (
-                    <button onClick={() => toTill(rx)} style={{ ...miniBtn, borderColor: '#1a6b3a', color: '#1a6b3a' }}>🛒 To till</button>
+                    <button onClick={() => toTill.mutate(rx)} disabled={toTill.isPending} style={{ ...miniBtn, borderColor: '#1a6b3a', color: '#1a6b3a' }}>🛒 To till</button>
                   )}
                   {canDispense && (
                     <button onClick={() => dispense.mutate(rx.id)} disabled={dispense.isPending} style={miniBtn}>✔ Dispense</button>

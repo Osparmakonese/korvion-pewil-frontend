@@ -218,6 +218,7 @@ export const NAV_ITEMS = [
   ]},
   { section: 'DAILY', module: 'retail', collapsible: false, items: [
     { key: 'POS', emoji: '\u{1F6D2}', label: 'Point of Sale' },
+    { key: 'Station', emoji: '\u{1F3AB}', label: 'Station / Dispensary', feature: 'tickets' },
     { key: 'Products', emoji: '\u{1F3F7}\uFE0F', label: 'Products' },
     { key: 'Customers', emoji: '\u{1F465}', label: 'Customers' },
     { key: 'Sales History', emoji: '\u{1F4CB}', label: 'Sales History' },

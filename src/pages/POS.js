@@ -14,6 +14,7 @@ import {
   getCreditAccounts,
   getMedicalAidProviders,
   dispensePrescription,
+  claimTicket,
   getReceiptTemplates,
   emailReceipt,
 } from '../api/retailApi';
@@ -43,6 +44,7 @@ import QuickTilesPanel from '../components/QuickTilesPanel';
 import ScannerLanePOS from '../components/ScannerLanePOS';
 import DarkSupermarketPOS from '../components/DarkSupermarketPOS';
 import MobilePOS from '../components/MobilePOS';
+import TicketBoard from '../components/TicketBoard';
 import MobileSaleComplete from '../components/MobileSaleComplete';
 import POSImmersiveControls from '../components/POSImmersiveControls';
 import { useAuth } from '../context/AuthContext';
@@ -1222,6 +1224,9 @@ export default function POS() {
   const { user } = useAuth();
   // Pharmacy Phase 3: only pharmacy tenants get the Medical Aid tender leg.
   const hasMedicalAid = Array.isArray(user?.features) && user.features.includes('medical_aid');
+  // Tickets (2026-09-01): station → till hand-off. Grocery tenants never have
+  // this feature, so nothing below that is gated on it can touch their till.
+  const hasTickets = Array.isArray(user?.features) && user.features.includes('tickets');
   const barcodeInputRef = useRef(null);
   const [search, setSearch] = useState('');
   const [barcode, setBarcode] = useState('');
@@ -1618,6 +1623,73 @@ export default function POS() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [products.length]);
 
+  // ── Tickets at the till (2026-09-01) ─────────────────────────────────
+  // Declared AFTER the products query on purpose (see the HOTFIX note above).
+  const [showTickets, setShowTickets] = useState(false);
+  const [loadedTicket, setLoadedTicket] = useState(null);
+  const [claimingTicket, setClaimingTicket] = useState(null);
+  const handleClaimTicket = async (tk) => {
+    if (!tk?.id) return;
+    setClaimingTicket(tk.id);
+    try {
+      const fresh = await claimTicket(tk.id);
+      const missing = [];
+      const cartLines = [];
+      for (const l of (fresh.lines || [])) {
+        const prod = products.find((x) => x.id === Number(l.product));
+        if (!prod) { missing.push(l.name || `#${l.product}`); continue; }
+        cartLines.push({
+          product_id: prod.id,
+          name: prod.name,
+          unit_price: l.price_locked && l.unit_price != null
+            ? Number(l.unit_price) : (Number(prod.selling_price) || 0),
+          quantity: Number(l.qty) || 1,
+          product: prod,
+        });
+      }
+      if (!cartLines.length) {
+        toast({ message: `Ticket ${fresh.number}: none of its items exist in this shop's catalogue.`, kind: 'error' });
+        return;
+      }
+      setCart(cartLines);
+      setLoadedTicket({
+        id: fresh.id, number: fresh.number, prompts: fresh.prompts || [],
+        paid_ahead: !!fresh.paid_ahead, payment_txn: fresh.payment_txn || null,
+        customer_name: fresh.customer_name || fresh.patient_detail?.name || '',
+      });
+      // A dispensary ticket carries its prescription and patient: reuse the Rx
+      // path so the dispense is counted and medical aid is pre-filled.
+      if (fresh.prescription || fresh.patient_detail) {
+        setLoadedRx({
+          id: fresh.prescription || null,
+          patient: fresh.patient_detail?.id || null,
+          patient_name: fresh.patient_detail?.name || fresh.customer_name || '',
+          medical_aid: fresh.patient_detail?.medical_aid || null,
+          member_number: fresh.patient_detail?.member_number || '',
+          member_suffix: fresh.patient_detail?.member_suffix || '',
+        });
+      }
+      if (fresh.paid_ahead) {
+        // Paid from the queue by mobile money: the till hands over, never re-charges.
+        setPaymentMethod('mobile_money');
+        setSplitMode(false);
+      }
+      setShowTickets(false);
+      toast({
+        message: `Ticket ${fresh.number} loaded${fresh.customer_name ? ` for ${fresh.customer_name}` : ''}.`
+          + (fresh.patient_detail?.allergies ? ` ⚠ ALLERGIES: ${fresh.patient_detail.allergies}.` : '')
+          + (fresh.paid_ahead ? ' Already PAID — hand over.' : '')
+          + (missing.length ? ` Skipped: ${missing.join(', ')}.` : ''),
+        kind: (fresh.patient_detail?.allergies || missing.length) ? 'error' : 'success',
+      });
+    } catch (err) {
+      toast({ message: err?.response?.data?.detail || 'Could not load that ticket.', kind: 'error' });
+    } finally {
+      setClaimingTicket(null);
+    }
+  };
+
+
   // POS look-and-feel settings — per-tenant singleton.
   // Fetched once; falls back to sane defaults so the POS still renders
   // even if the endpoint is unreachable.
@@ -1984,6 +2056,7 @@ export default function POS() {
     setCart([]);
     setLoadedQuote(null);
     setLoadedRx(null);
+    setLoadedTicket(null);
     setDiscount('');
     setPaymentMethod('cash');
     setAccountId('');
@@ -2421,7 +2494,20 @@ export default function POS() {
     // payment fails, abort so nothing is recorded as paid. (Split-tender legs
     // that include mobile money are reconciled manually via their reference.)
     let mobileMoneyTxn = null;
-    if (!splitMode && effective_payment_method === 'mobile_money') {
+    // Ticket prompts (pharmacy): the till confirms what the station asked for
+    // — counselling done, ID checked — before any money moves.
+    if (loadedTicket?.prompts?.length) {
+      const labels = { counselling: 'Pharmacist counselling given to the patient',
+                       id_check: 'Customer ID checked for this item' };
+      for (const key of loadedTicket.prompts) {
+        // eslint-disable-next-line no-await-in-loop
+        const ok = await confirm({ title: `Ticket ${loadedTicket.number}`, message: `${labels[key] || key}?`,
+                                   confirmText: 'Yes, confirmed', cancelText: 'Not yet' });
+        if (!ok) return;
+      }
+    }
+
+    if (!splitMode && effective_payment_method === 'mobile_money' && !loadedTicket?.paid_ahead) {
       mobileMoneyTxn = await chargeMobileMoney({
         amount: grandTotal,
         currency: (localStorage.getItem('currency') || 'USD'),
@@ -2465,6 +2551,15 @@ export default function POS() {
     };
     if (payments_data_payload) {
       saleData.payments_data = payments_data_payload;
+    }
+    if (loadedTicket?.id) {
+      saleData.ticket = loadedTicket.id;       // the sale closes the ticket server-side
+      if (loadedTicket.paid_ahead) {
+        saleData.amount_tendered = grandTotal;
+        saleData.change_given = 0;
+        // Link the pay-ahead collection to the sale on success (no new charge).
+        if (loadedTicket.payment_txn) pendingMmTxnRef.current = loadedTicket.payment_txn;
+      }
     }
     if (!splitMode && effective_payment_method === 'on_account' && accountId) {
       saleData.credit_account = accountId;
@@ -2908,6 +3003,23 @@ export default function POS() {
                          border: '1px solid #bde3cc', borderRadius: 10, fontSize: 11, fontWeight: 700 }}>
             💊 Rx: {loadedRx.patient_name}
           </span>
+        )}
+        {hasTickets && (
+          <button type="button" onClick={() => setShowTickets((v) => !v)}
+            title="Tickets sent from the dispensary / counter"
+            style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #d1d5db',
+                     background: loadedTicket ? '#1a6b3a' : '#fff', color: loadedTicket ? '#fff' : '#111827',
+                     fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+            {loadedTicket ? `🎫 ${loadedTicket.number}${loadedTicket.paid_ahead ? ' · PAID' : ''}` : '🎫 Tickets'}
+          </button>
+        )}
+        {hasTickets && showTickets && (
+          <TicketBoard
+            branchId={findMyOpenSession(sessions, user)?.branch || null}
+            onClaim={handleClaimTicket}
+            onClose={() => setShowTickets(false)}
+            claiming={claimingTicket}
+          />
         )}
         <button type="button" onClick={() => setSuspendDrawerOpen(true)}
           title="Suspended sales"

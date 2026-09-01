@@ -60,6 +60,20 @@ export const getProductionOrders = (params) => api.get('/retail/production-order
 export const createProductionOrder = (data) => api.post('/retail/production-orders/', data).then(r => r.data);
 export const completeProductionOrder = (id) => api.post(`/retail/production-orders/${id}/complete/`, {}).then(r => r.data);
 
+// ── Tickets (2026-09-01): station → till hand-off ──
+export const getTicketBoard = (params) => api.get('/retail/tickets/board/', { params }).then(r => r.data);
+export const getTickets = (params) => api.get('/retail/tickets/', { params }).then(r => r.data);
+export const createTicket = (data) => api.post('/retail/tickets/', data).then(r => r.data);
+export const updateTicket = (id, data) => api.patch(`/retail/tickets/${id}/`, data).then(r => r.data);
+export const readyTicket = (id) => api.post(`/retail/tickets/${id}/ready/`, {}).then(r => r.data);
+export const claimTicket = (id) => api.post(`/retail/tickets/${id}/claim/`, {}).then(r => r.data);
+export const voidTicket = (id, reason) => api.post(`/retail/tickets/${id}/void/`, { reason }).then(r => r.data);
+export const notifyTicket = (id, phone) => api.post(`/retail/tickets/${id}/notify/`, phone ? { phone } : {}).then(r => r.data);
+export const attachTicketPayment = (id, txn) => api.post(`/retail/tickets/${id}/attach-payment/`, { txn }).then(r => r.data);
+export const refreshTicketPayment = (id) => api.post(`/retail/tickets/${id}/refresh-payment/`, {}).then(r => r.data);
+export const intakeScript = (image) => api.post('/retail/intake/script/', { image }).then(r => r.data);
+export const intakeInvoice = (image) => api.post('/retail/intake/invoice/', { image }).then(r => r.data);
+
 // ── Phase 5 (2026-08-31): the books ──
 export const getAccountingPnl = (params) => api.get('/retail/accounting/pnl/', { params }).then(r => r.data);
 export const getAccountingVat7 = (params) => api.get('/retail/accounting/vat7/', { params }).then(r => r.data);
