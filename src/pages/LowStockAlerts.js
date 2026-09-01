@@ -267,7 +267,7 @@ export default function LowStockAlerts({ onTabChange }) {
           </div>
         </div>
         <div style={S.metricCard}>
-          <div style={S.metricLabel}>Healthy (> 50%)</div>
+          <div style={S.metricLabel}>Healthy (&gt; 50%)</div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div style={{ ...S.metricValue, color: '#1a6b3a' }}>{healthyCount}</div>
             <div style={{ ...S.metricIcon, background: '#e8f5ee' }}>✓</div>

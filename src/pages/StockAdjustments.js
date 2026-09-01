@@ -8,6 +8,7 @@ import api from '../api/axios';
 import usePrimaryAction from '../hooks/usePrimaryAction';
 import { shopStock } from '../utils/branchStock';
 import useViewBranch from '../hooks/useViewBranch';
+import { fmtQty } from '../utils/format';
 
 /* --- Add Adjustment Modal --- */
 function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading, branches = [], showBranchPicker = false, branchId = '', onBranchChange, branchLabel = '' }) {
@@ -34,7 +35,7 @@ function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading, bran
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const payload = { ...form, quantity: parseInt(form.quantity) || 0 };
+    const payload = { ...form, quantity: parseFloat(form.quantity) || 0 };
     // Name the shop the stock actually moves at. Left off, the server has
     // nothing to resolve from -- this POST goes through submitWithQueue, not
     // createStockAdjustment, so it never carried the switcher's ?branch=
@@ -163,7 +164,7 @@ function AddAdjustmentModal({ isOpen, onClose, onSubmit, products, loading, bran
             </div>
             <div>
               <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>Quantity</label>
-              <input type="number" name="quantity" value={form.quantity} onChange={handleChange} required min="1" placeholder="0" style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', boxSizing: 'border-box' }} />
+              <input type="number" name="quantity" value={form.quantity} onChange={handleChange} required min="0.001" step="any" placeholder="0" style={{ width: '100%', padding: '10px 12px', border: '1px solid #e3e8e4', borderRadius: 10, fontSize: 12, outline: 'none', boxSizing: 'border-box' }} />
             </div>
           </div>
           {form.adjustment_type === 'restock' && (
@@ -344,10 +345,10 @@ export default function StockAdjustments() {
   // Summary stats
   const totalLoss = filtered
     .filter(a => ['stolen', 'damaged', 'expired', 'broken'].includes(a.adjustment_type))
-    .reduce((sum, a) => sum + (a.quantity || 0), 0);
+    .reduce((sum, a) => sum + (Number(a.quantity) || 0), 0);
   const totalRestock = filtered
     .filter(a => a.adjustment_type === 'restock')
-    .reduce((sum, a) => sum + (a.quantity || 0), 0);
+    .reduce((sum, a) => sum + (Number(a.quantity) || 0), 0);
 
   return (
     <div style={S.page}>
@@ -414,7 +415,7 @@ export default function StockAdjustments() {
                   <td style={S.td}><span style={S.badge(adj.adjustment_type)}>{typeLabel(adj.adjustment_type)}</span></td>
                   <td style={S.td}>
                     <strong style={{ color: ['stolen', 'damaged', 'expired', 'broken'].includes(adj.adjustment_type) ? '#c0392b' : '#1a6b3a' }}>
-                      {['stolen', 'damaged', 'expired', 'broken'].includes(adj.adjustment_type) ? '-' : '+'}{adj.quantity}
+                      {['stolen', 'damaged', 'expired', 'broken'].includes(adj.adjustment_type) ? '-' : '+'}{fmtQty(adj.quantity)}
                     </strong>
                   </td>
                   <td style={S.td}><span style={{ color: '#6b7280', fontSize: 10 }}>{adj.notes || '\u2014'}</span></td>

@@ -93,6 +93,17 @@ const CURRENCIES = {
  * Renders with the right number of decimal places per currency
  * convention (e.g. UGX has none, USD has two).
  */
+/**
+ * Quantities come from the API as decimal STRINGS since the DECIMAL(14,3)
+ * migration ("5.000", "12.500"). Print them like a human: 5, 12.5, 1,250 —
+ * never "5.000", and never string-concatenated by accident (2026-09-01).
+ */
+export function fmtQty(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return v == null ? '' : String(v);
+  return n.toLocaleString(undefined, { maximumFractionDigits: 3 });
+}
+
 export function fmt(n, currency) {
   if (n == null || isNaN(n)) return '—';
   const num = typeof n === 'string' ? parseFloat(n) : n;

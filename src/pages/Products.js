@@ -17,7 +17,7 @@ import {
 } from '../api/retailApi';
 import MobileProducts from '../components/MobileProducts';
 import { useAuth } from '../context/AuthContext';
-import { fmt } from '../utils/format';
+import { fmt, fmtQty } from '../utils/format';
 import { confirm } from '../utils/confirm';
 import { invalidateProductCaches } from '../utils/queryCache';
 import { shopPrice, shopStock, shopStockIsError, shopCarries } from '../utils/branchStock';
@@ -1163,7 +1163,7 @@ export default function Products() {
                                   background: bad ? '#fdecea' : (some ? '#e8f5ee' : '#f3f4f6'),
                                 }}
                               >
-                                {s.code || s.name} {s.quantity}
+                                {s.code || s.name} {fmtQty(s.quantity)}
                               </span>
                             );
                           })}
@@ -1321,7 +1321,7 @@ export default function Products() {
                           {productName}
                         </td>
                         <td style={{ ...S.td, color: adj.quantity < 0 ? '#c0392b' : '#374151', fontWeight: 700 }}>
-                          {adj.quantity < 0 ? '' : '+'}{adj.quantity}
+                          {Number(adj.quantity) < 0 ? '' : '+'}{fmtQty(adj.quantity)}
                         </td>
                         <td style={S.td}>
                           <span

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getControlledLog, createControlledLog, getProducts } from '../api/retailApi';
+import { fmtQty } from '../utils/format';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
 const card = { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: 16, marginBottom: 16 };
@@ -55,7 +56,7 @@ export default function ControlledRegister() {
               <tr key={e.id}>
                 <td style={td}>{(e.dispensed_at || e.created_at || '').slice(0, 16).replace('T', ' ')}</td>
                 <td style={td}>{e.product_name || e.product}</td>
-                <td style={td}>{e.quantity}</td>
+                <td style={td}>{fmtQty(e.quantity)}</td>
                 <td style={td}>{e.balance_after}</td>
                 <td style={td}>{e.patient_name || '—'}</td>
                 <td style={td}>{e.prescriber_name || '—'}</td>

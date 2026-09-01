@@ -4,6 +4,7 @@ import {
   getProductBatches, createProductBatch, deleteProductBatch, getProducts,
   getExpirySummary, writeOffBatch, listBranches,
 } from '../api/retailApi';
+import { fmtQty } from '../utils/format';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
 const card = { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: 16, marginBottom: 16 };
@@ -103,7 +104,7 @@ export default function ProductBatches() {
                   <td style={{ ...td, color: warn ? '#991b1b' : '#111827', fontWeight: warn ? 700 : 400 }}>
                     {b.expiry_date || '—'}{d !== null && ` (${d}d)`}
                   </td>
-                  <td style={td}>{b.quantity_remaining}</td>
+                  <td style={td}>{fmtQty(b.quantity_remaining)}</td>
                   <td style={td}>
                     {writingOff === b.id ? (
                       <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>

@@ -4,7 +4,7 @@ import {
   getProfitLoss, getVatReturn, getBalanceSheet, getDebtorsCreditors, getStockValuation,
   exportFinancialsExcel,
 } from '../api/retailApi';
-import { fmt } from '../utils/format';
+import { fmt, fmtQty } from '../utils/format';
 import ReportScopeChip from '../components/ReportScopeChip';
 
 const G = '#1a6b3a';
@@ -189,7 +189,7 @@ export default function FinancialReports() {
               <Stat label="SKUs in stock" value={stock.data.sku_count} raw />
             </div>
             <div style={{ overflowX: 'auto' }}><table style={S.table}><thead><tr><th style={S.th}>Product</th><th style={S.th}>Cat</th><th style={S.th}>Qty</th><th style={S.th}>Cost val</th><th style={S.th}>Retail val</th></tr></thead>
-              <tbody>{(stock.data.items || []).slice(0, 200).map((p) => <tr key={p.id}><td style={S.td}>{p.name}</td><td style={S.td}>{p.category}</td><td style={S.td}>{p.quantity}</td><td style={S.td}>{money(p.cost_value)}</td><td style={S.td}>{money(p.retail_value)}</td></tr>)}</tbody></table></div>
+              <tbody>{(stock.data.items || []).slice(0, 200).map((p) => <tr key={p.id}><td style={S.td}>{p.name}</td><td style={S.td}>{p.category}</td><td style={S.td}>{fmtQty(p.quantity)}</td><td style={S.td}>{money(p.cost_value)}</td><td style={S.td}>{money(p.retail_value)}</td></tr>)}</tbody></table></div>
           </>)}
         </div>
       )}

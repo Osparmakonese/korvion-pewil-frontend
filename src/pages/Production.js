@@ -11,6 +11,7 @@ import {
   completeProductionOrder, getProducts,
 } from '../api/retailApi';
 import useIsMobile from '../hooks/useIsMobile';
+import { fmtQty } from '../utils/format';
 
 const arr = (d) => (Array.isArray(d) ? d : (d?.results || []));
 const card = { background: '#fff', border: '1px solid #e3e8e4', borderRadius: 12, padding: 16, marginBottom: 16 };
@@ -78,7 +79,7 @@ export default function Production() {
             <div key={o.id} style={{ borderBottom: '1px solid #f3f4f6', padding: '10px 0', display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>
-                  {o.quantity} × {o.bom_detail?.product_name || `BOM ${o.bom}`}
+                  {fmtQty(o.quantity)} × {o.bom_detail?.product_name || `BOM ${o.bom}`}
                   <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 10, marginLeft: 6, textTransform: 'uppercase',
                                  background: o.status === 'completed' ? '#e8f5ee' : '#fef3c7',
                                  color: o.status === 'completed' ? '#1a6b3a' : '#92400e' }}>{o.status}</span>
@@ -110,7 +111,7 @@ export default function Production() {
               <div style={{ fontSize: 13, fontWeight: 700 }}>{b.product_name}</div>
               {(b.lines || []).map((l) => (
                 <div key={l.id} style={{ fontSize: 11, color: '#374151' }}>
-                  • {l.quantity} {l.component_unit} {l.component_name} @ {l.component_cost}
+                  • {fmtQty(l.quantity)} {l.component_unit} {l.component_name} @ {l.component_cost}
                 </div>
               ))}
               {Number(b.labour_cost_per_unit) > 0 && (
