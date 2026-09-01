@@ -162,6 +162,7 @@ const ACCOUNTANT_TABS = new Set([
   'Profit Margins',
   'Profit Analysis',
   'Journal Entries',
+  'The Books',              // Phase 5 — the accountant's whole reason to log in
   'Recurring Invoices',
   'Cashier Performance',
   'Report',                 // farm P&L
@@ -259,6 +260,18 @@ export const NAV_ITEMS = [
     { key: 'Kitchen', emoji: '\u{1F373}', label: 'Kitchen', feature: 'kitchen_orders' },
     { key: 'Modifiers', emoji: '➕', label: 'Modifiers', feature: 'modifiers' },
   ]},
+  // Butchery vertical (Phase 4) — feature-gated to the butchery business type.
+  { section: 'BUTCHERY', module: 'retail', collapsible: true, items: [
+    { key: 'Butchery', emoji: '\u{1F969}', label: 'Carcass & Cutting', feature: 'carcass_yield' },
+  ]},
+  // Clothing & footwear vertical (Phase 4).
+  { section: 'CLOTHING', module: 'retail', collapsible: true, items: [
+    { key: 'Styles & Variants', emoji: '\u{1F45F}', label: 'Styles & Variants', feature: 'variants' },
+  ]},
+  // Light manufacturing vertical (Phase 4).
+  { section: 'MANUFACTURING', module: 'retail', collapsible: true, items: [
+    { key: 'Production', emoji: '\u{1F3ED}', label: 'Production', feature: 'bom_production' },
+  ]},
   // Liquor / bottle store (Phase 3).
   { section: 'LIQUOR', module: 'retail', collapsible: true, items: [
     { key: 'Excise', emoji: '\u{1F37E}', label: 'Excise Returns', ownerOnly: true, feature: 'excise_notes' },
@@ -310,6 +323,7 @@ export const NAV_ITEMS = [
     { key: 'Recurring Invoices', emoji: '\u{1F501}', label: 'Recurring Invoices', feature: 'recurring_billing' },
     { key: 'Profit Margins', emoji: '\u{1F4C8}', label: 'Profit Margins', ownerOnly: true, managerOk: true },
     { key: 'Profit Analysis', emoji: '\u{1F4B9}', label: 'Profit Analysis', ownerOnly: true, managerOk: true },
+    { key: 'The Books', emoji: '\u{1F4D8}', label: 'The Books', ownerOnly: true, managerOk: true },
     { key: 'Journal Entries', emoji: '\u{1F4D2}', label: 'Journal Entries' },
     { key: 'Retail Payroll', emoji: '\u{1F4B0}', label: 'Payroll' },
     { key: 'Customer Loyalty', emoji: '⭐', label: 'Loyalty' },

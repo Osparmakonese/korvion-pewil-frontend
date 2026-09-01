@@ -131,6 +131,10 @@ const PriceBoard = React.lazy(() => import('./pages/PriceBoard'));
 const ProductBatches = React.lazy(() => import('./pages/ProductBatches'));
 const Prescriptions = React.lazy(() => import('./pages/Prescriptions'));
 const MedicalAid = React.lazy(() => import('./pages/MedicalAid'));
+const Butchery = React.lazy(() => import('./pages/Butchery'));
+const StylesVariants = React.lazy(() => import('./pages/StylesVariants'));
+const Production = React.lazy(() => import('./pages/Production'));
+const Accounting = React.lazy(() => import('./pages/Accounting'));
 const ControlledRegister = React.lazy(() => import('./pages/ControlledRegister'));
 const RestaurantTables = React.lazy(() => import('./pages/RestaurantTables'));
 const KitchenOrders = React.lazy(() => import('./pages/KitchenOrders'));
@@ -256,6 +260,10 @@ const PAGES = {
   'Batches': ProductBatches,
   'Prescriptions': Prescriptions,
   'Medical Aid': MedicalAid,
+  'Butchery': Butchery,
+  'Styles & Variants': StylesVariants,
+  'Production': Production,
+  'The Books': Accounting,
   'Controlled Register': ControlledRegister,
   // Restaurant
   'Tables': RestaurantTables,
@@ -373,6 +381,10 @@ const PAGE_META = {
   'Batches': { title: 'Batches & Expiry', sub: 'Track lots and expiry dates' },
   'Prescriptions': { title: 'Prescriptions', sub: 'Patient prescriptions and dispensing' },
   'Medical Aid': { title: 'Medical Aid', sub: 'Societies, claims and the money they still owe' },
+  'Butchery': { title: 'Butchery', sub: 'Carcass intake, cutting and yield' },
+  'Styles & Variants': { title: 'Styles & Variants', sub: 'Size and colour matrix, markdowns and exchanges' },
+  'Production': { title: 'Production', sub: 'Recipes, production runs and true cost' },
+  'The Books': { title: 'The Books', sub: 'P&L, VAT, ledgers and the accountant pack' },
   'Controlled Register': { title: 'Controlled Register', sub: 'Audit log of scheduled-drug dispensing' },
   // Restaurant
   'Tables': { title: 'Tables', sub: 'Floor plan and table status' },

@@ -39,6 +39,37 @@ export const exportClaimsCsv = (params) => api.get('/retail/medical-aid-claims/e
 export const getExpirySummary = () => api.get('/retail/product-batches/expiry-summary/').then(r => r.data);
 export const writeOffBatch = (id, data) => api.post(`/retail/product-batches/${id}/write-off/`, data).then(r => r.data);
 
+// ── Phase 4 (2026-08-31): butchery, clothing variants, manufacturing ──
+export const getCarcasses = (params) => api.get('/retail/carcasses/', { params }).then(r => r.data);
+export const createCarcass = (data) => api.post('/retail/carcasses/', data).then(r => r.data);
+export const completeCutting = (id, data) => api.post(`/retail/carcasses/${id}/complete-cutting/`, data).then(r => r.data);
+export const getYieldReport = () => api.get('/retail/carcasses/yield-report/').then(r => r.data);
+
+export const getProductStyles = () => api.get('/retail/product-styles/').then(r => r.data);
+export const createProductStyle = (data) => api.post('/retail/product-styles/', data).then(r => r.data);
+export const generateVariants = (id) => api.post(`/retail/product-styles/${id}/generate-variants/`, {}).then(r => r.data);
+export const markdownStyle = (id, data) => api.post(`/retail/product-styles/${id}/markdown/`, data).then(r => r.data);
+export const getMarkdowns = () => api.get('/retail/markdowns/').then(r => r.data);
+export const createSizeExchange = (data) => api.post('/retail/size-exchanges/', data).then(r => r.data);
+export const getSizeExchanges = () => api.get('/retail/size-exchanges/').then(r => r.data);
+
+export const getBoms = () => api.get('/retail/boms/').then(r => r.data);
+export const createBom = (data) => api.post('/retail/boms/', data).then(r => r.data);
+export const updateBom = (id, data) => api.patch(`/retail/boms/${id}/`, data).then(r => r.data);
+export const getProductionOrders = (params) => api.get('/retail/production-orders/', { params }).then(r => r.data);
+export const createProductionOrder = (data) => api.post('/retail/production-orders/', data).then(r => r.data);
+export const completeProductionOrder = (id) => api.post(`/retail/production-orders/${id}/complete/`, {}).then(r => r.data);
+
+// ── Phase 5 (2026-08-31): the books ──
+export const getAccountingPnl = (params) => api.get('/retail/accounting/pnl/', { params }).then(r => r.data);
+export const getAccountingVat7 = (params) => api.get('/retail/accounting/vat7/', { params }).then(r => r.data);
+export const getAccountingTrialBalance = (params) => api.get('/retail/accounting/trial-balance/', { params }).then(r => r.data);
+export const getDebtors = () => api.get('/retail/accounting/debtors/').then(r => r.data);
+export const getCreditors = (params) => api.get('/retail/accounting/creditors/', { params }).then(r => r.data);
+export const getZReconciliation = (params) => api.get('/retail/accounting/z-reconciliation/', { params }).then(r => r.data);
+export const downloadSageCsv = (params) => api.get('/retail/accounting/sage-csv/', { params, responseType: 'blob' }).then(r => r.data);
+export const downloadAccountantPack = (params) => api.get('/retail/accounting/accountant-pack/', { params, responseType: 'blob' }).then(r => r.data);
+
 // ── Restaurant: tables / modifiers / kitchen orders (Phase 2) ──
 export const getRestaurantTables = () => api.get('/retail/restaurant-tables/').then(r => r.data);
 export const createRestaurantTable = (data) => api.post('/retail/restaurant-tables/', data).then(r => r.data);
