@@ -868,6 +868,21 @@ function ModuleSubCard({ title, sub, onManage }) {
           {charge.explanation}
         </div>
       )}
+      {/* Per-shop tiers (2026-09-01): when shops sit on different tiers,
+          show the bill shop by shop so the total is never a mystery. */}
+      {charge?.mixed_tiers && Array.isArray(charge.lines) && charge.lines.length > 0 && (
+        <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: '6px 10px', marginBottom: 8 }}>
+          {charge.lines.map((l) => (
+            <div key={l.branch} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, padding: '2px 0' }}>
+              <span>{l.name} <span style={{ color: '#6b7280', textTransform: 'capitalize' }}>· {l.tier}</span></span>
+              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{symbol}{Number(l.unit_price).toFixed(2)}</span>
+            </div>
+          ))}
+          <div style={{ fontSize: 10.5, color: '#6b7280', marginTop: 4 }}>
+            Change a shop's tier on the Branches page. It applies to the tills at once and to the next invoice.
+          </div>
+        </div>
+      )}
       {dueText && (
         <div style={{
           fontSize: 12, fontWeight: dueSoon ? 700 : 500,

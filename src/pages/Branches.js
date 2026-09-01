@@ -124,6 +124,13 @@ export default function Branches() {
     onSuccess: () => { invalidateBranchCaches(qc); setEditing(null); },
     onError: (err) => alert('Could not update branch:\n\n' + formatApiError(err)),
   });
+  // Per-shop tier (2026-09-01): a shop's own Starter / Growth / Enterprise.
+  // Changes its tills allowance at once and its line on the next invoice.
+  const tierMut = useMutation({
+    mutationFn: ({ id, data }) => updateBranch(id, data),
+    onSuccess: () => { invalidateBranchCaches(qc); qc.invalidateQueries({ queryKey: ['billing'] }); },
+    onError: (err) => alert('Could not change this shop\'s tier:\n\n' + formatApiError(err)),
+  });
   const deleteMut = useMutation({
     mutationFn: deleteBranch,
     onSuccess: () => invalidateBranchCaches(qc),
@@ -252,6 +259,8 @@ export default function Branches() {
                 onEdit={() => setEditing(b)}
                 onPromote={() => onPromote(b)}
                 onArchive={() => onArchive(b)}
+                onTier={(tier) => tierMut.mutate({ id: b.id, data: { tier } })}
+                tierBusy={tierMut.isPending && tierMut.variables?.id === b.id}
                 busy={
                   (deleteMut.isPending && deleteMut.variables === b.id) ||
                   (promoteMut.isPending && promoteMut.variables === b.id)
@@ -283,7 +292,10 @@ export default function Branches() {
   );
 }
 
-function BranchCard({ branch, isOwner, onEdit, onPromote, onArchive, busy }) {
+const TIER_LABEL = { starter: 'Starter · 1 till', growth: 'Growth · 3 tills', enterprise: 'Enterprise · unlimited tills' };
+const TIER_PRICE = { starter: '$10', growth: '$15', enterprise: '$25' };
+
+function BranchCard({ branch, isOwner, onEdit, onPromote, onArchive, onTier, tierBusy, busy }) {
   const inactive = branch.is_active === false;
   const phone = branch.phone || '';
   const address = branch.address || '';
@@ -328,6 +340,28 @@ function BranchCard({ branch, isOwner, onEdit, onPromote, onArchive, busy }) {
         <Row label="Address" value={address} />
         <Row label="Phone" value={phone} />
         <Row label="Manager" value={manager} fallback="Unassigned" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+          <span style={{ color: T.muted, minWidth: 64 }}>Tier</span>
+          {isOwner ? (
+            <select
+              value={branch.tier || ''}
+              disabled={tierBusy}
+              onChange={(e) => onTier(e.target.value || null)}
+              title="This shop's own tier. It sets how many tills the shop may open and its line on the invoice."
+              style={{ padding: '4px 8px', border: `1px solid ${T.line}`, borderRadius: 8, fontSize: 12, background: '#fff' }}
+            >
+              <option value="">Same as subscription{branch.effective_tier ? ` (${branch.effective_tier})` : ''}</option>
+              {Object.keys(TIER_LABEL).map((t) => (
+                <option key={t} value={t}>{TIER_LABEL[t]} — {TIER_PRICE[t]}/mo</option>
+              ))}
+            </select>
+          ) : (
+            <span style={{ textTransform: 'capitalize' }}>{branch.effective_tier || '—'}</span>
+          )}
+          {branch.tier && (
+            <span style={{ fontSize: 10, color: T.muted }}>own tier · billed {TIER_PRICE[branch.tier]}/mo for this shop</span>
+          )}
+        </div>
       </div>
 
       {isOwner && (
