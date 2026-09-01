@@ -18,7 +18,7 @@ export function AuthProvider({ children }) {
     let tenant_id = null;
     let tenant_slug = '';
     let tenant_name = '';
-    let modules = ['farm'];
+    let modules = ['retail'];
     let plan = 'free';
     let retail_perms = {};
     let farm_perms = {};
@@ -40,7 +40,7 @@ export function AuthProvider({ children }) {
       tenant_id = payload.tenant_id || null;
       tenant_slug = payload.tenant_slug || '';
       tenant_name = payload.tenant_name || '';
-      modules = payload.modules || ['farm'];
+      modules = payload.modules || ['retail'];
       plan = payload.plan || 'free';
       retail_perms = payload.retail_perms || {};
       farm_perms = payload.farm_perms || {};
@@ -188,7 +188,7 @@ export function AuthProvider({ children }) {
     }
   }
 
-  async function demoLogin(module = 'farm') {
+  async function demoLogin(module = 'retail') {
     // ``module`` picks which seeded demo tenant to log into:
     //   'farm'   -> Pewil Farm Live Demo (slug=demo)
     //   'retail' -> Pewil Retail Live Demo (slug=demo-retail)

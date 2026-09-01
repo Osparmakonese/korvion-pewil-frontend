@@ -30,7 +30,7 @@ export default function BillingLockoutGate({ children }) {
   const queryClient = useQueryClient();
 
   // The active module (single-module-per-tenant rule).
-  const module = (user?.modules && user.modules[0] === 'retail') ? 'retail' : 'farm';
+  const module = (user?.modules && user.modules[0] === 'farm') ? 'farm' : 'retail';
 
   // Override that the 402 interceptor can flip. Defaults to whatever
   // the /current_plan/ query says; the override forces lockout even

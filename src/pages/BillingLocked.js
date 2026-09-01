@@ -39,7 +39,7 @@ export default function BillingLocked({ subscription, reason }) {
     || subscription?.plan_details?.slug;
   const module = subscription?.module
     || user?.modules?.[0]
-    || 'farm';
+    || 'retail';
 
   // Translate reason → headline + supporting copy. Defensive defaults
   // because we want the page to render even if /current_plan/ 404s

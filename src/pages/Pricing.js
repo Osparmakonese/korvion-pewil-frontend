@@ -124,7 +124,6 @@ const FAQ = [
   { q: 'Do managers and office staff count as cashiers?', a: 'No. Only tills count. Managers, supervisors and anyone who just needs to see the reports — a bookkeeper, for example — are unlimited on every plan, at no extra cost. Give them the Manager role rather than Cashier.' },
   { q: 'Do you offer a yearly discount?', a: 'Yes — pay yearly and get 2 months free (about 17% off). That is $100, $150 or $250 per shop per year.' },
   { q: 'What payment methods do you accept?', a: 'Mobile money — EcoCash/OneMoney in Zimbabwe and MTN/Airtel/Zamtel in Zambia — plus Visa and Mastercard, via Paynow, Pesepay and Lenco. You can pay your subscription with mobile money — no card required.' },
-  { q: 'Why is farm priced differently?', a: 'Farm is a separate module with its own tools (fields, livestock, harvest). Its tiers (Starter $10, Growth $25, Enterprise $60) match the value a farm gets. Each tenant runs one module — farm OR retail.' },
   { q: 'Can I cancel anytime?', a: 'Yes. Cancel from your Billing page; your subscription stays active until the end of the current period — no immediate lockout.' },
   { q: 'Is my data safe?', a: 'HTTPS everywhere, JWT authentication, role-based access, full audit logs and automated backups. You can export your data anytime as Excel.' },
 ];
@@ -217,7 +216,6 @@ export default function Pricing() {
 
       <div style={S.moduleTabs}>
         <div style={S.moduleTab(module === 'retail')} onClick={() => setModule('retail')}>Retail / Shop</div>
-        <div style={S.moduleTab(module === 'farm')} onClick={() => setModule('farm')}>Farm</div>
       </div>
 
       <div style={S.grid}>

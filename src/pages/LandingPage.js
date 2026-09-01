@@ -17,7 +17,7 @@ function useDemoEntry() {
   // Farm and Retail demos.
   const [loadingModule, setLoadingModule] = useState(null);
   const [demoError, setDemoError] = useState('');
-  async function enterDemo(module = 'farm') {
+  async function enterDemo(module = 'retail') {
     if (loadingModule) return;
     setLoadingModule(module);
     setDemoError('');
@@ -353,7 +353,6 @@ const LandingPage = () => {
             <a href="#proof">Customers</a>
             <Link to="/pricing">Pricing</Link>
             <Link to="/download">Desktop app</Link>
-            <Link to="/farm">Pewil Farm</Link>
           </div>
           <div className="pl-nav-actions">
             <Link to="/login" className="pl-nav-login">Sign in</Link>
@@ -393,10 +392,7 @@ const LandingPage = () => {
             >
               {loadingModule === 'retail' ? 'opening retail demo…' : 'open Pewil Retail'}
             </button>
-            {' '}&mdash; real data, no signup. Running a farm instead?{' '}
-            <Link to="/farm" style={{ color: '#1a6b3a', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 3 }}>
-              Visit Pewil Farm &rarr;
-            </Link>
+            {' '}&mdash; real data, no signup.
             {demoError && <div style={{ color: '#c0392b', marginTop: 8, fontSize: 12 }}>{demoError}</div>}
           </div>
 
@@ -656,8 +652,6 @@ const LandingPage = () => {
           </div>
           <div className="pl-cta-micro">
             No credit card required. Runs on Android, iOS, and any modern browser.
-            {' '}&middot;{' '}
-            Running a farm? <Link to="/farm" style={{ color: 'inherit', textDecoration: 'underline', textUnderlineOffset: 3 }}>See Pewil Farm &rarr;</Link>
           </div>
         </div>
       </section>
@@ -677,7 +671,6 @@ const LandingPage = () => {
               <h4>Product</h4>
               <a href="#op-small">Pewil Retail</a>
               <a href="#op-chain">Pewil Retail for chains</a>
-              <Link to="/farm">Pewil Farm</Link>
               <Link to="/download">Desktop app</Link>
               <Link to="/pricing">Pricing</Link>
             </div>

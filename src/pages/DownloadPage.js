@@ -136,7 +136,7 @@ export default function DownloadPage() {
           </h1>
           <p>
             Install Pewil as a desktop app and get a dedicated window, a dock or
-            taskbar icon, and the same fast POS + farm experience &mdash; no browser tabs,
+            taskbar icon, and the same fast POS experience &mdash; no browser tabs,
             no distractions. One click on Chrome, Edge, Brave, or Arc.
           </p>
           <div className="dl-cta-row">

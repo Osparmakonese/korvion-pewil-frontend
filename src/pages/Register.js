@@ -232,8 +232,12 @@ export default function Register() {
   // Default to retail since pewil.org/ is now retail-led. Visitors arriving
   // at /register without a persona almost certainly came from the retail
   // homepage or a retail ad.
-  const persona = personaParam === 'farm' ? 'farm' : 'retail';
-  const otherPersona = persona === 'farm' ? 'retail' : 'farm';
+  // 2026-09-01: Pewil signs up SHOPS only. ?persona=farm is ignored — farm
+  // accounts are provisioned by Pewil from the super account, never
+  // self-served. The farm branches below stay for that provisioned path's
+  // shared components but are unreachable from here.
+  void personaParam;
+  const persona = 'retail';
   const accent = persona === 'farm' ? COLORS.farm : COLORS.retail;
   const accentSoft = persona === 'farm' ? 'rgba(26,107,58,0.10)' : 'rgba(199,119,0,0.12)';
 
@@ -401,9 +405,6 @@ export default function Register() {
                     : 'POS · stock · cashier sessions · multi-branch · fiscal'}
                 </div>
               </div>
-              <Link to={`/register?persona=${otherPersona}`} className="rg-persona-switch">
-                Switch to {otherPersona === 'farm' ? 'Farm' : 'Retail'}
-              </Link>
             </div>
 
             {error && <div className="rg-error">{error}</div>}
@@ -517,12 +518,6 @@ export default function Register() {
                 : (persona === 'farm' ? 'Start Pewil Farm →' : 'Start Pewil Retail →')}
             </button>
 
-            <div className="rg-cross">
-              Running a {otherPersona === 'farm' ? 'farm' : 'shop'} instead?{' '}
-              <Link to={otherPersona === 'farm' ? '/farm' : '/'}>
-                Visit Pewil {otherPersona === 'farm' ? 'Farm' : 'Retail'} &rarr;
-              </Link>
-            </div>
           </form>
         </main>
 

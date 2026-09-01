@@ -23,9 +23,9 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import SetupWizard from './pages/SetupWizard';
 
-/* Farm landing page — separate funnel at /farm (May 2026 split).
- * Eager so the marketing surface stays fast for SEO + ad clicks. */
-import FarmLandingPage from './pages/FarmLandingPage';
+/* Farm landing page retired 2026-09-01: Pewil is a retail POS. The farm
+ * module lives on only for accounts Pewil provisions itself; /farm now
+ * sends visitors to the shop homepage. */
 
 /* Download page — explains PWA install for desktop. Eager because it's
  * a CTA destination from landing pages and we want zero-flicker. */
@@ -516,7 +516,9 @@ function FarmApp() {
   // SINGLE-MODULE RULE (April 2026): activeModule is derived directly from
   // the tenant's one module — no in-app switching. An account is either
   // farm or retail for its lifetime.
-  const activeModule = (user?.modules && user.modules[0] === 'retail') ? 'retail' : 'farm';
+  // Retail is the product (2026-09-01): only a tenant whose FIRST module is
+  // literally 'farm' — one Pewil provisioned by hand — gets the farm shell.
+  const activeModule = (user?.modules && user.modules[0] === 'farm') ? 'farm' : 'retail';
 
   // URL-SYNCED TABS (2026-07-02): the active tab now lives in the URL as
   // /app?t=<TabName> instead of in-memory useState. Why this matters:
@@ -623,8 +625,8 @@ export default function App() {
       <StagingBanner />
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        {/* Pewil Farm marketing landing — separate funnel from the retail-led homepage. */}
-        <Route path="/farm" element={<FarmLandingPage />} />
+        {/* /farm retired (2026-09-01) — old links and bookmarks land on the shop homepage. */}
+        <Route path="/farm" element={<Navigate to="/" replace />} />
         {/* Download / install instructions — destination for "Install for Desktop" CTAs. */}
         <Route path="/download" element={<DownloadPage />} />
         {/* Offline sync queue — destination from the OfflineIndicator pill. */}

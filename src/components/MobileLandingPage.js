@@ -50,26 +50,6 @@ const EASE = 'cubic-bezier(.22,.9,.3,1)';
 
 const OPERATORS = [
   {
-    key: 'farmer',
-    chip: 'Farmer',
-    title: 'For farmers.',
-    sub: 'Cattle, fields, crops, eggs.',
-    quote: '"I can finally see which field paid for the diesel and which one cost me."',
-    feats: [
-      'Tag livestock — health, weight, vaccines',
-      'Field calendar with planting reminders',
-      'Wages, expenses, trip settlement',
-    ],
-    price: '$10',
-    per: '/mo · USD',
-    priceSub: 'up to $60/mo Enterprise',
-    tier: 'Starter',
-    accent: T.green,
-    gradient: `linear-gradient(135deg, ${T.green}, ${T.green2})`,
-    cta: 'Try farm demo →',
-    demoModule: 'farm',
-  },
-  {
     key: 'small',
     chip: 'Small shop',
     title: 'For small shops.',
@@ -119,31 +99,21 @@ const OPERATORS = [
 const PARITY_ROWS = [
   {
     capability: 'Mobile POS · cash · mobile money · card',
-    farmer: 'Light — for ad-hoc sales at the farm gate',
     small: 'Yes — full POS lane, split-tender included',
     chain: 'Yes — multi-lane, multi-cashier',
   },
   {
     capability: 'Stock with reorder alerts',
-    farmer: 'Inputs & feed',
     small: 'Yes',
     chain: 'Yes — per branch',
   },
   {
-    capability: 'Livestock + fields',
-    farmer: 'Yes',
-    small: '—',
-    chain: '—',
-  },
-  {
     capability: 'Tax authority compliance',
-    farmer: 'Yes (where local rails exist)',
     small: 'Yes',
     chain: 'Yes — across all branches',
   },
   {
     capability: 'Loss prevention dashboard',
-    farmer: '—',
     small: 'Yes',
     chain: 'Yes — with cross-branch flags',
   },
@@ -319,9 +289,8 @@ export default function MobileLandingPage() {
         <div style={{ ...S.menu, gridTemplateRows: menuOpen ? '1fr' : '0fr' }}>
           <div style={{ overflow: 'hidden' }}>
             <a href="#features" style={S.menuLink} onClick={closeMenu}>Features <small style={S.menuSub}>Offline POS · fiscal · WhatsApp</small></a>
-            <a href="#operators" style={S.menuLink} onClick={closeMenu}>Who it's for <small style={S.menuSub}>Farmer · shop · chain</small></a>
+            <a href="#operators" style={S.menuLink} onClick={closeMenu}>Who it's for <small style={S.menuSub}>Small shop · chain</small></a>
             <a href="#plans" style={S.menuLink} onClick={closeMenu}>Plans <small style={S.menuSub}>From $10/mo</small></a>
-            <Link to="/farm" style={S.menuLink} onClick={closeMenu}>Pewil Farm <small style={S.menuSub}>Fields · livestock · harvest</small></Link>
             <Link to="/contact" style={S.menuLink} onClick={closeMenu}>Contact & support</Link>
             <Link to="/register" style={S.menuCta} onClick={() => { haptics.tap(); closeMenu(); }}>Start your 14-day free trial</Link>
           </div>
@@ -332,8 +301,8 @@ export default function MobileLandingPage() {
       <header style={S.hero} id="top">
         <div style={S.kick}><i style={S.kickDot} /> Built in Africa, for African operators</div>
         <h1 style={S.heroH1} className="ml-serif">
-          Run your <span style={{ color: T.green }}>shop</span> &amp;{' '}
-          your <span style={{ color: T.amber }}>farm</span> from one place.
+          Run your <span style={{ color: T.amber }}>shop</span>{' '}
+          from one place.
         </h1>
         <p style={S.heroSub}>Sell, track stock, close the till — all on the phone in your hand.</p>
         <Link ref={heroCtaRef} to="/register" onClick={() => haptics.tap()} style={S.heroCta}>Start your 14-day free trial</Link>
@@ -341,10 +310,6 @@ export default function MobileLandingPage() {
           Or try it instantly —{' '}
           <button type="button" onClick={() => enterDemo('retail')} disabled={!!busy} style={S.demoLink}>
             {busy === 'retail' ? 'opening…' : 'retail demo'}
-          </button>
-          {' · '}
-          <button type="button" onClick={() => enterDemo('farm')} disabled={!!busy} style={S.demoLink}>
-            {busy === 'farm' ? 'opening…' : 'farm demo'}
           </button>
         </div>
 
@@ -548,7 +513,6 @@ export default function MobileLandingPage() {
                 <div style={{ ...S.accBody, gridTemplateRows: isOpen ? '1fr' : '0fr' }}>
                   <div style={{ overflow: 'hidden' }}>
                     <div style={S.accGrid}>
-                      <span style={{ ...S.accWho, color: T.green }}>Farmer</span><span style={S.accWhat}>{row.farmer}</span>
                       <span style={{ ...S.accWho, color: T.amber }}>Small shop</span><span style={S.accWhat}>{row.small}</span>
                       <span style={{ ...S.accWho, color: T.ink }}>Chain</span><span style={S.accWhat}>{row.chain}</span>
                     </div>
@@ -576,7 +540,7 @@ export default function MobileLandingPage() {
       <section ref={finalRef} style={S.final}>
         <Reveal>
           <h2 style={S.finalH2} className="ml-serif">
-            Run your shop or farm <em style={{ fontStyle: 'italic', color: '#ffd480' }}>from your pocket</em>.
+            Run your shop <em style={{ fontStyle: 'italic', color: '#ffd480' }}>from your pocket</em>.
           </h2>
         </Reveal>
         <Reveal><p style={S.finalP}>14-day free trial, no card. Then one simple flat price from $10/month — pay by mobile money or card.</p></Reveal>
@@ -600,7 +564,7 @@ export default function MobileLandingPage() {
       {/* ── Footer ── */}
       <footer style={S.foot}>
         <div style={S.footBrand} className="ml-serif">Pewil</div>
-        <div style={S.footTag}>The operating system for African retailers and farmers.</div>
+        <div style={S.footTag}>The operating system for African retailers.</div>
         <div style={S.footLinks}>
           <Link to="/pricing" style={S.footLink}>Pricing</Link>
           <Link to="/contact" style={S.footLink}>Support</Link>

@@ -390,7 +390,7 @@ export default function Sidebar({ activeTab, onTabChange, user, onLogout, lowSto
   const planLabel = tenantPlan.charAt(0).toUpperCase() + tenantPlan.slice(1) + ' Plan';
   // SINGLE-MODULE RULE (April 2026): every tenant runs exactly one module.
   const modules = user?.modules || ['farm'];
-  const tenantModule = (modules[0] === 'retail') ? 'retail' : 'farm';
+  const tenantModule = (modules[0] === 'farm') ? 'farm' : 'retail';   // retail unless Pewil provisioned a farm (2026-09-01)
   const hasFarm = tenantModule === 'farm';
   const hasRetail = tenantModule === 'retail';
 

@@ -41,9 +41,12 @@ const tabBtn = (active) => ({
 });
 
 // ─── HELPERS ──────────────────────────────────────────────
+// Retail is the product (2026-09-01). A farm tenant Pewil provisioned still
+// reaches its farm plans via lockedModule='farm'; the public tab row shows
+// retail only.
 const MODULES = [
-  { key: 'farm', label: 'Pewil Farm' },
   { key: 'retail', label: 'Pewil Retail' },
+  { key: 'farm', label: 'Pewil Farm', hidden: true },
 ];
 
 const TIER_ORDER = { starter: 0, growth: 1, enterprise: 2 };
@@ -80,7 +83,7 @@ function aiLabel(tier) {
  *      tenant can't browse the other module's plans — they don't have that
  *      module and shouldn't see it. Preferred over defaultModule.
  */
-export default function PlansTable({ activeSubscriptions = {}, onSelectPlan, defaultModule = 'farm', lockedModule = null }) {
+export default function PlansTable({ activeSubscriptions = {}, onSelectPlan, defaultModule = 'retail', lockedModule = null }) {
   const [module, setModule] = useState(lockedModule || defaultModule);
   const [billingCycle, setBillingCycle] = useState('monthly');
 
@@ -131,7 +134,7 @@ export default function PlansTable({ activeSubscriptions = {}, onSelectPlan, def
         <div style={{ display: 'flex', gap: 8 }}>
           {/* Module switcher is hidden when locked — single-module tenants
               should never see the other module's tab. */}
-          {!lockedModule && MODULES.map(m => (
+          {!lockedModule && MODULES.filter(m => !m.hidden).map(m => (
             <button key={m.key} onClick={() => setModule(m.key)} style={tabBtn(module === m.key)}>
               {m.label}
             </button>

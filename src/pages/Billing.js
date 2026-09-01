@@ -37,7 +37,7 @@ const fetchActiveSubs = async () => {
     const subs = resp?.subscriptions || (Array.isArray(resp) ? resp : resp ? [resp] : []);
     const byModule = {};
     subs.forEach(s => {
-      const mod = s.module || s.plan?.module || 'farm';
+      const mod = s.module || s.plan?.module || 'retail';
       byModule[mod] = s;
     });
     return byModule;
@@ -88,7 +88,7 @@ export default function Billing({ activeModule }) {
   const currentModule =
     activeModule ||
     (Array.isArray(user?.modules) && user.modules[0]) ||
-    'farm';
+    'retail';
   const moduleLabel = currentModule === 'retail' ? 'Pewil Retail' : 'Pewil Farm';
 
   // Payment modal state — selectedPlan is the full Plan object from API

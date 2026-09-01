@@ -220,7 +220,7 @@ export default function Settings({ onTabChange }) {
 
   /* ── Modules — farm page only cares about farmOn.
      Retail module toggle lives on the Retail Settings page. ── */
-  const modules = user?.modules || ['farm', 'retail'];
+  const modules = user?.modules || ['retail'];
   const [farmOn] = useState(modules.includes('farm'));
 
   /* ── Cashier permissions ── */
