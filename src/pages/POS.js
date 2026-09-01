@@ -1304,98 +1304,6 @@ export default function POS() {
     return () => window.removeEventListener('pewil:sale-synced', onSynced);
   }, []);
 
-  // ── Quote → till (2026-08-31) ─────────────────────────────────────────
-  // The Quotations page's "To till" button parks the accepted quote in
-  // localStorage and opens the POS; we pick it up here, fill the cart at
-  // the QUOTED prices, and remember which quote this basket belongs to so
-  // the finished sale converts it automatically.
-  const { data: medAidProvidersData } = useQuery({
-    queryKey: ['medaid-providers-pos'],
-    queryFn: getMedicalAidProviders,
-    enabled: hasMedicalAid,
-    staleTime: 5 * 60 * 1000,
-  });
-  const medAidProviders = Array.isArray(medAidProvidersData)
-    ? medAidProvidersData : (medAidProvidersData?.results || []);
-
-  const [loadedQuote, setLoadedQuote] = useState(null);
-  useEffect(() => {
-    if (!products.length) return;
-    let pending = null;
-    try { pending = JSON.parse(localStorage.getItem('pewil_pending_quote') || 'null'); } catch (_) {}
-    if (!pending || !Array.isArray(pending.items_data)) return;
-    localStorage.removeItem('pewil_pending_quote');
-    const missing = [];
-    const cartLines = [];
-    for (const it of pending.items_data) {
-      const prod = products.find((x) => x.id === Number(it.product));
-      if (!prod) { missing.push(it.name || `#${it.product}`); continue; }
-      cartLines.push({
-        product_id: prod.id,
-        name: prod.name,
-        unit_price: Number(it.unit_price) || 0,   // the QUOTED price, deliberately
-        quantity: Number(it.qty) || 1,
-        product: prod,
-      });
-    }
-    if (!cartLines.length) {
-      toast({ message: 'None of the quoted products exist in the catalogue any more.', kind: 'error' });
-      return;
-    }
-    setCart(cartLines);
-    setLoadedQuote({ id: pending.id, quote_number: pending.quote_number, customer_name: pending.customer_name });
-    toast({
-      message: `Quote ${pending.quote_number} loaded at quoted prices for ${pending.customer_name}.`
-        + (missing.length ? ` Skipped (no longer in catalogue): ${missing.join(', ')}.` : ''),
-      kind: missing.length ? 'error' : 'success',
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [products.length]);
-
-  // ── Prescription → till (Pharmacy Phase 3, 2026-08-31) ────────────────
-  // Mirrors the quote loader above, with two pharmacy differences: lines
-  // ring at CURRENT shelf prices (an Rx is a clinical document, not a price
-  // agreement), and the patient's allergies are shown to the cashier the
-  // moment the basket loads.
-  const [loadedRx, setLoadedRx] = useState(null);
-  useEffect(() => {
-    if (!products.length) return;
-    let pending = null;
-    try { pending = JSON.parse(localStorage.getItem('pewil_pending_rx') || 'null'); } catch (_) {}
-    if (!pending || !Array.isArray(pending.items_data)) return;
-    localStorage.removeItem('pewil_pending_rx');
-    const missing = [];
-    const cartLines = [];
-    for (const it of pending.items_data) {
-      const prod = products.find((x) => x.id === Number(it.product));
-      if (!prod) { missing.push(it.name || `#${it.product}`); continue; }
-      cartLines.push({
-        product_id: prod.id,
-        name: prod.name,
-        unit_price: Number(prod.selling_price) || 0,   // TODAY'S shelf price
-        quantity: Number(it.qty) || 1,
-        product: prod,
-      });
-    }
-    if (!cartLines.length) {
-      toast({ message: 'None of the prescribed medicines exist in the catalogue.', kind: 'error' });
-      return;
-    }
-    setCart(cartLines);
-    setLoadedRx({
-      id: pending.id, patient: pending.patient, patient_name: pending.patient_name,
-      medical_aid: pending.medical_aid || null,
-      member_number: pending.member_number || '',
-      member_suffix: pending.member_suffix || '',
-    });
-    toast({
-      message: `Rx for ${pending.patient_name} loaded.`
-        + (pending.allergies ? ` ⚠ ALLERGIES: ${pending.allergies}.` : '')
-        + (missing.length ? ` Skipped (not in catalogue): ${missing.join(', ')}.` : ''),
-      kind: (pending.allergies || missing.length) ? 'error' : 'success',
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [products.length]);
   const [focusMode, setFocusMode] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -1612,6 +1520,103 @@ export default function POS() {
       }
     },
   });
+
+  // ── HOTFIX 2026-09-01: these two loaders read `products.length` and were
+  // declared ABOVE the products query. Compiled to `var`, that read
+  // `undefined.length` on every render and took the whole POS down
+  // (Sentry MAKONESE-FARM-FRONTEND-A). They live below the query now.
+  // ── Quote → till (2026-08-31) ─────────────────────────────────────────
+  // The Quotations page's "To till" button parks the accepted quote in
+  // localStorage and opens the POS; we pick it up here, fill the cart at
+  // the QUOTED prices, and remember which quote this basket belongs to so
+  // the finished sale converts it automatically.
+  const { data: medAidProvidersData } = useQuery({
+    queryKey: ['medaid-providers-pos'],
+    queryFn: getMedicalAidProviders,
+    enabled: hasMedicalAid,
+    staleTime: 5 * 60 * 1000,
+  });
+  const medAidProviders = Array.isArray(medAidProvidersData)
+    ? medAidProvidersData : (medAidProvidersData?.results || []);
+
+  const [loadedQuote, setLoadedQuote] = useState(null);
+  useEffect(() => {
+    if (!products.length) return;
+    let pending = null;
+    try { pending = JSON.parse(localStorage.getItem('pewil_pending_quote') || 'null'); } catch (_) {}
+    if (!pending || !Array.isArray(pending.items_data)) return;
+    localStorage.removeItem('pewil_pending_quote');
+    const missing = [];
+    const cartLines = [];
+    for (const it of pending.items_data) {
+      const prod = products.find((x) => x.id === Number(it.product));
+      if (!prod) { missing.push(it.name || `#${it.product}`); continue; }
+      cartLines.push({
+        product_id: prod.id,
+        name: prod.name,
+        unit_price: Number(it.unit_price) || 0,   // the QUOTED price, deliberately
+        quantity: Number(it.qty) || 1,
+        product: prod,
+      });
+    }
+    if (!cartLines.length) {
+      toast({ message: 'None of the quoted products exist in the catalogue any more.', kind: 'error' });
+      return;
+    }
+    setCart(cartLines);
+    setLoadedQuote({ id: pending.id, quote_number: pending.quote_number, customer_name: pending.customer_name });
+    toast({
+      message: `Quote ${pending.quote_number} loaded at quoted prices for ${pending.customer_name}.`
+        + (missing.length ? ` Skipped (no longer in catalogue): ${missing.join(', ')}.` : ''),
+      kind: missing.length ? 'error' : 'success',
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products.length]);
+
+  // ── Prescription → till (Pharmacy Phase 3, 2026-08-31) ────────────────
+  // Mirrors the quote loader above, with two pharmacy differences: lines
+  // ring at CURRENT shelf prices (an Rx is a clinical document, not a price
+  // agreement), and the patient's allergies are shown to the cashier the
+  // moment the basket loads.
+  const [loadedRx, setLoadedRx] = useState(null);
+  useEffect(() => {
+    if (!products.length) return;
+    let pending = null;
+    try { pending = JSON.parse(localStorage.getItem('pewil_pending_rx') || 'null'); } catch (_) {}
+    if (!pending || !Array.isArray(pending.items_data)) return;
+    localStorage.removeItem('pewil_pending_rx');
+    const missing = [];
+    const cartLines = [];
+    for (const it of pending.items_data) {
+      const prod = products.find((x) => x.id === Number(it.product));
+      if (!prod) { missing.push(it.name || `#${it.product}`); continue; }
+      cartLines.push({
+        product_id: prod.id,
+        name: prod.name,
+        unit_price: Number(prod.selling_price) || 0,   // TODAY'S shelf price
+        quantity: Number(it.qty) || 1,
+        product: prod,
+      });
+    }
+    if (!cartLines.length) {
+      toast({ message: 'None of the prescribed medicines exist in the catalogue.', kind: 'error' });
+      return;
+    }
+    setCart(cartLines);
+    setLoadedRx({
+      id: pending.id, patient: pending.patient, patient_name: pending.patient_name,
+      medical_aid: pending.medical_aid || null,
+      member_number: pending.member_number || '',
+      member_suffix: pending.member_suffix || '',
+    });
+    toast({
+      message: `Rx for ${pending.patient_name} loaded.`
+        + (pending.allergies ? ` ⚠ ALLERGIES: ${pending.allergies}.` : '')
+        + (missing.length ? ` Skipped (not in catalogue): ${missing.join(', ')}.` : ''),
+      kind: (pending.allergies || missing.length) ? 'error' : 'success',
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products.length]);
 
   // POS look-and-feel settings — per-tenant singleton.
   // Fetched once; falls back to sane defaults so the POS still renders
