@@ -52,13 +52,42 @@ export default function DeviceConfiguration({ onTabChange }) {
   });
 
   // ── Mutations ──
+  // What the SERVER said when a save failed. Neither of these had an
+  // onError, so a rejected save - a validation error, a 402 from the plan
+  // gate, an expired token - left the modal sitting there with the button
+  // flicking from "Saving..." back to "Add Device" and not one word about
+  // why. Indistinguishable from a dead button, which is what it was
+  // reported as (2026-09-09). `testMut` already learned this lesson on
+  // 2026-08-31; create and update never did.
+  const [saveError, setSaveError] = useState('');
+  const readError = (err) => {
+    const d = err?.response?.data;
+    if (typeof d === 'string') return d;
+    if (d?.detail) return d.detail;
+    if (d && typeof d === 'object') {
+      const first = Object.entries(d)[0];
+      if (first) {
+        const [field, msg] = first;
+        const text = Array.isArray(msg) ? msg[0] : String(msg);
+        return field === 'detail' ? text : `${field}: ${text}`;
+      }
+    }
+    return err?.message || 'Could not save the device. Please try again.';
+  };
+
   const createMut = useMutation({
     mutationFn: createDeviceProfile,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['deviceProfiles'] }); qc.invalidateQueries({ queryKey: ['deviceSummary'] }); setShowAddModal(false); },
+    onSuccess: () => { setSaveError(''); qc.invalidateQueries({ queryKey: ['deviceProfiles'] }); qc.invalidateQueries({ queryKey: ['deviceSummary'] }); setShowAddModal(false); },
+    onError: (err) => setSaveError(readError(err)),
   });
   const updateMut = useMutation({
     mutationFn: ({ id, data }) => updateDeviceProfile(id, data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['deviceProfiles'] }); setEditDevice(null); },
+    // Also CLOSES the modal. It used to clear editDevice and leave the
+    // dialog open, so a successful edit silently retitled itself "Add New
+    // Device" with the same values still in it - one more click away from
+    // creating a duplicate of the device just edited.
+    onSuccess: () => { setSaveError(''); qc.invalidateQueries({ queryKey: ['deviceProfiles'] }); qc.invalidateQueries({ queryKey: ['deviceSummary'] }); setEditDevice(null); setShowAddModal(false); },
+    onError: (err) => setSaveError(readError(err)),
   });
   const deleteMut = useMutation({
     mutationFn: deleteDeviceProfile,
@@ -122,15 +151,24 @@ export default function DeviceConfiguration({ onTabChange }) {
     connection_config: {},
   });
 
+  const canSave = !!(form.device_name || '').trim()
+    && !createMut.isPending && !updateMut.isPending;
+
   const handleSave = () => {
+    if (!canSave) return;
+    setSaveError('');
+    // Trimmed: a name of nothing but spaces passed the old check and was
+    // then stored as a device with no readable name.
+    const payload = { ...form, device_name: form.device_name.trim() };
     if (editDevice) {
-      updateMut.mutate({ id: editDevice.id, data: form });
+      updateMut.mutate({ id: editDevice.id, data: payload });
     } else {
-      createMut.mutate(form);
+      createMut.mutate(payload);
     }
   };
 
   const openEdit = (d) => {
+    setSaveError('');
     setForm({
       device_type: d.device_type,
       device_name: d.device_name,
@@ -144,6 +182,7 @@ export default function DeviceConfiguration({ onTabChange }) {
   };
 
   const openAdd = () => {
+    setSaveError('');
     resetForm();
     setEditDevice(null);
     setShowAddModal(true);
@@ -611,8 +650,18 @@ export default function DeviceConfiguration({ onTabChange }) {
             </select>
 
             {/* Device Name */}
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Device Name</label>
-            <input type="text" placeholder="e.g. Front Counter Printer" value={form.device_name} onChange={e => setForm({ ...form, device_name: e.target.value })} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e3e8e4', fontSize: 13, marginBottom: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }} />
+            <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>
+              Device Name <span style={{ color: '#c0392b' }}>*</span>
+            </label>
+            <input
+              type="text"
+              autoFocus
+              placeholder="e.g. Front Counter Printer"
+              value={form.device_name}
+              onChange={e => setForm({ ...form, device_name: e.target.value })}
+              onKeyDown={e => { if (e.key === 'Enter') handleSave(); }}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e3e8e4', fontSize: 13, marginBottom: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }}
+            />
 
             {/* Connection Type */}
             <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Connection Type</label>
@@ -676,12 +725,46 @@ export default function DeviceConfiguration({ onTabChange }) {
               </>
             )}
 
-            {/* Save */}
+            {/* Save.
+
+                This button has always been `disabled` until a name is typed,
+                and `greenBtn` has no disabled styling — so it rendered solid
+                green with a pointer cursor, swallowed every click, and said
+                nothing. Device Name was not marked required either. The
+                entire hardware section read as broken (2026-09-09).
+
+                Three things now: it LOOKS disabled when it is, it SAYS what
+                it is waiting for, and a refusal from the server is printed
+                instead of swallowed. */}
+            {saveError && (
+              <div style={{
+                background: '#fee2e2', color: '#c0392b', border: '1px solid #fca5a5',
+                borderRadius: 8, padding: '10px 12px', fontSize: 12, marginTop: 4,
+                marginBottom: 10, lineHeight: 1.45,
+              }}>
+                {saveError}
+              </div>
+            )}
+            {!(form.device_name || '').trim() && (
+              <div style={{ fontSize: 11.5, color: '#9ca3af', marginTop: 4, marginBottom: 6 }}>
+                Give the device a name first {'\u2014'} that is how it is
+                labelled at the till.
+              </div>
+            )}
             <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-              <button style={{ ...greenBtn, flex: 1 }} onClick={handleSave} disabled={!form.device_name || createMut.isPending || updateMut.isPending}>
+              <button
+                style={{
+                  ...greenBtn,
+                  flex: 1,
+                  ...(canSave ? {} : { opacity: 0.45, cursor: 'not-allowed' }),
+                }}
+                onClick={handleSave}
+                disabled={!canSave}
+                title={canSave ? undefined : 'Enter a device name to save'}
+              >
                 {createMut.isPending || updateMut.isPending ? 'Saving...' : editDevice ? 'Update Device' : 'Add Device'}
               </button>
-              <button style={grayBtn} onClick={() => { setShowAddModal(false); setEditDevice(null); }}>Cancel</button>
+              <button style={grayBtn} onClick={() => { setShowAddModal(false); setEditDevice(null); setSaveError(''); }}>Cancel</button>
             </div>
           </div>
         </div>
