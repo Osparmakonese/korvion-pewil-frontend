@@ -31,7 +31,7 @@ const CATS = [
 ];
 
 const FAQ = [
-  { cat: 'start', q: 'How do I add a product or field?', a: 'Go to Products (retail) or Fields (farm) and tap the "+" button at the top. For products you can also set a barcode, HS code, VAT rate, and flags like age-restricted or weighable under Advanced options.' },
+  { cat: 'start', q: 'How do I add a product?', a: 'Go to Products and tap the "+" button at the top. You can also set a barcode, HS code, VAT rate, and flags like age-restricted, controlled or weighable under Advanced options — the ones your trade needs are the ones you will see.' },
   { cat: 'start', q: 'Can I use Pewil on my phone?', a: 'Yes — Pewil is a Progressive Web App. Open www.pewil.org in your phone browser and choose "Add to Home Screen" for an app-like experience that also works offline at the till.' },
   { cat: 'start', q: 'How do I set my shop branding (logo, VAT, address)?', a: 'Go to Setup → Receipt Customization. Set your store name, address, logo URL, brand colour, VAT number, TIN and bank details — these appear automatically on your printed receipts and invoices.' },
 

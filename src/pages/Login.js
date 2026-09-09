@@ -6,7 +6,8 @@ import PasswordInput from '../components/PasswordInput';
 /**
  * Login.js — Pewil sign-in, two-step (creds → 2FA when enabled).
  *
- * Redesigned 2026-05-16 to match the new retail-led / farm-led landing
+ * Redesigned 2026-05-16 to match the landing pages; retail-only since
+ * 2026-09-09.
  * pages (Playfair Display headings + Inter body, ink hero with a subtle
  * green→amber accent so login stays persona-AGNOSTIC — returning users
  * already have a module tied to their tenant).
@@ -28,7 +29,9 @@ import PasswordInput from '../components/PasswordInput';
 
 const COLORS = {
   ink: '#111827', muted: '#6b7280', line: '#e5e7eb',
-  farm: '#1a6b3a', retail: '#c77700',
+  // Brand green and brand amber. Named for what they are, not for a
+  // product lane that no longer exists (2026-09-09).
+  green: '#1a6b3a', retail: '#c77700',
 };
 
 const SERIF = "'Playfair Display', Georgia, serif";
@@ -46,7 +49,7 @@ const CSS = `
   .lg-hero::before{content:'';position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(26,107,58,0.32),transparent 60%);top:-160px;left:-160px;pointer-events:none}
   .lg-hero::after{content:'';position:absolute;width:480px;height:480px;border-radius:50%;background:radial-gradient(circle,rgba(199,119,0,0.30),transparent 60%);bottom:-200px;right:-180px;pointer-events:none}
   .lg-brand{display:inline-flex;align-items:center;gap:10px;font-family:${SERIF};font-weight:800;font-size:22px;color:#fff;position:relative;z-index:1}
-  .lg-brand-dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,${COLORS.farm} 40%,${COLORS.retail} 60%);box-shadow:0 0 0 3px rgba(255,255,255,0.12)}
+  .lg-brand-dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,${COLORS.green} 40%,${COLORS.retail} 60%);box-shadow:0 0 0 3px rgba(255,255,255,0.12)}
   .lg-brand-sub{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;margin-left:8px;font-weight:600;opacity:0.62}
 
   .lg-hero-body{position:relative;z-index:1;margin:48px 0 0}
@@ -72,7 +75,7 @@ const CSS = `
   .lg-newacct a:hover{border-color:${COLORS.ink}}
 
   .lg-form h2{font-family:${SERIF};font-size:36px;line-height:1.1;font-weight:700;margin:0 0 10px;color:${COLORS.ink};letter-spacing:-0.02em}
-  .lg-form h2 em{font-style:normal;color:${COLORS.farm}}
+  .lg-form h2 em{font-style:normal;color:${COLORS.green}}
   .lg-sub{font-size:14px;color:${COLORS.muted};margin:0 0 28px;line-height:1.55}
 
   .lg-field{margin-bottom:16px}

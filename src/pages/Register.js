@@ -8,17 +8,16 @@ import PasswordInput from '../components/PasswordInput';
 /**
  * Register.js — Pewil signup, persona-aware.
  *
- * Redesigned 2026-05-16 to match the new retail-led / farm-led landing
- * pages (Playfair Display headings + Inter body, green accent for farm,
+ * Redesigned 2026-05-16 to match the landing page (Playfair Display
+ * headings + Inter body,
  * amber/ink for retail). Layout: hero-left (persona-tuned copy + trust
  * strip), form-right (single-step form, no friction).
  *
  * Persona resolution:
- *   - URL ?persona=farm   → green-led farm signup
  *   - URL ?persona=retail → amber/ink-led retail signup
  *   - no URL persona      → default retail (homepage is retail-led)
  *
- * Single-module rule: a tenant is FARM or RETAIL, never both. The
+ * Single-module rule: a tenant belongs to one product lane. The
  * persona picked here writes to form.module which the backend honors.
  * If the operator wants both, they create two accounts. A small
  * cross-link at the bottom of the form lets them re-route to the
@@ -33,8 +32,6 @@ const COLORS = {
   ink: '#111827', muted: '#6b7280', line: '#e5e7eb',
   // Retail accent — amber/ink, matches retail homepage
   retail: '#c77700', retailDark: '#8b5200', retailSoft: '#fff4e1',
-  // Farm accent — green, matches /farm page
-  farm: '#1a6b3a', farmDark: '#0d4a22', farmSoft: '#e8f5ee',
 };
 
 const SERIF = "'Playfair Display', Georgia, serif";
@@ -49,7 +46,6 @@ const CSS = `
 
   /* HERO column — persona-tuned background + copy */
   .rg-hero{padding:56px 56px 48px;display:flex;flex-direction:column;justify-content:space-between;color:#fff;position:relative;overflow:hidden}
-  .rg-hero.farm{background:linear-gradient(135deg,${COLORS.farm} 0%,${COLORS.farmDark} 100%)}
   .rg-hero.retail{background:linear-gradient(135deg,${COLORS.ink} 0%,#2a2018 100%)}
   .rg-hero::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 80% 15%,rgba(255,255,255,0.08),transparent 60%);pointer-events:none}
   .rg-brand{display:inline-flex;align-items:center;gap:10px;font-family:${SERIF};font-weight:800;font-size:22px;color:#fff;position:relative;z-index:1}
@@ -88,19 +84,16 @@ const CSS = `
 
   .rg-form h2{font-family:${SERIF};font-size:36px;line-height:1.1;font-weight:700;margin:0 0 10px;color:${COLORS.ink};letter-spacing:-0.02em}
   .rg-form h2 em{font-style:normal}
-  .rg-form h2.farm em{color:${COLORS.farm}}
   .rg-form h2.retail em{color:${COLORS.retail}}
   .rg-sub{font-size:14px;color:${COLORS.muted};margin:0 0 28px;line-height:1.55}
 
   /* Persona pill (locked, not toggleable) */
   .rg-persona{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;margin-bottom:24px;border:1px solid ${COLORS.line}}
-  .rg-persona.farm{background:${COLORS.farmSoft};border-color:rgba(26,107,58,0.18)}
   .rg-persona.retail{background:${COLORS.retailSoft};border-color:rgba(199,119,0,0.2)}
   .rg-persona-icon{font-size:20px;flex:none}
   .rg-persona-name{font-size:13px;font-weight:700;color:${COLORS.ink};line-height:1.3}
   .rg-persona-sub{font-size:11.5px;color:${COLORS.muted};line-height:1.4;margin-top:1px}
   .rg-persona-switch{font-size:12px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
-  .rg-persona.farm .rg-persona-switch{color:${COLORS.farmDark}}
   .rg-persona.retail .rg-persona-switch{color:${COLORS.retailDark}}
 
   /* Inputs */
@@ -115,7 +108,7 @@ const CSS = `
   .rg-pw-bars{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:8px}
   .rg-pw-bar{height:3px;border-radius:99px;background:${COLORS.line};transition:background .2s}
   .rg-pw-bar.on{background:var(--rg-accent)}
-  .rg-pw-bar.strong{background:${COLORS.farm}}
+  .rg-pw-bar.strong{background:#1a6b3a}
   .rg-pw-label{font-size:11px;color:${COLORS.muted};margin-top:6px;letter-spacing:0.01em}
 
   /* Terms */
@@ -126,7 +119,6 @@ const CSS = `
 
   /* Submit */
   .rg-submit{width:100%;padding:14px 20px;border-radius:999px;border:none;font-family:${SANS};font-size:14px;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .15s,opacity .15s;color:#fff}
-  .rg-submit.farm{background:${COLORS.farm};box-shadow:0 10px 24px -8px rgba(26,107,58,0.45)}
   .rg-submit.retail{background:${COLORS.ink};box-shadow:0 10px 24px -8px rgba(17,24,39,0.45)}
   .rg-submit:not(:disabled):hover{transform:translateY(-1px)}
   .rg-submit:disabled{opacity:0.55;cursor:not-allowed;box-shadow:none}
@@ -165,36 +157,6 @@ function PersonaCopy({ persona, loc }) {
     ? `${momoList[0]} / ${momoList[1].replace(' Money', '').replace(' MoMo', '')}`
     : momo;
 
-  if (persona === 'farm') {
-    return (
-      <>
-        <div className="rg-eye">Pewil Farm · 14-day free trial</div>
-        <h1 className="rg-serif">Open the gate &mdash; <em>start the season on data</em>.</h1>
-        <p>
-          Pewil Farm gives you fields, livestock, attendance, wages and the daily AI briefing on one screen.
-          From your two-hectare plot to a 600-hectare estate &mdash; same tools.
-        </p>
-        <div className="rg-trust">
-          <div className="rg-trust-item">
-            <div className="rg-trust-title">No card up front</div>
-            <div className="rg-trust-sub">14 days free, cancel from the dashboard</div>
-          </div>
-          <div className="rg-trust-item">
-            <div className="rg-trust-title">WhatsApp ready</div>
-            <div className="rg-trust-sub">Daily digest to your phone, on the app you already use</div>
-          </div>
-          <div className="rg-trust-item">
-            <div className="rg-trust-title">Export anytime</div>
-            <div className="rg-trust-sub">Your data, in CSV/Excel, whenever you want it</div>
-          </div>
-          <div className="rg-trust-item">
-            <div className="rg-trust-title">Built in Africa</div>
-            <div className="rg-trust-sub">Designed for African farms, by an African team</div>
-          </div>
-        </div>
-      </>
-    );
-  }
   return (
     <>
       <div className="rg-eye">Pewil Retail · Free to start</div>
@@ -232,14 +194,13 @@ export default function Register() {
   // Default to retail since pewil.org/ is now retail-led. Visitors arriving
   // at /register without a persona almost certainly came from the retail
   // homepage or a retail ad.
-  // 2026-09-01: Pewil signs up SHOPS only. ?persona=farm is ignored — farm
-  // accounts are provisioned by Pewil from the super account, never
-  // self-served. The farm branches below stay for that provisioned path's
-  // shared components but are unreachable from here.
-  void personaParam;
+  // 2026-09-01: Pewil signs up SHOPS only, and since 2026-09-09 there is no
+  // farm signup left to ignore — the dead branches that used to sit beside
+  // every line here have gone. `persona` stays as the class hook the hero
+  // and form styling key off.
   const persona = 'retail';
-  const accent = persona === 'farm' ? COLORS.farm : COLORS.retail;
-  const accentSoft = persona === 'farm' ? 'rgba(26,107,58,0.10)' : 'rgba(199,119,0,0.12)';
+  const accent = COLORS.retail;
+  const accentSoft = 'rgba(199,119,0,0.12)';
 
   const { register, loading, error } = useAuth();
 
@@ -258,9 +219,7 @@ export default function Register() {
   // inherit signup copy.
   useEffect(() => {
     const prev = document.title;
-    document.title = persona === 'farm'
-      ? 'Start your farm — Pewil Farm signup'
-      : 'Start your shop — Pewil Retail signup';
+    document.title = 'Start your shop — Pewil Retail signup';
     return () => { document.title = prev; };
   }, [persona]);
 
@@ -340,9 +299,9 @@ export default function Register() {
 
         {/* HERO column — persona-tuned */}
         <aside className={`rg-hero ${persona}`}>
-          <Link to={persona === 'farm' ? '/farm' : '/'} className="rg-brand">
+          <Link to="/" className="rg-brand">
             <span className="rg-brand-dot" />
-            Pewil <span className="rg-brand-sub">{persona === 'farm' ? 'Farm' : 'Retail'}</span>
+            Pewil <span className="rg-brand-sub">Retail</span>
           </Link>
 
           <div className="rg-hero-body">
@@ -352,23 +311,11 @@ export default function Register() {
           <div className="rg-trial">
             <span className="rg-trial-dot" />
             <div>
-              {persona === 'farm' ? (
-                <>
-                  <div className="rg-trial-title">Starts on the Growth trial</div>
-                  <div className="rg-trial-body">
-                    14 days free on Growth &mdash; the full feature set. No card now, switch tiers anytime from
-                    Settings → Billing.
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="rg-trial-title">Start your 14-day free trial</div>
-                  <div className="rg-trial-body">
-                    No card required. Full till, {locAuthority} fiscalisation and {locMomo} from day one. After the
-                    trial, one simple flat monthly plan — pay by {locMomo} or card. Cancel anytime.
-                  </div>
-                </>
-              )}
+              <div className="rg-trial-title">Start your 14-day free trial</div>
+              <div className="rg-trial-body">
+                No card required. Full till, {locAuthority} fiscalisation and {locMomo} from day one. After the
+                trial, one simple flat monthly plan — pay by {locMomo} or card. Cancel anytime.
+              </div>
             </div>
           </div>
         </aside>
@@ -377,32 +324,25 @@ export default function Register() {
         <main className="rg-form-wrap">
           <form className="rg-form" onSubmit={handleSubmit} noValidate>
             <div className="rg-form-top">
-              <Link to={persona === 'farm' ? '/farm' : '/'} className="rg-back">&larr; Back</Link>
+              <Link to="/" className="rg-back">&larr; Back</Link>
               <div className="rg-signin">
                 Already with us? <Link to="/login">Sign in</Link>
               </div>
             </div>
 
-            <h2 className={`rg-serif ${persona}`}>
-              {persona === 'farm'
-                ? <>Start your <em>farm</em>.</>
-                : <>Open your <em>shop</em>.</>}
-            </h2>
+            <h2 className={`rg-serif ${persona}`}>Open your <em>shop</em>.</h2>
             <p className="rg-sub">
-              {persona === 'farm'
-                ? '14-day free trial on Growth. No card. Cancel anytime from your dashboard.'
-                : '14-day free trial — no card required. Then from $10/month, fiscalisation included. Cancel anytime.'}
+              14-day free trial — no card required. Then from $10/month, fiscalisation included. Cancel anytime.
             </p>
 
-            {/* Persona pill — locked, with a cross-link to switch */}
+            {/* What you are signing up for. One product, so it states
+                rather than asks. */}
             <div className={`rg-persona ${persona}`}>
-              <div className="rg-persona-icon">{persona === 'farm' ? '🌱' : '🛒'}</div>
+              <div className="rg-persona-icon">🛒</div>
               <div style={{ flex: 1 }}>
-                <div className="rg-persona-name">{persona === 'farm' ? 'Pewil Farm' : 'Pewil Retail'}</div>
+                <div className="rg-persona-name">Pewil Retail</div>
                 <div className="rg-persona-sub">
-                  {persona === 'farm'
-                    ? 'Fields · livestock · attendance · wages · AI digest'
-                    : 'POS · stock · cashier sessions · multi-branch · fiscal'}
+                  POS · stock · cashier sessions · multi-branch · fiscal
                 </div>
               </div>
             </div>
@@ -425,14 +365,14 @@ export default function Register() {
             <div className="rg-field">
               <label className="rg-label">Business name</label>
               <input className="rg-input" type="text"
-                placeholder={persona === 'farm' ? 'e.g. Chikomo Organic Farm' : 'e.g. Avenues Supermarket'}
+                placeholder="e.g. Avenues Supermarket"
                 value={form.business_name} onChange={e => set('business_name', e.target.value)} required />
             </div>
 
             <div className="rg-field">
               <label className="rg-label">Work email</label>
               <input className="rg-input" type="email"
-                placeholder={persona === 'farm' ? 'you@farm.co.zw' : 'you@shop.co.zw'}
+                placeholder="you@shop.co.zw"
                 value={form.email} onChange={e => set('email', e.target.value)} required />
             </div>
 
@@ -515,7 +455,7 @@ export default function Register() {
               className={`rg-submit ${persona}`}>
               {loading
                 ? 'Creating account…'
-                : (persona === 'farm' ? 'Start Pewil Farm →' : 'Start Pewil Retail →')}
+                : 'Start Pewil Retail →'}
             </button>
 
           </form>

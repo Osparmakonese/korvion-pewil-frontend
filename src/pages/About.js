@@ -82,8 +82,24 @@ export default function About() {
           <li style={S.li}><strong>Fuel forecourt</strong> — grades, tanks, deliveries, dip readings, fleet cards and regulator returns.</li>
         </ul>
         <p style={S.p}>
-          Pewil adapts to the trade — supermarket, pharmacy, restaurant, liquor, hardware, wholesale,
-          electronics, or service station — showing each shop only the tools it needs.
+          Pewil adapts to the trade — supermarket, pharmacy, fuel station, butchery, restaurant and bar,
+          hardware, wholesale, bottle store, electronics, clothing and footwear, light manufacturing, or
+          the general shop — showing each business only the tools it needs.
+        </p>
+
+        <h2 style={S.h2}>One engine, many fronts</h2>
+        <p style={S.p}>
+          A pharmacy till should not look like a grocery till. In a real chemist the customer collects a
+          script at the dispensary and pays at the front counter — two stations, one sale — and a
+          supermarket screen has no idea that happens. So Pewil is built in two layers. The engine is one
+          thing for everybody: stock, pricing, VAT, fiscalisation, the offline queue, payments and the
+          books. The front your staff touch is shaped to the job in front of them.
+        </p>
+        <p style={S.p}>
+          That is deliberately the opposite of two common answers. It is not one identical screen for
+          every business, and it is not a separate product per industry that quietly drifts apart until
+          the trades no longer share a till. Tell us your trade when you sign up and the product changes
+          shape around it — at the same price, with nothing to configure your way out of.
         </p>
 
         <h2 style={S.h2}>The company</h2>

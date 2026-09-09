@@ -14,7 +14,7 @@ function useDemoEntry() {
   const { demoLogin } = useAuth();
   // ``loadingModule`` doubles as both "is something loading" and "which demo is
   // being opened" so we can show a per-button spinner without flicker between
-  // Farm and Retail demos.
+  // Retail demo.
   const [loadingModule, setLoadingModule] = useState(null);
   const [demoError, setDemoError] = useState('');
   async function enterDemo(module = 'retail') {
@@ -91,7 +91,6 @@ const PL_CSS = `
   .pl-ribbon-tile::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.75) 100%)}
   .pl-ribbon-label{position:absolute;z-index:2;left:20px;right:20px;bottom:18px;color:#fff}
   .pl-ribbon-chip{display:inline-block;padding:4px 10px;border-radius:999px;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;font-weight:700;margin-bottom:10px}
-  .pl-ribbon-tile.farmer .pl-ribbon-chip{background:#1a6b3a;color:#fff}
   .pl-ribbon-tile.small .pl-ribbon-chip{background:#c77700;color:#fff}
   .pl-ribbon-tile.chain .pl-ribbon-chip{background:#fff;color:#111827}
   .pl-ribbon-name{font-family:'Playfair Display',serif;font-weight:700;font-size:22px;line-height:1.2}
@@ -108,7 +107,6 @@ const PL_CSS = `
   .pl-three-grid-2{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;max-width:1040px;margin:0 auto}
   .pl-op-card{background:#fff;border-radius:20px;overflow:hidden;border:1px solid #e5e7eb;display:flex;flex-direction:column;transition:transform .3s,box-shadow .3s,border-color .3s}
   .pl-op-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,0.08)}
-  .pl-op-card.farmer:hover{border-color:#2d9e58}
   .pl-op-card.small:hover{border-color:#c77700}
   .pl-op-card.chain:hover{border-color:#111827}
   .pl-op-photo{aspect-ratio:16/10;overflow:hidden;position:relative;background:#111827}
@@ -116,25 +114,21 @@ const PL_CSS = `
   .pl-op-card:hover .pl-op-photo img{transform:scale(1.06)}
   .pl-op-photo::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(0,0,0,0.35) 100%)}
   .pl-op-photo-chip{position:absolute;top:16px;left:16px;z-index:2;padding:5px 12px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase}
-  .pl-op-card.farmer .pl-op-photo-chip{background:#1a6b3a;color:#fff}
   .pl-op-card.small .pl-op-photo-chip{background:#c77700;color:#fff}
   .pl-op-card.chain .pl-op-photo-chip{background:#fff;color:#111827}
   .pl-op-body{padding:28px 28px 32px;flex:1;display:flex;flex-direction:column}
   .pl-op-title{font-family:'Playfair Display',serif;font-weight:700;font-size:24px;line-height:1.25;margin:0 0 6px}
   .pl-op-sub{font-size:13px;color:#6b7280;font-weight:500;margin-bottom:20px}
   .pl-op-quote{font-family:'Playfair Display',serif;font-style:italic;font-size:17px;line-height:1.55;color:#374151;padding:18px 20px;border-left:3px solid;border-radius:6px;margin-bottom:22px;background:#f9fafb}
-  .pl-op-card.farmer .pl-op-quote{border-color:#1a6b3a;background:#e8f5ee}
   .pl-op-card.small .pl-op-quote{border-color:#c77700;background:#fff4e1}
   .pl-op-card.chain .pl-op-quote{border-color:#111827;background:#f3f4f6}
   .pl-op-feats{list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;margin:0 0 24px;padding:0}
   .pl-op-feats li{display:flex;align-items:flex-start;gap:10px;color:#374151;line-height:1.5}
   .pl-op-feats li::before{content:'';flex-shrink:0;width:16px;height:16px;border-radius:50%;margin-top:2px}
-  .pl-op-card.farmer .pl-op-feats li::before{background-image:linear-gradient(135deg,#1a6b3a,#2d9e58)}
   .pl-op-card.small .pl-op-feats li::before{background:#c77700}
   .pl-op-card.chain .pl-op-feats li::before{background:#111827}
   .pl-op-price{margin-top:auto;padding-top:18px;border-top:1px solid #e5e7eb;display:flex;align-items:baseline;justify-content:space-between}
   .pl-op-price .amt{font-family:'Playfair Display',serif;font-weight:700;font-size:34px}
-  .pl-op-card.farmer .pl-op-price .amt{color:#1a6b3a}
   .pl-op-card.small .pl-op-price .amt{color:#c77700}
   .pl-op-price .per{font-size:13px;color:#6b7280;font-weight:500;margin-left:2px}
   .pl-op-price .tier{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#6b7280}
@@ -151,7 +145,6 @@ const PL_CSS = `
   .pl-op-price-ent-scale .br{display:block;font-size:11px;color:#6b7280;font-weight:600;margin-bottom:3px}
   .pl-op-price-ent-scale .pr{display:block;font-family:'Playfair Display',serif;font-weight:700;font-size:15px;color:#111827}
   .pl-op-btn{margin-top:16px;display:block;text-align:center;padding:12px;border-radius:10px;font-weight:600;font-size:14px;color:#fff!important;transition:transform .2s,opacity .2s}
-  .pl-op-card.farmer .pl-op-btn{background:#1a6b3a}
   .pl-op-card.small .pl-op-btn{background:#c77700}
   .pl-op-card.chain .pl-op-btn{background:#111827}
   .pl-op-btn:hover{transform:translateY(-1px);opacity:0.95}
@@ -183,7 +176,6 @@ const PL_CSS = `
   .pl-parity-row > div{padding:20px 22px;font-size:14px;line-height:1.5}
   .pl-parity-row.head > div{background:#111827;color:#fff;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase}
   .pl-parity-q{color:#111827;font-weight:600}
-  .pl-parity-farm{color:#0d4a22;background:rgba(26,107,58,0.04);font-weight:500}
   .pl-parity-small{color:#8b5200;background:rgba(199,119,0,0.04);font-weight:500}
   .pl-parity-chain{color:#111827;background:rgba(17,24,39,0.04);font-weight:500}
 
@@ -271,7 +263,6 @@ const PL_CSS = `
     .pl-parity-row.head{display:none}
     .pl-parity-row > div{padding:14px 16px;border-bottom:1px solid #f3f4f6}
     .pl-parity-q{background:#f9fafb;font-weight:700}
-    .pl-parity-farm::before{content:'Farmer · ';font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#1a6b3a}
     .pl-parity-small::before{content:'Small shop · ';font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#c77700}
     .pl-parity-chain::before{content:'Chain · ';font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#111827}
     .pl-proof{padding:50px 0}
@@ -287,13 +278,34 @@ const PL_CSS = `
     .pl-foot-grid{grid-template-columns:1fr;gap:24px}
     .pl-wrap{padding:0 22px}
   }
+  /* ─── trades: one engine, many fronts ─────────────── */
+  .pl-trades{padding:96px 0;background:#0f1115;color:#fff}
+  .pl-trades-head{max-width:760px;margin:0 0 44px}
+  .pl-trades-eye{font-size:11px;letter-spacing:0.22em;text-transform:uppercase;font-weight:700;color:#8fd6a9;margin-bottom:14px}
+  .pl-trades h2{font-family:'Playfair Display',Georgia,serif;font-size:40px;line-height:1.12;font-weight:700;margin:0 0 18px;letter-spacing:-0.02em;color:#fff}
+  .pl-trades h2 em{font-style:normal;color:#ffd47a}
+  .pl-trades-head p{font-size:16px;line-height:1.7;color:rgba(255,255,255,0.72);margin:0}
+  .pl-trades-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .pl-trade{border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:20px 18px;background:rgba(255,255,255,0.035);transition:border-color 0.15s,background 0.15s}
+  .pl-trade:hover{border-color:rgba(143,214,169,0.5);background:rgba(255,255,255,0.06)}
+  .pl-trade-name{font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;letter-spacing:-0.01em}
+  .pl-trade-what{font-size:12.5px;line-height:1.55;color:rgba(255,255,255,0.62)}
+  .pl-trades-foot{margin-top:36px;padding-top:28px;border-top:1px solid rgba(255,255,255,0.12);display:flex;gap:28px;flex-wrap:wrap;align-items:baseline}
+  .pl-trades-foot p{margin:0;font-size:14.5px;color:rgba(255,255,255,0.78);max-width:620px;line-height:1.65}
+  .pl-trades-foot a{font-weight:700;color:#ffd47a;text-decoration:none;white-space:nowrap}
+  .pl-trades-foot a:hover{text-decoration:underline}
+
+  @media (max-width: 820px){
+    .pl-trades{padding:64px 0}
+    .pl-trades h2{font-size:29px}
+    .pl-trades-grid{grid-template-columns:repeat(2,1fr)}
+  }
+
 `;
 
 const UNSPLASH = {
-  farmer:  'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=900&q=80',
   shop:    'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=900&q=80',
   chain:   'https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?w=900&q=80',
-  farmer2: 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=900&q=80',
   chain2:  'https://images.unsplash.com/photo-1542838132-92c53300491e?w=900&q=80',
 };
 
@@ -562,6 +574,43 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* ─── trades ────────────────────────────────────── */}
+      <section className="pl-trades" id="trades">
+        <div className="pl-wrap">
+          <div className="pl-trades-head">
+            <div className="pl-trades-eye">One engine · many fronts</div>
+            <h2 className="pl-serif">A pharmacy till should not look like a <em>grocery</em> till.</h2>
+            <p>
+              Underneath, every Pewil shop runs the same engine &mdash; stock, pricing, VAT, fiscalisation,
+              the offline queue, payments, the books. What changes is the front your staff actually touch.
+              Tell us your trade at signup and the product changes shape around it: the screens you need,
+              and none of the ones you don&rsquo;t.
+            </p>
+          </div>
+          <div className="pl-trades-grid">
+            <div className="pl-trade"><div className="pl-trade-name">Supermarket</div><div className="pl-trade-what">Scanner lane, quick tiles, shelf labels, multi-till sessions.</div></div>
+            <div className="pl-trade"><div className="pl-trade-name">Pharmacy</div><div className="pl-trade-what">Dispensary and front shop, batch &amp; expiry, controlled register.</div></div>
+            <div className="pl-trade"><div className="pl-trade-name">Fuel station</div><div className="pl-trade-what">Tanks, wet-stock, fleet cards, regulator returns.</div></div>
+            <div className="pl-trade"><div className="pl-trade-name">Butchery</div><div className="pl-trade-what">Weigh, price per kg, carcass yield, big wet-hand buttons.</div></div>
+            <div className="pl-trade"><div className="pl-trade-name">Restaurant &amp; bar</div><div className="pl-trade-what">Tables, kitchen tickets, modifiers, split bills.</div></div>
+            <div className="pl-trade"><div className="pl-trade-name">Hardware</div><div className="pl-trade-what">Quotations, bulk units, serials, trade price tiers.</div></div>
+            <div className="pl-trade"><div className="pl-trade-name">Wholesale</div><div className="pl-trade-what">Price tiers, credit accounts, statements, bulk picking.</div></div>
+            <div className="pl-trade"><div className="pl-trade-name">Bottle store</div><div className="pl-trade-what">Age checks, excise returns, single &amp; case pricing.</div></div>
+            <div className="pl-trade"><div className="pl-trade-name">Electronics</div><div className="pl-trade-what">Serial tracking, warranty registration, IMEI capture.</div></div>
+            <div className="pl-trade"><div className="pl-trade-name">Clothing &amp; footwear</div><div className="pl-trade-what">Size and colour variants, exchanges, seasonal lines.</div></div>
+            <div className="pl-trade"><div className="pl-trade-name">Light manufacturing</div><div className="pl-trade-what">Recipes and bills of materials, production runs, unit costing.</div></div>
+            <div className="pl-trade"><div className="pl-trade-name">General shop</div><div className="pl-trade-what">The essentials, uncluttered &mdash; and everything above waiting.</div></div>
+          </div>
+          <div className="pl-trades-foot">
+            <p>
+              Every front is the same price. You are not charged extra for being a chemist,
+              and you are never asked to configure your way out of a screen built for somebody else&rsquo;s trade.
+            </p>
+            <Link to="/register?persona=retail">Pick your trade &rarr;</Link>
+          </div>
+        </div>
+      </section>
+
       {/* ─── parity table ──────────────────────────────── */}
       <section className="pl-parity pl-parity-2" id="parity">
         <div className="pl-wrap">
@@ -664,13 +713,14 @@ const LandingPage = () => {
               <div className="pl-foot-brand">Pewil</div>
               <div className="pl-foot-brand-sub">Rooted in the work.</div>
               <p className="pl-foot-tag">
-                The operating system for African retail and agribusiness. Built in Africa, shipped with love across borders &mdash; live in Zimbabwe, Zambia and beyond.
+                The operating system for African retail. One engine, twelve trades &mdash; built in Africa, shipped with love across borders, live in Zimbabwe, Zambia and beyond.
               </p>
             </div>
             <div className="pl-foot-col">
               <h4>Product</h4>
               <a href="#op-small">Pewil Retail</a>
               <a href="#op-chain">Pewil Retail for chains</a>
+              <a href="#trades">Your trade</a>
               <Link to="/download">Desktop app</Link>
               <Link to="/pricing">Pricing</Link>
             </div>

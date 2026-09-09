@@ -61,27 +61,6 @@ const PLANS = {
       ],
     },
   ],
-  farm: [
-    {
-      tier: 'starter', name: 'Pewil Farm Starter', slug: 'farm-starter',
-      price_monthly: 10, price_yearly: 100, blurb: 'For small farms getting started.',
-      features: ['Up to 2 users', '5 fields', '10 workers', '50 livestock records',
-        'Costs, stock, sales, reports', 'Email support'],
-    },
-    {
-      tier: 'growth', name: 'Pewil Farm Growth', slug: 'farm-growth',
-      price_monthly: 25, price_yearly: 250, popular: true,
-      blurb: 'Most popular — for growing operations.',
-      features: ['Up to 5 users', '20 fields', '30 workers', '500 livestock records',
-        'Everything in Starter', 'Basic AI insights', 'WhatsApp alerts', 'Priority email support'],
-    },
-    {
-      tier: 'enterprise', name: 'Pewil Farm Enterprise', slug: 'farm-enterprise',
-      price_monthly: 60, price_yearly: 600, blurb: 'For large estates and multi-site farms.',
-      features: ['Unlimited users', 'Unlimited fields, workers, livestock', 'Everything in Growth',
-        'Advanced AI insights', 'White-label branding', 'Dedicated account manager', 'Phone support'],
-    },
-  ],
 };
 
 // Local-currency overlay for the public pricing page. Mirrors the backend
@@ -100,9 +79,6 @@ const LOCAL_PRICES = {
   'retail-starter':    { ZMW: [199, 1990] },
   'retail-growth':     { ZMW: [299, 2990] },
   'retail-enterprise': { ZMW: [499, 4990] },
-  'farm-starter':      { ZMW: [199, 1990] },
-  'farm-growth':       { ZMW: [499, 4990] },
-  'farm-enterprise':   { ZMW: [1099, 10990] },
 };
 
 // Thousands separator so K4,990 reads cleanly.
@@ -142,8 +118,6 @@ const S = {
   toggleRow: { display: 'inline-flex', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: 4, marginTop: 24, gap: 4 },
   toggleBtn: (on) => ({ border: 'none', cursor: 'pointer', padding: '9px 20px', borderRadius: 7, fontSize: 14, fontWeight: 700, background: on ? C.green : 'transparent', color: on ? '#fff' : C.ink2, display: 'flex', alignItems: 'center', gap: 8 }),
   save: { fontSize: 11, fontWeight: 700, background: '#fff', color: C.green, borderRadius: 12, padding: '2px 8px' },
-  moduleTabs: { display: 'flex', justifyContent: 'center', gap: 8, margin: '28px auto 8px', maxWidth: 360 },
-  moduleTab: (on) => ({ flex: 1, textAlign: 'center', cursor: 'pointer', padding: '10px 0', borderRadius: 9, fontWeight: 700, fontSize: 14, border: `1px solid ${on ? C.green : C.border}`, background: on ? C.green3 : '#fff', color: on ? C.green : C.ink3 }),
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, maxWidth: 1040, margin: '24px auto 10px', padding: '0 20px' },
   card: (pop) => ({ position: 'relative', background: '#fff', border: `1.5px solid ${pop ? C.green : C.border}`, borderRadius: 16, padding: '28px 24px', boxShadow: pop ? '0 8px 30px rgba(26,107,58,.12)' : '0 1px 4px rgba(0,0,0,.04)' }),
   popularBadge: { position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: C.green, color: '#fff', fontSize: 11, fontWeight: 800, letterSpacing: '.05em', padding: '4px 14px', borderRadius: 20 },
@@ -171,13 +145,12 @@ const S = {
 export default function Pricing() {
   const { user } = useAuth();
   const [cycle, setCycle] = useState('monthly');
-  const [module, setModule] = useState('retail');
   const [currency, setCurrency] = useState('USD');
   const [openFaq, setOpenFaq] = useState(null);
 
   if (user) return <Navigate to="/app" replace />;
 
-  const plans = PLANS[module];
+  const plans = PLANS.retail;
 
   return (
     <div style={S.page}>
@@ -213,10 +186,6 @@ export default function Pricing() {
           ))}
         </div>
       </section>
-
-      <div style={S.moduleTabs}>
-        <div style={S.moduleTab(module === 'retail')} onClick={() => setModule('retail')}>Retail / Shop</div>
-      </div>
 
       <div style={S.grid}>
         {plans.map((plan) => {
