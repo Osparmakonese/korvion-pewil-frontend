@@ -52,8 +52,42 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
   // brand-new line only.
   const perShopStock = !!isMultiBranch && !!initialData;
 
+  // ...and the hole that left (2026-09-09). `isMultiBranch` comes from the
+  // branch list, which BranchViewSet deliberately narrows to the shops a
+  // user may see -- so a MANAGER pinned to one shop of five sees one shop,
+  // `isMultiBranch` is false for them, and this box stayed enabled and
+  // prefilled with the CHAIN total under a heading meaning one shop.
+  // ShopPricing hides itself for them too (one row), so the chain figure
+  // was the only stock box they had. Adding 50 to it sent "this shop holds
+  // chain + 50", which the server books as that shop's ABSOLUTE count: on
+  // a 100-unit chain with 40 here, that is a 110 correction and a shelf
+  // recorded at 150. Silent, and exactly the class of over-count the
+  // per-shop panel exists to prevent.
+  //
+  // So whenever a shop is in context and the per-shop panel is not doing
+  // the job, this box IS that shop's shelf. The server reads the number
+  // the same way, so the two can no longer disagree about whose stock it
+  // is. `branch_quantity` is null only when no shop is in context or a
+  // single-shop tenant has no row, and the chain total is the right answer
+  // in both.
+  const shopStockBox = !perShopStock && !!initialData && !!inShop;
+
+  // What the box was showing when it loaded. An untouched box must not be
+  // sent: the server would read it as a fresh count of this shelf and
+  // stamp `last_counted_at` on a shelf nobody counted -- and would refuse
+  // the whole save with "a stock count cannot be negative" if the shop's
+  // row is one of the negatives, blocking even a rename.
+  const [stockAtLoad, setStockAtLoad] = useState('');
+
   useEffect(() => {
     if (initialData) {
+      // The shop's own figure when this box means one shop, else the chain.
+      const shopBox = !(!!isMultiBranch && !!initialData) && !!inShop;
+      const raw = shopBox
+        ? (initialData.branch_quantity ?? initialData.quantity_in_stock)
+        : initialData.quantity_in_stock;
+      const stockPrefill = (raw === null || raw === undefined) ? '' : String(raw);
+      setStockAtLoad(stockPrefill);
       setForm({
         ...BLANK_PRODUCT,
         name: initialData.name || '',
@@ -62,7 +96,7 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
         category: initialData.category || '',
         cost_price: initialData.cost_price || '',
         selling_price: initialData.selling_price || '',
-        quantity_in_stock: initialData.quantity_in_stock || '',
+        quantity_in_stock: stockPrefill,
         reorder_level: initialData.reorder_level || '',
         unit: initialData.unit || 'piece',
         expiry_date: initialData.expiry_date || '',
@@ -84,9 +118,10 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
         initialData.is_quick_tile || initialData.is_menu_item || initialData.is_controlled || initialData.barcode));
     } else {
       setForm(BLANK_PRODUCT);
+      setStockAtLoad('');
       setShowAdvanced(false);
     }
-  }, [initialData]);
+  }, [initialData, inShop, isMultiBranch]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -114,6 +149,10 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
     // per-shop panel owns that number. Sending it unchanged would be a
     // no-op server-side, but sending it at all invites the old bug back.
     if (perShopStock) delete payload.quantity_in_stock;
+    // An untouched shop box is not a count. See `stockAtLoad`.
+    if (shopStockBox && String(payload.quantity_in_stock ?? '') === String(stockAtLoad)) {
+      delete payload.quantity_in_stock;
+    }
     onSubmit(payload);
     setForm(BLANK_PRODUCT);
   };
@@ -305,9 +344,11 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
               <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>
                 {perShopStock
                   ? 'Stock (all shops)'
-                  : (isMultiBranch && inShop
-                      ? `Opening Stock at ${branchName}`
-                      : 'Stock Quantity')}
+                  : (shopStockBox
+                      ? `Stock at ${branchName}`
+                      : (isMultiBranch && inShop
+                          ? `Opening Stock at ${branchName}`
+                          : 'Stock Quantity'))}
               </label>
               <input
                 type="number"
@@ -318,7 +359,9 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
                 disabled={perShopStock}
                 title={perShopStock
                   ? 'This is the total across every shop. Set what each shop holds under "Stock and price per shop" below.'
-                  : undefined}
+                  : (shopStockBox
+                      ? `What ${branchName} is holding. This replaces the figure — it is a count of the shelf, not an amount to add.`
+                      : undefined)}
                 style={{
                   width: '100%',
                   padding: '8px 10px',
@@ -336,7 +379,13 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
                   Total across every shop. Set each shop{'’'}s own count below.
                 </div>
               )}
-              {!perShopStock && isMultiBranch && (
+              {shopStockBox && (
+                <div style={{ fontSize: 9.5, color: '#9ca3af', marginTop: 3, lineHeight: 1.4 }}>
+                  What {branchName} is holding. Change it only to record a count
+                  of this shelf {'\u2014'} it replaces the figure, it does not add to it.
+                </div>
+              )}
+              {!perShopStock && !shopStockBox && isMultiBranch && (
                 <div style={{ fontSize: 9.5, color: '#9ca3af', marginTop: 3, lineHeight: 1.4 }}>
                   {inShop
                     ? `Lands at ${branchName}. Other shops start at 0.`
