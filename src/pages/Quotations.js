@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getQuotations, createQuotation, setQuotationStatus, deleteQuotation, getProducts } from '../api/retailApi';
+import {
+  getQuotations, createQuotation, setQuotationStatus, deleteQuotation, getProducts,
+  createTicket, readyTicket,
+} from '../api/retailApi';
 import { fmt } from '../utils/format';
 import { shopPrice } from '../utils/branchStock';
 import useIsMobile from '../hooks/useIsMobile';
@@ -21,7 +24,10 @@ const STATUS_COLORS = {
   expired: { bg: '#fef3e2', fg: '#c97d1a' }, converted: { bg: '#e8f5ee', fg: '#1a6b3a' },
 };
 
-export default function Quotations({ onTabChange }) {
+// No `onTabChange`: sending a quote to the till no longer drags this user
+// to the POS tab. The whole point is that somebody ELSE, on another till,
+// picks it up off the board by number.
+export default function Quotations() {
   const isMobile = useIsMobile();
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ['quotations'], queryFn: () => getQuotations() });
@@ -76,12 +82,62 @@ export default function Quotations({ onTabChange }) {
     return q.status;
   };
 
-  // Load into the till at the QUOTED prices; the POS picks this up on mount,
-  // and converts the quote automatically when the sale confirms.
-  const toTill = (q) => {
-    try { localStorage.setItem('pewil_pending_quote', JSON.stringify(q)); } catch (_) {}
-    if (onTabChange) onTabChange('POS');
-  };
+  // Send the quote to the till as a TICKET (2026-09-09).
+  //
+  // This used to write the whole quote into
+  // localStorage['pewil_pending_quote'] and switch tab, and the POS read it
+  // back on mount. That is a hand-off that only works on one device in one
+  // browser: a quote raised on the office PC could not be collected at the
+  // till, which is the entire point of having a quote desk. It also carried
+  // no number to give the customer, never showed on the till's ticket board,
+  // never expired, and disappeared without trace if the browser was cleared
+  // — and the POS deleted it from storage BEFORE it finished loading the
+  // cart, so a failure there destroyed the hand-off outright.
+  //
+  // A Ticket is the server-side object the station model already uses for
+  // the dispensary. Lines go over `price_locked` so the till honours the
+  // QUOTED price rather than re-pricing from the shelf, which is what a
+  // quote means. The quote is marked converted server-side when the sale
+  // closes the ticket — not by whichever browser happened to be holding it.
+  const [sentTicket, setSentTicket] = useState(null);
+  const toTillMut = useMutation({
+    mutationFn: async (q) => {
+      const lines = (q.items_data || [])
+        .map((it) => ({
+          product: Number(it.product) || null,
+          name: it.name || '',
+          qty: Number(it.qty) || 1,
+          unit_price: Number(it.unit_price) || 0,
+          price_locked: true,
+        }))
+        .filter((l) => l.product);
+      if (!lines.length) {
+        throw new Error('None of the quoted products are in the catalogue any more.');
+      }
+      const tk = await createTicket({
+        station: 'quote_desk',
+        customer_name: q.customer_name || '',
+        customer_phone: q.customer_phone || '',
+        quotation: q.id,
+        lines,
+        notes: `Quote ${q.quote_number || ''}`.trim(),
+        client_key: `quote-${q.id}-${Date.now()}`,
+      });
+      // 'ready' is what puts it on the till's board.
+      return readyTicket(tk.id);
+    },
+    onSuccess: (tk) => {
+      setSentTicket(tk);
+      qc.invalidateQueries({ queryKey: ['quotations'] });
+    },
+    onError: (err) => {
+      setSentTicket({
+        error: err?.response?.data?.detail || err?.message
+          || 'Could not send that quote to the till.',
+      });
+    },
+  });
+  const toTill = (q) => { setSentTicket(null); toTillMut.mutate(q); };
 
   const esc = (x) => String(x == null ? '' : x).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const money = (n) => '$' + (parseFloat(n) || 0).toFixed(2);
@@ -134,7 +190,26 @@ export default function Quotations({ onTabChange }) {
     <div className="vtl-stack" style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 360px', gap: 16 }}>
       <div style={card}>
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Quotations</h3>
-        <p style={{ fontSize: 11.5, color: '#6b7280', marginBottom: 10 }}>Quote a job, then mark it accepted or converted when the customer commits.</p>
+        <p style={{ fontSize: 11.5, color: '#6b7280', marginBottom: 10 }}>Quote a job, then send it to the till when the customer commits.</p>
+
+        {sentTicket && !sentTicket.error && (
+          <div style={{
+            background: '#e8f5ee', border: '1px solid #a7d8bd', borderRadius: 10,
+            padding: '12px 14px', marginBottom: 12, fontSize: 12.5, color: '#0d4a22', lineHeight: 1.5,
+          }}>
+            <strong style={{ fontSize: 15, letterSpacing: '0.02em' }}>{sentTicket.number}</strong>
+            {' — on the till board now. '}
+            Tell {sentTicket.customer_name || 'the customer'} to pay at any till and quote that number.
+          </div>
+        )}
+        {sentTicket && sentTicket.error && (
+          <div style={{
+            background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: 10,
+            padding: '12px 14px', marginBottom: 12, fontSize: 12.5, color: '#c0392b', lineHeight: 1.5,
+          }}>
+            {sentTicket.error}
+          </div>
+        )}
         <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead><tr><th style={th}>Quote #</th><th style={th}>Customer</th><th style={th}>Total</th><th style={th}>Valid</th><th style={th}>Status</th><th style={th}></th></tr></thead>
           <tbody>
@@ -148,8 +223,12 @@ export default function Quotations({ onTabChange }) {
                 <td style={td}><span style={pill(STATUS_COLORS[effectiveStatus(q)] || STATUS_COLORS.draft)}>{effectiveStatus(q)}</span></td>
                 <td style={{ ...td, whiteSpace: 'nowrap' }}>
                   {q.status !== 'converted' && (
-                    <button onClick={() => toTill(q)} title="Load this quote into the till at the quoted prices"
-                      style={{ ...miniBtn, background: '#1a6b3a', color: '#fff', border: 'none' }}>To till</button>
+                    <button onClick={() => toTill(q)} disabled={toTillMut.isPending}
+                      title="Send this quote to the till at the quoted prices — the cashier picks it up by number, on any till"
+                      style={{ ...miniBtn, background: '#1a6b3a', color: '#fff', border: 'none',
+                               ...(toTillMut.isPending ? { opacity: 0.5, cursor: 'not-allowed' } : {}) }}>
+                      {toTillMut.isPending ? 'Sending…' : 'Send to till'}
+                    </button>
                   )}
                   <button onClick={() => printQuote(q)} title="Print / save as PDF" style={miniBtn}>🖨</button>
                   {q.customer_phone && (

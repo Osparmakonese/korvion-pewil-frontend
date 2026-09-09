@@ -1550,7 +1550,15 @@ export default function POS() {
     let pending = null;
     try { pending = JSON.parse(localStorage.getItem('pewil_pending_quote') || 'null'); } catch (_) {}
     if (!pending || !Array.isArray(pending.items_data)) return;
-    localStorage.removeItem('pewil_pending_quote');
+    // LEGACY (2026-09-09). The quote desk now sends a Ticket, which any till
+    // can pick off the board by number. This reader stays for one release so
+    // a hand-off already sitting in a browser at deploy time is not
+    // stranded, then it comes out.
+    //
+    // The removeItem used to run HERE, before the cart was built — so if
+    // anything below threw, or none of the quoted products still existed,
+    // the hand-off was destroyed and the quote had to be re-sent. Clear it
+    // only once the cart is actually loaded.
     const missing = [];
     const cartLines = [];
     for (const it of pending.items_data) {
@@ -1569,6 +1577,7 @@ export default function POS() {
       return;
     }
     setCart(cartLines);
+    localStorage.removeItem('pewil_pending_quote');
     setLoadedQuote({ id: pending.id, quote_number: pending.quote_number, customer_name: pending.customer_name });
     toast({
       message: `Quote ${pending.quote_number} loaded at quoted prices for ${pending.customer_name}.`
@@ -1589,7 +1598,9 @@ export default function POS() {
     let pending = null;
     try { pending = JSON.parse(localStorage.getItem('pewil_pending_rx') || 'null'); } catch (_) {}
     if (!pending || !Array.isArray(pending.items_data)) return;
-    localStorage.removeItem('pewil_pending_rx');
+    // LEGACY (2026-09-09) — same as the quote reader above. The dispensary
+    // sends a Ticket now. Kept one release as a fallback, and no longer
+    // clears the hand-off before the cart has actually been built.
     const missing = [];
     const cartLines = [];
     for (const it of pending.items_data) {
@@ -1614,6 +1625,7 @@ export default function POS() {
       return;
     }
     setCart(cartLines);
+    localStorage.removeItem('pewil_pending_rx');
     setLoadedRx({
       id: pending.id, patient: pending.patient, patient_name: pending.patient_name,
       medical_aid: pending.medical_aid || null,
