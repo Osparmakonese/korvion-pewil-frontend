@@ -1598,7 +1598,13 @@ export default function POS() {
       cartLines.push({
         product_id: prod.id,
         name: prod.name,
-        unit_price: Number(prod.selling_price) || 0,   // TODAY'S shelf price
+        // shopPrice(), not selling_price: the second is the CHAIN price, and
+        // this shop may charge its own. Dispensing a prescription was the
+        // one route into the cart that still billed the chain figure, so a
+        // branch with an override undercharged or overcharged every
+        // prescription it filled (2026-09-09). "Today's shelf price" is what
+        // this always meant — shopPrice is what actually reads it.
+        unit_price: shopPrice(prod),
         quantity: Number(it.qty) || 1,
         product: prod,
       });
@@ -1641,8 +1647,11 @@ export default function POS() {
         cartLines.push({
           product_id: prod.id,
           name: prod.name,
+          // A locked line keeps the price the customer was quoted; anything
+          // else is re-priced at what THIS shop charges today, not the
+          // chain figure. Same fix as the prescription path above.
           unit_price: l.price_locked && l.unit_price != null
-            ? Number(l.unit_price) : (Number(prod.selling_price) || 0),
+            ? Number(l.unit_price) : shopPrice(prod),
           quantity: Number(l.qty) || 1,
           product: prod,
         });
