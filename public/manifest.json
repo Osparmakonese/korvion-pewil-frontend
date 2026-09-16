@@ -53,7 +53,7 @@
     "standalone",
     "minimal-ui"
   ],
-  "orientation": "portrait",
+  "orientation": "any",
   "theme_color": "#1a6b3a",
   "background_color": "#faf6ef",
   "scope": "/",

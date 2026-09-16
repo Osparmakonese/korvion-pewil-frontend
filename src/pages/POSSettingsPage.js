@@ -30,6 +30,12 @@ const THEMES = [
     hint: 'Scan-first supermarket lane: itemised ledger with line numbers, a huge balance-due, colour-coded function keys (Qty / Void / Manager) and tender. Best for high-volume tills.',
     preview: { bg: 'linear-gradient(135deg, #1f2937 58%, #15803d 100%)', fg: '#fff' },
   },
+  {
+    id: 'mobile',
+    label: 'Touch Lane',
+    hint: 'The phone and tablet front: big tap targets, search-first, cart as a sheet. Phones and tablets always use this whatever you pick here — choose it to run the same touch screen on a desktop or a touchscreen till.',
+    preview: { bg: 'linear-gradient(135deg, #e8f5ee 55%, #1a6b3a 100%)', fg: '#0d4a22' },
+  },
 ];
 
 const TOGGLES = [

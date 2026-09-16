@@ -106,7 +106,7 @@ export default function MobilePOS({
       <BottomSheet open={sheet === 'pay'} onClose={() => setSheet(null)} title={`Charge ${money(grandTotal)}`}>
         {/* 2x2 on phones — 4-across gave ~92px buttons at 390px, too small to
             tap reliably at a busy till (2026-07-02). */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8, marginBottom: 12 }}>
           <Method t={T} icon="💵" label="Cash" active={!splitMode && paymentMethod === 'cash'} onClick={() => { haptics.tap(); setSplitMode(false); setPaymentMethod('cash'); }} />
           <Method t={T} icon="📱" label="EcoCash" active={!splitMode && paymentMethod === 'mobile_money'} onClick={() => { haptics.tap(); setSplitMode(false); setPaymentMethod('mobile_money'); }} />
           <Method t={T} icon="💳" label="Card" active={!splitMode && paymentMethod === 'card'} onClick={() => { haptics.tap(); setSplitMode(false); setPaymentMethod('card'); }} />
@@ -251,7 +251,12 @@ export default function MobilePOS({
             )}
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+          /* auto-fill, not a fixed 2 columns (2026-09-16): this front now
+             runs on tablets too, and two tiles across a 10-inch screen in
+             landscape is a lot of glass for very little catalogue. A phone
+             still lands on 2; a tablet gets 4-6, without a second layout to
+             maintain. */
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10 }}>
             {list.map((p) => {
               const added = justAdded === p.id;
               // Shown, greyed, unsellable, and it says which shop's shelf is

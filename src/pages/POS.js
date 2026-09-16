@@ -1312,16 +1312,40 @@ export default function POS() {
   const [focusMode, setFocusMode] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Mobile breakpoint detection. ≤ 500px gets the locked mobile design
-  // (Frame 1/2 of mobile-mockups/PEWIL_MOBILE_PREVIEW_2026-04-26.html).
-  // Wider viewports keep the existing desktop POS untouched. Listener
-  // updates on rotation / window resize so the cashier can switch
-  // between phone and tablet without a reload.
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' && window.innerWidth <= 500
-  );
+  // WHICH TILL FRONT? (rewritten 2026-09-16)
+  //
+  // This used to be `window.innerWidth <= 500`, which decided by how wide the
+  // window happens to be right now. Two things were wrong with that:
+  //
+  //   * A TABLET got the desktop split layout. A 10" tablet is 800-1024px
+  //     wide, so it sailed past 500 and landed on a screen built for a mouse,
+  //     a keyboard and a scanner — on a device that has none of them.
+  //   * ROTATING changed the answer. The same tablet could be a phone in
+  //     portrait and a desktop in landscape, so the cashier's screen
+  //     rearranged itself mid-shift when they turned the device.
+  //
+  // Decide by the INSTRUMENT, not by the current width. A coarse pointer
+  // means a finger — a phone or a tablet — and the shorter side of the
+  // screen does not change when the device rotates, so the answer holds
+  // through a turn.
+  //
+  // 1024 is the shorter side of the largest tablet sold (12.9" iPad Pro).
+  // A touchscreen laptop at 1920x1080 has a shorter side of 1080 and stays
+  // on the desktop front, which is right — it has a keyboard.
+  const wantsTouchFront = () => {
+    if (typeof window === 'undefined') return false;
+    const shortSide = Math.min(window.innerWidth, window.innerHeight);
+    let coarse = false;
+    try { coarse = !!window.matchMedia?.('(pointer: coarse)')?.matches; } catch (_) {}
+    // Phone or tablet, in either orientation.
+    if (coarse && shortSide <= 1024) return true;
+    // A genuinely narrow window on a desktop — keep the old behaviour.
+    return window.innerWidth <= 500;
+  };
+
+  const [touchDevice, setTouchDevice] = useState(wantsTouchFront);
   useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth <= 500);
+    const onResize = () => setTouchDevice(wantsTouchFront());
     window.addEventListener('resize', onResize);
     window.addEventListener('orientationchange', onResize);
     return () => {
@@ -1379,18 +1403,6 @@ export default function POS() {
   // The "pnp" and "dark" themes are full-viewport immersive layouts, so we
   // force focus mode on whenever either is active — no cashier should see the
   // Pewil sidebar/topbar while they're ringing up sales at the lane.
-  useEffect(() => {
-    // The mobile POS is ALWAYS a full-screen takeover, so hide the app chrome on
-    // mobile too. Otherwise the fixed bottom nav (z-index 500) renders on top of
-    // MobilePOS (z-index 30) and covers the "View cart / Charge" control — the
-    // cashier can't see where to complete the sale. A back button in MobilePOS
-    // gives them a way out now that the nav is hidden.
-    const focus = focusMode || isMobile;
-    if (focus) document.body.classList.add('pewil-pos-focus');
-    else document.body.classList.remove('pewil-pos-focus');
-    return () => document.body.classList.remove('pewil-pos-focus');
-  }, [focusMode, isMobile]);
-
   // Track native fullscreen state so the button reflects reality if user hits ESC.
   useEffect(() => {
     const onFs = () => setIsFullscreen(!!document.fullscreenElement);
@@ -1738,6 +1750,23 @@ export default function POS() {
     auto_focus_scan: true,
     ...(posSettings || {}),
   };
+
+  // The touch front wins on a touch device no matter what is configured, and
+  // can also be CHOSEN on a desktop or a touchscreen till (theme 'mobile').
+  // Order matters: a tablet must never be talked out of it by a setting.
+  const isMobile = touchDevice || settings.theme === 'mobile';
+
+  useEffect(() => {
+    // The mobile POS is ALWAYS a full-screen takeover, so hide the app chrome on
+    // mobile too. Otherwise the fixed bottom nav (z-index 500) renders on top of
+    // MobilePOS (z-index 30) and covers the "View cart / Charge" control — the
+    // cashier can't see where to complete the sale. A back button in MobilePOS
+    // gives them a way out now that the nav is hidden.
+    const focus = focusMode || isMobile;
+    if (focus) document.body.classList.add('pewil-pos-focus');
+    else document.body.classList.remove('pewil-pos-focus');
+    return () => document.body.classList.remove('pewil-pos-focus');
+  }, [focusMode, isMobile]);
 
   // Claim a tab-level lock on the active session. If another tab is already
   // running POS for the same session, this tab flips to read-only so we can't
