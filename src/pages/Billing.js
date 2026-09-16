@@ -89,7 +89,10 @@ export default function Billing({ activeModule }) {
     activeModule ||
     (Array.isArray(user?.modules) && user.modules[0]) ||
     'retail';
-  const moduleLabel = currentModule === 'retail' ? 'Pewil Retail' : 'Pewil Farm';
+  // Always Pewil Retail (2026-09-16). `currentModule` still drives the API
+  // calls below — it is the tenant's real module and must not be faked —
+  // but nothing a paying customer reads should offer them a farm product.
+  const moduleLabel = 'Pewil Retail';
 
   // Payment modal state — selectedPlan is the full Plan object from API
   const [showPayModal, setShowPayModal] = useState(false);
@@ -112,7 +115,7 @@ export default function Billing({ activeModule }) {
   const { data: usage } = useQuery({ queryKey: ['usage'], queryFn: getUsage, staleTime: 60000 });
 
   // Canonical billing state for this module — drives whether we show the
-  // per-receipt (retail) experience or the flat-plan (farm) experience.
+  // per-receipt experience or the flat-plan experience.
   const { data: summary } = useQuery({
     queryKey: ['billingSummary', currentModule],
     queryFn: () => getBillingSummary(currentModule),
@@ -342,7 +345,7 @@ export default function Billing({ activeModule }) {
                 <AddonsSection addons={summary?.addons} />
               </>
             ) : (
-              /* Farm (and any flat plan) keeps the plan card. */
+              /* Any flat plan keeps the plan card. */
               <ModuleSubCard title={moduleLabel} sub={currentSub} onManage={() => setTab('plans')} />
             )}
           </div>

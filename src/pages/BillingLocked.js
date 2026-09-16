@@ -32,9 +32,13 @@ export default function BillingLocked({ subscription, reason }) {
   // Re-prime on mount so the visible state always matches server reality.
   useEffect(() => { setError(null); }, [subscription?.id]);
 
+  // Falls back to Pewil Retail, full stop (2026-09-16). This used to read
+  // "Pewil Farm" for anyone whose module wasn't literally 'retail' — so a
+  // shop whose /current_plan/ call 404'd was asked to pay for a farm product
+  // on the one screen where trust matters most.
   const planName = subscription?.plan_details?.name
     || subscription?.plan_name
-    || (user?.modules?.[0] === 'retail' ? 'Pewil Retail' : 'Pewil Farm');
+    || 'Pewil Retail';
   const planSlug = subscription?.plan_slug
     || subscription?.plan_details?.slug;
   const module = subscription?.module
@@ -128,8 +132,10 @@ export default function BillingLocked({ subscription, reason }) {
         <p style={styles.sub}>{copy.sub}</p>
 
         <div style={styles.statusStrip}>
+          {/* The Module pill is gone (2026-09-16): it printed the word
+              "Farm" at a customer about to pay, and said nothing the Plan
+              pill beside it doesn't already say better. */}
           <Pill label="Plan" value={planName} />
-          <Pill label="Module" value={module === 'retail' ? 'Retail' : 'Farm'} />
           <Pill label="Status" value={prettyStatus(subscription?.status, reason)} tone="warn" />
         </div>
 
