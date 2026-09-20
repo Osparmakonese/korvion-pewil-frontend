@@ -543,7 +543,18 @@ export default function ReceiptCustomization({ onTabChange }) {
               { name: 'Sugar 2kg', qty: 1, price: 2.8, total: 2.8 },
             ];
             const totalIncl = 11.0;
-            const subEx = totalIncl / 1.15;
+            // The preview must show the receipt this shop will actually
+            // print. It used to draw a 15% VAT breakdown for everybody,
+            // including the many shops that are not VAT-registered and whose
+            // receipts carry no tax line at all (2026-09-20). The rate is
+            // mirrored into localStorage by the Settings page.
+            const previewVatPct = (() => {
+              const r = parseFloat(localStorage.getItem('vat_rate'));
+              return Number.isFinite(r) && r > 0 ? r : 0;
+            })();
+            const subEx = previewVatPct > 0
+              ? totalIncl / (1 + previewVatPct / 100)
+              : totalIncl;
             const vat = totalIncl - subEx;
             const pill = (businessName || 'Your Store');
             const dual = currencyDisplay && currencyDisplay.indexOf('Dual') === 0;
@@ -610,11 +621,14 @@ export default function ReceiptCustomization({ onTabChange }) {
                 {/* totals */}
                 <div style={{ fontSize: 11 * fs, marginTop: 10 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', padding: '3px 0' }}>
-                    <span>Subtotal (excl VAT)</span><b style={{ color: '#0f172a' }}>{money(subEx)}</b>
+                    <span>{previewVatPct > 0 ? 'Subtotal (excl VAT)' : 'Subtotal'}</span>
+                    <b style={{ color: '#0f172a' }}>{money(subEx)}</b>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', padding: '3px 0' }}>
-                    <span>VAT 15% (A)</span><b style={{ color: '#0f172a' }}>{money(vat)}</b>
-                  </div>
+                  {previewVatPct > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', padding: '3px 0' }}>
+                      <span>VAT {previewVatPct}% (A)</span><b style={{ color: '#0f172a' }}>{money(vat)}</b>
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 8, paddingTop: 10, borderTop: '2px solid #0f172a' }}>
                   <span style={{ fontSize: 12 * fs, fontWeight: 800 }}>TOTAL</span>
@@ -622,9 +636,11 @@ export default function ReceiptCustomization({ onTabChange }) {
                 </div>
                 {dual && <div style={{ textAlign: 'right', fontSize: 9 * fs, color: '#94a3b8', marginTop: 2 }}>≈ ZiG 374.00 @ 34.00</div>}
                 <div style={{ fontSize: 10 * fs, color: '#64748b', marginTop: 6 }}>Paid: {(getLocalization().mobile_money || [])[0] || 'Cash'}</div>
-                <div style={{ fontSize: 8.5 * fs, color: '#94a3b8', textAlign: 'center', marginTop: 8 }}>
-                  A = 15% Standard · B = 0% Zero-rated · C = Exempt
-                </div>
+                {previewVatPct > 0 && (
+                  <div style={{ fontSize: 8.5 * fs, color: '#94a3b8', textAlign: 'center', marginTop: 8 }}>
+                    A = {previewVatPct}% Standard · B = 0% Zero-rated · C = Exempt
+                  </div>
+                )}
 
                 {/* ZIMRA fiscal block (the dark card from print) */}
                 <div style={{ background: '#0f172a', color: '#e2e8f0', borderRadius: 10, padding: 14, marginTop: 14, textAlign: 'center' }}>

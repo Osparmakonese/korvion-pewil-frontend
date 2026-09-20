@@ -208,7 +208,10 @@ export default function RetailSettings({ onTabChange }) {
   const [tin, setTin] = useState(() => localStorage.getItem('zimra_tin') || '');
   const [vat, setVat] = useState(() => localStorage.getItem('zimra_vat') || '');
   const [fiscalSerial, setFiscalSerial] = useState(() => localStorage.getItem('fiscal_serial') || '');
-  const [vatRate, setVatRate] = useState(() => localStorage.getItem('vat_rate') || '15');
+  // Empty of tax, not pre-filled with 15. A shop that is not registered
+  // must not find a rate already waiting for it (2026-09-20).
+  const [vatRate, setVatRate] = useState(() => localStorage.getItem('vat_rate') || '0');
+  const [vatRegistered, setVatRegistered] = useState(false);
 
   /* ── Hardware ── */
   const [barcodeEnabled, setBarcodeEnabled] = useState(() => localStorage.getItem('barcode_enabled') !== 'false');
@@ -265,6 +268,7 @@ export default function RetailSettings({ onTabChange }) {
         if (s.digest_hour !== undefined && s.digest_hour !== null) { setDigestHour(parseInt(s.digest_hour, 10) || 18); }
         if (s.store_timezone) { setStoreTimezone(s.store_timezone); localStorage.setItem('store_timezone', s.store_timezone); }
         if (s.vat_rate !== undefined) { setVatRate(String(s.vat_rate)); localStorage.setItem('vat_rate', String(s.vat_rate)); }
+        if (s.vat_registered !== undefined) setVatRegistered(!!s.vat_registered);
         if (s.barcode_enabled !== undefined) { setBarcodeEnabled(!!s.barcode_enabled); localStorage.setItem('barcode_enabled', String(!!s.barcode_enabled)); }
         if (s.scanner_mode !== undefined) { setScannerMode(safe(s.scanner_mode, 'usb_hid')); localStorage.setItem('scanner_mode', safe(s.scanner_mode, 'usb_hid')); }
         if (s.barcode_format !== undefined) { setBarcodeFormat(safe(s.barcode_format, 'auto')); localStorage.setItem('barcode_format', safe(s.barcode_format, 'auto')); }
@@ -344,7 +348,8 @@ export default function RetailSettings({ onTabChange }) {
         digest_recipients: digestRecipients,
         digest_hour: digestHour,
         store_timezone: storeTimezone,
-        vat_rate: vatRate,
+        vat_registered: vatRegistered,
+        vat_rate: vatRegistered ? vatRate : '0',
         barcode_enabled: barcodeEnabled,
         scanner_mode: scannerMode,
         barcode_format: barcodeFormat,
@@ -733,20 +738,34 @@ export default function RetailSettings({ onTabChange }) {
                     <label style={fieldLabel}>Fiscal device serial</label>
                     <input style={input} value={fiscalSerial} onChange={(e) => setFiscalSerial(e.target.value)} placeholder="FDMS-XXXXXX" />
                   </div>
-                  <div style={fieldBlock}>
-                    <label style={fieldLabel}>VAT rate (%)</label>
-                    <input style={input} value={vatRate} onChange={(e) => setVatRate(e.target.value)} />
-                  </div>
+                  {vatRegistered && (
+                    <div style={fieldBlock}>
+                      <label style={fieldLabel}>VAT rate (%)</label>
+                      <input style={input} value={vatRate}
+                             onChange={(e) => setVatRate(e.target.value)} />
+                    </div>
+                  )}
                 </div>
                 <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {/* Non-VAT-registered shops (below the registration threshold)
-                      legally charge no VAT: this zeroes the rate and removes all
-                      VAT wording from receipts (2026-07-08). */}
+                      legally charge no VAT: this removes all VAT wording from
+                      receipts (2026-07-08).
+
+                      It drives a real `vat_registered` flag now, instead of
+                      being inferred from "is the rate above zero". A rate and
+                      a registration are different facts, and reading one off
+                      the other is how a shop that never ticked anything ended
+                      up charging 15% from its first sale (2026-09-20). */}
                   <ToggleItem
-                    label="This business charges VAT"
-                    desc="Turn OFF if your business is not VAT-registered — no VAT is added at the till and receipts show no VAT lines. Turn ON only if you are VAT-registered."
-                    on={Number(vatRate) > 0}
-                    onToggle={() => setVatRate(Number(vatRate) > 0 ? '0' : '15')}
+                    label="This business is registered for VAT"
+                    desc="Leave OFF if you are not VAT-registered — no VAT is charged at the till, printed on receipts, or reported. Turn it ON only if ZIMRA has registered you."
+                    on={vatRegistered}
+                    onToggle={() => {
+                      const next = !vatRegistered;
+                      setVatRegistered(next);
+                      if (next && !(Number(vatRate) > 0)) setVatRate('15');
+                      if (!next) setVatRate('0');
+                    }}
                   />
                   <ToggleItem label="Auto-submit fiscal receipts" desc={`Every POS sale is transmitted to the ${LOC.fiscal_system} within 5 seconds.`} on={autoFiscal} onToggle={() => setAutoFiscal(!autoFiscal)} />
                 </div>

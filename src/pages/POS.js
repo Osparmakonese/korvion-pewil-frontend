@@ -2083,8 +2083,18 @@ export default function POS() {
   const vatRatePct = (() => {
     // Server first (per-tenant truth on every till), the Settings page's
     // localStorage mirror as offline fallback. NO hard-coded 15: a shop
-    // that is not VAT-registered runs at vat_rate 0 and must never have
-    // VAT invented onto its receipts by a default.
+    // that is not VAT-registered runs at zero and must never have VAT
+    // invented onto its receipts by a default.
+    //
+    // `effective_vat_rate` is the rate AFTER registration is taken into
+    // account — zero unless the business has said it is registered. Reading
+    // `vat_rate` alone would charge tax from a rate left behind in the
+    // settings by someone who never ticked the box (2026-09-20).
+    const effective = parseFloat(tenantSettings?.effective_vat_rate);
+    if (Number.isFinite(effective) && effective >= 0) return effective;
+    // Older server that predates the flag: fall back to the plain rate,
+    // but only when it says the business is registered.
+    if (tenantSettings && tenantSettings.vat_registered === false) return 0;
     const server = parseFloat(tenantSettings?.vat_rate);
     if (Number.isFinite(server) && server >= 0) return server;
     const mirrored = parseFloat(localStorage.getItem('vat_rate'));
