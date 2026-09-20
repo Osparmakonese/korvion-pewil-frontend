@@ -69,6 +69,12 @@ const chipStyle = (active) => ({
   fontFamily: 'inherit',
 });
 
+const offlineTag = {
+  fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 999,
+  background: T.amberT, color: T.amber, textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+};
+
 const dateLabel = {
   display: 'block', fontSize: 10, fontWeight: 700, color: T.muted,
   letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4,
@@ -329,11 +335,12 @@ export default function MobileSalesHistory() {
                     borderRadius: 999, background: pill.bg, color: pill.fg,
                   }}>{prettyMethod(sale.payment_method)}</span>
                   <span>
-                    {sale.created_at && new Date(sale.created_at).toLocaleString(undefined, {
+                    {saleStamp(sale) && new Date(saleStamp(sale)).toLocaleString(undefined, {
                       month: 'short', day: 'numeric',
                       hour: '2-digit', minute: '2-digit',
                     })}
                   </span>
+                  {sale.was_offline && <span style={offlineTag}>offline</span>}
                   {(sale.items_data?.length || 0) > 0 && (
                     <span>· {sale.items_data.length} items</span>
                   )}
@@ -385,10 +392,18 @@ export default function MobileSalesHistory() {
                 Receipt #{selectedSale.receipt_number || selectedSale.id}
               </div>
               <div style={{ fontSize: 11, color: T.muted, marginTop: 3 }}>
-                {selectedSale.created_at && new Date(selectedSale.created_at).toLocaleString(undefined, {
+                {saleStamp(selectedSale) && new Date(saleStamp(selectedSale)).toLocaleString(undefined, {
                   month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit',
                 })}
               </div>
+              {selectedSale.was_offline && (
+                <div style={{ fontSize: 10.5, color: T.amber, marginTop: 4, fontWeight: 700 }}>
+                  Rung offline{selectedSale.created_at
+                    ? ` — reached the system ${new Date(selectedSale.created_at).toLocaleString(undefined, {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
+                    : ''}
+                </div>
+              )}
               {selectedSale.customer_name && (
                 <div style={{ fontSize: 11, color: T.muted, marginTop: 2 }}>{selectedSale.customer_name}</div>
               )}

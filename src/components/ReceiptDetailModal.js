@@ -53,7 +53,10 @@ export default function ReceiptDetailModal({ isOpen, onClose, sale }) {
         </div>
 
         <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 16 }}>
-          {sale.created_at ? new Date(sale.created_at).toLocaleString() : ''}
+          {/* When it was rung, not when it reached us. */}
+          {(sale.sold_at || sale.created_at)
+            ? new Date(sale.sold_at || sale.created_at).toLocaleString() : ''}
+          {sale.was_offline ? ' · rung offline' : ''}
           {sale.customer_name ? ` \u2022 ${sale.customer_name}` : ''}
         </div>
 

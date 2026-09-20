@@ -174,7 +174,23 @@ export default function SalesHistory() {
               {filtered.map(sale => (
                 <tr key={sale.id}>
                   <td style={{ ...S.td, fontFamily: 'monospace', color: '#1a6b3a', fontWeight: 600 }}>{sale.receipt_number}</td>
-                  <td style={S.td}>{sale.created_at ? new Date(sale.created_at).toLocaleString() : ''}</td>
+                  {/* The moment it was RUNG. For a sale taken while the till
+                      was offline that is not when the row arrived, and the
+                      column used to show the arrival. */}
+                  <td style={S.td}>
+                    {(sale.sold_at || sale.created_at)
+                      ? new Date(sale.sold_at || sale.created_at).toLocaleString()
+                      : ''}
+                    {sale.was_offline && (
+                      <span style={{
+                        marginLeft: 6, fontSize: 9, fontWeight: 800, padding: '2px 6px',
+                        borderRadius: 999, background: '#fdeedd', color: '#c77700',
+                        textTransform: 'uppercase', letterSpacing: '0.04em',
+                      }} title={sale.created_at
+                        ? `Rung offline — reached the system ${new Date(sale.created_at).toLocaleString()}`
+                        : 'Rung while the till had no connection'}>offline</span>
+                    )}
+                  </td>
                   <td style={S.td}>{(sale.items_data || []).length}</td>
                   <td style={S.td}><strong style={{ color: '#1a6b3a' }}>{fmt(sale.total, 'zwd')}</strong></td>
                   <td style={S.td}>

@@ -106,7 +106,8 @@ export default function MobileSaleComplete({ isOpen, onClose, receipt }) {
         }}>Sale complete</h1>
         <div style={{ color: T.muted, fontSize: 13, marginBottom: 22 }}>
           Receipt #{receipt.receipt_number || '—'}
-          {receipt.created_at ? ` · ${formatDate(receipt.created_at)}` : ''}
+          {(receipt.sold_at || receipt.created_at)
+            ? ` · ${formatDate(receipt.sold_at || receipt.created_at)}` : ''}
         </div>
         <div style={{
           fontFamily: "'Playfair Display', Georgia, serif",

@@ -158,7 +158,9 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
         storeName, addr, phone, vatNo, tinNo,
         isFiscal: Number(receipt.tax) > 0,
         receiptNo: receipt.receipt_number,
-        date: new Date(receipt.created_at || Date.now()).toLocaleString(),
+        // The moment of sale. An offline receipt has no created_at yet and
+        // falls back to now, which IS when it was rung.
+        date: new Date(receipt.sold_at || receipt.created_at || Date.now()).toLocaleString(),
         items: items.map((it) => ({ ...it, taxCode: taxCodeFor(it) })),
         subtotal: receipt.subtotal, discount: receipt.discount, tax: receipt.tax,
         total: receipt.total, tendered: receipt.amount_tendered,
