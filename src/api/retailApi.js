@@ -409,7 +409,10 @@ export const getStocktake = (id) => api.get(`/retail/stocktakes/${id}/`).then(r 
 export const startStocktake = (data) =>
   api.post('/retail/stocktakes/', data || {}, viewBranchParams()).then(r => r.data);
 export const saveStocktakeCounts = (id, counts) => api.post(`/retail/stocktakes/${id}/save-counts/`, { counts }).then(r => r.data);
-export const finalizeStocktake = (id) => api.post(`/retail/stocktakes/${id}/finalize/`).then(r => r.data);
+// The counts ride along with the finalize so the save and the reconcile
+// are one request and one transaction. See StocktakeViewSet._write_counts.
+export const finalizeStocktake = (id, counts) =>
+  api.post(`/retail/stocktakes/${id}/finalize/`, { counts: counts || [] }).then(r => r.data);
 
 // ── Phase 2/3: Layby ──
 export const getLaybys = (st) => api.get('/retail/laybys/', { params: st ? { status: st } : {} }).then(r => r.data);

@@ -209,16 +209,25 @@ function CountScreen({ id, onBack }) {
   const [filter, setFilter] = useState('all'); // all | todo | var
   const [done, setDone] = useState(null);
 
+  // Drop cleared/blank boxes — posting counted_qty:'' makes the API 400
+  // and would lose the whole save, not just that one line.
+  const pendingCounts = () => Object.entries(counts)
+    .filter(([, v]) => v !== '' && v != null && !isNaN(Number(v)))
+    .map(([line_id, counted_qty]) => ({ line_id: Number(line_id), counted_qty }));
+
   const saveMut = useMutation({
-    // Drop cleared/blank boxes — posting counted_qty:'' makes the API 400
-    // and would lose the whole save, not just that one line.
-    mutationFn: () => saveStocktakeCounts(id, Object.entries(counts)
-      .filter(([, v]) => v !== '' && v != null && !isNaN(Number(v)))
-      .map(([line_id, counted_qty]) => ({ line_id: Number(line_id), counted_qty }))),
+    mutationFn: () => saveStocktakeCounts(id, pendingCounts()),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['stocktake', id] }),
   });
+  // Finalize CARRIES the counts. It used to be fired alongside a separate
+  // save — `saveMut.mutate(); finMut.mutate();` — with nothing awaited, so
+  // the two requests raced. On a 189-line count the save took 1.48s writing
+  // rows one at a time and the finalize, which had read the lines at the
+  // start of that, found 174 of them still uncounted, skipped them, and
+  // closed the stocktake as a success. Sending the counts with the finalize
+  // makes it one request and one transaction; there is no window left.
   const finMut = useMutation({
-    mutationFn: () => finalizeStocktake(id),
+    mutationFn: () => finalizeStocktake(id, pendingCounts()),
     onSuccess: (r) => { setDone(r); qc.invalidateQueries({ queryKey: ['stocktake', id] }); },
   });
 
@@ -389,8 +398,10 @@ function CountScreen({ id, onBack }) {
         )}
 
         {done && (
-          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: 12, marginBottom: 12, fontSize: 13, color: '#166534', fontWeight: 600 }}>
-            ✓ Stocktake completed — {done.adjusted} product(s) adjusted to the counted figures.
+          <div style={{ background: done.success === false ? '#fef2f2' : '#f0fdf4', border: `1px solid ${done.success === false ? '#fecaca' : '#bbf7d0'}`, borderRadius: 12, padding: 12, marginBottom: 12, fontSize: 13, color: done.success === false ? '#991b1b' : '#166534', fontWeight: 600 }}>
+            {done.success === false
+              ? `${done.failed} line(s) could not be booked, so the stocktake is still open — finalize again.`
+              : `✓ Stocktake completed — ${done.counted} line(s) counted, ${done.adjusted} adjusted to the counted figure${done.uncounted ? `, ${done.uncounted} left uncounted` : ''}.`}
           </div>
         )}
 
@@ -486,7 +497,7 @@ function CountScreen({ id, onBack }) {
             <button style={M.barBtn(false)} disabled={saveMut.isPending}
               onClick={() => saveMut.mutate()}>{saveMut.isPending ? 'Saving…' : 'Save counts'}</button>
             <button style={M.barBtn(true)} disabled={finMut.isPending}
-              onClick={() => { saveMut.mutate(); finMut.mutate(); }}>{finMut.isPending ? 'Finalizing…' : 'Finalize'}</button>
+              onClick={() => finMut.mutate()}>{finMut.isPending ? 'Finalizing…' : 'Finalize'}</button>
           </div>
         )}
       </div>
@@ -504,12 +515,18 @@ function CountScreen({ id, onBack }) {
         {open && (
           <div style={{ display: 'flex', gap: 8 }}>
             <button style={S.btnO} disabled={saveMut.isPending} onClick={() => saveMut.mutate()}>{saveMut.isPending ? 'Saving…' : 'Save counts'}</button>
-            <button style={S.btn} disabled={finMut.isPending} onClick={() => { saveMut.mutate(); finMut.mutate(); }}>{finMut.isPending ? 'Finalizing…' : 'Finalize & reconcile'}</button>
+            <button style={S.btn} disabled={finMut.isPending} onClick={() => finMut.mutate()}>{finMut.isPending ? 'Finalizing…' : 'Finalize & reconcile'}</button>
           </div>
         )}
       </div>
 
-      {done && <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: 12, marginBottom: 12, fontSize: 13, color: '#166534', fontWeight: 600 }}>✓ Stocktake completed — {done.adjusted} product(s) adjusted to the counted figures.</div>}
+      {done && (
+        <div style={{ background: done.success === false ? '#fef2f2' : '#f0fdf4', border: `1px solid ${done.success === false ? '#fecaca' : '#bbf7d0'}`, borderRadius: 8, padding: 12, marginBottom: 12, fontSize: 13, color: done.success === false ? '#991b1b' : '#166534', fontWeight: 600 }}>
+          {done.success === false
+              ? `${done.failed} line(s) could not be booked, so the stocktake is still open — finalize again.`
+              : `✓ Stocktake completed — ${done.counted} line(s) counted, ${done.adjusted} adjusted to the counted figure${done.uncounted ? `, ${done.uncounted} left uncounted` : ''}.`}
+        </div>
+      )}
 
       <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search products…"
         style={{ width: '100%', maxWidth: 320, padding: '9px 11px', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13, marginBottom: 12, boxSizing: 'border-box' }} />

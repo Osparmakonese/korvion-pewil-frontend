@@ -153,6 +153,15 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
     if (shopStockBox && String(payload.quantity_in_stock ?? '') === String(stockAtLoad)) {
       delete payload.quantity_in_stock;
     }
+    // Say whose shelf the number is. Without this the server has to guess,
+    // and it guessed by comparing the figure against the CHAIN total: a
+    // typed count that happened to equal the chain was read as "the client
+    // echoed back what it was showing" and thrown away in silence. That
+    // heuristic is still there for cached copies of this app that predate
+    // this flag; saying so explicitly retires it for everyone else.
+    if (shopStockBox && payload.quantity_in_stock !== undefined) {
+      payload.quantity_scope = 'branch';
+    }
     onSubmit(payload);
     setForm(BLANK_PRODUCT);
   };
