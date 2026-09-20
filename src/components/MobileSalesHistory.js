@@ -28,11 +28,60 @@ const T = {
 };
 
 const FILTERS = [
-  { key: 'today',  label: 'Today'  },
-  { key: 'week',   label: '7 days' },
-  { key: 'month',  label: '30 days'},
-  { key: 'all',    label: 'All'    },
+  { key: 'today',     label: 'Today'     },
+  { key: 'yesterday', label: 'Yesterday' },
+  { key: 'week',      label: '7 days'    },
+  { key: 'month',     label: '30 days'   },
+  { key: 'all',       label: 'All'       },
 ];
+
+const startOfDay = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+const endOfDay = (d) => { const x = new Date(d); x.setHours(23, 59, 59, 999); return x; };
+const isoDay = (d) => {
+  // Local calendar day, not toISOString() — that converts to UTC first and
+  // hands back yesterday's date for anyone east of Greenwich after 22:00.
+  const x = new Date(d);
+  const m = `${x.getMonth() + 1}`.padStart(2, '0');
+  const day = `${x.getDate()}`.padStart(2, '0');
+  return `${x.getFullYear()}-${m}-${day}`;
+};
+const prettyDay = (iso) => {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-').map(Number);
+  if (!y) return iso;
+  return new Date(y, m - 1, d).toLocaleDateString(undefined,
+    { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
+// WHEN THE SALE WAS RUNG, not when it reached the server. A sale taken while
+// the till was offline keeps its real time in `sold_at` and only arrives
+// later, so reading `created_at` filed a Saturday's trade under the Monday it
+// synced. The desktop history has always read sold_at; this did not.
+const saleStamp = (sale) => sale.sold_at || sale.created_at;
+
+const chipStyle = (active) => ({
+  flexShrink: 0,
+  padding: '8px 14px', borderRadius: 999,
+  border: `1px solid ${active ? T.ink : T.line}`,
+  background: active ? T.ink : '#fff',
+  color: active ? '#fff' : T.inkSoft,
+  fontSize: 12, fontWeight: 700, cursor: 'pointer',
+  fontFamily: 'inherit',
+});
+
+const dateLabel = {
+  display: 'block', fontSize: 10, fontWeight: 700, color: T.muted,
+  letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4,
+};
+
+const dateInput = {
+  width: '100%', padding: '9px 10px', borderRadius: 10,
+  border: `1px solid ${T.line}`, fontSize: 13, fontFamily: 'inherit',
+  color: T.ink, background: '#fff', boxSizing: 'border-box',
+  // Safari on iPhone shrinks a date input to its content and then clips the
+  // year; a minimum height keeps the native picker tappable.
+  minHeight: 38,
+};
 
 const prettyMethod = (m) => {
   const s = String(m || '').toLowerCase();
@@ -53,23 +102,46 @@ const methodPillStyle = (m) => {
   return { bg: T.greenT, fg: T.green }; // cash default
 };
 
-function withinFilter(sale, filter) {
+function withinFilter(sale, filter, from, to) {
   if (filter === 'all') return true;
-  if (!sale.created_at) return false;
-  const dt = new Date(sale.created_at);
+  const raw = saleStamp(sale);
+  if (!raw) return false;
+  const dt = new Date(raw);
+  if (isNaN(dt.getTime())) return false;
   const now = new Date();
-  if (filter === 'today') {
-    return dt.toDateString() === now.toDateString();
+
+  if (filter === 'custom') {
+    if (!from && !to) return true;
+    const a = from || to;
+    const b = to || from;
+    // Either way round, so picking the second date first still works.
+    const lo = startOfDay(new Date(`${a <= b ? a : b}T12:00:00`));
+    const hi = endOfDay(new Date(`${a <= b ? b : a}T12:00:00`));
+    return dt >= lo && dt <= hi;
   }
+  if (filter === 'today') return dt.toDateString() === now.toDateString();
+  if (filter === 'yesterday') {
+    const y = new Date(now);
+    y.setDate(y.getDate() - 1);
+    return dt.toDateString() === y.toDateString();
+  }
+  // Calendar days, counting today as the first. "7 days" on a Sunday means
+  // Monday to Sunday, not "since 3pm last Sunday" — a shopkeeper comparing
+  // weeks should not get a part-day at each end.
   const days = filter === 'week' ? 7 : filter === 'month' ? 30 : 0;
   if (days === 0) return true;
-  const cutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+  const cutoff = startOfDay(new Date(now.getTime() - (days - 1) * 24 * 60 * 60 * 1000));
   return dt >= cutoff;
 }
 
 export default function MobileSalesHistory() {
   const [filter, setFilter] = useState('today');
   const [selectedSale, setSelectedSale] = useState(null);
+  // Pick any day, or any stretch of days. Leave "To" empty for a single day.
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const [showPicker, setShowPicker] = useState(false);
+  const todayISO = isoDay(new Date());
 
   const { data: sales = [], isLoading } = useQuery({
     queryKey: ['sales-history-mobile'],
@@ -78,9 +150,17 @@ export default function MobileSalesHistory() {
   });
 
   const filtered = useMemo(
-    () => (Array.isArray(sales) ? sales : []).filter(s => withinFilter(s, filter)),
-    [sales, filter]
+    () => (Array.isArray(sales) ? sales : []).filter(s => withinFilter(s, filter, from, to)),
+    [sales, filter, from, to]
   );
+
+  const heading = filter === 'custom'
+    ? (from || to
+        ? (to && from && to !== from
+            ? `${prettyDay(from)} — ${prettyDay(to)}`
+            : prettyDay(from || to))
+        : 'Pick a date')
+    : (FILTERS.find(f => f.key === filter)?.label || '');
 
   const gross = filtered.reduce((s, x) => s + (parseFloat(x.total) || 0), 0);
   const count = filtered.length;
@@ -94,7 +174,7 @@ export default function MobileSalesHistory() {
         <div style={{
           fontFamily: "'Playfair Display', Georgia, serif",
           fontSize: 22, fontWeight: 700, color: T.ink, marginTop: 2,
-        }}>{FILTERS.find(f => f.key === filter)?.label}</div>
+        }}>{heading}</div>
       </div>
 
       {/* Gross revenue hero */}
@@ -143,20 +223,64 @@ export default function MobileSalesHistory() {
             <button
               key={f.key}
               type="button"
-              onClick={() => setFilter(f.key)}
-              style={{
-                flexShrink: 0,
-                padding: '8px 14px', borderRadius: 999,
-                border: `1px solid ${active ? T.ink : T.line}`,
-                background: active ? T.ink : '#fff',
-                color: active ? '#fff' : T.inkSoft,
-                fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                fontFamily: 'inherit',
-              }}
+              onClick={() => { setFilter(f.key); setShowPicker(false); }}
+              style={chipStyle(active)}
             >{f.label}</button>
           );
         })}
+        {/* Any other day, or a stretch of them. */}
+        <button
+          type="button"
+          onClick={() => {
+            setShowPicker(v => !v);
+            if (filter !== 'custom') setFilter('custom');
+          }}
+          style={chipStyle(filter === 'custom')}
+        >
+          {filter === 'custom' && (from || to) ? heading : 'Pick dates'}
+        </button>
       </div>
+
+      {showPicker && (
+        <div style={{
+          display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap',
+          background: '#fff', border: `1px solid ${T.line}`, borderRadius: 14,
+          padding: 12, marginBottom: 14,
+        }}>
+          <label style={{ flex: '1 1 130px' }}>
+            <span style={dateLabel}>From</span>
+            <input
+              type="date"
+              value={from}
+              max={to || todayISO}
+              onChange={(e) => { setFrom(e.target.value); setFilter('custom'); }}
+              style={dateInput}
+            />
+          </label>
+          <label style={{ flex: '1 1 130px' }}>
+            <span style={dateLabel}>To <span style={{ fontWeight: 400, textTransform: 'none' }}>(optional)</span></span>
+            <input
+              type="date"
+              value={to}
+              min={from || undefined}
+              max={todayISO}
+              onChange={(e) => { setTo(e.target.value); setFilter('custom'); }}
+              style={dateInput}
+            />
+          </label>
+          {(from || to) && (
+            <button
+              type="button"
+              onClick={() => { setFrom(''); setTo(''); setFilter('today'); setShowPicker(false); }}
+              style={{
+                padding: '9px 14px', borderRadius: 10, border: `1px solid ${T.line}`,
+                background: '#fff', color: T.inkSoft, fontSize: 12, fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >Clear</button>
+          )}
+        </div>
+      )}
 
       {/* Receipt feed */}
       <div style={{

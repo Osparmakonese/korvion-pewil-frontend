@@ -306,12 +306,15 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
               <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>
                 Cost Price
               </label>
+              {/* step="any": cost is a rate, usually a division — a carton
+                  of 18 at $9.80 is $0.544444 each. The column holds six
+                  places (migration 0053), so the box must accept them. */}
               <input
                 type="number"
                 name="cost_price"
                 value={form.cost_price}
                 onChange={handleChange}
-                step="0.0001"
+                step="any"
                 required
                 style={{
                   width: '100%',
