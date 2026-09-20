@@ -330,7 +330,16 @@ export default function DeviceConfiguration({ onTabChange }) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                     <div style={{ fontSize: 28 }}>{typeIcons[d.device_type] || '\u{1F50C}'}</div>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: '#111827' }}>{d.device_name}</div>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: '#111827' }}>
+                        {d.device_name}
+                        {/* Which shop it is plugged in at, when the business has more
+                            than one. Hardware is per shop now, not per business. */}
+                        {d.branch_name && (
+                          <span style={{ fontWeight: 600, fontSize: 11, color: '#6b7280' }}>
+                            {' \u00b7 '}{d.branch_name}
+                          </span>
+                        )}
+                      </div>
                       <div style={{ fontSize: 11, color: '#6b7280' }}>{typeLabels[d.device_type]}</div>
                     </div>
                   </div>
