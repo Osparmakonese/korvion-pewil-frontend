@@ -27,7 +27,11 @@ import axios from 'axios';
 import { noteSaleQueued, clearSale } from './offlineStockLedger';
 
 const KEY = 'pewil_offline_sales';
-const MAX_ATTEMPTS = 20;
+// How many failed attempts before a queued sale is called STUCK on the
+// screen. It no longer decides whether the sale is kept — see
+// isRetryableNetworkError for why nothing does — only when the app
+// should stop being quiet about one.
+const STUCK_AFTER_ATTEMPTS = 20;
 
 // ─── ONE COPY OF EACH SALE IN FLIGHT, EVER (2026-08-30) ─────────────
 //
@@ -147,6 +151,19 @@ export function getPendingCount() { return read().length; }
 export function getPendingSales() { return read(); }
 
 /**
+ * Sales that are still queued but have been failing for a long time.
+ *
+ * Nothing is discarded any more, which means "0 failed" no longer implies
+ * "all sent". A queue that cannot reach the server — an expired login, an
+ * unpaid subscription, a cashier whose permissions changed — would
+ * otherwise sit there looking like it was merely busy. These are the ones
+ * worth putting in front of somebody.
+ */
+export function getStuckSales() {
+  return read().filter((it) => (it.attempts || 0) >= STUCK_AFTER_ATTEMPTS);
+}
+
+/**
  * Remove a single pending sale by its client_receipt_number. Use when a
  * cashier manually voids a queued sale that should never sync (e.g. they
  * realised mid-shift they entered the wrong items).
@@ -217,10 +234,35 @@ export function dismissDeadLetter(clientReceiptNumber) {
 export function isOffline() { return !navigator.onLine; }
 
 /**
- * Classify an error from axios as "network / server down" vs "application".
- * Network errors get queued; application errors (400 validation, etc.) are
- * surfaced to the caller.
+ * Is this failure about the SALE, or about everything else?
+ *
+ * A queued sale is money the shop has already taken. It may leave this
+ * queue for exactly one reason: the server has it. Anything else keeps it
+ * here, however long that takes, because the alternative is a shop that
+ * rings a day's trade and finds no record of it.
+ *
+ * This used to answer `false` for every 4xx, and a `false` here sends the
+ * sale to the dead-letter list on its FIRST failure. Three ordinary things
+ * therefore erased a queue (2026-09-20):
+ *
+ *   401 — the refresh token lives one day. A till that goes offline on
+ *         Friday evening and reconnects on Monday cannot refresh. Every
+ *         queued sale 401'd, dead-lettered on the spot, and the browser
+ *         was redirected to /login in the middle of the drain.
+ *   429 — the API allows 300 requests a minute per user. A day's offline
+ *         trade drains as fast as the loop can post, so a queue of 400
+ *         sales trips the throttle around sale 300 and the REST of the
+ *         day's takings were discarded, one 429 at a time.
+ *   402 — a lapsed subscription blocks writes. The queue was thrown away
+ *         rather than waiting for the bill to be paid.
+ *
+ * None of those say anything is wrong with the sale. Only the server
+ * saying "this request is malformed or refers to something that is not
+ * there" is permanent, and even then the sale is kept — in the
+ * dead-letter list, where a person decides.
  */
+const PERMANENT_STATUSES = new Set([400, 404, 405, 409, 410, 415, 422]);
+
 function isRetryableNetworkError(err) {
   if (!err) return false;
   if (axios.isCancel?.(err)) return false;
@@ -228,9 +270,29 @@ function isRetryableNetworkError(err) {
   if (err.code === 'ECONNABORTED') return true;
   const status = err.response?.status;
   if (status == null) return true;                       // no response — treat as network
-  if (status >= 500 && status <= 599) return true;       // server outage
-  if (status === 502 || status === 503 || status === 504) return true;
-  return false;
+  // Anything not on the list is retryable, including statuses nobody has
+  // thought of yet. For money, "I don't recognise this" must mean "keep it".
+  return !PERMANENT_STATUSES.has(status);
+}
+
+// ── Draining without tripping the rate limit ─────────────
+//
+// The API allows 300 requests/min per user. A serial loop posts far faster
+// than that, so a long offline day used to throttle itself halfway through.
+// The drain now posts in paced batches and stands down when told to.
+const DRAIN_BATCH = 60;      // sales per cycle; the timer comes round again
+const DRAIN_GAP_MS = 150;    // between posts — ~400/min ceiling, under 300 in practice
+let _throttledUntil = 0;     // epoch ms; set from a 429's Retry-After
+
+const _sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function _noteThrottle(err) {
+  const retryAfter = Number(err?.response?.headers?.['retry-after']);
+  const waitMs = Number.isFinite(retryAfter) && retryAfter > 0
+    ? (retryAfter + 1) * 1000
+    : 60000;
+  _throttledUntil = Date.now() + waitMs;
+  return waitMs;
 }
 
 /**
@@ -385,6 +447,11 @@ function queueSale(payload) {
  */
 export async function drainPendingSales(api) {
   if (isOffline()) return { sent: 0, failed: 0, remaining: read().length };
+  // Serving a 429 back to back is how a queue talks itself into a longer
+  // ban. Wait out whatever Retry-After asked for.
+  if (Date.now() < _throttledUntil) {
+    return { sent: 0, failed: 0, remaining: read().length };
+  }
   // One drain at a time. A second caller (another timer, the 'online'
   // event, the sync-queue page) gets "nothing to report" rather than a
   // second copy of every POST. See the note at the top of this file.
@@ -404,8 +471,13 @@ async function _drainPendingSalesLocked(api) {
   const keep = [];
   let sent = 0;
   let failed = 0;
+  // Set when the server tells us to slow down, or when the batch ceiling is
+  // reached. Everything still in the queue is kept for the next cycle —
+  // never posted harder, never discarded.
+  let standDown = false;
 
   for (const item of q) {
+    if (standDown || sent >= DRAIN_BATCH) { keep.push(item); continue; }
     const key = item.client_receipt_number;
     if (_inFlight.has(key)) {
       // submitSaleOnline's own POST for this sale is still on the wire.
@@ -433,17 +505,27 @@ async function _drainPendingSalesLocked(api) {
       // and stop subtracting its units locally — the server's own figure now
       // includes them, and doing both would count the sale twice.
       clearSale(key);
+      if (DRAIN_GAP_MS) await _sleep(DRAIN_GAP_MS);
     } catch (err) {
       const retryable = isRetryableNetworkError(err);
       item.attempts = (item.attempts || 0) + 1;
       item.last_error = err?.response?.data?.detail
                       || err?.message
                       || 'unknown';
-      if (retryable && item.attempts < MAX_ATTEMPTS) {
-        keep.push(item);           // retry later
+      if (err?.response?.status === 429) {
+        // Too fast. Stop the cycle, keep everything, come back later.
+        _noteThrottle(err);
+        standDown = true;
+        keep.push(item);
+      } else if (retryable) {
+        // Kept for as long as it takes. The attempt count is for the
+        // cashier's benefit — it no longer decides anything, because a
+        // counter is not a reason to throw away a sale that was rung up.
+        keep.push(item);
       } else {
         failed++;
-        // Permanent failure — stash in a dead-letter slot so it's not lost.
+        // The request itself is wrong, so retrying it forever would only
+        // hide it. Stash it where a person can see it and decide.
         stashDeadLetter(item);
       }
     } finally {
@@ -702,7 +784,12 @@ export async function drainAuxQueue(api, queueName) {
       const retryable = isRetryableNetworkError(err);
       item.attempts = (item.attempts || 0) + 1;
       item.last_error = err?.response?.data?.detail || err?.message || 'unknown';
-      if (retryable && item.attempts < MAX_ATTEMPTS) {
+      if (err?.response?.status === 429) {
+        _noteThrottle(err);
+        keep.push(item);
+      } else if (retryable) {
+        // Kept until it lands. A refund the shop has already paid out is
+        // money too; see isRetryableNetworkError.
         keep.push(item);
       } else {
         failed++;

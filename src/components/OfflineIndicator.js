@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  isOffline,
   getPendingCount,
   onPendingChange,
   installOfflineSync,
   getDeadLetters,
+  getStuckSales,
 } from '../utils/offlinePOS';
 import api from '../api/axios';
 
@@ -35,6 +35,10 @@ export default function OfflineIndicator() {
   const [pending, setPending] = useState(() => getPendingCount());
   const [flashSuccess, setFlashSuccess] = useState(false);
   const [deadLetters, setDeadLetters] = useState(() => getDeadLetters().length);
+  // Queued sales that keep failing. Nothing is discarded any more, so
+  // "syncing…" would otherwise sit there forever looking merely busy
+  // while an expired login or an unpaid bill held the whole day's trade.
+  const [stuck, setStuck] = useState(() => getStuckSales().length);
 
   // Click handler — any non-null pill navigates to the sync queue page
   // so the cashier can see what's queued / failed / draining.
@@ -52,6 +56,7 @@ export default function OfflineIndicator() {
       prev = n;
       setPending(n);
       setDeadLetters(getDeadLetters().length);
+      setStuck(getStuckSales().length);
     });
     return () => unsub();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -77,13 +82,14 @@ export default function OfflineIndicator() {
       onDrain: () => {
         setPending(getPendingCount());
         setDeadLetters(getDeadLetters().length);
+        setStuck(getStuckSales().length);
       },
     });
     return () => stop();
   }, []);
 
   // Decide what (if anything) to render.
-  // Priority: dead-letters > offline > pending > success-flash > hidden.
+  // Priority: dead-letters > stuck > offline > pending > success-flash > hidden.
 
   if (deadLetters > 0) {
     return (
@@ -93,6 +99,18 @@ export default function OfflineIndicator() {
         onClick={goToQueue}
       >
         <strong>{deadLetters}</strong> sale{deadLetters === 1 ? '' : 's'} failed to sync
+      </Pill>
+    );
+  }
+
+  if (stuck > 0 && online) {
+    return (
+      <Pill
+        bg="#fee2e2" border="#fecaca" color="#991b1b" icon="⚠"
+        title={`${stuck} sale${stuck === 1 ? '' : 's'} cannot reach the server — still saved here, click to see why`}
+        onClick={goToQueue}
+      >
+        <strong>{stuck}</strong> sale{stuck === 1 ? '' : 's'} not syncing
       </Pill>
     );
   }
