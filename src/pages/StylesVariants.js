@@ -110,7 +110,9 @@ export default function StylesVariants() {
                             <td style={td}>{v.sku}</td>
                             <td style={{ ...td, color: v.barcode ? '#111827' : '#991b1b' }}>{v.barcode || 'no barcode yet'}</td>
                             <td style={td}>{v.selling_price}</td>
-                            <td style={td}>{v.quantity_in_stock}</td>
+                            {/* The shop's own peg when a shop is in context,
+                                the chain total only when it is not. */}
+                            <td style={td}>{v.branch_quantity ?? v.quantity_in_stock}</td>
                           </tr>
                         ))}
                       </tbody>
