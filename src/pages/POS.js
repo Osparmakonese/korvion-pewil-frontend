@@ -17,6 +17,7 @@ import {
   claimTicket,
   getReceiptTemplates,
   emailReceipt,
+  correctSale,
 } from '../api/retailApi';
 import apiClient from '../api/axios';
 import { fmt } from '../utils/format';
@@ -33,8 +34,9 @@ import * as Sentry from '@sentry/react';
 import {
   submitSaleOnline, installOfflineSync, getPendingCount, getPendingSales,
   onPendingChange, isOffline as posIsOffline, OFFLINE_QUEUE_LIMIT,
-  newClientReceiptNumber,
+  newClientReceiptNumber, removePendingSale,
 } from '../utils/offlinePOS';
+import { promptSaleFix } from '../utils/saleFix';
 import { promptWeight } from '../utils/weightPrompt';
 import { requireAgeVerification } from '../utils/ageVerify';
 import { chargeMobileMoney } from '../utils/mobileMoneyCharge';
@@ -59,7 +61,7 @@ import {
 import useViewBranch from '../hooks/useViewBranch';
 
 /* ─── Receipt Modal ─── */
-function ReceiptModal({ isOpen, onClose, receipt }) {
+function ReceiptModal({ isOpen, onClose, receipt, onFix }) {
   const { data: tmplData } = useQuery({
     queryKey: ['receipt-template'], queryFn: getReceiptTemplates,
     staleTime: 300000, retry: false,
@@ -363,16 +365,68 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
                 {'\u2713'} FISCAL: SUBMITTED
                 {receipt.fiscal_receipt_number ? ` · ${receipt.fiscal_receipt_number}` : ''}
               </span>
-            ) : (
+            ) : qrTextExpected ? (
+              // Only when this sale will actually be fiscalised. It used to
+              // say "FISCAL: PENDING — WILL SYNC TO ZIMRA" on every sale of
+              // every shop, including the many that are not registered and
+              // never send anything to ZIMRA at all (2026-09-21).
               <span style={{
                 fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 999,
                 background: '#fef3c7', color: '#92400e', letterSpacing: '0.05em',
               }}>
                 {'\u23F3'} FISCAL: PENDING — WILL SYNC TO {getLocalization().authority_short}
               </span>
-            )}
+            ) : null}
           </div>
         </div>
+
+        {/* WHAT WAS SOLD (2026-09-21). This screen showed the total and how
+            it was paid, but not the lines — so the one moment a cashier can
+            still catch a wrong quantity, with the customer standing there,
+            showed nothing to catch it with. Laid out like the printed slip,
+            because that is what the cashier is checking against. */}
+        {items.length > 0 && (
+          <div
+            aria-label="What was sold"
+            style={{
+              background: '#fffefb', border: '1px solid #ece8de', borderRadius: 4,
+              padding: '12px 14px', marginBottom: 16, maxHeight: 260, overflowY: 'auto',
+              fontFamily: "ui-monospace, 'SFMono-Regular', Consolas, monospace",
+              fontSize: 12, lineHeight: 1.55, color: '#1b1b1b',
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            <div style={{ textAlign: 'center', fontWeight: 600, letterSpacing: '0.04em' }}>{storeName}</div>
+            <div style={{ textAlign: 'center', color: '#6b6b6b', fontSize: 11 }}>
+              {new Date(receipt.sold_at || receipt.created_at || Date.now()).toLocaleString(undefined, {
+                day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+              })}
+            </div>
+            <div style={{ borderTop: '1px dashed #b9b3a6', margin: '8px 0' }} />
+            {items.map((it, i) => {
+              const q = Number(it.qty ?? it.quantity ?? 0) || 0;
+              const up = parseFloat(it.unit_price ?? it.price ?? 0) || 0;
+              const lt = it.total != null ? (parseFloat(it.total) || 0) : up * q;
+              return (
+                <div key={i} style={{ marginBottom: 3 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {it.product_name || it.name || 'Item'}
+                    </span>
+                    <span>{lt.toFixed(2)}</span>
+                  </div>
+                  <div style={{ color: '#6b6b6b', fontSize: 11 }}>
+                    {Number.isInteger(q) ? q : q.toFixed(3)} × {up.toFixed(2)}
+                  </div>
+                </div>
+              );
+            })}
+            <div style={{ borderTop: '1px dashed #b9b3a6', margin: '8px 0 4px' }} />
+            <div style={{ color: '#6b6b6b', fontSize: 11 }}>
+              {items.length} item{items.length === 1 ? '' : 's'}
+            </div>
+          </div>
+        )}
 
         <div style={{ marginBottom: 20 }}>
           <div
@@ -577,6 +631,9 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
           )}
           <button
             onClick={onClose}
+            // Focused when the receipt opens, so Enter starts the next sale:
+            // reading the slip must never slow a busy till down.
+            autoFocus
             style={{
               flex: 1,
               padding: '10px',
@@ -589,9 +646,22 @@ function ReceiptModal({ isOpen, onClose, receipt }) {
               cursor: 'pointer',
             }}
           >
-            New sale
+            New sale <span style={{ opacity: 0.7, fontSize: 10, marginLeft: 4 }}>Enter</span>
           </button>
         </div>
+        {onFix && !receipt.corrected_at && (
+          <button
+            type="button"
+            onClick={() => onFix(receipt)}
+            style={{
+              display: 'block', width: '100%', marginTop: 10, padding: '6px',
+              background: 'transparent', border: 'none', color: '#b86a00',
+              fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
+            }}
+          >
+            Something wrong? Fix this sale
+          </button>
+        )}
         <div style={{
           display: 'flex', justifyContent: 'center', alignItems: 'center',
           gap: 18, marginTop: 12, flexWrap: 'wrap',
@@ -1260,6 +1330,10 @@ export default function POS() {
   ]);
   const [receipt, setReceipt] = useState(null);
   const [showReceipt, setShowReceipt] = useState(false);
+  // A sale being redone after "Fix this sale": { id, receipt_number, total,
+  // label }. The old sale is already cancelled server-side; this only links
+  // the replacement to it and keeps the cashier told what the customer paid.
+  const [correcting, setCorrecting] = useState(null);
 
   // Every sale is queued first and shown optimistically with a placeholder
   // number (OFF-<uuid>), then synced in the background. When the server
@@ -1829,6 +1903,7 @@ export default function POS() {
       setReceipt(sale);
       setLastReceiptId(sale?.id || null);
       setShowReceipt(true);
+      setCorrecting(null);
       // Award loyalty points only when the sale is confirmed server-side.
       // For queued offline sales we defer until drain (simpler than queuing
       // a second endpoint — re-award on reconnect is a 2b-follow-up).
@@ -2134,6 +2209,144 @@ export default function POS() {
       { method: 'mobile_money', amount: '', reference: '' },
     ]);
   };
+
+  // ── Fix this sale (2026-09-21) ──────────────────────────────────────
+  // The cashier rang it up wrong. Cancel the sale — the server puts the
+  // items back on the shelf and reverses the payment — then bring the basket
+  // back so it can be rung up again. A manager is asked for only when the
+  // server says so (someone else's sale, a big one, or an old one).
+  const loadSaleIntoCart = (items, reason) => {
+    const missing = [];
+    const lines = [];
+    for (const it of items || []) {
+      const pid = Number(it.product_id ?? it.product);
+      const prod = products.find((x) => x.id === pid);
+      if (!prod) { missing.push(it.product_name || it.name || `#${pid}`); continue; }
+      lines.push({
+        product_id: prod.id,
+        name: prod.name,
+        // A wrong price is fixed by ringing at today's shelf price; every
+        // other mistake keeps the price the customer was actually charged.
+        unit_price: reason === 'wrong_price'
+          ? shopPrice(prod)
+          : (Number(it.unit_price) || shopPrice(prod)),
+        quantity: Number(it.qty ?? it.quantity) || 1,
+        product: prod,
+      });
+    }
+    return { lines, missing };
+  };
+
+  const handleFixSale = async (sale) => {
+    if (!sale) return;
+    if (cart.length > 0) {
+      toast({ message: 'Finish or clear the sale in the basket first, then fix the old one.', kind: 'error' });
+      return;
+    }
+    const picked = await promptSaleFix({ receipt: sale });
+    if (!picked) return;
+
+    let items = sale.items_data || sale.items || [];
+    let linkId = null;
+
+    if (!sale.id) {
+      // Never reached the server. While the device is online it may be
+      // mid-send right now, and taking it out of the queue then could leave
+      // a sale on the server that the till thinks it cancelled. Wait for it.
+      if (!posIsOffline()) {
+        toast({ message: 'This sale is still being sent. Give it a few seconds and tap Fix again.', kind: 'error' });
+        return;
+      }
+      if (!removePendingSale(sale.client_receipt_number || sale.receipt_number)) {
+        toast({ message: 'This sale has already been sent. Reconnect and try again.', kind: 'error' });
+        return;
+      }
+      setPendingCount(getPendingCount());
+    } else {
+      let result = null;
+      try {
+        result = await correctSale(sale.id, picked.reason);
+      } catch (e) {
+        const data = e?.response?.data || {};
+        if (e?.response?.status === 403 && data.error === 'manager_approval_required') {
+          let token;
+          try {
+            token = await requireManagerApproval('void_sale', {
+              resourceType: 'sale',
+              resourceId: String(sale.id),
+              notes: `Fix ${sale.receipt_number}: ${picked.label}. ${data.detail || ''}`.trim(),
+            });
+          } catch (_) { return; }   // manager cancelled
+          try {
+            result = await correctSale(sale.id, picked.reason, token);
+          } catch (e2) {
+            toast({ message: e2?.response?.data?.detail || 'Could not fix the sale. Nothing was changed.', kind: 'error' });
+            return;
+          }
+        } else {
+          toast({ message: data.detail || 'Could not fix the sale. Nothing was changed.', kind: 'error' });
+          return;
+        }
+      }
+      if (Array.isArray(result?.items) && result.items.length) items = result.items;
+      linkId = sale.id;
+      invalidateSaleCaches(qc);
+      invalidateProductCaches(qc);
+    }
+
+    const { lines, missing } = loadSaleIntoCart(items, picked.reason);
+    setShowReceipt(false);
+    setReceipt(null);
+    setLastReceiptId(null);
+    resetCart();
+    setCart(lines);
+    setCorrecting({
+      id: linkId,
+      receipt_number: sale.receipt_number,
+      total: parseFloat(sale.total) || 0,
+      label: picked.label,
+      reason: picked.reason,
+    });
+    toast({
+      message: `${sale.receipt_number} cancelled — items are back on the shelf. Ring it up again.`
+        + (missing.length ? ` Not in the catalogue any more: ${missing.join(', ')}.` : ''),
+      kind: missing.length ? 'error' : 'success',
+    });
+    setTimeout(() => barcodeInputRef.current?.focus(), 50);
+  };
+
+  const finishCorrectionWithoutSale = async () => {
+    if (!correcting) return;
+    const ok = await confirm({
+      title: 'No new sale',
+      message: `Give the customer back ${correcting.total.toFixed(2)} for ${correcting.receipt_number}. The old sale stays cancelled.`,
+      confirmText: 'Done',
+    });
+    if (!ok) return;
+    setCorrecting(null);
+    resetCart();
+  };
+
+  const correctingBanner = correcting ? (
+    <div role="status" style={{
+      position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 8px)', left: '50%',
+      transform: 'translateX(-50%)', zIndex: 60, width: 'min(560px, calc(100% - 24px))',
+      background: '#fff7e6', border: '1.5px solid #f0b85a', borderRadius: 10,
+      boxShadow: '0 8px 24px rgba(0,0,0,0.15)', padding: '10px 12px',
+      display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap',
+    }}>
+      <div style={{ flex: '1 1 240px', fontSize: 13, color: '#5c3b00', lineHeight: 1.4 }}>
+        <strong>Fixing {correcting.receipt_number}</strong> ({correcting.label}). The customer already
+        paid <strong>{correcting.total.toFixed(2)}</strong>. Ring up what they are really taking, enter
+        the new total as paid, and hand over or collect only the difference.
+      </div>
+      <button type="button" onClick={finishCorrectionWithoutSale}
+        style={{ padding: '7px 12px', borderRadius: 8, border: '1px solid #e0a040',
+                 background: '#fff', color: '#8a5200', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+        No new sale
+      </button>
+    </div>
+  ) : null;
 
   // Broadcast current state to customer-facing display every render.
   // Gated by the POSSettings.customer_display_enabled flag so managers can
@@ -2614,6 +2827,11 @@ export default function POS() {
     if (payments_data_payload) {
       saleData.payments_data = payments_data_payload;
     }
+    // The replacement for a sale fixed at the till. Only a server id can be
+    // linked; a fixed sale that never left this device has nothing to link.
+    if (correcting?.id) {
+      saleData.corrects = correcting.id;
+    }
     if (loadedTicket?.id) {
       saleData.ticket = loadedTicket.id;       // the sale closes the ticket server-side
       if (loadedTicket.paid_ahead) {
@@ -2830,7 +3048,9 @@ export default function POS() {
             barcodeInputRef.current?.focus();
           }}
           receipt={receipt}
+          onFix={handleFixSale}
         />
+        {correctingBanner}
       </>
     );
   }
@@ -2904,7 +3124,9 @@ export default function POS() {
             barcodeInputRef.current?.focus();
           }}
           receipt={receipt}
+          onFix={handleFixSale}
         />
+        {correctingBanner}
       </div>
     );
   }
@@ -2983,7 +3205,9 @@ export default function POS() {
             barcodeInputRef.current?.focus();
           }}
           receipt={receipt}
+          onFix={handleFixSale}
         />
+        {correctingBanner}
       </div>
     );
   }
@@ -3979,7 +4203,9 @@ export default function POS() {
           barcodeInputRef.current?.focus();
         }}
         receipt={receipt}
+        onFix={handleFixSale}
       />
+      {correctingBanner}
     </div>
   );
 }

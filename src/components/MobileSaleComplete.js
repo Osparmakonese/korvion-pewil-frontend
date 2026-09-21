@@ -24,7 +24,7 @@ const T = {
   orange2: '#e09a2b',
 };
 
-export default function MobileSaleComplete({ isOpen, onClose, receipt }) {
+export default function MobileSaleComplete({ isOpen, onClose, receipt, onFix }) {
   if (!isOpen || !receipt) return null;
 
   const total = parseFloat(receipt.total) || 0;
@@ -32,6 +32,7 @@ export default function MobileSaleComplete({ isOpen, onClose, receipt }) {
   const change = Math.max(0, tendered - total);
   const isMixed = receipt.payment_method === 'mixed';
   const breakdown = Array.isArray(receipt.payments_data) ? receipt.payments_data : [];
+  const lines = receipt.items_data || receipt.items || [];
 
   const handlePrint = () => {
     const printWin = window.open('', '_blank', 'width=400,height=600');
@@ -127,6 +128,36 @@ export default function MobileSaleComplete({ isOpen, onClose, receipt }) {
         )}
       </div>
 
+      {/* What was sold — so the cashier can check the basket before the
+          customer walks, and fix it if it is wrong. */}
+      {lines.length > 0 && (
+        <div aria-label="What was sold" style={{
+          background: '#fff', border: `1px solid ${T.line}`, borderRadius: 16,
+          padding: 14, marginTop: 22,
+        }}>
+          <div style={{
+            fontSize: 11, color: T.muted, fontWeight: 700,
+            letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6,
+          }}>{lines.length} item{lines.length === 1 ? '' : 's'}</div>
+          {lines.map((it, idx) => {
+            const q = Number(it.qty ?? it.quantity) || 0;
+            const up = parseFloat(it.unit_price) || 0;
+            const lt = parseFloat(it.total ?? it.line_total) || q * up;
+            return (
+              <div key={idx} style={{ padding: '5px 0', borderTop: idx ? `1px dashed ${T.line}` : 'none' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 13.5, color: T.ink }}>
+                  <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>{it.product_name || it.name || 'Item'}</span>
+                  <strong style={{ fontVariantNumeric: 'tabular-nums' }}>{fmt(lt, 'zwd')}</strong>
+                </div>
+                <div style={{ fontSize: 12, color: T.muted, fontVariantNumeric: 'tabular-nums' }}>
+                  {q} × {fmt(up, 'zwd')}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Breakdown panel — only when split, otherwise show single-method line */}
       <div style={{
         background: '#fff',
@@ -200,6 +231,19 @@ export default function MobileSaleComplete({ isOpen, onClose, receipt }) {
           New sale
         </button>
       </div>
+      {onFix && !receipt.corrected_at && (
+        <button
+          type="button"
+          onClick={() => onFix(receipt)}
+          style={{
+            marginTop: 12, padding: 8, background: 'transparent', border: 'none',
+            color: '#b86a00', fontWeight: 700, fontSize: 13,
+            fontFamily: 'inherit', cursor: 'pointer',
+          }}
+        >
+          Something wrong? Fix this sale
+        </button>
+      )}
     </div>
   );
 }

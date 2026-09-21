@@ -62,6 +62,8 @@ const DEFAULTS = {
   auto_focus_scan: true,
   blind_close: false,
   variance_threshold: 5,
+  correction_approval_amount: 50,
+  correction_free_minutes: 10,
 };
 
 export default function POSSettingsPage() {
@@ -192,6 +194,44 @@ export default function POSSettingsPage() {
             style={{ width: 160, padding: '10px 12px', border: '1px solid #e2e8f0', borderRadius: 10, fontSize: 14, outline: 'none' }}
           />
           <span style={{ fontSize: 12, color: '#64748b' }}>USD</span>
+        </div>
+      </section>
+
+      {/* Fixing a sale at the till */}
+      <section style={styles.card}>
+        <div style={styles.tag}>Fixing sales</div>
+        <h2 style={styles.h2}>When a manager must approve a fix</h2>
+        <p style={styles.p}>
+          After every sale the cashier sees the receipt and can tap <b>Fix this sale</b> if it was rung up
+          wrong — the sale is cancelled, its items go back on the shelf and the basket comes back to be rung
+          again. A cashier can fix their own sale on their own; a manager PIN is needed when the sale was
+          someone else&apos;s, is over the amount below, or is older than the minutes below.
+        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#334155' }}>
+            Over
+            <input
+              id="correction-approval-amount"
+              type="number" step="0.01" min="0"
+              value={form.correction_approval_amount ?? 50}
+              onChange={(e) => canEdit && set({ correction_approval_amount: e.target.value === '' ? 0 : e.target.value })}
+              disabled={!canEdit}
+              style={{ width: 120, padding: '10px 12px', border: '1px solid #e2e8f0', borderRadius: 10, fontSize: 14, outline: 'none' }}
+            />
+            USD
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#334155' }}>
+            Older than
+            <input
+              id="correction-free-minutes"
+              type="number" step="1" min="0"
+              value={form.correction_free_minutes ?? 10}
+              onChange={(e) => canEdit && set({ correction_free_minutes: e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value, 10) || 0) })}
+              disabled={!canEdit}
+              style={{ width: 90, padding: '10px 12px', border: '1px solid #e2e8f0', borderRadius: 10, fontSize: 14, outline: 'none' }}
+            />
+            minutes
+          </label>
         </div>
       </section>
 

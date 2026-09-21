@@ -393,6 +393,13 @@ export const retryFiscalItem = (id) => api.post(`/retail/fiscal-queue/${id}/retr
 export const getFiscalQueueStats = () => api.get('/retail/fiscal-queue/stats/').then(r => r.data);
 export const fiscaliseReturn = (id) => api.post(`/retail/returns/${id}/fiscalise/`).then(r => r.data);
 export const emailReceipt = (saleId, data) => api.post(`/retail/sales/${saleId}/email-receipt/`, data).then(r => r.data);
+// Fix a sale at the till: cancels it (items back on the shelf, payment
+// reversed) so it can be rung up again. `approvalToken` only when the
+// server answers 403 manager_approval_required.
+export const correctSale = (saleId, reason, approvalToken) => api.post(
+  `/retail/sales/${saleId}/correct/`, { reason },
+  approvalToken ? { headers: { 'X-Manager-Approval': approvalToken } } : {},
+).then(r => r.data);
 export const exportSalesExcel = (params) => api.get('/retail/sales/export-excel/', { params, responseType: 'blob' }).then(r => r.data);
 export const exportFinancialsExcel = (params) => api.get('/retail/financials/export-excel/', { params, responseType: 'blob' }).then(r => r.data);
 export const importProducts = (formData) => api.post('/retail/products-import/', formData, { headers: { 'Content-Type': 'multipart/form-data' } }).then(r => r.data);
