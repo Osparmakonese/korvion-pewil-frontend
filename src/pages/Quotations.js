@@ -264,7 +264,7 @@ export default function Quotations() {
                 {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
               <input style={{ ...input, padding: '6px 6px' }} type="number" min={0} value={l.qty} onChange={(e) => setLine(i, { qty: e.target.value })} />
-              <input style={{ ...input, padding: '6px 6px' }} type="number" min={0} step="0.01" placeholder="price" value={l.unit_price} onChange={(e) => setLine(i, { unit_price: e.target.value })} />
+              <input style={{ ...input, padding: '6px 6px' }} type="number" min={0} step="any" placeholder="price" value={l.unit_price} onChange={(e) => setLine(i, { unit_price: e.target.value })} />
             </div>
           ))}
           <button type="button" onClick={() => setLines([...lines, { product: '', name: '', qty: 1, unit_price: '' }])} style={{ background: 'none', border: 'none', color: '#1a6b3a', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>+ Add line</button>

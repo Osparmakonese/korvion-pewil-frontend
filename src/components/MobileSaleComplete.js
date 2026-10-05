@@ -10,7 +10,7 @@
  * for the visual reference.
  */
 import React from 'react';
-import { fmt } from '../utils/format';
+import { fmt, price as fmtUnitPrice } from '../utils/format';
 
 const T = {
   cream:   '#ffffff',
@@ -150,7 +150,7 @@ export default function MobileSaleComplete({ isOpen, onClose, receipt, onFix }) 
                   <strong style={{ fontVariantNumeric: 'tabular-nums' }}>{fmt(lt, 'zwd')}</strong>
                 </div>
                 <div style={{ fontSize: 12, color: T.muted, fontVariantNumeric: 'tabular-nums' }}>
-                  {q} × {fmt(up, 'zwd')}
+                  {q} × {fmtUnitPrice(up, 'zwd')}
                 </div>
               </div>
             );

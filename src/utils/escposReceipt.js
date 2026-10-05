@@ -88,6 +88,16 @@ function qrBytes(text) {
 }
 
 const money = (n) => '$' + (parseFloat(n) || 0).toFixed(2);
+// A per-unit price can carry up to nine places (a case price over its
+// singles, a price per kilogram). Printing it rounded to the cent would put
+// a line on the slip the customer cannot reproduce: 18 x $0.54 is not
+// $9.80. Print the price as it is, cash at the line as cash (2026-10-05).
+const unitMoney = (n) => {
+  const v = parseFloat(n) || 0;
+  const s = v.toFixed(9).replace(/0+$/, '');
+  return '$' + (s.endsWith('.') ? v.toFixed(2)
+    : (s.split('.')[1] || '').length < 2 ? v.toFixed(2) : s);
+};
 
 /**
  * Build a full receipt.
@@ -128,7 +138,7 @@ export function buildReceiptBytes(r, { width = 32, drawerKick = false } = {}) {
     const name = it.product_name || it.name || 'Item';
     const tax = it.taxCode ? ` ${it.taxCode}` : '';
     line(padBetween(name, money(it.total != null ? it.total : qty * unit) + tax, width));
-    line(`  ${qty} x ${money(unit)}`);
+    line(`  ${qty} x ${unitMoney(unit)}`);
   }
   rule();
 

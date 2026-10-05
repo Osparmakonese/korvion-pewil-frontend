@@ -128,6 +128,26 @@ export async function syncCatalog(api) {
 }
 
 /**
+ * syncCatalog, but not more often than `minGapMs` (2026-09-22).
+ *
+ * The POS grid refetches its products after sales, and each successful
+ * refetch used to download the whole catalogue AGAIN for this cache. While
+ * an offline backlog drained that was a full catalogue download per synced
+ * sale. The offline copy only has to be recent, not instant; one download
+ * in flight at a time, and none within `minGapMs` of the last good one.
+ */
+let _lastCatalogSyncAt = 0;
+let _catalogSyncInFlight = null;
+export function syncCatalogIfStale(api, minGapMs = 5 * 60 * 1000) {
+  if (_catalogSyncInFlight) return _catalogSyncInFlight;
+  if (Date.now() - _lastCatalogSyncAt < minGapMs) return Promise.resolve(null);
+  _catalogSyncInFlight = syncCatalog(api)
+    .then((r) => { _lastCatalogSyncAt = Date.now(); return r; })
+    .finally(() => { _catalogSyncInFlight = null; });
+  return _catalogSyncInFlight;
+}
+
+/**
  * Search the local catalog. Returns up to `limit` matches.
  *
  *   searchOffline({ barcode: '6001241038055' })  // exact barcode hit

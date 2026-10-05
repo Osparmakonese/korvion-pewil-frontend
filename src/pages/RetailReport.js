@@ -467,17 +467,28 @@ export default function RetailReport() {
             <div style={S.accentCard(C.green)}>
               <div style={S.st}>{'\u{1F4B5}'} Profit & Loss Statement</div>
               <div style={S.micro}>Revenue</div>
+              {/* 2026-09-22: each line now subtracts to the next. "Gross
+                  Sales" used to print revenue that was already after
+                  discount and still included VAT and refunds. */}
               <div style={S.row}>
                 <span style={S.rowLabel}>Gross Sales (Subtotal)</span>
-                <span style={S.rowVal(C.green)}>{fmt(pl.revenue)}</span>
+                <span style={S.rowVal(C.green)}>{fmt(pl.gross_sales ?? pl.revenue)}</span>
               </div>
               <div style={S.row}>
                 <span style={S.rowLabel}>Less: Discounts Given</span>
                 <span style={S.rowVal(C.red)}>-{fmt(pl.discounts)}</span>
               </div>
               <div style={S.row}>
-                <span style={S.rowLabel}>Tax Collected</span>
-                <span style={S.rowVal('#6b7280')}>{fmt(pl.tax_collected)}</span>
+                <span style={S.rowLabel}>Less: Refunds</span>
+                <span style={S.rowVal(C.red)}>-{fmt(pl.refunds || 0)}</span>
+              </div>
+              <div style={S.row}>
+                <span style={S.rowLabel}>Less: VAT Collected</span>
+                <span style={S.rowVal('#6b7280')}>-{fmt(pl.tax_collected)}</span>
+              </div>
+              <div style={S.row}>
+                <span style={S.rowLabel}>Net Revenue</span>
+                <span style={S.rowVal(C.green)}>{fmt(pl.revenue)}</span>
               </div>
 
               <div style={{ ...S.micro, marginTop: 14 }}>Cost of Goods Sold</div>
@@ -513,7 +524,7 @@ export default function RetailReport() {
               <div style={S.row}>
                 <span style={S.rowLabel}>Net Margin</span>
                 <span style={S.rowVal(netPositive ? C.green : C.red)}>
-                  {rev.total_revenue ? pct(pl.net_profit / rev.total_revenue * 100) : '0.0%'}
+                  {pl.revenue ? pct(pl.net_profit / pl.revenue * 100) : '0.0%'}
                 </span>
               </div>
               <div style={S.row}>

@@ -47,6 +47,33 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// ── One refresh at a time, and keep the token it hands back (2026-09-22) ──
+//
+// The server rotates refresh tokens (ROTATE_REFRESH_TOKENS) and returns a
+// new one with every refresh, but only the access token was ever saved. The
+// refresh token from the original login therefore expired 14 days after
+// sign-in no matter how often the till refreshed, and the till was sent to
+// /login in the middle of trading. Every request that 401s together now
+// shares ONE refresh call, which has a timeout (plain axios has none, so on
+// a dead line it could hang the offline drain behind it indefinitely).
+let _refreshing = null;
+function refreshAccessToken() {
+  if (_refreshing) return _refreshing;
+  _refreshing = (async () => {
+    const refresh = localStorage.getItem('refresh_token');
+    const res = await axios.post(
+      `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/api/token/refresh/`,
+      { refresh },
+      { timeout: 15000 }
+    );
+    localStorage.setItem('access_token', res.data.access);
+    if (res.data.refresh) localStorage.setItem('refresh_token', res.data.refresh);
+    return res.data.access;
+  })();
+  _refreshing.then(() => { _refreshing = null; }, () => { _refreshing = null; });
+  return _refreshing;
+}
+
 // Auto-refresh on 401, handle 403 gracefully (FIX 11)
 //
 // Offline-safe behavior (added 2026-05-16):
@@ -124,26 +151,18 @@ api.interceptors.response.use(
         return Promise.reject(error);
       }
       try {
-        const refresh = localStorage.getItem('refresh_token');
-        const res = await axios.post(
-          `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/api/token/refresh/`,
-          { refresh }
-        );
-        localStorage.setItem('access_token', res.data.access);
-        original.headers.Authorization = `Bearer ${res.data.access}`;
+        const access = await refreshAccessToken();
+        original.headers.Authorization = `Bearer ${access}`;
         return api(original);
       } catch (refreshErr) {
-        // Network error during refresh ≠ logged out. Could be the
-        // browser flipped to offline between our navigator.onLine
-        // check and the actual fetch, or the API host is reachable
-        // but returning 502/503/504. Leave the session intact.
+        // Only the server saying the refresh token itself is bad (400/401)
+        // means logged out. Everything else — no response, a timeout, a
+        // 429 because a burst of requests all refreshed at once, a 5xx —
+        // is not, and used to sign the cashier out mid-shift (2026-09-22).
+        // Leave the session intact and propagate the original 401.
         const refreshStatus = refreshErr?.response?.status;
-        const isNetwork = !refreshErr?.response
-          || refreshErr.code === 'ERR_NETWORK'
-          || refreshErr.message === 'Network Error'
-          || (refreshStatus >= 500 && refreshStatus <= 599);
-        if (isNetwork) {
-          return Promise.reject(error);  // propagate the original 401
+        if (refreshStatus !== 400 && refreshStatus !== 401) {
+          return Promise.reject(error);
         }
         // Refresh genuinely rejected (4xx) → real logged-out state.
         localStorage.removeItem('access_token');

@@ -10,7 +10,7 @@
  * used exactly as received; this file only changes the look.
  */
 import React from 'react';
-import { fmt } from '../utils/format';
+import { fmt, price as fmtUnitPrice, lineTotal as lineCash } from '../utils/format';
 
 const C = {
   chrome: '#1f2937', chrome2: '#111827',
@@ -119,7 +119,7 @@ export default function ScannerLanePOS({
                 <div style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>Scan a barcode to start the sale.</div>
               </div>
             ) : cart.map((item, idx) => {
-              const lineTotal = item.unit_price * item.quantity;
+              const lineTotal = lineCash(item.unit_price, item.quantity);
               const weigh = item.product?.is_weighable;
               const age = item.product?.is_age_restricted;
               return (
@@ -129,7 +129,7 @@ export default function ScannerLanePOS({
                     {item.name}{age && <span style={S.age}>AGE 18+</span>}
                     <small>{item.product?.barcode || item.product?.sku || item.product_id}</small>
                   </span>
-                  <span style={S.up}>${fmt(item.unit_price)}</span>
+                  <span style={S.up}>{fmtUnitPrice(item.unit_price, 'zwd')}</span>
                   <span style={S.qy}>
                     <button type="button" style={S.qbtn} disabled={weigh}
                       onClick={() => updateCartQty(item.product_id, Math.max(1, (item.quantity | 0) - 1))}>−</button>

@@ -357,9 +357,11 @@ export default function EndOfDayReport({ onTabChange }) {
               </div>
             </div>
             <div style={S.metricCard}>
-              <div style={S.metricLabel}>Discounts Given</div>
+              {/* 2026-09-22: gross sales are already after discount, so
+                  this is shown for information, not subtracted again. */}
+              <div style={S.metricLabel}>Discounts Given (in gross)</div>
               <div style={{ ...S.metricValue, ...S.amberValue }}>
-                -${data.summary.discounts_given.toFixed(2)}
+                ${data.summary.discounts_given.toFixed(2)}
               </div>
             </div>
             <div style={S.metricCard}>
@@ -420,6 +422,10 @@ export default function EndOfDayReport({ onTabChange }) {
               <div style={S.cashDrawerRow}>
                 <span style={S.cashDrawerLabel}>- Cash Returns</span>
                 <span style={S.cashDrawerValue}>-${data.cash_drawer.cash_returns.toFixed(2)}</span>
+              </div>
+              <div style={S.cashDrawerRow}>
+                <span style={S.cashDrawerLabel}>- Cash Drops</span>
+                <span style={S.cashDrawerValue}>-${(data.cash_drawer.cash_drops || 0).toFixed(2)}</span>
               </div>
               <div style={S.varianceRow}>
                 <span>= Expected</span>

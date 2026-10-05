@@ -20,7 +20,7 @@ import {
   correctSale,
 } from '../api/retailApi';
 import apiClient from '../api/axios';
-import { fmt } from '../utils/format';
+import { fmt, price as fmtUnitPrice, cash, lineTotal } from '../utils/format';
 import { confirm } from '../utils/confirm';
 import { requireManagerApproval } from '../utils/managerApproval';
 import { promptLoyaltyMember } from '../utils/loyaltyLookup';
@@ -51,7 +51,7 @@ import MobileSaleComplete from '../components/MobileSaleComplete';
 import POSImmersiveControls from '../components/POSImmersiveControls';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
-import { invalidateSaleCaches, invalidateProductCaches } from '../utils/queryCache';
+import { invalidateSaleCaches, invalidateProductCaches, requestSaleCachesRefresh } from '../utils/queryCache';
 import { getProductIcon } from '../utils/productIcons';
 import { shopPrice, shopStock, sellState } from '../utils/branchStock';
 import { toast } from '../utils/toast';
@@ -59,6 +59,61 @@ import {
   rememberOpenSessions, recallOpenSessions,
 } from '../utils/posSessionMemory';
 import useViewBranch from '../hooks/useViewBranch';
+
+// ─── Work that has to wait for the SERVER'S sale (2026-09-22) ──────────
+//
+// Every sale is queued first, so `source` is never 'online' and the three
+// things that needed a confirmed sale never ran at all: loyalty points were
+// not awarded, the mobile-money payment was never linked to its sale (so
+// EcoCash reconciliation had nothing to match), and the "give change
+// another way" offer never appeared. They are remembered here against the
+// sale's client key and done when 'pewil:sale-synced' brings back the real
+// sale id — seconds later on a good line, or when the queue drains.
+//
+// Module-level, not component state, so a sale that syncs while the cashier
+// is on another screen is still handled. In memory only: if the page is
+// reloaded before the sale syncs, its loyalty points and mobile-money link
+// are not done automatically (the sale itself is safe in the queue).
+const EFFECTIVE_VAT_KEY = 'pewil_effective_vat';
+const CHANGE_OFFER_WINDOW_MS = 60000;   // the customer is still at the counter
+const _afterSync = new Map();           // client_receipt_number -> work
+function _rememberAfterSync(crn, work) {
+  if (!crn || !work) return;
+  _afterSync.set(crn, { ...work, rung_at: Date.now() });
+}
+function _runAfterSync(crn, confirmed) {
+  const work = _afterSync.get(crn);
+  if (!work || !confirmed || !confirmed.id) return;
+  _afterSync.delete(crn);
+  try {
+    if (work.mmTxn) linkPaymentToSale(work.mmTxn, confirmed.id).catch(() => {});
+  } catch (_) { /* best effort */ }
+  try {
+    if (work.memberId && work.points > 0) {
+      api.post('/retail/loyalty-transactions/', {
+        member: work.memberId,
+        points: work.points,
+        transaction_type: 'earn',
+        notes: `Sale #${confirmed.id}`,
+      }).catch(() => {});
+    }
+  } catch (_) { /* best effort */ }
+  try {
+    const change = Number(confirmed.change_given);
+    if (work.offerChange && confirmed.payment_method === 'cash' && change > 0
+        && Date.now() - work.rung_at < CHANGE_OFFER_WINDOW_MS) {
+      offerChangeOptions({
+        amount: change,
+        currency: localStorage.getItem('currency') || 'USD',
+      });
+    }
+  } catch (_) { /* best effort */ }
+}
+if (typeof window !== 'undefined') {
+  window.addEventListener('pewil:sale-synced', (e) => {
+    try { _runAfterSync(e?.detail?.client_receipt_number, e?.detail?.sale); } catch (_) { /* never break sync */ }
+  });
+}
 
 /* ─── Receipt Modal ─── */
 function ReceiptModal({ isOpen, onClose, receipt, onFix }) {
@@ -416,7 +471,7 @@ function ReceiptModal({ isOpen, onClose, receipt, onFix }) {
                     <span>{lt.toFixed(2)}</span>
                   </div>
                   <div style={{ color: '#6b6b6b', fontSize: 11 }}>
-                    {Number.isInteger(q) ? q : q.toFixed(3)} × {up.toFixed(2)}
+                    {Number.isInteger(q) ? q : q.toFixed(3)} × {fmtUnitPrice(up, 'zwd').replace(/^[^0-9-]+/, '')}
                   </div>
                 </div>
               );
@@ -872,7 +927,7 @@ function QuickAddProductModal({ isOpen, prefill, onClose, onCreated }) {
           </div>
           <div>
             <label style={qaLabel}>Selling price *</label>
-            <input type="number" inputMode="decimal" min="0" step="0.01" value={price}
+            <input type="number" inputMode="decimal" min="0" step="any" value={price}
               onChange={(e) => setPrice(e.target.value)} placeholder="0.00" style={qaInput} />
           </div>
           <div>
@@ -1598,8 +1653,11 @@ export default function POS() {
         const live = await getProducts(tillBranchId ? { branch: tillBranchId } : undefined);
         // Fire-and-forget — don't block render on the IndexedDB write.
         try {
-          const { syncCatalog } = await import('../utils/productCatalogCache');
-          syncCatalog(apiClient).catch(() => {});
+          // Not on every refetch (2026-09-22): the grid refetches after
+          // sales, and a full second catalogue download each time was part
+          // of the request storm that throttled a draining till.
+          const { syncCatalogIfStale } = await import('../utils/productCatalogCache');
+          syncCatalogIfStale(apiClient).catch(() => {});
         } catch (_) {}
         return live;
       } catch (err) {
@@ -1814,6 +1872,26 @@ export default function POS() {
     staleTime: 300000,
     retry: 1,
   });
+  // Remember the rate the server says THIS business charges, for the moment
+  // the settings cannot be fetched (2026-09-22; see vatRatePct).
+  const userTenantId = user?.tenant_id ?? null;
+  useEffect(() => {
+    if (!tenantSettings) return;
+    const effective = parseFloat(tenantSettings.effective_vat_rate);
+    let rate = null;
+    if (Number.isFinite(effective) && effective >= 0) rate = effective;
+    else if (tenantSettings.vat_registered === false) rate = 0;
+    else {
+      const plain = parseFloat(tenantSettings.vat_rate);
+      if (Number.isFinite(plain) && plain >= 0) rate = plain;
+    }
+    if (rate == null) return;
+    try {
+      localStorage.setItem(EFFECTIVE_VAT_KEY, JSON.stringify({
+        rate, tenant_id: userTenantId, at: Date.now(),
+      }));
+    } catch (_) { /* storage full — the fallback is simply zero */ }
+  }, [tenantSettings, userTenantId]);
   const settings = {
     theme: 'light',
     show_product_tiles: true,
@@ -1898,6 +1976,16 @@ export default function POS() {
       // Link the mobile-money payment to the sale it settled (best-effort).
       if (source === 'online' && pendingMmTxnRef.current && sale?.id) {
         linkPaymentToSale(pendingMmTxnRef.current, sale.id).catch(() => {});
+      } else if (source !== 'online') {
+        // Queued: link it, award points and offer change once the server
+        // has the sale and its real id. See _afterSync at the top.
+        const pts = Math.floor(parseFloat(sale?.total || grandTotal) || 0);
+        _rememberAfterSync(sale?.client_receipt_number, {
+          mmTxn: pendingMmTxnRef.current || null,
+          memberId: loyaltyMember ? loyaltyMember.id : null,
+          points: loyaltyMember ? pts : 0,
+          offerChange: true,
+        });
       }
       pendingMmTxnRef.current = null;
       setReceipt(sale);
@@ -1923,7 +2011,10 @@ export default function POS() {
       // refresh), low-stock alerts, sales history, end-of-day rollup,
       // dashboard hero numbers, customer LTV (if a customer was attached),
       // loyalty balance, and cashier session totals.
-      invalidateSaleCaches(qc);
+      // Coalesced (2026-09-22) — back-to-back sales used to refetch the
+      // catalogue once each; the tiles already count down from the local
+      // ledger, so one refresh per few seconds is plenty.
+      requestSaleCachesRefresh(qc);
       setPendingCount(getPendingCount());
       // Cash sale with change due → offer to give it another way (store credit
       // now; airtime / EcoCash payout / ZESA once a provider is connected).
@@ -1956,8 +2047,9 @@ export default function POS() {
       onDrain: ({ sent, failed, remaining }) => {
         setPendingCount(remaining);
         if (sent > 0) {
-          // Offline queue drained — same fan-out as a live sale.
-          invalidateSaleCaches(qc);
+          // Offline queue drained — same fan-out as a live sale, coalesced
+          // with the per-sale refreshes (this also books the final one).
+          requestSaleCachesRefresh(qc);
         }
       },
     });
@@ -2142,7 +2234,16 @@ export default function POS() {
     setCart((prev) => prev.filter((item) => item.product_id !== productId));
   };
 
-  const subtotal = cart.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
+  // THE CENT IS APPLIED TO THE LINE, NOT TO THE PRICE (2026-10-05)
+  //
+  // A shelf price now carries nine places, because it is often divided out
+  // of a case or a kilogram. The customer still pays whole cents, so every
+  // line is rounded to the cent and the subtotal is the sum of those lines
+  // — exactly what the slip shows, and what the customer gets if they add
+  // it up themselves. Rounding the sum instead would print a total that
+  // disagrees with its own lines by a cent.
+  const subtotal = cash(cart.reduce(
+    (sum, item) => sum + lineTotal(item.unit_price, item.quantity), 0));
   const discountAmount = parseFloat(discount) || 0;
   // ── VAT, the Zimbabwe way (2026-08-31) ────────────────────────────────
   // Shelf prices are VAT-INCLUSIVE, so the customer pays the shelf price
@@ -2172,12 +2273,25 @@ export default function POS() {
     if (tenantSettings && tenantSettings.vat_registered === false) return 0;
     const server = parseFloat(tenantSettings?.vat_rate);
     if (Number.isFinite(server) && server >= 0) return server;
-    const mirrored = parseFloat(localStorage.getItem('vat_rate'));
-    return Number.isFinite(mirrored) && mirrored >= 0 ? mirrored : 0;
+    // Settings not loaded (offline, first open). NOT the Settings page's
+    // `vat_rate` mirror (2026-09-22): that is the rate typed in the box,
+    // kept whether or not the business is registered, and possibly another
+    // business's on a shared device — it could put 15% VAT on a shop that
+    // must charge none. Only the effective rate this till last heard from
+    // the server for THIS business is trusted; otherwise zero.
+    try {
+      const saved = JSON.parse(localStorage.getItem(EFFECTIVE_VAT_KEY) || 'null');
+      const rate = parseFloat(saved?.rate);
+      if (saved && String(saved.tenant_id) === String(user?.tenant_id ?? '')
+          && Number.isFinite(rate) && rate >= 0) {
+        return rate;
+      }
+    } catch (_) { /* fall through to zero */ }
+    return 0;
   })();
   const vatableBase = cart.reduce((sum, item) => {
     const p = item.product || products.find((x) => x.id === item.product_id);
-    return sum + ((p && p.is_vat_exempt) ? 0 : item.unit_price * item.quantity);
+    return sum + ((p && p.is_vat_exempt) ? 0 : lineTotal(item.unit_price, item.quantity));
   }, 0);
   const taxAmount = (() => {
     if (!(vatRatePct > 0) || vatableBase <= 0) return 0;
@@ -2186,8 +2300,8 @@ export default function POS() {
       : vatableBase;
     return Math.round((discounted * vatRatePct / (100 + vatRatePct)) * 100) / 100;
   })();
-  const grandTotal = subtotal - discountAmount;
-  const change = (parseFloat(amountTendered) || 0) - grandTotal;
+  const grandTotal = cash(subtotal - discountAmount);
+  const change = cash((parseFloat(amountTendered) || 0) - grandTotal);
 
   const resetCart = () => {
     setCart([]);
@@ -2813,8 +2927,9 @@ export default function POS() {
         product_id: item.product_id,
         product_name: item.name,
         qty: item.quantity,
+        // The price keeps every place it has; the line is cash.
         unit_price: parseFloat(item.unit_price),
-        total: parseFloat(item.unit_price) * item.quantity,
+        total: lineTotal(item.unit_price, item.quantity),
       })),
       subtotal: subtotal,
       discount: discountAmount,
@@ -3640,12 +3755,12 @@ export default function POS() {
                     <div style={S.cartItemLeft}>
                       <div style={S.cartItemName}>{item.name}</div>
                       <div style={S.cartItemPrice}>
-                        {fmt(item.unit_price, 'zwd')} each
+                        {fmtUnitPrice(item.unit_price, 'zwd')} each
                       </div>
                     </div>
                     <div style={S.cartItemRight}>
                       <div style={S.cartItemTotal}>
-                        {fmt(item.unit_price * item.quantity, 'zwd')}
+                        {fmt(lineTotal(item.unit_price, item.quantity), 'zwd')}
                       </div>
                       <div style={S.qtyControl}>
                         <button

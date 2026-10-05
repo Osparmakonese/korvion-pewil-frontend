@@ -206,7 +206,7 @@ export default function ShopPricing({ productId, chainPriceFallback, chainStockF
 
                 <input
                   type="number"
-                  step="0.01"
+                  step="any"
                   min="0"
                   inputMode="decimal"
                   value={r.selling_price}

@@ -45,9 +45,11 @@ export default function OfflineIndicator() {
   const goToQueue = () => navigate('/sync-queue');
 
   // Subscribe to pending-count changes (fired by offlinePOS write()).
+  // The change carries its own counts (2026-09-22): re-reading the whole
+  // queue twice more per sale here was part of what slowed a busy till.
   useEffect(() => {
     let prev = pending;
-    const unsub = onPendingChange((n) => {
+    const unsub = onPendingChange((n, status) => {
       if (prev > 0 && n === 0 && online) {
         // Just finished draining — flash a success pill for 3s.
         setFlashSuccess(true);
@@ -55,8 +57,8 @@ export default function OfflineIndicator() {
       }
       prev = n;
       setPending(n);
-      setDeadLetters(getDeadLetters().length);
-      setStuck(getStuckSales().length);
+      setDeadLetters(status ? status.dead : getDeadLetters().length);
+      setStuck(status ? status.stuck : getStuckSales().length);
     });
     return () => unsub();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -78,10 +80,11 @@ export default function OfflineIndicator() {
   // a singleton interval). This is also called by POS.js, but mounting
   // it here means the queue drains even when the cashier isn't on /pos.
   useEffect(() => {
+    // The drain's own queue write already reported the counts through
+    // onPendingChange; only the stuck state needs a fresh look here, since a
+    // round that sent nothing can change it without changing the queue.
     const stop = installOfflineSync(api, {
       onDrain: () => {
-        setPending(getPendingCount());
-        setDeadLetters(getDeadLetters().length);
         setStuck(getStuckSales().length);
       },
     });

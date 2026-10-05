@@ -67,7 +67,7 @@ export default function PriceTiers() {
           <label style={label}>Minimum quantity *</label>
           <input style={input} type="number" min={1} step="0.01" value={form.min_qty} onChange={(e) => setForm({ ...form, min_qty: e.target.value })} required />
           <label style={label}>Price per unit at this tier *</label>
-          <input style={input} type="number" min={0} step="0.01" value={form.unit_price} onChange={(e) => setForm({ ...form, unit_price: e.target.value })} required />
+          <input style={input} type="number" min={0} step="any" value={form.unit_price} onChange={(e) => setForm({ ...form, unit_price: e.target.value })} required />
           <label style={label}>Label (optional)</label>
           <input style={input} placeholder="e.g. Case price" value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} />
           <button style={btn} disabled={create.isPending}>{create.isPending ? 'Saving…' : 'Add tier'}</button>

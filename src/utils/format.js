@@ -127,6 +127,59 @@ export function fmt(n, currency) {
 }
 
 /**
+ * A PRICE IS NOT A TOTAL (2026-10-05)
+ *
+ * `selling_price` carries nine decimal places, because a shelf price is
+ * often divided out of something — a case over its singles, a price per
+ * kilogram. `fmt` is for CASH: it rounds to the cent, which is right for a
+ * line total, a subtotal, change. Use `price` where a PER-UNIT rate is
+ * shown, so $0.544444444 each is not displayed as $0.54 each — the figure
+ * the customer would multiply by 18 and get a different answer from.
+ *
+ * Shows two places at least, and only the places a price actually uses:
+ * 5.8 → $5.80, 0.544444444 → $0.544444444.
+ */
+export function price(n, currency) {
+  if (n == null || isNaN(n)) return '—';
+  const num = typeof n === 'string' ? parseFloat(n) : n;
+  let cur = currency || localStorage.getItem('currency') || 'USD';
+  if (cur === 'zwd') cur = localStorage.getItem('currency') || 'USD';
+  cur = String(cur).toUpperCase();
+  const meta = CURRENCIES[cur] || CURRENCIES.USD;
+  let formatted;
+  try {
+    formatted = new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: meta.decimals,
+      maximumFractionDigits: 9,
+    }).format(num);
+  } catch (_) {
+    formatted = String(num);
+  }
+  return meta.symbol + formatted;
+}
+
+/**
+ * Cash, to the cent. Every figure the customer pays or is owed goes
+ * through this: a line (qty x price), a subtotal, a total, change. The
+ * rounding happens ONCE, here, on the line — never on the price itself,
+ * so the slip adds up in front of the customer and the price behind it
+ * stays true.
+ */
+export function cash(n) {
+  const num = typeof n === 'string' ? parseFloat(n) : n;
+  if (num == null || !Number.isFinite(num)) return 0;
+  return Math.round((num + Number.EPSILON) * 100) / 100;
+}
+
+/** A line on the slip: quantity x unit price, to the cent. */
+export function lineTotal(unitPrice, quantity) {
+  const up = typeof unitPrice === 'string' ? parseFloat(unitPrice) : unitPrice;
+  const q = typeof quantity === 'string' ? parseFloat(quantity) : quantity;
+  if (!Number.isFinite(up) || !Number.isFinite(q)) return 0;
+  return cash(up * q);
+}
+
+/**
  * Currency code → human label. Used by FiscalSettings + TaxConfig pages.
  */
 export function currencyLabel(code) {

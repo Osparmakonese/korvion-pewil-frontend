@@ -58,7 +58,9 @@ export const shopStock = (p) => {
   // tile counts down as they sell and `sellState()` refuses at zero all by
   // itself — no offline special case anywhere in the till.
   const pending = p == null ? 0 : pendingUnitsFor(p.id);
-  return pending ? onServer - pending : onServer;
+  // Rounded to the gram: the ledger keeps weighed quantities exactly now
+  // (2026-09-22), and 3 - 0.1 must read 2.9, not 2.9000000000000004.
+  return pending ? Math.round((onServer - pending) * 1000) / 1000 : onServer;
 };
 
 /**

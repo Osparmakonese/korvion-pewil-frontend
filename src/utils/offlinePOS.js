@@ -93,11 +93,98 @@ const _syncCallbacks = new Set();
  */
 export const OFFLINE_QUEUE_LIMIT = 1000;
 
+const DEAD_KEY = 'pewil_offline_sales_failed';
+
 // ── storage ──────────────────────────────────────────────
-function read() {
-  try { return JSON.parse(localStorage.getItem(KEY) || '[]'); }
-  catch (_) { return []; }
+//
+// FAST, AND NEVER WIPES WHAT IT COULD NOT READ (2026-09-22).
+//
+// Every queue read used to JSON.parse the whole queue and every write
+// JSON.stringify it again, several times per sale (the pending pill and
+// the stuck count each re-read it on every change). At a few hundred
+// queued sales that is tens of milliseconds per sale on a laptop and far
+// more on a cheap phone — the till got slower the longer it was offline.
+// Reads are now memoised on the raw string, and adding a sale splices it
+// onto the stored string instead of re-serialising everything before it.
+//
+// And a queue that could not be parsed used to read as EMPTY, so the next
+// sale's write replaced a whole day's trade with one sale. A value that
+// will not parse is now copied to `<key>_corrupt_<time>` first; if even
+// that copy cannot be made, writes to the key are refused (the cashier is
+// told the device is out of room) rather than overwrite it.
+//
+// Callers must treat queue items as read-only: the memo shares them.
+const _memo = new Map();       // storage key -> { raw, arr }
+const _unsafe = new Set();     // keys whose stored value we could not read
+
+function _readArr(key) {
+  let raw;
+  try { raw = localStorage.getItem(key); }
+  catch (_) { _unsafe.add(key); return []; }
+  if (!raw) { _unsafe.delete(key); _memo.delete(key); return []; }
+  const m = _memo.get(key);
+  if (m && m.raw === raw) { _unsafe.delete(key); return m.arr.slice(); }
+  let arr = null;
+  try { arr = JSON.parse(raw); } catch (_) { arr = null; }
+  if (!Array.isArray(arr)) { _quarantine(key, raw); return []; }
+  _unsafe.delete(key);
+  _memo.set(key, { raw, arr });
+  return arr.slice();
 }
+
+function _quarantine(key, raw) {
+  _memo.delete(key);
+  try {
+    localStorage.setItem(`${key}_corrupt_${Date.now()}`, raw);
+    localStorage.removeItem(key);
+    _unsafe.delete(key);
+  } catch (_) {
+    _unsafe.add(key);
+  }
+}
+
+function _writeArr(key, arr) {
+  if (_unsafe.has(key)) {
+    _readArr(key);                       // try again to read / set it aside
+    if (_unsafe.has(key)) return false;
+  }
+  let raw;
+  try {
+    raw = JSON.stringify(arr);
+    localStorage.setItem(key, raw);
+  } catch (_) {
+    _memo.delete(key);
+    return false;
+  }
+  _memo.set(key, { raw, arr: arr.slice() });
+  return true;
+}
+
+// Append one item without re-serialising the items already stored.
+function _appendArr(key, item) {
+  let raw;
+  try { raw = localStorage.getItem(key); }
+  catch (_) { _unsafe.add(key); return false; }
+  const m = _memo.get(key);
+  if (!raw || !m || m.raw !== raw || _unsafe.has(key)) {
+    const arr = _readArr(key);
+    arr.push(item);
+    return _writeArr(key, arr);
+  }
+  let next;
+  try {
+    const s = JSON.stringify(item);
+    next = m.arr.length ? `${raw.slice(0, -1)},${s}]` : `[${s}]`;
+    localStorage.setItem(key, next);
+  } catch (_) {
+    _memo.delete(key);
+    return false;
+  }
+  _memo.set(key, { raw: next, arr: m.arr.concat([item]) });
+  return true;
+}
+
+function read() { return _readArr(KEY); }
 /**
  * Persist the queue. Returns whether it actually stuck.
  *
@@ -113,14 +200,29 @@ function read() {
  * that a no-op.
  */
 function write(arr) {
-  let ok = true;
-  try {
-    localStorage.setItem(KEY, JSON.stringify(arr));
-  } catch (_) {
-    ok = false;
-  }
+  const ok = _writeArr(KEY, arr);
   fireChange();
   return ok;
+}
+
+// Who is signed in on this device right now (2026-09-22). Stamped on every
+// queued item, because the queue deliberately survives sign-out: a sale
+// rung under one business must never be posted under another's login.
+function _whoAmI() {
+  try {
+    const u = JSON.parse(localStorage.getItem('user') || 'null');
+    return {
+      tenant_id: u?.tenant_id ?? null,
+      user_id: u?.user_id ?? u?.id ?? null,
+    };
+  } catch (_) {
+    return { tenant_id: null, user_id: null };
+  }
+}
+const FOREIGN_MSG = 'Rung up under another business — sign in as that business on this device to send it.';
+function _isForeign(item, me) {
+  return item?.tenant_id != null && me?.tenant_id != null
+    && String(item.tenant_id) !== String(me.tenant_id);
 }
 
 // ── idempotency key ──────────────────────────────────────
@@ -133,14 +235,22 @@ export function newClientReceiptNumber() {
 }
 
 // ── pending-count listeners ──────────────────────────────
+//
+// Listeners get the count AND a snapshot of what the pill needs (2026-09-22),
+// so a change costs one read of the queue instead of one per subscriber.
 const listeners = new Set();
 export function onPendingChange(cb) {
   listeners.add(cb);
   return () => listeners.delete(cb);
 }
 function fireChange() {
-  const n = read().length;
-  listeners.forEach((cb) => { try { cb(n); } catch (_) {} });
+  const q = read();
+  const status = {
+    pending: q.length,
+    stuck: getStuckSales(q).length,
+    dead: getDeadLetters().length,
+  };
+  listeners.forEach((cb) => { try { cb(q.length, status); } catch (_) {} });
 }
 export function getPendingCount() { return read().length; }
 
@@ -149,6 +259,38 @@ export function getPendingCount() { return read().length; }
  * Each item: { payload, client_receipt_number, queued_at, attempts, last_error }
  */
 export function getPendingSales() { return read(); }
+
+/** Queued sales rung up in one cashier session — for the close-till guard. */
+export function getQueuedSalesForSession(sessionId) {
+  if (sessionId == null) return [];
+  return read().filter((it) => String(it?.payload?.session) === String(sessionId));
+}
+
+// ── is the queue moving? (2026-09-22) ────────────────────
+//
+// A drain round now ends at the first sign that the server cannot be
+// reached (see _drainPendingSalesLocked), so only the sale at the front
+// of the queue collects failed attempts and the per-sale count alone would
+// keep quiet for hours. Rounds that end that way without sending anything
+// are counted too; after STALLED_ROUNDS of them (~10 min at one round per
+// 30 s) the whole queue is shown as not syncing. Any sale reaching the
+// server resets it.
+const STALLED_ROUNDS = 20;
+const HEALTH_KEY = 'pewil_offline_sync_health';
+let _stalled = null;
+function _getStalled() {
+  if (_stalled == null) {
+    try { _stalled = Number(JSON.parse(localStorage.getItem(HEALTH_KEY) || '{}').stalled_rounds) || 0; }
+    catch (_) { _stalled = 0; }
+  }
+  return _stalled;
+}
+function _setStalled(n) {
+  if (_getStalled() === n) return;
+  _stalled = n;
+  try { localStorage.setItem(HEALTH_KEY, JSON.stringify({ stalled_rounds: n, at: Date.now() })); } catch (_) {}
+}
+function _noteProgress() { _setStalled(0); }
 
 /**
  * Sales that are still queued but have been failing for a long time.
@@ -159,8 +301,10 @@ export function getPendingSales() { return read(); }
  * otherwise sit there looking like it was merely busy. These are the ones
  * worth putting in front of somebody.
  */
-export function getStuckSales() {
-  return read().filter((it) => (it.attempts || 0) >= STUCK_AFTER_ATTEMPTS);
+export function getStuckSales(q = read()) {
+  if (q.length && _getStalled() >= STALLED_ROUNDS) return q;
+  const me = _whoAmI();
+  return q.filter((it) => (it.attempts || 0) >= STUCK_AFTER_ATTEMPTS || _isForeign(it, me));
 }
 
 /**
@@ -186,6 +330,10 @@ export function removePendingSale(clientReceiptNumber) {
  * Retry a single dead-lettered sale: move it back into the live queue
  * with attempts reset to 0. Caller should then call drainPendingSales()
  * to push it. Returns true if the dead-letter was found + re-queued.
+ *
+ * 2026-09-22: it is taken off the failed list only once it is safely back
+ * in the queue. It used to be dropped from the list even when the queue
+ * write had failed, which lost it from both.
  */
 export function retryDeadLetter(clientReceiptNumber) {
   try {
@@ -193,22 +341,26 @@ export function retryDeadLetter(clientReceiptNumber) {
     const idx = failed.findIndex((it) => it.client_receipt_number === clientReceiptNumber);
     if (idx === -1) return false;
     const item = failed[idx];
-    // Re-queue with reset attempts so it gets full retry budget.
-    const q = read();
-    q.push({
-      payload: item.payload,
-      client_receipt_number: item.client_receipt_number,
-      queued_at: Date.now(),
-      attempts: 0,
-      last_error: null,
-    });
-    write(q);
+    const already = read().some((it) => it.client_receipt_number === clientReceiptNumber);
+    if (!already) {
+      const ok = _appendArr(KEY, {
+        payload: item.payload,
+        client_receipt_number: item.client_receipt_number,
+        tenant_id: item.tenant_id ?? null,
+        user_id: item.user_id ?? null,
+        queued_at: Date.now(),
+        attempts: 0,
+        last_error: null,
+      });
+      fireChange();
+      if (!ok) return false;
+    }
     // Back in the queue means back off the shelf, so the till stops offering
     // stock this sale already took.
     noteSaleQueued(item.client_receipt_number, item.payload?.items_data);
-    // Drop from dead-letter list.
-    failed.splice(idx, 1);
-    localStorage.setItem('pewil_offline_sales_failed', JSON.stringify(failed));
+    // Drop from dead-letter list. If this write fails the sale is in both
+    // lists for a while, which is harmless: the server key makes it a no-op.
+    _writeArr(DEAD_KEY, failed.filter((_, i) => i !== idx));
     return true;
   } catch (_) {
     return false;
@@ -222,10 +374,7 @@ export function dismissDeadLetter(clientReceiptNumber) {
   try {
     const failed = getDeadLetters();
     const next = failed.filter((it) => it.client_receipt_number !== clientReceiptNumber);
-    if (next.length !== failed.length) {
-      localStorage.setItem('pewil_offline_sales_failed', JSON.stringify(next));
-      return true;
-    }
+    if (next.length !== failed.length) return _writeArr(DEAD_KEY, next);
     return false;
   } catch (_) { return false; }
 }
@@ -364,6 +513,7 @@ export async function submitSaleOnline(api, saleData) {
     api.post('/retail/sales/', payload)
       .then((res) => {
         removePendingSale(payload.client_receipt_number);
+        _noteProgress();
         // 2026-07-31: the cashier already saw "Sale Complete" optimistically
         // before this resolved (that's the whole point of the instant-queue
         // change). Without this signal, dashboards/lists would sit on
@@ -411,16 +561,22 @@ function optimisticReceipt(payload) {
   };
 }
 
+// Appended in place — no re-serialising the sales already queued (2026-09-22).
+// Stamped with who rang it, so it can only ever be posted under that
+// business's login.
 function queueSale(payload) {
-  const q = read();
-  q.push({
+  const me = _whoAmI();
+  const ok = _appendArr(KEY, {
     payload,
     client_receipt_number: payload.client_receipt_number,
+    tenant_id: me.tenant_id,
+    user_id: me.user_id,
     queued_at: Date.now(),
     attempts: 0,
     last_error: null,
   });
-  return write(q);
+  fireChange();
+  return ok;
 }
 
 /**
@@ -458,38 +614,91 @@ export async function drainPendingSales(api) {
   if (_draining) return { sent: 0, failed: 0, remaining: read().length };
   _draining = true;
   try {
-    return await _drainPendingSalesLocked(api);
+    return await _withCrossTabLock(
+      'pewil-offline-sales-drain',
+      () => _drainPendingSalesLocked(api),
+      () => ({ sent: 0, failed: 0, remaining: read().length }),
+    );
   } finally {
     _draining = false;
   }
+}
+
+// ── one drain across ALL tabs (2026-09-22) ───────────────
+//
+// `_draining` and `_inFlight` live in one tab's memory. Two tabs (or the
+// installed app and a browser tab) on the same till each drained the same
+// stored queue, posting every sale twice and doubling the load that trips
+// the rate limit. Where the browser has the Web Locks API only the tab
+// holding the lock drains; the others skip the round. A tab that dies
+// releases the lock with it. Without the API it behaves as before.
+async function _withCrossTabLock(name, fn, busy) {
+  let locks = null;
+  try { locks = typeof navigator !== 'undefined' ? navigator.locks : null; } catch (_) { locks = null; }
+  if (!locks || typeof locks.request !== 'function') return fn();
+  let ran = false;
+  try {
+    return await locks.request(name, { ifAvailable: true }, (lock) => {
+      if (!lock) return busy();
+      ran = true;
+      return fn();
+    });
+  } catch (e) {
+    if (ran) throw e;
+    return fn();
+  }
+}
+
+// Is this failure about the whole connection rather than this one sale?
+// (2026-09-22) No response at all (dead link, timeout), an expired login or
+// a blocked subscription fails every sale behind it the same way. The round
+// used to carry on regardless: on a line that says "online" but is dead,
+// every queued sale waited out its own 15 s timeout — 300 queued sales held
+// one round for over an hour. Now the round stops and the timer comes back.
+function _endsTheRound(err) {
+  const status = err?.response?.status;
+  return !err?.response || status === 401 || status === 402;
 }
 
 async function _drainPendingSalesLocked(api) {
   const q = read();
   if (q.length === 0) return { sent: 0, failed: 0, remaining: 0 };
 
-  const keep = [];
+  const me = _whoAmI();
+  const updates = new Map();   // key -> replacement item (attempts, last_error)
+  const removed = new Set();   // keys the server now has, or that were dead-lettered
   let sent = 0;
   let failed = 0;
-  // Set when the server tells us to slow down, or when the batch ceiling is
-  // reached. Everything still in the queue is kept for the next cycle —
-  // never posted harder, never discarded.
-  let standDown = false;
+  let stop = false;
+  let failures = 0;
+  let serverErrorsInARow = 0;
 
   for (const item of q) {
-    if (standDown || sent >= DRAIN_BATCH) { keep.push(item); continue; }
+    // Set when the server tells us to slow down or cannot be reached, or
+    // when the batch ceiling is reached. Everything still in the queue is
+    // kept for the next cycle — never posted harder, never discarded.
+    if (stop || sent >= DRAIN_BATCH) break;
     const key = item.client_receipt_number;
-    if (_inFlight.has(key)) {
-      // submitSaleOnline's own POST for this sale is still on the wire.
-      // It will remove the item itself on success; if it fails, the next
-      // drain picks it up. Never send a second copy alongside it.
-      keep.push(item);
+    if (_isForeign(item, me)) {
+      // Another business's sale. Leave it queued and visible; posting it
+      // under this login would have it refused and dead-lettered.
+      if (item.last_error !== FOREIGN_MSG) updates.set(key, { ...item, last_error: FOREIGN_MSG });
       continue;
     }
+    // submitSaleOnline's own POST for this sale is still on the wire. It
+    // removes the item itself on success; if it fails, the next drain picks
+    // it up. Never send a second copy alongside it.
+    if (_inFlight.has(key)) continue;
+    // The list above was read when the round began. A sale whose own POST
+    // landed since then (or that another tab sent) is no longer queued —
+    // posting it again only costs a request and a second sync event.
+    if (!read().some((it) => it.client_receipt_number === key)) continue;
     _inFlight.add(key);
     try {
       const res = await api.post('/retail/sales/', item.payload);
       sent++;
+      serverErrorsInARow = 0;
+      removed.add(key);
       // Same signal submitSaleOnline's background POST sends: the server has
       // confirmed this sale, so the receipt on screen can swap to the real
       // number, and anything keyed on this sale (a quote to convert, a
@@ -507,74 +716,76 @@ async function _drainPendingSalesLocked(api) {
       clearSale(key);
       if (DRAIN_GAP_MS) await _sleep(DRAIN_GAP_MS);
     } catch (err) {
-      const retryable = isRetryableNetworkError(err);
-      item.attempts = (item.attempts || 0) + 1;
-      item.last_error = err?.response?.data?.detail
-                      || err?.message
-                      || 'unknown';
-      if (err?.response?.status === 429) {
+      failures++;
+      const status = err?.response?.status;
+      const next = {
+        ...item,
+        attempts: (item.attempts || 0) + 1,
+        last_error: err?.response?.data?.detail || err?.message || 'unknown',
+      };
+      if (status === 429) {
         // Too fast. Stop the cycle, keep everything, come back later.
         _noteThrottle(err);
-        standDown = true;
-        keep.push(item);
-      } else if (retryable) {
+        updates.set(key, next);
+        stop = true;
+      } else if (_endsTheRound(err)) {
+        updates.set(key, next);
+        stop = true;
+      } else if (isRetryableNetworkError(err)) {
         // Kept for as long as it takes. The attempt count is for the
         // cashier's benefit — it no longer decides anything, because a
         // counter is not a reason to throw away a sale that was rung up.
-        keep.push(item);
-      } else {
-        failed++;
+        updates.set(key, next);
+        // One 500 can be about this sale; three in a row is the server.
+        if (status >= 500 && ++serverErrorsInARow >= 3) stop = true;
+      } else if (stashDeadLetter(next)) {
         // The request itself is wrong, so retrying it forever would only
-        // hide it. Stash it where a person can see it and decide.
-        stashDeadLetter(item);
+        // hide it. Stashed where a person can see it and decide.
+        failed++;
+        removed.add(key);
+      } else {
+        // Could not even save it to the failed list: keep it queued.
+        updates.set(key, next);
       }
     } finally {
       _inFlight.delete(key);
     }
   }
-  // Merge, don't overwrite. The queue moved while this loop was awaiting:
-  // `removePendingSale` may have dropped a sale whose background POST
-  // completed (a blind `write(keep)` would put it back, to be posted
-  // again), and the cashier may have rung NEW sales (a blind `write(keep)`
-  // would silently throw them out of the queue — money taken, no record,
-  // if their own POST then failed). Keep what we kept, keep what arrived,
-  // drop what we sent or what someone else already removed.
-  const final = _mergeQueue(read(), q, keep, (it) => it.client_receipt_number);
+  // Merge onto what is stored NOW, not onto the list read at the start. The
+  // queue moved while this loop was awaiting: `removePendingSale` may have
+  // dropped a sale whose background POST completed, and the cashier may have
+  // rung NEW sales. Keep everything that is there, apply what this round
+  // learned, drop only what the server now has.
+  if (sent > 0) _noteProgress();
+  else if (failures > 0) _setStalled(_getStalled() + 1);
+  const final = read()
+    .filter((it) => !removed.has(it.client_receipt_number))
+    .map((it) => updates.get(it.client_receipt_number) || it);
   write(final);
   return { sent, failed, remaining: final.length };
 }
 
-function _mergeQueue(current, seen, keep, keyOf) {
-  const seenKeys = new Set(seen.map(keyOf));
-  const kept = new Map(keep.map((it) => [keyOf(it), it]));
-  return current
-    .map((it) => (kept.has(keyOf(it)) ? kept.get(keyOf(it))
-      : (seenKeys.has(keyOf(it)) ? null : it)))
-    .filter(Boolean);
-}
-
+// No cap (2026-09-22). This list used to keep only the last 50, so the
+// 51st sale the server refused silently pushed the oldest one out of
+// existence. Returns false when it could not be saved — the caller then
+// keeps the sale in the live queue rather than lose it.
 function stashDeadLetter(item) {
-  // A sale the server has permanently refused never deducted anything there,
-  // so this device must stop deducting it either — otherwise the shelf reads
-  // low forever for a sale that does not exist. It is not lost: it sits on
-  // the sync-queue screen for a person to deal with, which is the only thing
-  // that can decide what a rejected sale means.
-  try { clearSale(item.client_receipt_number); } catch (_) {}
-  try {
-    const key = 'pewil_offline_sales_failed';
-    const arr = JSON.parse(localStorage.getItem(key) || '[]');
-    arr.push({ ...item, failed_at: Date.now() });
-    localStorage.setItem(key, JSON.stringify(arr.slice(-50)));  // cap at 50
-  } catch (_) {}
+  const ok = _appendArr(DEAD_KEY, { ...item, failed_at: Date.now() });
+  if (ok) {
+    // A sale the server has permanently refused never deducted anything
+    // there, so this device must stop deducting it either — otherwise the
+    // shelf reads low forever for a sale that does not exist. It is not
+    // lost: it sits on the sync-queue screen for a person to deal with.
+    try { clearSale(item.client_receipt_number); } catch (_) {}
+  }
+  return ok;
 }
 
-export function getDeadLetters() {
-  try { return JSON.parse(localStorage.getItem('pewil_offline_sales_failed') || '[]'); }
-  catch (_) { return []; }
-}
+export function getDeadLetters() { return _readArr(DEAD_KEY); }
 
 export function clearDeadLetters() {
-  try { localStorage.removeItem('pewil_offline_sales_failed'); } catch (_) {}
+  try { localStorage.removeItem(DEAD_KEY); } catch (_) {}
+  _memo.delete(DEAD_KEY);
 }
 
 /**
@@ -683,30 +894,28 @@ function newClientKey() {
 function _readQueue(name) {
   const cfg = AUX_QUEUES[name];
   if (!cfg) return [];
-  try { return JSON.parse(localStorage.getItem(cfg.key) || '[]'); }
-  catch (_) { return []; }
+  return _readArr(cfg.key);
 }
 
 function _writeQueue(name, arr) {
   const cfg = AUX_QUEUES[name];
-  if (!cfg) return;
-  try { localStorage.setItem(cfg.key, JSON.stringify(arr)); }
-  catch (_) {}
+  if (!cfg) return false;
+  const ok = _writeArr(cfg.key, arr);
   fireAuxChange();
+  return ok;
 }
 
 function _readFailed(name) {
   const cfg = AUX_QUEUES[name];
   if (!cfg) return [];
-  try { return JSON.parse(localStorage.getItem(cfg.failedKey) || '[]'); }
-  catch (_) { return []; }
+  return _readArr(cfg.failedKey);
 }
 
-function _writeFailed(name, arr) {
+// No cap and a real answer (2026-09-22) — same reasons as stashDeadLetter.
+function _stashAuxFailed(name, item) {
   const cfg = AUX_QUEUES[name];
-  if (!cfg) return;
-  try { localStorage.setItem(cfg.failedKey, JSON.stringify(arr.slice(-50))); }
-  catch (_) {}
+  if (!cfg) return false;
+  return _appendArr(cfg.failedKey, { ...item, failed_at: Date.now() });
 }
 
 /**
@@ -725,7 +934,7 @@ export async function submitWithQueue(api, queueName, payload) {
   const body = { ...payload, [cfg.keyField]: key };
 
   if (isOffline()) {
-    _enqueueAux(queueName, body);
+    _enqueueAuxOrThrow(queueName, body);
     return { ...body, _offline_pending: true, id: null };
   }
 
@@ -735,7 +944,7 @@ export async function submitWithQueue(api, queueName, payload) {
     return res.data;
   } catch (err) {
     if (isRetryableNetworkError(err)) {
-      _enqueueAux(queueName, body);
+      _enqueueAuxOrThrow(queueName, body);
       return { ...body, _offline_pending: true, id: null };
     }
     throw err;
@@ -744,76 +953,126 @@ export async function submitWithQueue(api, queueName, payload) {
   }
 }
 
+// Queued, or the caller hears it was not (2026-09-22) — never a silent
+// "queued" for something that was not saved anywhere.
+function _enqueueAuxOrThrow(queueName, payload) {
+  if (_enqueueAux(queueName, payload)) return;
+  const err = new Error(
+    'This device has run out of room to save this. Connect to the internet '
+    + 'so the saved work can be sent, then try again.'
+  );
+  err.code = 'offline_queue_write_failed';
+  throw err;
+}
+
 function _enqueueAux(queueName, payload) {
   const cfg = AUX_QUEUES[queueName];
-  const q = _readQueue(queueName);
-  q.push({
+  const me = _whoAmI();
+  const ok = _appendArr(cfg.key, {
     payload,
     client_key: payload[cfg.keyField],
+    tenant_id: me.tenant_id,
+    user_id: me.user_id,
     queued_at: Date.now(),
     attempts: 0,
     last_error: null,
   });
-  _writeQueue(queueName, q);
+  fireAuxChange();
+  return ok;
 }
 
 /**
  * Drain one specific aux queue (returns / stock_adjustments / cash_drops).
  * Returns { sent, failed, remaining } shaped like drainPendingSales.
+ * Same rules as the sales drain (2026-09-22): stops at the first sign the
+ * server is unreachable, honours a 429's wait, never posts an item that has
+ * left the queue, and never drops one it could not dead-letter.
  */
 export async function drainAuxQueue(api, queueName) {
   const cfg = AUX_QUEUES[queueName];
   if (!cfg) return { sent: 0, failed: 0, remaining: 0 };
-  if (isOffline()) return { sent: 0, failed: 0, remaining: _readQueue(queueName).length };
+  if (isOffline() || Date.now() < _throttledUntil) {
+    return { sent: 0, failed: 0, remaining: _readQueue(queueName).length };
+  }
 
   const q = _readQueue(queueName);
   if (q.length === 0) return { sent: 0, failed: 0, remaining: 0 };
 
-  const keep = [];
+  const me = _whoAmI();
+  const updates = new Map();
+  const removed = new Set();
   let sent = 0;
   let failed = 0;
 
   for (const item of q) {
     const key = item.client_key;
-    if (_inFlight.has(key)) { keep.push(item); continue; }   // already on the wire
+    if (_isForeign(item, me)) continue;                     // another business's
+    if (_inFlight.has(key)) continue;                       // already on the wire
+    if (!_readQueue(queueName).some((it) => it.client_key === key)) continue;
     _inFlight.add(key);
+    let stop = false;
     try {
       await api.post(cfg.endpoint, item.payload);
       sent++;
+      removed.add(key);
     } catch (err) {
-      const retryable = isRetryableNetworkError(err);
-      item.attempts = (item.attempts || 0) + 1;
-      item.last_error = err?.response?.data?.detail || err?.message || 'unknown';
+      const next = {
+        ...item,
+        attempts: (item.attempts || 0) + 1,
+        last_error: err?.response?.data?.detail || err?.message || 'unknown',
+      };
       if (err?.response?.status === 429) {
         _noteThrottle(err);
-        keep.push(item);
-      } else if (retryable) {
+        updates.set(key, next);
+        stop = true;
+      } else if (_endsTheRound(err)) {
+        updates.set(key, next);
+        stop = true;
+      } else if (isRetryableNetworkError(err)) {
         // Kept until it lands. A refund the shop has already paid out is
         // money too; see isRetryableNetworkError.
-        keep.push(item);
-      } else {
+        updates.set(key, next);
+      } else if (_stashAuxFailed(queueName, next)) {
         failed++;
-        const failedList = _readFailed(queueName);
-        failedList.push({ ...item, failed_at: Date.now() });
-        _writeFailed(queueName, failedList);
+        removed.add(key);
+      } else {
+        updates.set(key, next);
       }
     } finally {
       _inFlight.delete(key);
     }
+    if (stop) break;
   }
-  const final = _mergeQueue(_readQueue(queueName), q, keep, (it) => it.client_key);
+  const final = _readQueue(queueName)
+    .filter((it) => !removed.has(it.client_key))
+    .map((it) => updates.get(it.client_key) || it);
   _writeQueue(queueName, final);
   return { sent, failed, remaining: final.length };
 }
 
 /** Drain all aux queues at once. Used by the global online listener. */
+let _auxDraining = false;
 export async function drainAllAuxQueues(api) {
-  let sent = 0, failed = 0, remaining = 0;
-  for (const name of Object.keys(AUX_QUEUES)) {
-    const r = await drainAuxQueue(api, name);
-    sent += r.sent; failed += r.failed; remaining += r.remaining;
+  const idle = () => {
+    let remaining = 0;
+    for (const name of Object.keys(AUX_QUEUES)) remaining += _readQueue(name).length;
+    return { sent: 0, failed: 0, remaining };
+  };
+  // One at a time, in this tab and across tabs (2026-09-22).
+  if (_auxDraining) return idle();
+  _auxDraining = true;
+  try {
+    return await _withCrossTabLock('pewil-offline-aux-drain', async () => {
+      let sent = 0, failed = 0, remaining = 0;
+      for (const name of Object.keys(AUX_QUEUES)) {
+        const r = await drainAuxQueue(api, name);
+        sent += r.sent; failed += r.failed; remaining += r.remaining;
+      }
+      return { sent, failed, remaining };
+    }, idle);
+  } finally {
+    _auxDraining = false;
   }
-  return { sent, failed, remaining };
 }
 
 export function getAuxPendingCount(queueName) {

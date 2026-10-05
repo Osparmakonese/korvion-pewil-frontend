@@ -102,9 +102,11 @@ export default function FinancialReports() {
               note={pnl.data.overheads_are_chain_wide
                 ? 'expenses and wages are the whole business' : ''}
             />
-            <Line label="Gross sales" value={pnl.data.gross_sales} />
+            {/* 2026-09-22: gross sales are after discount, so discounts are
+                not taken off again; refunds are. */}
+            <Line label="Gross sales (after discounts)" value={pnl.data.gross_sales} />
+            <Line label="Less: refunds" value={-(pnl.data.refunds || 0)} />
             <Line label="Less: VAT" value={-pnl.data.vat} />
-            <Line label="Less: discounts" value={-pnl.data.discounts} />
             <Line label="Net revenue" value={pnl.data.net_revenue} bold />
             <Line label="Cost of goods sold" value={-pnl.data.cost_of_goods_sold} />
             <Line label={`Gross profit (${pnl.data.gross_margin_pct}%)`} value={pnl.data.gross_profit} bold />

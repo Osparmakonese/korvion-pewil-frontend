@@ -9,13 +9,15 @@
  * queue. Only the visual layer changes per theme.
  */
 import React, { useState, useMemo, useEffect } from 'react';
-import { fmt } from '../utils/format';
+import { fmt, price as fmtUnitPrice, lineTotal } from '../utils/format';
 import { M } from '../styles/mobileTokens';
 import haptics from '../utils/haptics';
 import BottomSheet from './mobile/BottomSheet';
 import { shopPrice, sellState } from '../utils/branchStock';
 
 const money = (v) => fmt(v, 'zwd');
+// A per-unit price shows every place it has; cash is rounded at the line.
+const unitMoney = (v) => fmtUnitPrice(v, 'zwd');
 const FONT = "'Inter', system-ui, sans-serif";
 
 export default function MobilePOS({
@@ -81,12 +83,12 @@ export default function MobilePOS({
                 <div key={item.product_id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0', borderBottom: `1px solid ${T.line}` }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: T.ink }}>{item.name}</div>
-                    <div style={{ fontSize: 11, color: T.ink3 }}>{money(item.unit_price)} each</div>
+                    <div style={{ fontSize: 11, color: T.ink3 }}>{unitMoney(item.unit_price)} each</div>
                   </div>
                   <Stepper t={T} value={item.quantity}
                     onDec={() => { haptics.tap(); item.quantity <= 1 ? removeFromCart(item.product_id) : updateCartQty(item.product_id, item.quantity - 1); }}
                     onInc={() => { haptics.tap(); updateCartQty(item.product_id, item.quantity + 1); }} />
-                  <div style={{ width: 72, textAlign: 'right', fontWeight: 800, fontSize: 14, color: T.ink }}>{money(parseFloat(item.unit_price) * item.quantity)}</div>
+                  <div style={{ width: 72, textAlign: 'right', fontWeight: 800, fontSize: 14, color: T.ink }}>{money(lineTotal(item.unit_price, item.quantity))}</div>
                 </div>
               ))}
             </div>
@@ -170,12 +172,12 @@ export default function MobilePOS({
                 <span style={{ color: '#94a3b8', fontWeight: 700, fontSize: 13, width: 18 }}>{idx + 1}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 700 }}>{item.name}{age && <span style={{ fontSize: 9, fontWeight: 900, color: '#fff', background: '#c2741a', borderRadius: 4, padding: '1px 5px', marginLeft: 6 }}>18+</span>}</div>
-                  <div style={{ fontSize: 11.5, color: '#64748b' }}>{item.quantity} × ${fmt(item.unit_price)}</div>
+                  <div style={{ fontSize: 11.5, color: '#64748b' }}>{item.quantity} × {unitMoney(item.unit_price)}</div>
                 </div>
                 <Stepper t={{ ...T, surface: '#f3f6fa', card: '#fff', ink: '#0b1220', line: '#d7dde6' }} value={item.quantity}
                   onDec={() => { haptics.tap(); item.quantity <= 1 ? removeFromCart(item.product_id) : updateCartQty(item.product_id, item.quantity - 1); }}
                   onInc={() => { haptics.tap(); updateCartQty(item.product_id, item.quantity + 1); }} />
-                <div style={{ width: 64, textAlign: 'right', fontWeight: 800, fontSize: 14.5 }}>${fmt(item.unit_price * item.quantity)}</div>
+                <div style={{ width: 64, textAlign: 'right', fontWeight: 800, fontSize: 14.5 }}>${fmt(lineTotal(item.unit_price, item.quantity))}</div>
               </div>
             );
           })}

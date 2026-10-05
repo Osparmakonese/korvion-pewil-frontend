@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { subscribe, promptInstall, isStandalone } from '../utils/pwaInstall';
-import { invalidateSaleCaches } from '../utils/queryCache';
+import { requestSaleCachesRefresh } from '../utils/queryCache';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Sidebar, { NAV_ITEMS, itemVisibleToRole } from './Sidebar';
 import Topbar from './Topbar';
@@ -161,7 +161,9 @@ export default function Layout({
   // event fires if the cashier moved to another tab quickly.
   const qc = useQueryClient();
   useEffect(() => {
-    const onSaleSynced = () => invalidateSaleCaches(qc);
+    // Coalesced (2026-09-22): a draining backlog fires this once per sale;
+    // refreshing on every one throttled the whole till. See queryCache.js.
+    const onSaleSynced = () => requestSaleCachesRefresh(qc);
     window.addEventListener('pewil:sale-synced', onSaleSynced);
     return () => window.removeEventListener('pewil:sale-synced', onSaleSynced);
   }, [qc]);

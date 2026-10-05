@@ -119,7 +119,7 @@ export function invalidateCategoryCaches(qc) {
  * sales history, customer LTV (if a customer was attached), loyalty
  * balance, and cashier session totals.
  */
-export function invalidateSaleCaches(qc) {
+export function invalidateSaleCaches(qc, options) {
   qc.invalidateQueries({
     predicate: matches([
       'product',                   // stock count decrements
@@ -129,14 +129,43 @@ export function invalidateSaleCaches(qc) {
       'sale',                      // retail-sales*, sales-history*, livestockSales
       'end-of-day',                // retail-end-of-day, end-of-day-report
       'cashier-session',           // retail-cashier-sessions*
-      'session',                   // retail-sessions-pos
-      'pos',
+      // 2026-09-22: 'session' and 'pos' are gone. As substrings they also
+      // hit pos-settings, pos-credit-accounts, medaid-providers-pos and
+      // retail-sessions-pos — none of which a sale changes — so every sale
+      // refetched them all. The POS product grid is still covered by
+      // 'product' (retail-products-pos).
       'dashboard',                 // hero numbers
       'customer',                  // LTV when customer attached
       'loyalty',                   // points balance
       'recent-activity',           // dashboard recent feed
     ]),
-  });
+  }, options);
+}
+
+// ── Coalesced refresh for sales that sync in the background (2026-09-22) ──
+//
+// Every sale that reached the server used to refresh every sale-related
+// screen on its own. An offline queue drains at a couple of sales a second,
+// so a backlog meant the product catalogue and half a dozen other lists
+// were re-requested several times a second — well past the API's 300
+// requests a minute — and the till throttled itself: the drain, the grid
+// and new sales all got 429s together. Now: at most one refresh every
+// SALE_REFRESH_GAP_MS, plus one trailing refresh after the last sale in a
+// burst, so the screens still end up current. An in-flight refetch is left
+// to finish rather than cancelled and restarted.
+const SALE_REFRESH_GAP_MS = 10000;
+let _saleRefreshLast = 0;
+let _saleRefreshTimer = null;
+export function requestSaleCachesRefresh(qc) {
+  if (_saleRefreshTimer) return;                  // a trailing one is booked
+  const wait = _saleRefreshLast + SALE_REFRESH_GAP_MS - Date.now();
+  const run = () => {
+    _saleRefreshTimer = null;
+    _saleRefreshLast = Date.now();
+    try { invalidateSaleCaches(qc, { cancelRefetch: false }); } catch (_) { /* never break a sale */ }
+  };
+  if (wait <= 0) { run(); return; }
+  _saleRefreshTimer = setTimeout(run, wait);
 }
 
 /**

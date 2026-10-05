@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getStocktakes, getStocktake, startStocktake, saveStocktakeCounts, finalizeStocktake,
@@ -208,6 +208,19 @@ function CountScreen({ id, onBack }) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all'); // all | todo | var
   const [done, setDone] = useState(null);
+  // Save each count moments after it is taken (2026-09-22). The server now
+  // notes what the shop's book said AT THAT MOMENT and finalize applies
+  // counted minus that, so sales rung between counting a shelf and pressing
+  // Finalize are no longer undone. A count that only reaches the server at
+  // finalize is measured against the book at finalize, as before.
+  const lineTimers = useRef({});
+  const saveLine = (l, val) => {
+    if (val === '' || val == null || isNaN(Number(val))) return;
+    clearTimeout(lineTimers.current[l.id]);
+    lineTimers.current[l.id] = setTimeout(() => {
+      saveStocktakeCounts(id, [{ line_id: l.id, counted_qty: val }]).catch(() => {});
+    }, 800);
+  };
 
   // Drop cleared/blank boxes — posting counted_qty:'' makes the API 400
   // and would lose the whole save, not just that one line.
@@ -324,7 +337,10 @@ function CountScreen({ id, onBack }) {
     </div>
   );
 
-  const setCount = (l, val) => setCounts((c) => ({ ...c, [l.id]: val }));
+  const setCount = (l, val) => {
+    setCounts((c) => ({ ...c, [l.id]: val }));
+    if (open) saveLine(l, val);
+  };
   const bump = (l, d) => {
     const cur = cval(l);
     const n = (cur === '' || cur == null || isNaN(Number(cur))) ? 0 : Number(cur);
@@ -577,7 +593,7 @@ function CountScreen({ id, onBack }) {
                   <td style={S.td}>
                     {open ? (
                       <input type="number" style={S.input} value={cval(l)}
-                        onChange={(e) => setCounts((cs) => ({ ...cs, [l.id]: e.target.value }))} />
+                        onChange={(e) => setCount(l, e.target.value)} />
                     ) : (l.counted_qty != null ? l.counted_qty : '—')}
                   </td>
                   <td style={{ ...S.td, fontWeight: 700, color: v == null ? '#94a3b8' : v === 0 ? '#64748b' : v > 0 ? G : '#b91c1c' }}>

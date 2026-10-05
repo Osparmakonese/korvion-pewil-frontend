@@ -17,7 +17,7 @@ import {
 } from '../api/retailApi';
 import MobileProducts from '../components/MobileProducts';
 import { useAuth } from '../context/AuthContext';
-import { fmt, fmtQty } from '../utils/format';
+import { fmt, fmtQty, price as fmtUnitPrice } from '../utils/format';
 import { confirm } from '../utils/confirm';
 import { invalidateProductCaches } from '../utils/queryCache';
 import { shopPrice, shopStock, shopStockIsError, shopCarries } from '../utils/branchStock';
@@ -331,12 +331,16 @@ function AddProductModal({ isOpen, onClose, onSubmit, categories, loading, initi
               <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 4, textTransform: 'uppercase' }}>
                 Selling Price
               </label>
+              {/* step="any": a price is a rate too — a case price over its
+                  singles, a price per kilogram. The column holds nine places
+                  (migration 0060); the cent is applied to the line on the
+                  receipt, not to the price. */}
               <input
                 type="number"
                 name="selling_price"
                 value={form.selling_price}
                 onChange={handleChange}
-                step="0.01"
+                step="any"
                 required
                 style={{
                   width: '100%',
@@ -1158,11 +1162,11 @@ export default function Products() {
                       {/* This shop's price when a shop is selected, with a
                           marker where it differs from the chain price so the
                           owner can see at a glance which lines are overridden. */}
-                      {fmt(shopPrice(product), 'zwd')}
+                      {fmtUnitPrice(shopPrice(product), 'zwd')}
                       {product.branch_price != null
                         && Number(product.branch_price) !== Number(product.selling_price) && (
                         <span
-                          title={`Chain price ${fmt(product.selling_price, 'zwd')}`}
+                          title={`Chain price ${fmtUnitPrice(product.selling_price, 'zwd')}`}
                           style={{
                             marginLeft: 6, fontSize: 10, fontWeight: 700,
                             color: '#1a6b3a', background: '#e8f5ee',

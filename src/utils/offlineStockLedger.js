@@ -76,7 +76,7 @@ function aggregate() {
     for (const pid of Object.keys(lines)) {
       const n = Number(lines[pid]) || 0;
       if (!n) continue;
-      out[pid] = (out[pid] || 0) + n;
+      out[pid] = Math.round(((out[pid] || 0) + n) * 1000) / 1000;
     }
   }
   agg = out;
@@ -98,9 +98,13 @@ function fire() {
  * Record the lines of a sale that has just been queued.
  *
  * `items` is the sale's `items_data`: `[{ product_id, qty }, ...]`.
- * Quantities are rounded UP to whole units, on purpose — a 0.75 kg line
- * still means a bag left the shelf, and rounding it to zero would let a
- * weighable be sold without ever counting down.
+ *
+ * Quantities are kept as sold, to the gram (2026-09-22). They used to be
+ * rounded UP to whole units, so a 0.25 kg sale of a product stocked in kg
+ * took a whole kilo off the shelf here: four quarter-kilo sales offline and
+ * the till showed 4 kg gone for 1 kg sold, and started refusing weighed
+ * sales long before the stock ran out. The server deducts the exact
+ * quantity; this has to match it.
  */
 export function noteSaleQueued(clientReceiptNumber, items) {
   if (!clientReceiptNumber || !Array.isArray(items)) return;
@@ -110,7 +114,7 @@ export function noteSaleQueued(clientReceiptNumber, items) {
     const qty = Number(item && item.qty) || 0;
     if (pid == null || qty <= 0) continue;
     const key = String(pid);
-    lines[key] = (lines[key] || 0) + Math.ceil(qty);
+    lines[key] = Math.round(((lines[key] || 0) + qty) * 1000) / 1000;
   }
   if (!Object.keys(lines).length) return;
   const all = readAll();

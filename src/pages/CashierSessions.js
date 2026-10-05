@@ -8,7 +8,9 @@ import {
   createCashDrop, managerApprove,
   listBranches,
 } from '../api/retailApi';
-import { VIEW_BRANCH_KEY } from '../api/axios';
+import api, { VIEW_BRANCH_KEY } from '../api/axios';
+import { getQueuedSalesForSession, drainPendingSales } from '../utils/offlinePOS';
+import { toast } from '../utils/toast';
 import { fmt } from '../utils/format';
 import AIInsightCard from '../components/AIInsightCard';
 import MobileCashierSessions from '../components/MobileCashierSessions';
@@ -294,6 +296,7 @@ function XReportModal({ isOpen, onClose, session }) {
               <RowKV k="Sales" v={`${data.sales_count} txns \u00B7 ${fmt(data.sales_total, 'zwd')}`} />
               <RowKV k="VAT collected" v={fmt(data.vat_collected, 'zwd')} />
               <RowKV k="Cash drops" v={`${data.cash_drops_count} \u00B7 ${fmt(data.cash_drops_total, 'zwd')}`} />
+              <RowKV k="Cash refunds" v={`${data.cash_refunds_count || 0} \u00B7 ${fmt(data.cash_refunds_total || 0, 'zwd')}`} />
               <div style={{ marginTop: 8, marginBottom: 4, fontSize: 10, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase' }}>Payment breakdown</div>
               {Object.entries(data.payment_breakdown || {}).map(([k, v]) => (
                 <RowKV key={k} k={k} v={`${v.count} \u00B7 ${fmt(v.total, 'zwd')}`} />
@@ -422,10 +425,14 @@ function CloseSessionModal({ isOpen, onClose, onSubmit, session, loading, blindC
     return sum + (isNaN(c) ? 0 : c) * d.value;
   }, 0);
 
-  // Expected cash = opening_float + cash sales \u2212 cash drops.
+  // Expected cash = opening_float + cash sales \u2212 cash drops \u2212 cash refunds.
+  // 2026-09-22: refunds paid out of this drawer come off too, and the cash
+  // figure now includes the cash part of split sales net of change — the
+  // same arithmetic the server saves at close.
   const cashPayments = (session.payment_breakdown && session.payment_breakdown.cash) || { total: 0 };
   const drops = Number(session.cash_drops_total || 0);
-  const expectedCash = Number(session.opening_float || 0) + Number(cashPayments.total || 0) - drops;
+  const refunds = Number(session.cash_refunds_total || 0);
+  const expectedCash = Number(session.opening_float || 0) + Number(cashPayments.total || 0) - drops - refunds;
   const variance = countedCash - expectedCash;
 
   const showVariance = !blindClose || submitted;
@@ -489,6 +496,12 @@ function CloseSessionModal({ isOpen, onClose, onSubmit, session, loading, blindC
             <span style={{ color: '#6b7280' }}>Cash drops:</span>
             <strong style={{ color: drops > 0 ? '#c0392b' : '#111827' }}>
               {session.cash_drops_count || 0} &middot; {fmt(drops, 'zwd')}
+            </strong>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+            <span style={{ color: '#6b7280' }}>Cash refunds:</span>
+            <strong style={{ color: refunds > 0 ? '#c0392b' : '#111827' }}>
+              {fmt(refunds, 'zwd')}
             </strong>
           </div>
         </div>
@@ -695,11 +708,39 @@ export default function CashierSessions() {
     return err?.message || 'The till could not be opened. Please try again.';
   })();
 
+  // A till must not be closed while THIS device still holds sales rung in
+  // it (2026-09-22). The close freezes the expected cash from the sales the
+  // server has; queued ones were missing from it, so the drawer read over,
+  // the close demanded a variance reason, and the sales then landed in a
+  // session that was already closed. Send them first; if they cannot go,
+  // refuse and say why.
+  const sendQueuedSalesFirst = async (sessionId) => {
+    if (!getQueuedSalesForSession(sessionId).length) return;
+    try { await drainPendingSales(api); } catch (_) { /* counted below */ }
+    const left = getQueuedSalesForSession(sessionId).length;
+    if (left) {
+      throw new Error(
+        `${left} sale${left === 1 ? '' : 's'} from this till ${left === 1 ? 'is' : 'are'} still saved on this device `
+        + 'and not yet on the server. Connect to the internet and wait for '
+        + '"All sales synced", then close the till.'
+      );
+    }
+  };
+
   const closeMut = useMutation({
-    mutationFn: ({ id, data, token }) => closeCashierSessionAdvanced(id, data, token),
+    mutationFn: async ({ id, data, token }) => {
+      await sendQueuedSalesFirst(id);
+      return closeCashierSessionAdvanced(id, data, token);
+    },
     onSuccess: () => {
       invalidateSessionCaches(qc);
       setClosingSession(null);
+    },
+    onError: (err) => {
+      toast({
+        message: err?.response?.data?.detail || err?.message || 'The till could not be closed. Please try again.',
+        kind: 'error',
+      });
     },
   });
 

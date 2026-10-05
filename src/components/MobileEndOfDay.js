@@ -159,8 +159,8 @@ export default function MobileEndOfDay() {
           fg={T.red}
         />
         <Tile
-          label="Discounts"
-          value={`-${fmt(parseFloat(summary.discounts_given) || 0, 'zwd')}`}
+          label="Discounts (in gross)"
+          value={fmt(parseFloat(summary.discounts_given) || 0, 'zwd')}
           tint={T.amberT}
           fg={T.amber}
         />
@@ -221,6 +221,7 @@ export default function MobileEndOfDay() {
         <DrawerRow label="Opening float" value={fmt(parseFloat(drawer.opening_float) || 0, 'zwd')} />
         <DrawerRow label="+ Cash sales" value={fmt(parseFloat(drawer.cash_sales) || 0, 'zwd')} />
         <DrawerRow label="− Cash returns" value={`-${fmt(parseFloat(drawer.cash_returns) || 0, 'zwd')}`} />
+        <DrawerRow label="− Cash drops" value={`-${fmt(parseFloat(drawer.cash_drops) || 0, 'zwd')}`} />
         <div style={{
           marginTop: 10, paddingTop: 10, borderTop: `1px dashed ${T.line}`,
           display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',

@@ -7,7 +7,7 @@
  * received; this file only changes the look.
  */
 import React, { useMemo, useState } from 'react';
-import { fmt } from '../utils/format';
+import { fmt, price as fmtUnitPrice, lineTotal } from '../utils/format';
 import { shopPrice, sellState } from '../utils/branchStock';
 
 const C = {
@@ -106,14 +106,14 @@ export default function DarkSupermarketPOS({
                 <div key={item.product_id} style={S.line}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={S.lnm}>{item.name}{age && <span style={S.age}>18+</span>}</div>
-                    <div style={S.lea}>${fmt(item.unit_price)} each</div>
+                    <div style={S.lea}>{fmtUnitPrice(item.unit_price, 'zwd')} each</div>
                   </div>
                   <div style={S.qty}>
                     <button type="button" style={S.qbtn} disabled={weigh} onClick={() => updateCartQty(item.product_id, Math.max(1, (item.quantity | 0) - 1))}>−</button>
                     <span style={{ minWidth: 18, textAlign: 'center', fontWeight: 700, fontSize: 13 }}>{weigh ? Number(item.quantity).toFixed(3) : item.quantity}</span>
                     <button type="button" style={S.qbtn} disabled={weigh} onClick={() => updateCartQty(item.product_id, (item.quantity | 0) + 1)}>+</button>
                   </div>
-                  <div style={{ width: 56, textAlign: 'right', fontWeight: 800, fontSize: 13 }}>${fmt(item.unit_price * item.quantity)}</div>
+                  <div style={{ width: 56, textAlign: 'right', fontWeight: 800, fontSize: 13 }}>${fmt(lineTotal(item.unit_price, item.quantity))}</div>
                   <button type="button" style={S.rm} onClick={() => removeFromCart(item.product_id)}>×</button>
                 </div>
               );
