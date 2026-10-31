@@ -16,15 +16,19 @@
  *     Products.js add modal via the prop callback.
  */
 import React, { useState, useMemo, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getProducts, getCategories, getLowStockProducts, getExpiringProducts,
+  deleteProduct,
 } from '../api/retailApi';
 import { useAuth } from '../context/AuthContext';
 import useViewBranch from '../hooks/useViewBranch';
 import { fmt } from '../utils/format';
 import { getProductIcon } from '../utils/productIcons';
 import { shopPrice, shopStock, shopStockIsError, shopCarries } from '../utils/branchStock';
+import { confirm } from '../utils/confirm';
+import { toast } from '../utils/toast';
+import { invalidateProductCaches } from '../utils/queryCache';
 
 const T = {
   cream:   '#ffffff',
@@ -50,6 +54,42 @@ export default function MobileProducts({ onAddProduct, onEditProduct }) {
 
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+
+  // ARCHIVING FROM THE PHONE (2026-10-31)
+  //
+  // The desktop table has given every row an Edit and a Delete since the
+  // start; this screen had neither, so an owner working from a phone — which
+  // is most of them — could add a product but never retire one. Same call,
+  // same wording, same outcome as the desktop: DELETE soft-deletes, so the
+  // line leaves the till and the catalogue while every past sale that
+  // included it stays exactly as it was.
+  const qc = useQueryClient();
+  const archiveMut = useMutation({
+    // The whole product goes in, so the toast can name it on the way out.
+    mutationFn: (product) => deleteProduct(product.id),
+    onSuccess: (_data, product) => {
+      invalidateProductCaches(qc);
+      toast({ message: `${product?.name || 'Product'} archived.`, kind: 'success' });
+    },
+    onError: (err) => {
+      const detail = err?.response?.data?.detail
+        || err?.response?.data?.error
+        || err?.message || 'unknown error';
+      toast({ message: `Could not archive: ${detail}`, kind: 'error' });
+    },
+  });
+
+  const askArchive = async (product) => {
+    const ok = await confirm({
+      title: 'Archive product',
+      message: `Archive "${product.name}"? It will stop appearing in POS and `
+        + 'reports, but every past sale that included it stays intact. An '
+        + 'owner can restore it later from the archive.',
+      confirmText: 'Archive',
+      cancelText: 'Keep it',
+    });
+    if (ok) archiveMut.mutate(product);
+  };
 
   // Owners/managers edit products from this screen, so it must show the whole
   // catalogue — including lines this shop has turned off. Without
@@ -241,10 +281,21 @@ export default function MobileProducts({ onAddProduct, onEditProduct }) {
         const stockError = shopStockIsError(p);
         const notCarriedHere = inShop && !shopCarries(p);
         return (
-        <button
+        <div
           key={p.id}
-          type="button"
+          // A div, not a button: the card now holds its own Edit and
+          // Archive buttons, and a button inside a button is invalid and
+          // swallows the inner taps on some Android browsers.
+          role={isOwnerOrManager ? 'button' : undefined}
+          tabIndex={isOwnerOrManager ? 0 : undefined}
           onClick={() => isOwnerOrManager && onEditProduct?.(p)}
+          onKeyDown={(e) => {
+            if (!isOwnerOrManager) return;
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onEditProduct?.(p);
+            }
+          }}
           style={{
             width: '100%',
             background: '#fff',
@@ -253,12 +304,14 @@ export default function MobileProducts({ onAddProduct, onEditProduct }) {
             borderRadius: 16,
             padding: 14,
             marginBottom: 10,
-            display: 'flex', alignItems: 'center', gap: 12,
+            display: 'flex', flexDirection: 'column', gap: 10,
             textAlign: 'left',
             fontFamily: 'inherit',
+            boxSizing: 'border-box',
             cursor: isOwnerOrManager ? 'pointer' : 'default',
           }}
         >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
             width: 44, height: 44, borderRadius: 12,
             background: icon.bg, color: icon.fg,
@@ -303,7 +356,40 @@ export default function MobileProducts({ onAddProduct, onEditProduct }) {
           }}>
             {fmt(shopPrice(p), 'zwd')}
           </div>
-        </button>
+          </div>
+            {isOwnerOrManager && (
+              <div style={{
+                display: 'flex', gap: 8, justifyContent: 'flex-end',
+                borderTop: `1px solid ${T.line}`, paddingTop: 10,
+              }}>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onEditProduct?.(p); }}
+                  style={{
+                    padding: '9px 18px', border: `1px solid ${T.green}`,
+                    background: 'transparent', color: T.green, borderRadius: 8,
+                    fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  disabled={archiveMut.isPending}
+                  onClick={(e) => { e.stopPropagation(); askArchive(p); }}
+                  style={{
+                    padding: '9px 18px', border: `1px solid ${T.red}`,
+                    background: 'transparent', color: T.red, borderRadius: 8,
+                    fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
+                    cursor: 'pointer', opacity: archiveMut.isPending ? 0.6 : 1,
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            )}
+        </div>
         );
       })}
 
