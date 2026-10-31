@@ -55,10 +55,11 @@ const SIZE_NORMAL = [GS, 0x21, 0x00];
 // shouty block that double-width-AND-height gives (2026-10-31).
 const SIZE_TALL = [GS, 0x21, 0x01];     // double height, normal width
 const SIZE_WIDE = [GS, 0x21, 0x10];     // double width, normal height
-// White on black. A printer that does not know GS B ignores it and prints
-// the text plainly, which still reads correctly.
-const INVERT_ON = [GS, 0x42, 1];
-const INVERT_OFF = [GS, 0x42, 0];
+// NO WHITE-ON-BLACK (2026-10-31). A reversed bar is a solid block of
+// burned paper: it is the slowest thing a thermal head does, it wears the
+// head, and on a till printing hundreds of slips a day the shop pays for it
+// in rolls and in printers. The headings earn their weight with bold text
+// and the rules that are already on the slip.
 const FEED = (n) => [ESC, 0x64, n];
 // Partial cut with feed. Printers without a cutter ignore it.
 const CUT = [GS, 0x56, 66, 3];
@@ -124,13 +125,6 @@ function wrap(text, width) {
   return out;
 }
 
-/** Centre text in `width` columns (the printer centres whole lines only). */
-function centred(text, width) {
-  const t = toAscii(text).slice(0, width);
-  const pad = Math.max(0, Math.floor((width - t.length) / 2));
-  return ' '.repeat(pad) + t + ' '.repeat(Math.max(0, width - pad - t.length));
-}
-
 function qrBytes(text) {
   const data = encode(text);
   if (!data.length) return [];
@@ -174,8 +168,9 @@ export function buildReceiptBytes(r, { width = 32, drawerKick = false } = {}) {
   const line = (s = '') => push(encode(s), [0x0a]);
   const rule = (ch = '-') => line(ch.repeat(W));
   const bold = (s) => { push(BOLD_ON); line(s); push(BOLD_OFF); };
-  const bar = (s) => { push(INVERT_ON); line(centred(s, W)); push(INVERT_OFF); };
   const centre = (s) => { push(ALIGN_CENTER); line(s); push(ALIGN_LEFT); };
+  // A heading: centred and bold, between the rules the slip already uses.
+  const heading = (s) => { push(ALIGN_CENTER, BOLD_ON); line(toAscii(s)); push(BOLD_OFF, ALIGN_LEFT); };
 
   const items = r.items || [];
   const vatShop = parseFloat(r.tax) > 0;
@@ -214,11 +209,13 @@ export function buildReceiptBytes(r, { width = 32, drawerKick = false } = {}) {
   line();
 
   // ── what this piece of paper is ──────────────────────────────────────
-  bar(`${vatShop ? 'TAX INVOICE' : 'SALE RECEIPT'} - ${currency}`);
+  rule();
+  heading(`${vatShop ? 'TAX INVOICE' : 'SALE RECEIPT'} - ${currency}`);
   // A slip run off again later says so on its face: the original is what
   // the customer was handed, and a copy that looks identical can be
   // presented as a second sale.
-  if (r.isReprint) bar('COPY OF RECEIPT');
+  if (r.isReprint) heading('* COPY OF RECEIPT *');
+  rule();
   line(padBetween(r.receiptNo ? `No ${r.receiptNo}` : '', r.date || '', W));
   if (r.cashier || r.till) {
     line(padBetween(r.till ? `Till ${toAscii(r.till)}` : '',
@@ -259,10 +256,11 @@ export function buildReceiptBytes(r, { width = 32, drawerKick = false } = {}) {
   if (parseFloat(r.discount) > 0) {
     line(padBetween('Discount', '-' + money(r.discount), W));
   }
-  // Double WIDTH only: as wide as the paper, without the shouting block.
-  push(INVERT_ON, SIZE_WIDE);
-  line(padBetween(' TOTAL', money(r.total) + ' ', Math.floor(W / 2)));
-  push(SIZE_NORMAL, INVERT_OFF);
+  // Double WIDTH only, bold: as wide as the paper, and the only thing on
+  // the slip set that large, so the eye lands on it without a black bar.
+  push(SIZE_WIDE, BOLD_ON);
+  line(padBetween('TOTAL', money(r.total), Math.floor(W / 2)));
+  push(BOLD_OFF, SIZE_NORMAL);
   line(padBetween(r.payLabel || 'CASH',
                   money(r.tendered != null ? r.tendered : r.total), W));
   if (parseFloat(r.change) > 0) bold(padBetween('CHANGE', money(r.change), W));
@@ -276,7 +274,8 @@ export function buildReceiptBytes(r, { width = 32, drawerKick = false } = {}) {
   // ── the authority's part ─────────────────────────────────────────────
   const f = r.fiscal || {};
   if (f.vcode) {
-    bar(`${f.authority || 'ZIMRA'} FISCALISED`);
+    rule();
+    heading(`${f.authority || 'ZIMRA'} FISCALISED`);
     if (f.qrText) { push(ALIGN_CENTER, qrBytes(f.qrText), ALIGN_LEFT); line(); }
     bold(padBetween('Verification', f.vcode, W));
     if (f.fday !== '' && f.fday != null) {
@@ -288,7 +287,7 @@ export function buildReceiptBytes(r, { width = 32, drawerKick = false } = {}) {
     centre('fdms.zimra.co.zw');
     line();
   } else if (r.fiscalPending) {
-    bar(`PENDING - WILL SYNC TO ${f.authority || 'ZIMRA'}`);
+    heading(`PENDING - WILL SYNC TO ${f.authority || 'ZIMRA'}`);
     line();
   }
 
