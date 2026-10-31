@@ -12,6 +12,7 @@ import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getSales } from '../api/retailApi';
 import { fmt } from '../utils/format';
+import PrintSlipButton from './PrintSlipButton';
 
 const T = {
   surface: '#f9fafb',
@@ -469,11 +470,20 @@ export default function MobileSalesHistory() {
               )}
             </div>
 
+            {/* Reprint on the till printer — this sheet had no print at
+                all, so a customer coming back with a query left with
+                nothing on paper (2026-10-31). */}
+            <div style={{ marginTop: 16 }}>
+              <PrintSlipButton
+                sale={selectedSale}
+                style={{ width: '100%', padding: 12, borderRadius: 10, fontSize: 13 }}
+              />
+            </div>
             <button
               type="button"
               onClick={() => setSelectedSale(null)}
               style={{
-                width: '100%', marginTop: 16, padding: 12,
+                width: '100%', marginTop: 10, padding: 12,
                 background: T.ink, color: '#fff', border: 'none', borderRadius: 10,
                 fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
               }}

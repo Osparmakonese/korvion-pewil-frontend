@@ -27,7 +27,7 @@ export function templateFrom(tmplData) {
 }
 
 /** ESC/POS bytes for this sale, branded and fiscalised like the slip. */
-export function receiptBytes(receipt, template) {
+export function receiptBytes(receipt, template, { isReprint = false } = {}) {
   const LOC = getLocalization();
   const FAUTH = LOC.authority_short || 'ZIMRA';
   const items = receipt.items_data || receipt.items || [];
@@ -45,6 +45,7 @@ export function receiptBytes(receipt, template) {
   })();
 
   return buildReceiptBytes({
+    isReprint,
     storeName: (template && template.store_name) || 'Your Store',
     addr: template
       ? [template.address_line1, template.address_line2].filter(Boolean).join(', ')
@@ -101,10 +102,12 @@ export function setAutoPrint(on) {
  * cashier mid-sale should not be handed a permission dialog they did not
  * ask for.
  */
-export async function printReceiptBluetooth(receipt, template, { silent = false } = {}) {
+export async function printReceiptBluetooth(
+  receipt, template, { silent = false, isReprint = false } = {},
+) {
   if (silent && !isPrinterReady()) return { ok: false, skipped: true, message: '' };
   try {
-    const res = await btPrintBytes(receiptBytes(receipt, template));
+    const res = await btPrintBytes(receiptBytes(receipt, template, { isReprint }));
     return {
       ok: true,
       message: res.via === 'rawbt'

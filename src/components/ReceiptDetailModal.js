@@ -1,5 +1,6 @@
 import React from 'react';
 import { fmt } from '../utils/format';
+import PrintSlipButton from './PrintSlipButton';
 
 // Lifted out of SalesHistory 2026-08-24 so the dashboard can open a receipt
 // too. The dashboard's Recent Transactions rows had no click handler at all —
@@ -97,9 +98,13 @@ export default function ReceiptDetailModal({ isOpen, onClose, sale }) {
           )}
         </div>
 
+        {/* The till printer first: a reprint belongs on the same 58mm slip
+            the customer was given, not on A4. The browser dialog stays for
+            an office printer or a PDF copy (2026-10-31). */}
+        <PrintSlipButton sale={sale} style={{ width: '100%', marginBottom: 8 }} />
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={handlePrint} style={{ flex: 1, padding: 10, background: '#fff', color: '#1a6b3a', border: '1px solid #1a6b3a', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-            {'\u{1F5A8}'} Print
+            {'\u{1F5A8}'} A4 / PDF
           </button>
           <button onClick={onClose} style={{ flex: 1, padding: 10, background: '#1a6b3a', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
             Close

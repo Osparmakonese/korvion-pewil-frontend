@@ -126,6 +126,11 @@ export function buildReceiptBytes(r, { width = 32, drawerKick = false } = {}) {
   line();
   push(BOLD_ON);
   line(r.isFiscal ? 'FISCAL TAX INVOICE' : 'RECEIPT');
+  // A slip run off again later says so on its face. The customer's original
+  // is the one that was handed over at the till; a copy that looks identical
+  // can be presented as a second sale, and on a fiscal receipt the authority
+  // expects a reprint to be marked (2026-10-31).
+  if (r.isReprint) line('** COPY — REPRINT **');
   push(BOLD_OFF, ALIGN_LEFT);
   rule();
   line(padBetween(`No ${r.receiptNo || ''}`, r.date || '', width));
