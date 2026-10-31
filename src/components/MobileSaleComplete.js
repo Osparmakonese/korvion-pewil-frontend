@@ -9,8 +9,12 @@
  * See mobile-mockups/PEWIL_MOBILE_PREVIEW_2026-04-26.html Frame 5
  * for the visual reference.
  */
-import React from 'react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { fmt, price as fmtUnitPrice } from '../utils/format';
+import { getReceiptTemplates } from '../api/retailApi';
+import { printReceiptBluetooth, templateFrom, lastPrinterName } from '../utils/printReceipt';
+import { isWebBluetoothSupported, isAndroid } from '../utils/btPrinter';
 
 const T = {
   cream:   '#ffffff',
@@ -25,6 +29,27 @@ const T = {
 };
 
 export default function MobileSaleComplete({ isOpen, onClose, receipt, onFix }) {
+  // THE PHONE TILL COULD NOT PRINT (2026-10-31)
+  //
+  // This screen replaces ReceiptModal at phone widths, and ReceiptModal is
+  // where Bluetooth printing was written. So the only print button here
+  // opened the browser's print dialog — the Android page-printer sheet,
+  // all A4 and "Save as PDF", which cannot talk to a 58mm Bluetooth
+  // thermal. Every shop running the till on a phone had no way to print a
+  // slip. Same bytes, same printer, same helper as the desktop now.
+  const { data: tmplData } = useQuery({
+    queryKey: ['receipt-template'], queryFn: getReceiptTemplates,
+    staleTime: 300000, retry: false, enabled: !!isOpen,
+  });
+  const [btState, setBtState] = useState(null);
+  const bluetoothCapable = isWebBluetoothSupported() || isAndroid();
+
+  const printBluetooth = async () => {
+    if (btState === 'printing') return;
+    setBtState('printing');
+    setBtState(await printReceiptBluetooth(receipt, templateFrom(tmplData)));
+  };
+
   if (!isOpen || !receipt) return null;
 
   const total = parseFloat(receipt.total) || 0;
@@ -206,18 +231,48 @@ export default function MobileSaleComplete({ isOpen, onClose, receipt, onFix }) 
 
       <div style={{ flex: 1 }} />
 
+      {btState && btState !== 'printing' && (
+        <div role="status" style={{
+          fontSize: 12.5, lineHeight: 1.45, borderRadius: 12, padding: '10px 12px',
+          marginBottom: 10, fontWeight: 600,
+          background: btState.ok ? '#f0fdf4' : '#fef2f2',
+          border: `1px solid ${btState.ok ? '#bbf7d0' : '#fecaca'}`,
+          color: btState.ok ? '#166534' : '#991b1b',
+        }}>
+          {btState.message}
+        </div>
+      )}
+
       {/* Action row */}
+      {bluetoothCapable && (
+        <button
+          type="button"
+          onClick={printBluetooth}
+          disabled={btState === 'printing'}
+          style={{
+            width: '100%', padding: 14, borderRadius: 14, border: 'none',
+            background: T.green, color: '#fff', fontWeight: 800, fontSize: 14,
+            fontFamily: 'inherit', cursor: 'pointer', marginBottom: 10,
+            opacity: btState === 'printing' ? 0.6 : 1,
+          }}
+        >
+          {btState === 'printing'
+            ? 'Printing…'
+            : `Print slip${lastPrinterName() ? ` · ${lastPrinterName()}` : ''}`}
+        </button>
+      )}
       <div style={{ display: 'flex', gap: 10 }}>
         <button
           type="button"
           onClick={handlePrint}
+          title="Opens the phone's own print dialog — for an A4 printer or a PDF, not the till's Bluetooth printer."
           style={{
             flex: 1, padding: 14, borderRadius: 14, border: `1px solid ${T.line}`,
             background: '#fff', color: T.ink, fontWeight: 800, fontSize: 13,
             fontFamily: 'inherit', cursor: 'pointer',
           }}
         >
-          Print receipt
+          {bluetoothCapable ? 'A4 / PDF' : 'Print receipt'}
         </button>
         <button
           type="button"

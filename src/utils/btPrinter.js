@@ -45,6 +45,23 @@ export function isAndroid() {
   return typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent || '');
 }
 
+/**
+ * Running inside the installed app (Capacitor WebView) rather than Chrome.
+ *
+ * It matters for printing: an Android WebView has NO Web Bluetooth at all,
+ * whatever the phone supports, so the installed app can only print through
+ * RawBT — and a WebView swallows a plain `location.href` to a custom scheme
+ * instead of handing it to the other app, which looks to the cashier like
+ * the print button does nothing (2026-10-31).
+ */
+export function isNativeShell() {
+  if (typeof window === 'undefined') return false;
+  const cap = window.Capacitor;
+  if (cap && (cap.isNativePlatform ? cap.isNativePlatform() : cap.isNative)) return true;
+  return /\bwv\b|Version\/[\d.]+ Chrome/i.test(navigator.userAgent || '')
+    && !/Chrome\/[\d.]+ Mobile Safari/i.test(navigator.userAgent || '');
+}
+
 export function lastPrinterName() {
   try { return localStorage.getItem(LAST_KEY) || ''; } catch (_) { return ''; }
 }
@@ -160,8 +177,16 @@ export async function printViaWebBluetooth(bytes) {
 export function printViaRawBT(bytes) {
   let bin = '';
   for (let i = 0; i < bytes.length; i += 1) bin += String.fromCharCode(bytes[i]);
-  const b64 = btoa(bin);
-  window.location.href = 'rawbt:base64,' + b64;
+  const url = 'rawbt:base64,' + btoa(bin);
+  // In the installed app, hand the URL to Android rather than to the
+  // WebView, which drops an unknown scheme without a word.
+  if (isNativeShell()) {
+    try {
+      const opened = window.open(url, '_system');
+      if (opened) return { via: 'rawbt' };
+    } catch (_) { /* fall through to the plain hop */ }
+  }
+  window.location.href = url;
   return { via: 'rawbt' };
 }
 
@@ -188,12 +213,19 @@ export async function printBytes(bytes) {
     }
   }
   if (isAndroid()) return printViaRawBT(bytes);
-  const err = new Error('This browser cannot reach Bluetooth printers. Use Chrome, or print with the normal Print button.');
+  const err = new Error(
+    isNativeShell()
+      ? 'The installed app cannot reach Bluetooth printers directly. Install RawBT '
+        + 'from the Play Store and set your printer in it, or open the till at '
+        + 'pewil.org in Chrome.'
+      : 'This browser cannot reach Bluetooth printers. Open the till in Chrome on '
+        + 'the phone, or print through RawBT.'
+  );
   err.code = 'NOT_SUPPORTED';
   throw err;
 }
 
 export default {
-  isWebBluetoothSupported, isAndroid, lastPrinterName,
+  isWebBluetoothSupported, isAndroid, isNativeShell, lastPrinterName,
   pairBluetoothPrinter, printViaWebBluetooth, printViaRawBT, printBytes,
 };

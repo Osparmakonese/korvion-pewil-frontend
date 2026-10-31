@@ -27,8 +27,8 @@ import { promptLoyaltyMember } from '../utils/loyaltyLookup';
 import { promptDiscountReason } from '../utils/discountReason';
 import { promptCashDrop, submitCashDrop } from '../utils/cashDrop';
 import { claimSessionLock } from '../utils/posSessionLock';
-import { buildReceiptBytes } from '../utils/escposReceipt';
-import { printBytes as btPrintBytes, isWebBluetoothSupported, isAndroid, lastPrinterName } from '../utils/btPrinter';
+import { isWebBluetoothSupported, isAndroid, lastPrinterName } from '../utils/btPrinter';
+import { printReceiptBluetooth } from '../utils/printReceipt';
 import { findMyOpenSession, describeSessions } from '../utils/tillSession';
 import * as Sentry from '@sentry/react';
 import {
@@ -210,35 +210,10 @@ function ReceiptModal({ isOpen, onClose, receipt, onFix }) {
   const printBluetooth = async () => {
     if (btState === 'printing') return;
     setBtState('printing');
-    try {
-      const bytes = buildReceiptBytes({
-        storeName, addr, phone, vatNo, tinNo,
-        isFiscal: Number(receipt.tax) > 0,
-        receiptNo: receipt.receipt_number,
-        // The moment of sale. An offline receipt has no created_at yet and
-        // falls back to now, which IS when it was rung.
-        date: new Date(receipt.sold_at || receipt.created_at || Date.now()).toLocaleString(),
-        items: items.map((it) => ({ ...it, taxCode: taxCodeFor(it) })),
-        subtotal: receipt.subtotal, discount: receipt.discount, tax: receipt.tax,
-        total: receipt.total, tendered: receipt.amount_tendered,
-        change: (parseFloat(receipt.amount_tendered) || 0) - (parseFloat(receipt.total) || 0),
-        payLabel: payLabel(),
-        footer: footerMsg,
-        fiscalPending: !fiscalised && !!qrTextExpected,
-        fiscal: fiscalised
-          ? { qrText, vcode, fday, gno, authority: FAUTH }
-          : { authority: FAUTH },
-      }, { width: (template && template.paper_width === '80mm') ? 48 : 32 });
-      const res = await btPrintBytes(bytes);
-      setBtState({
-        ok: true,
-        message: res.via === 'rawbt'
-          ? 'Sent to RawBT. If nothing printed, install the RawBT app from the Play Store and set your printer in it.'
-          : `Printed via Bluetooth${res.printer ? ` (${res.printer})` : ''}${lastPrinterName() ? '' : ''}.`,
-      });
-    } catch (e) {
-      setBtState({ ok: false, message: e?.message || 'Bluetooth print failed.' });
-    }
+    // One print path for every receipt screen — see utils/printReceipt.js.
+    // It used to live here, which is why the phone till (MobileSaleComplete)
+    // had no Bluetooth printing at all until 2026-10-31.
+    setBtState(await printReceiptBluetooth(receipt, template));
   };
 
   const fiscalThermal = () => fiscalised
