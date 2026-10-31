@@ -17,7 +17,9 @@
  * here, or the phone goes quietly out of step with the desktop again.
  */
 import { buildReceiptBytes } from './escposReceipt';
-import { printBytes as btPrintBytes, isPrinterReady, lastPrinterName } from './btPrinter';
+import {
+  printBytes as btPrintBytes, printBytesIfConnected, lastPrinterName,
+} from './btPrinter';
 import getLocalization from './localization';
 
 /** The merchant's receipt template, whatever shape the API returned it in. */
@@ -44,8 +46,23 @@ export function receiptBytes(receipt, template, { isReprint = false } = {}) {
     return m || 'Cash';
   })();
 
+  // The rate is derived from the money on the sale rather than from a
+  // setting that may have moved since: shelf prices here are VAT-inclusive,
+  // so the rate is tax / (total - tax). A receipt must describe the sale it
+  // IS, not the shop's rate today.
+  const taxAmt = parseFloat(receipt.tax) || 0;
+  const net = (parseFloat(receipt.total) || 0) - taxAmt;
+  const vatRate = taxAmt > 0 && net > 0
+    ? Math.round((taxAmt / net) * 100) : null;
+  let currency = 'USD';
+  try { currency = localStorage.getItem('currency') || 'USD'; } catch (_) {}
+
   return buildReceiptBytes({
     isReprint,
+    currency,
+    vatRate,
+    cashier: receipt.cashier_name || receipt.cashier || '',
+    till: receipt.session_id != null ? String(receipt.session_id) : '',
     storeName: (template && template.store_name) || 'Your Store',
     addr: template
       ? [template.address_line1, template.address_line2].filter(Boolean).join(', ')
@@ -80,11 +97,20 @@ export function receiptBytes(receipt, template, { isReprint = false } = {}) {
   }, { width: (template && template.paper_width === '80mm') ? 48 : 32 });
 }
 
-/** Per-device: print every slip without being asked. */
+/**
+ * Per-device: print every slip without being asked. ON unless this till has
+ * been told otherwise (2026-10-31).
+ *
+ * It was opt-in, which meant a queue of customers waiting while a cashier
+ * found a button on every single sale. Printing is what a till does; a shop
+ * that does not want a slip every time unticks it once, on that device.
+ * Nothing prints unless a printer is already connected, so a till with no
+ * printer is unaffected.
+ */
 const AUTO_KEY = 'pewil_autoprint';
 
 export function autoPrintOn() {
-  try { return localStorage.getItem(AUTO_KEY) === '1'; } catch (_) { return false; }
+  try { return localStorage.getItem(AUTO_KEY) !== '0'; } catch (_) { return true; }
 }
 
 export function setAutoPrint(on) {
@@ -105,7 +131,17 @@ export function setAutoPrint(on) {
 export async function printReceiptBluetooth(
   receipt, template, { silent = false, isReprint = false } = {},
 ) {
-  if (silent && !isPrinterReady()) return { ok: false, skipped: true, message: '' };
+  if (silent) {
+    // Reconnects to a printer this till already knows, prints, and says
+    // nothing if there is none — never a chooser mid-sale.
+    const quiet = await printBytesIfConnected(
+      receiptBytes(receipt, template, { isReprint }));
+    if (!quiet) return { ok: false, skipped: true, message: '' };
+    if (quiet.failed) {
+      return { ok: false, message: 'The printer did not take the slip. Tap Print slip to try again.' };
+    }
+    return { ok: true, message: `Printed${quiet.printer ? ` on ${quiet.printer}` : ''}.` };
+  }
   try {
     const res = await btPrintBytes(receiptBytes(receipt, template, { isReprint }));
     return {

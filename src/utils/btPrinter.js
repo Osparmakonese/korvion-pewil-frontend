@@ -174,9 +174,7 @@ async function ensureConnected() {
  * Print bytes over Web Bluetooth. Pairs (chooser) if nothing is connected.
  * Throws with a human message when it cannot; callers decide the fallback.
  */
-export async function printViaWebBluetooth(bytes) {
-  let ch = await ensureConnected();
-  if (!ch) ch = (await pairBluetoothPrinter()).char;
+async function writeChunks(ch, bytes) {
   const CHUNK = 100;
   for (let i = 0; i < bytes.length; i += CHUNK) {
     const slice = bytes.slice(i, i + CHUNK);
@@ -187,6 +185,33 @@ export async function printViaWebBluetooth(bytes) {
     } else {
       await ch.writeValue(slice);   // with-response paces itself
     }
+  }
+}
+
+export async function printViaWebBluetooth(bytes) {
+  let ch = await ensureConnected();
+  if (!ch) ch = (await pairBluetoothPrinter()).char;
+  await writeChunks(ch, bytes);
+  return { via: 'web-bluetooth', printer: _device?.name || '' };
+}
+
+/**
+ * Print ONLY if the printer can be reached without asking the cashier
+ * anything — the automatic slip after a sale (2026-10-31).
+ *
+ * `ensureConnected` reconnects to a printer this page already paired with,
+ * and on a Chrome that allows it, to one paired in an earlier session. It
+ * never opens the chooser, so this returns null instead of interrupting a
+ * cashier mid-sale, and the caller stays quiet.
+ */
+export async function printBytesIfConnected(bytes) {
+  let ch = null;
+  try { ch = await ensureConnected(); } catch (_) { return null; }
+  if (!ch) return null;
+  try {
+    await writeChunks(ch, bytes);
+  } catch (e) {
+    return { via: 'web-bluetooth', failed: true, error: e };
   }
   return { via: 'web-bluetooth', printer: _device?.name || '' };
 }
@@ -254,6 +279,7 @@ export async function printBytes(bytes) {
 }
 
 export default {
-  isWebBluetoothSupported, isAndroid, isNativeShell, isPrinterReady, lastPrinterName,
+  isWebBluetoothSupported, isAndroid, isNativeShell, isPrinterReady,
+  printBytesIfConnected, lastPrinterName,
   pairBluetoothPrinter, printViaWebBluetooth, printViaRawBT, printBytes,
 };
