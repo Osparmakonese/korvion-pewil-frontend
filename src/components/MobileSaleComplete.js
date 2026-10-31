@@ -9,11 +9,13 @@
  * See mobile-mockups/PEWIL_MOBILE_PREVIEW_2026-04-26.html Frame 5
  * for the visual reference.
  */
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fmt, price as fmtUnitPrice } from '../utils/format';
 import { getReceiptTemplates } from '../api/retailApi';
-import { printReceiptBluetooth, templateFrom, lastPrinterName } from '../utils/printReceipt';
+import {
+  printReceiptBluetooth, templateFrom, lastPrinterName, autoPrintOn, setAutoPrint,
+} from '../utils/printReceipt';
 import { isWebBluetoothSupported, isAndroid } from '../utils/btPrinter';
 
 const T = {
@@ -42,6 +44,7 @@ export default function MobileSaleComplete({ isOpen, onClose, receipt, onFix }) 
     staleTime: 300000, retry: false, enabled: !!isOpen,
   });
   const [btState, setBtState] = useState(null);
+  const [auto, setAuto] = useState(autoPrintOn);
   const bluetoothCapable = isWebBluetoothSupported() || isAndroid();
 
   const printBluetooth = async () => {
@@ -49,6 +52,26 @@ export default function MobileSaleComplete({ isOpen, onClose, receipt, onFix }) 
     setBtState('printing');
     setBtState(await printReceiptBluetooth(receipt, templateFrom(tmplData)));
   };
+
+  // Print the slip the moment the sale lands, when the till is set to and a
+  // printer is already connected. Silent: no chooser is ever thrown at a
+  // cashier who is handing over change. Once per receipt, not once per
+  // render.
+  const printedFor = useRef(null);
+  const key = receipt && (receipt.id || receipt.client_receipt_number
+    || receipt.receipt_number);
+  useEffect(() => {
+    if (!isOpen || !auto || !key || printedFor.current === key) return;
+    printedFor.current = key;
+    let live = true;
+    (async () => {
+      const res = await printReceiptBluetooth(receipt, templateFrom(tmplData),
+                                              { silent: true });
+      if (live && !res.skipped) setBtState(res);
+    })();
+    return () => { live = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, auto, key]);
 
   if (!isOpen || !receipt) return null;
 
@@ -286,6 +309,20 @@ export default function MobileSaleComplete({ isOpen, onClose, receipt, onFix }) 
           New sale
         </button>
       </div>
+      {bluetoothCapable && (
+        <label style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          marginTop: 12, fontSize: 12.5, color: T.muted, fontWeight: 600,
+        }}>
+          <input
+            type="checkbox"
+            checked={auto}
+            onChange={(e) => { setAuto(e.target.checked); setAutoPrint(e.target.checked); }}
+            style={{ width: 16, height: 16 }}
+          />
+          Print every slip automatically on this till
+        </label>
+      )}
       {onFix && !receipt.corrected_at && (
         <button
           type="button"

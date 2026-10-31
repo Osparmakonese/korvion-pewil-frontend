@@ -28,7 +28,9 @@ import { promptDiscountReason } from '../utils/discountReason';
 import { promptCashDrop, submitCashDrop } from '../utils/cashDrop';
 import { claimSessionLock } from '../utils/posSessionLock';
 import { isWebBluetoothSupported, isAndroid, lastPrinterName } from '../utils/btPrinter';
-import { printReceiptBluetooth } from '../utils/printReceipt';
+import {
+  printReceiptBluetooth, templateFrom, autoPrintOn, setAutoPrint,
+} from '../utils/printReceipt';
 import { findMyOpenSession, describeSessions } from '../utils/tillSession';
 import * as Sentry from '@sentry/react';
 import {
@@ -128,6 +130,28 @@ function ReceiptModal({ isOpen, onClose, receipt, onFix }) {
   const [emailOpen, setEmailOpen] = useState(false);
   // Bluetooth print state: 'printing' | { ok, message } | null
   const [btState, setBtState] = useState(null);
+  const [auto, setAuto] = useState(autoPrintOn);
+  // Print the slip as the sale lands, when this till is set to and a
+  // printer is already connected. Silent — the chooser needs a tap, and a
+  // cashier handing over change should never be shown one unasked. Once
+  // per receipt. Hooks run before the early return below, so the effect
+  // checks for a receipt itself.
+  const printedFor = useRef(null);
+  const autoKey = (isOpen && receipt)
+    ? (receipt.id || receipt.client_receipt_number || receipt.receipt_number)
+    : null;
+  useEffect(() => {
+    if (!autoKey || !auto || printedFor.current === autoKey) return;
+    printedFor.current = autoKey;
+    let live = true;
+    (async () => {
+      const res = await printReceiptBluetooth(receipt, templateFrom(tmplData),
+                                              { silent: true });
+      if (live && !res.skipped) setBtState(res);
+    })();
+    return () => { live = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoKey, auto]);
   if (!isOpen || !receipt) return null;
 
   const sendEmail = async () => {
@@ -599,6 +623,19 @@ function ReceiptModal({ isOpen, onClose, receipt, onFix }) {
           }}>
             {btState.message}
           </div>
+        )}
+        {bluetoothCapable && (
+          <label style={{
+            display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8,
+            fontSize: 11, color: '#64748b', fontWeight: 600, cursor: 'pointer',
+          }}>
+            <input
+              type="checkbox"
+              checked={auto}
+              onChange={(e) => { setAuto(e.target.checked); setAutoPrint(e.target.checked); }}
+            />
+            Print every slip automatically on this till
+          </label>
         )}
         <div style={{ display: 'flex', gap: 8 }}>
           {bluetoothCapable && (

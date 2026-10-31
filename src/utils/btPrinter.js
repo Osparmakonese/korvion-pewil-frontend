@@ -62,6 +62,17 @@ export function isNativeShell() {
     && !/Chrome\/[\d.]+ Mobile Safari/i.test(navigator.userAgent || '');
 }
 
+/**
+ * Is a printer connected RIGHT NOW, so bytes can be sent with no chooser?
+ *
+ * The chooser needs a tap. Anything that prints on its own — the automatic
+ * slip after a sale — must ask this first and stay quiet when the answer is
+ * no, instead of throwing a chooser at a cashier mid-sale (2026-10-31).
+ */
+export function isPrinterReady() {
+  return !!(_char && _device && _device.gatt && _device.gatt.connected);
+}
+
 export function lastPrinterName() {
   try { return localStorage.getItem(LAST_KEY) || ''; } catch (_) { return ''; }
 }
@@ -137,12 +148,23 @@ async function ensureConnected() {
   }
   // Chrome behind a flag can list permitted devices; use it when present so
   // a reload does not need the chooser again.
+  //
+  // Bounded by a timeout: the tap that started this print carries a user
+  // activation that Chrome only honours for a few seconds, and the chooser
+  // needs it. A getDevices() that sits there spends the cashier's tap and
+  // the print then fails with "must be handling a user gesture", which
+  // reads like the printer is broken (2026-10-31).
   try {
     if (navigator.bluetooth?.getDevices) {
-      const devices = await navigator.bluetooth.getDevices();
-      const wanted = lastPrinterName();
-      const match = devices.find((d) => !wanted || d.name === wanted) || devices[0];
-      if (match) return (await open(match)).char;
+      const devices = await Promise.race([
+        navigator.bluetooth.getDevices(),
+        new Promise((resolve) => setTimeout(() => resolve(null), 1200)),
+      ]);
+      if (devices && devices.length) {
+        const wanted = lastPrinterName();
+        const match = devices.find((d) => !wanted || d.name === wanted) || devices[0];
+        if (match) return (await open(match)).char;
+      }
     }
   } catch (_) { /* chooser it is */ }
   return null;
@@ -200,6 +222,12 @@ export async function printBytes(bytes) {
     try {
       return await printViaWebBluetooth(bytes);
     } catch (e) {
+      // The tap expired before the chooser could open. Tapping again works,
+      // and saying so is the whole fix for the cashier.
+      if (e && (e.name === 'SecurityError' || e.name === 'NotAllowedError'
+                || /user gesture|user activation/i.test(e.message || ''))) {
+        throw new Error('Tap Print again and pick the printer from the list.');
+      }
       if (e && (e.name === 'NotFoundError' || e.code === 'NOT_SUPPORTED')) {
         // Chooser cancelled, or no BLE — try the RawBT road on Android.
         if (isAndroid()) return printViaRawBT(bytes);
@@ -226,6 +254,6 @@ export async function printBytes(bytes) {
 }
 
 export default {
-  isWebBluetoothSupported, isAndroid, isNativeShell, lastPrinterName,
+  isWebBluetoothSupported, isAndroid, isNativeShell, isPrinterReady, lastPrinterName,
   pairBluetoothPrinter, printViaWebBluetooth, printViaRawBT, printBytes,
 };

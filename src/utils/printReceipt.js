@@ -17,7 +17,7 @@
  * here, or the phone goes quietly out of step with the desktop again.
  */
 import { buildReceiptBytes } from './escposReceipt';
-import { printBytes as btPrintBytes, lastPrinterName } from './btPrinter';
+import { printBytes as btPrintBytes, isPrinterReady, lastPrinterName } from './btPrinter';
 import getLocalization from './localization';
 
 /** The merchant's receipt template, whatever shape the API returned it in. */
@@ -79,13 +79,30 @@ export function receiptBytes(receipt, template) {
   }, { width: (template && template.paper_width === '80mm') ? 48 : 32 });
 }
 
+/** Per-device: print every slip without being asked. */
+const AUTO_KEY = 'pewil_autoprint';
+
+export function autoPrintOn() {
+  try { return localStorage.getItem(AUTO_KEY) === '1'; } catch (_) { return false; }
+}
+
+export function setAutoPrint(on) {
+  try { localStorage.setItem(AUTO_KEY, on ? '1' : '0'); } catch (_) { /* private mode */ }
+}
+
 /**
  * Print the slip on the till's Bluetooth thermal printer.
  *
  * Never throws: returns { ok, message } written for a cashier, because the
  * only person who sees it is standing at a counter with a customer waiting.
+ *
+ * `silent` is for the automatic print after a sale: with no printer already
+ * connected it does nothing at all, because the chooser needs a tap and a
+ * cashier mid-sale should not be handed a permission dialog they did not
+ * ask for.
  */
-export async function printReceiptBluetooth(receipt, template) {
+export async function printReceiptBluetooth(receipt, template, { silent = false } = {}) {
+  if (silent && !isPrinterReady()) return { ok: false, skipped: true, message: '' };
   try {
     const res = await btPrintBytes(receiptBytes(receipt, template));
     return {
