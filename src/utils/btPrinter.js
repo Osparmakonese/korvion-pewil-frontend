@@ -174,6 +174,60 @@ async function ensureConnected() {
  * Print bytes over Web Bluetooth. Pairs (chooser) if nothing is connected.
  * Throws with a human message when it cannot; callers decide the fallback.
  */
+// ── THE SAME SLIP IS NEVER SENT TWICE (2026-11-01) ──────────────────────
+//
+// Receipts kept coming out in pairs. The first cause was found and fixed
+// upstream (a sale changes identity when it syncs, so the automatic print
+// treated it as a second sale). Receipts still doubled, which means at
+// least one more path reaches this module twice — a second tab draining
+// the same till, a component mounted twice, a cashier tapping a button
+// that had already fired. Rather than chase each one, the guard goes where
+// every road ends: the bytes themselves.
+//
+// A payload identical to the one just printed is refused for a short
+// window unless the caller forces it, and the fingerprint is kept in
+// localStorage so a second TAB on the same till is covered too. Forcing is
+// what the Print button does: a cashier who taps it wants another copy.
+const PRINT_LOCK_KEY = 'pewil_last_print';
+const PRINT_LOCK_MS = 25000;
+
+function fingerprint(bytes) {
+  // FNV-1a over the whole slip: the date and the receipt number are in
+  // there, so two different sales never collide, and the same sale printed
+  // again always matches.
+  let h = 0x811c9dc5;
+  for (let i = 0; i < bytes.length; i += 1) {
+    h ^= bytes[i];
+    h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
+  }
+  return `${bytes.length}-${h.toString(16)}`;
+}
+
+// The last few slips, not just the last one: at a busy till two sales can
+// be rung inside the window, and a late duplicate of the FIRST must still
+// be refused after the second has printed.
+function recentPrints() {
+  try {
+    const raw = localStorage.getItem(PRINT_LOCK_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(list)) return [];
+    const now = Date.now();
+    return list.filter((e) => e && e.fp && (now - e.at) < PRINT_LOCK_MS);
+  } catch (_) { return []; }        // no storage: fall back to printing
+}
+
+function justPrinted(fp) {
+  return recentPrints().some((e) => e.fp === fp);
+}
+
+function notePrinted(fp) {
+  try {
+    const list = recentPrints().filter((e) => e.fp !== fp);
+    list.push({ fp, at: Date.now() });
+    localStorage.setItem(PRINT_LOCK_KEY, JSON.stringify(list.slice(-5)));
+  } catch (_) { /* private mode — the in-page guards still hold */ }
+}
+
 async function writeChunks(ch, bytes) {
   const CHUNK = 100;
   for (let i = 0; i < bytes.length; i += CHUNK) {
@@ -204,11 +258,16 @@ export async function printViaWebBluetooth(bytes) {
  * never opens the chooser, so this returns null instead of interrupting a
  * cashier mid-sale, and the caller stays quiet.
  */
-export async function printBytesIfConnected(bytes) {
+export async function printBytesIfConnected(bytes, { force = false } = {}) {
+  const fp = fingerprint(bytes);
+  if (!force && justPrinted(fp)) {
+    return { via: 'web-bluetooth', duplicate: true };
+  }
   let ch = null;
   try { ch = await ensureConnected(); } catch (_) { return null; }
   if (!ch) return null;
   try {
+    notePrinted(fp);
     await writeChunks(ch, bytes);
   } catch (e) {
     return { via: 'web-bluetooth', failed: true, error: e };
@@ -242,7 +301,12 @@ export function printViaRawBT(bytes) {
  * Returns { via, printer? }. Throws only when NO road exists — the message
  * is written for a cashier, show it verbatim.
  */
-export async function printBytes(bytes) {
+export async function printBytes(bytes, { force = false } = {}) {
+  const fp = fingerprint(bytes);
+  if (!force && justPrinted(fp)) {
+    return { via: 'duplicate', duplicate: true };
+  }
+  notePrinted(fp);
   if (isWebBluetoothSupported()) {
     try {
       return await printViaWebBluetooth(bytes);

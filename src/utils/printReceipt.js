@@ -173,13 +173,17 @@ export async function printReceiptBluetooth(
     const quiet = await printBytesIfConnected(
       receiptBytes(receipt, template, { isReprint }));
     if (!quiet) return { ok: false, skipped: true, message: '' };
+    // Already on paper seconds ago, from some other path.
+    if (quiet.duplicate) return { ok: false, skipped: true, message: '' };
     if (quiet.failed) {
       return { ok: false, message: 'The printer did not take the slip. Tap Print slip to try again.' };
     }
     return { ok: true, message: `Printed${quiet.printer ? ` on ${quiet.printer}` : ''}.` };
   }
   try {
-    const res = await btPrintBytes(receiptBytes(receipt, template, { isReprint }));
+    // A tap is a request for a copy, so it is never refused as a duplicate.
+    const res = await btPrintBytes(
+      receiptBytes(receipt, template, { isReprint }), { force: true });
     return {
       ok: true,
       message: res.via === 'rawbt'
