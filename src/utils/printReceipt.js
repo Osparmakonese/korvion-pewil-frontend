@@ -22,6 +22,27 @@ import {
 } from './btPrinter';
 import getLocalization from './localization';
 
+/**
+ * The one id that survives a sale syncing.
+ *
+ * A sale is shown the instant it is rung, before the server has it: no id,
+ * and the till's own offline number. Seconds later it syncs and the REAL
+ * sale swaps in, carrying a server id and the real receipt number. Keyed on
+ * `id`, that swap looked like a different receipt and the automatic print
+ * ran a second time — two slips for one sale, but only when the sync landed
+ * while the receipt was still on screen, which is why it was "sometimes"
+ * (2026-11-01). The client receipt number is on both.
+ */
+export function receiptKey(receipt) {
+  if (!receipt) return '';
+  return receipt.client_receipt_number || receipt.receipt_number
+    || (receipt.id != null ? `id-${receipt.id}` : '');
+}
+
+// Slips already printed automatically. Survives the receipt screen being
+// re-mounted, which a re-render or a swapped-in sale both cause.
+const autoPrinted = new Set();
+
 /** The merchant's receipt template, whatever shape the API returned it in. */
 export function templateFrom(tmplData) {
   if (Array.isArray(tmplData)) return tmplData[0] || null;
@@ -56,12 +77,22 @@ export function receiptBytes(receipt, template, { isReprint = false } = {}) {
     ? Math.round((taxAmt / net) * 100) : null;
   let currency = 'USD';
   try { currency = localStorage.getItem('currency') || 'USD'; } catch (_) {}
+  // The sale names its own cashier once the server has it. A sale just rung
+  // offline has no server fields yet, so the till falls back to whoever is
+  // signed in — which at that moment IS the person serving the customer.
+  let cashier = receipt.cashier_name || receipt.cashier || '';
+  if (!cashier) {
+    try {
+      const me = JSON.parse(localStorage.getItem('user') || 'null');
+      cashier = (me && (me.full_name || me.username)) || '';
+    } catch (_) { /* no session on this device */ }
+  }
 
   return buildReceiptBytes({
     isReprint,
     currency,
     vatRate,
-    cashier: receipt.cashier_name || receipt.cashier || '',
+    cashier,
     till: receipt.session_id != null ? String(receipt.session_id) : '',
     storeName: (template && template.store_name) || 'Your Store',
     addr: template
@@ -129,9 +160,14 @@ export function setAutoPrint(on) {
  * ask for.
  */
 export async function printReceiptBluetooth(
-  receipt, template, { silent = false, isReprint = false } = {},
+  receipt, template, { silent = false, isReprint = false, once = '' } = {},
 ) {
   if (silent) {
+    // One automatic slip per sale, however many times this is called.
+    if (once && autoPrinted.has(once)) {
+      return { ok: false, skipped: true, message: '' };
+    }
+    if (once) autoPrinted.add(once);
     // Reconnects to a printer this till already knows, prints, and says
     // nothing if there is none — never a chooser mid-sale.
     const quiet = await printBytesIfConnected(

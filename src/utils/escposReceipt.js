@@ -217,9 +217,12 @@ export function buildReceiptBytes(r, { width = 32, drawerKick = false } = {}) {
   if (r.isReprint) heading('* COPY OF RECEIPT *');
   rule();
   line(padBetween(r.receiptNo ? `No ${r.receiptNo}` : '', r.date || '', W));
+  // Who served the customer, named on the slip: it is what a customer asks
+  // for when they come back with a query, and what settles "which cashier
+  // rang this" without anyone opening a report (2026-11-01).
   if (r.cashier || r.till) {
     line(padBetween(r.till ? `Till ${toAscii(r.till)}` : '',
-                    r.cashier ? toAscii(r.cashier) : '', W));
+                    r.cashier ? `Served by ${toAscii(r.cashier)}` : '', W));
   }
   line();
 

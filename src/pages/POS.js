@@ -29,7 +29,7 @@ import { promptCashDrop, submitCashDrop } from '../utils/cashDrop';
 import { claimSessionLock } from '../utils/posSessionLock';
 import { isWebBluetoothSupported, isAndroid, lastPrinterName } from '../utils/btPrinter';
 import {
-  printReceiptBluetooth, templateFrom, autoPrintOn, setAutoPrint,
+  printReceiptBluetooth, templateFrom, autoPrintOn, setAutoPrint, receiptKey,
 } from '../utils/printReceipt';
 import { findMyOpenSession, describeSessions } from '../utils/tillSession';
 import * as Sentry from '@sentry/react';
@@ -137,16 +137,15 @@ function ReceiptModal({ isOpen, onClose, receipt, onFix }) {
   // per receipt. Hooks run before the early return below, so the effect
   // checks for a receipt itself.
   const printedFor = useRef(null);
-  const autoKey = (isOpen && receipt)
-    ? (receipt.id || receipt.client_receipt_number || receipt.receipt_number)
-    : null;
+  // Keyed on the till's own number, not the server id: see receiptKey.
+  const autoKey = (isOpen && receipt) ? receiptKey(receipt) : null;
   useEffect(() => {
     if (!autoKey || !auto || printedFor.current === autoKey) return;
     printedFor.current = autoKey;
     let live = true;
     (async () => {
       const res = await printReceiptBluetooth(receipt, templateFrom(tmplData),
-                                              { silent: true });
+                                              { silent: true, once: autoKey });
       if (live && !res.skipped) setBtState(res);
     })();
     return () => { live = false; };

@@ -15,6 +15,7 @@ import { fmt, price as fmtUnitPrice } from '../utils/format';
 import { getReceiptTemplates } from '../api/retailApi';
 import {
   printReceiptBluetooth, templateFrom, lastPrinterName, autoPrintOn, setAutoPrint,
+  receiptKey,
 } from '../utils/printReceipt';
 import { isWebBluetoothSupported, isAndroid } from '../utils/btPrinter';
 
@@ -58,15 +59,16 @@ export default function MobileSaleComplete({ isOpen, onClose, receipt, onFix }) 
   // cashier who is handing over change. Once per receipt, not once per
   // render.
   const printedFor = useRef(null);
-  const key = receipt && (receipt.id || receipt.client_receipt_number
-    || receipt.receipt_number);
+  // The till's own number: it is the same before and after the sale syncs,
+  // so the swap cannot look like a second sale (see receiptKey).
+  const key = receiptKey(receipt);
   useEffect(() => {
     if (!isOpen || !auto || !key || printedFor.current === key) return;
     printedFor.current = key;
     let live = true;
     (async () => {
       const res = await printReceiptBluetooth(receipt, templateFrom(tmplData),
-                                              { silent: true });
+                                              { silent: true, once: key });
       if (live && !res.skipped) setBtState(res);
     })();
     return () => { live = false; };
