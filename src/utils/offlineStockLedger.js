@@ -111,7 +111,12 @@ export function noteSaleQueued(clientReceiptNumber, items) {
   const lines = {};
   for (const item of items) {
     const pid = item && (item.product_id ?? item.product);
-    const qty = Number(item && item.qty) || 0;
+    // A line sold as a pack takes the singles inside it off this shop's
+    // shelf — the same arithmetic the server does (2026-11-09). Counting
+    // the packs instead would leave the till showing stock it has sold.
+    const packs = item && item.unit_kind === 'pack';
+    const per = packs ? (Number(item.pack_size) || 1) : 1;
+    const qty = (Number(item && item.qty) || 0) * per;
     if (pid == null || qty <= 0) continue;
     const key = String(pid);
     lines[key] = Math.round(((lines[key] || 0) + qty) * 1000) / 1000;

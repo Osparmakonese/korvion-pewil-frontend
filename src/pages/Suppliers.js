@@ -114,6 +114,17 @@ function POModal({ open, onClose, onSubmit, suppliers, products, submitting, sho
     setForm({ ...form, items });
   };
 
+  // Pack size for the product on a line, from the catalogue.
+  const packOf = (it) => {
+    const p = products.find((x) => String(x.id) === String(it.product));
+    const per = Number(p?.units_per_purchase) || 1;
+    return per > 1 ? per : 1;
+  };
+  const packLabel = (it) => {
+    const p = products.find((x) => String(x.id) === String(it.product));
+    return (p?.purchase_unit || 'case').toString().toLowerCase();
+  };
+
   const addItem = () => setForm({ ...form, items: [...form.items, { product: products[0]?.id || '', quantity: 1, unit_price: 0, batch_number: '', expiry_date: '' }] });
   const removeItem = (i) => setForm({ ...form, items: form.items.filter((_, idx) => idx !== i) });
 
@@ -124,6 +135,9 @@ function POModal({ open, onClose, onSubmit, suppliers, products, submitting, sho
       .filter((it) => it.product && it.quantity > 0)
       .map((it) => ({
         product: Number(it.product), quantity: Number(it.quantity), unit_price: Number(it.unit_price),
+        // 'purchase' tells goods-received to expand the quantity by the
+        // pack size and divide the cost by it.
+        ...(it.received_unit === 'purchase' ? { received_unit: 'purchase' } : {}),
         // Pharmacy (Phase 3): the lot number and expiry travel on the PO line
         // so goods-received books the batch — the only moment the lot number
         // is in the receiver's hand.
@@ -180,10 +194,36 @@ function POModal({ open, onClose, onSubmit, suppliers, products, submitting, sho
             </select>
             <input type="number" min="1" value={it.quantity} onChange={(e) => updateItem(i, 'quantity', e.target.value)}
               placeholder="Qty" style={{ padding: '6px 8px', fontSize: 11, border: '1px solid #d1d5db', borderRadius: 5 }} />
-            <input type="number" min="0" step="0.01" value={it.unit_price} onChange={(e) => updateItem(i, 'unit_price', e.target.value)}
-              placeholder="Unit price" style={{ padding: '6px 8px', fontSize: 11, border: '1px solid #d1d5db', borderRadius: 5 }} />
+            {/* ORDERING BY THE CASE (2026-11-08). The backend has always
+                known how to receive a line in purchase units — it expands
+                the quantity by the pack size and divides the cost by it —
+                but no screen ever sent `received_unit`, so a shop that
+                bought cartons had to work the singles out by hand or book
+                18 eggs as 1. The selector only appears for a product that
+                actually has a pack size. */}
+            <input type="number" min="0" step="any" value={it.unit_price} onChange={(e) => updateItem(i, 'unit_price', e.target.value)}
+              placeholder={packOf(it) > 1 && it.received_unit === 'purchase'
+                ? `Price per ${packLabel(it)}` : 'Unit price'}
+              style={{ padding: '6px 8px', fontSize: 11, border: '1px solid #d1d5db', borderRadius: 5 }} />
             <button type="button" onClick={() => removeItem(i)} disabled={form.items.length === 1}
               style={{ padding: '6px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: 5, cursor: 'pointer', fontSize: 11 }}>×</button>
+            {packOf(it) > 1 && (
+              <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, alignItems: 'center', marginTop: -4 }}>
+                <select value={it.received_unit || 'each'}
+                  onChange={(e) => updateItem(i, 'received_unit', e.target.value)}
+                  style={{ padding: '5px 8px', fontSize: 11, border: '1px dashed #d1d5db', borderRadius: 5 }}>
+                  <option value="each">Ordering singles</option>
+                  <option value="purchase">Ordering {packLabel(it)}s of {packOf(it)}</option>
+                </select>
+                <span style={{ fontSize: 10.5, color: '#6b7280' }}>
+                  {it.received_unit === 'purchase'
+                    ? `${Number(it.quantity) || 0} x ${packOf(it)} = `
+                      + `${(Number(it.quantity) || 0) * packOf(it)} singles on the shelf, `
+                      + `cost ${((Number(it.unit_price) || 0) / packOf(it)).toFixed(6)} each`
+                    : `This product comes in ${packLabel(it)}s of ${packOf(it)}`}
+                </span>
+              </div>
+            )}
             {showBatch && (
               <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, marginTop: -4 }}>
                 <input value={it.batch_number || ''} onChange={(e) => updateItem(i, 'batch_number', e.target.value)}

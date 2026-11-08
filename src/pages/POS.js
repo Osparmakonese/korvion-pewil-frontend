@@ -18,6 +18,7 @@ import {
   getReceiptTemplates,
   emailReceipt,
   correctSale,
+  getPriceTiers,
 } from '../api/retailApi';
 import apiClient from '../api/axios';
 import { fmt, price as fmtUnitPrice, cash, lineTotal } from '../utils/format';
@@ -56,6 +57,9 @@ import api from '../api/axios';
 import { invalidateSaleCaches, invalidateProductCaches, requestSaleCachesRefresh } from '../utils/queryCache';
 import { getProductIcon } from '../utils/productIcons';
 import { shopPrice, shopStock, sellState } from '../utils/branchStock';
+import { indexTiers, tierPriceFor } from '../utils/priceTiers';
+import { sellsPacks, packSize, packLabel, packPrice, packsOnHand } from '../utils/packs';
+import { promptPackOrSingle } from '../utils/packPrompt';
 import { toast } from '../utils/toast';
 import {
   rememberOpenSessions, recallOpenSessions,
@@ -1725,6 +1729,9 @@ export default function POS() {
         product_id: prod.id,
         name: prod.name,
         unit_price: Number(it.unit_price) || 0,   // the QUOTED price, deliberately
+        // Held against re-pricing: a quote is a promise, so neither a
+        // volume tier nor today's shelf price may move it (2026-11-08).
+        price_overridden: true,
         quantity: Number(it.qty) || 1,
         product: prod,
       });
@@ -1821,6 +1828,7 @@ export default function POS() {
           // chain figure. Same fix as the prescription path above.
           unit_price: l.price_locked && l.unit_price != null
             ? Number(l.unit_price) : shopPrice(prod),
+          price_overridden: !!(l.price_locked && l.unit_price != null),
           quantity: Number(l.qty) || 1,
           product: prod,
         });
@@ -2153,6 +2161,75 @@ export default function POS() {
 
   // Low-level: add a single product line with a known quantity. Used after
   // the weight modal resolves, or for ordinary piece-based items.
+  // ONE SHOP AT A TIME (2026-11-09)
+  //
+  // Packs and volume pricing arrive per shop, through the feature keys in
+  // the login token, because both change what a live till charges: a tier
+  // that has sat unused starts coming off at the counter. A shop that has
+  // not switched them on sees exactly the till it saw yesterday. An older
+  // cached token has no feature list at all — then they stay OFF, because
+  // the safe default at a till is "behave as before".
+  const tokenFeatures = Array.isArray(user?.features) ? user.features : [];
+  const volumePricingOn = tokenFeatures.includes('price_tiers');
+  const packSellingOn = tokenFeatures.includes('bulk_units');
+
+  // VOLUME PRICING AT THE TILL (2026-11-08)
+  //
+  // Loaded once with the catalogue and resolved on the device, so a shop
+  // that is offline still charges its own volume prices and the + button
+  // never waits on a request. A shop with no tiers gets an empty list and
+  // every line keeps its shelf price.
+  const { data: tierRows = [] } = useQuery({
+    queryKey: ['price-tiers', 'pos'],
+    queryFn: () => getPriceTiers(),
+    staleTime: 300000,
+    retry: false,
+    enabled: volumePricingOn,
+  });
+  const tierIndex = useMemo(() => indexTiers(tierRows), [tierRows]);
+
+  // What a line of this product, at this quantity, should be charged — a
+  // price the cashier set by hand (manager-approved) always wins.
+  const lineUnitPrice = (product, quantity, item) => {
+    if (item && item.price_overridden) {
+      return { price: item.unit_price, label: item.tier_label || '' };
+    }
+    if (!volumePricingOn) return { price: shopPrice(product), label: '' };
+    return tierPriceFor(tierIndex, product?.id, quantity, shopPrice(product));
+  };
+
+  // A pack line: its own price, its own name on the slip, and a quantity
+  // counted in packs. The shelf still moves in singles — the backend
+  // multiplies qty by pack_size (see line_singles in retail/models.py), and
+  // so does the offline ledger on this device (2026-11-09).
+  const addPackLineToCart = (product, packs) => {
+    const per = packSize(product);
+    const max = packsOnHand(product);
+    const take = Math.max(1, Math.min(packs, max || packs));
+    setCart((prev) => {
+      const existing = prev.find((item) => item.product_id === product.id
+        && item.unit_kind === 'pack');
+      if (existing) {
+        return prev.map((item) => (
+          item === existing
+            ? { ...item, quantity: Math.min(item.quantity + take, max || item.quantity + take) }
+            : item));
+      }
+      return [...prev, {
+        product_id: product.id,
+        name: `${product.name} (${packLabel(product).toLowerCase()})`,
+        unit_price: packPrice(product),
+        unit_kind: 'pack',
+        pack_size: per,
+        // A pack price is set by the shop for the pack; a volume tier is a
+        // rule about singles, so it must not reach in and re-price it.
+        price_overridden: true,
+        quantity: take,
+        product,
+      }];
+    });
+  };
+
   const addLineToCart = (product, quantity) => {
     setCart((prev) => {
       // For weighable items every capture is a new line — cashier might weigh
@@ -2160,12 +2237,14 @@ export default function POS() {
       // unit_price is what the customer is charged and what gets written to
       // the sale line — it MUST be this shop's price, not the chain's.
       if (product.is_weighable) {
+        const priced = lineUnitPrice(product, quantity, null);
         return [
           ...prev,
           {
             product_id: product.id,
             name: product.name,
-            unit_price: shopPrice(product),
+            unit_price: priced.price,
+            tier_label: priced.label,
             quantity,
             product,
           },
@@ -2173,24 +2252,22 @@ export default function POS() {
       }
       const existing = prev.find((item) => item.product_id === product.id);
       if (existing) {
-        return prev.map((item) =>
-          item.product_id === product.id
-            ? {
-              ...item,
-              quantity: Math.min(
-                item.quantity + quantity,
-                shopStock(product)
-              ),
-            }
-            : item
-        );
+        return prev.map((item) => {
+          if (item.product_id !== product.id) return item;
+          const qty = Math.min(item.quantity + quantity, shopStock(product));
+          const priced = lineUnitPrice(product, qty, item);
+          return { ...item, quantity: qty,
+                   unit_price: priced.price, tier_label: priced.label };
+        });
       }
+      const priced = lineUnitPrice(product, quantity, null);
       return [
         ...prev,
         {
           product_id: product.id,
           name: product.name,
-          unit_price: shopPrice(product),
+          unit_price: priced.price,
+          tier_label: priced.label,
           quantity,
           product,
         },
@@ -2202,6 +2279,21 @@ export default function POS() {
   // first. Age-verification is deferred to checkout so the cashier isn't
   // prompted per bottle — one prompt per sale, with all age-gated items.
   const addToCart = async (product) => {
+    // Sold both ways? Ask which, before anything reaches the basket.
+    //
+    // Only when the shop has given the pack a price of its own. A product
+    // that is merely BOUGHT by the box — which is most of them — must not
+    // start asking the cashier a question on every scan.
+    if (packSellingOn && sellsPacks(product) && !product.is_weighable) {
+      const picked = await promptPackOrSingle(product);
+      if (!picked) return;                    // cashier backed out
+      if (picked.kind === 'pack') {
+        addPackLineToCart(product, picked.quantity);
+      } else {
+        addLineToCart(product, picked.quantity);
+      }
+      return;
+    }
     if (product.is_weighable) {
       try {
         // Same price the cart line will carry — the modal shows the customer
@@ -2229,14 +2321,22 @@ export default function POS() {
       // a stock figure we no longer have — shopStock() of undefined is 0,
       // and silently zeroing a line at the till is worse than trusting it.
       setCart((prev) =>
-        prev.map((item) =>
-          item.product_id === productId
-            ? {
-              ...item,
-              quantity: product ? Math.min(qty, shopStock(product)) : qty,
-            }
-            : item
-        )
+        prev.map((item) => {
+          if (item.product_id !== productId) return item;
+          if (item.unit_kind === 'pack') {
+            // Counted in packs, and capped by how many whole packs the
+            // shelf holds — not by the number of singles.
+            const maxPacks = product ? packsOnHand(product) : qty;
+            return { ...item, quantity: Math.max(1, Math.min(qty, maxPacks || qty)) };
+          }
+          const next = product ? Math.min(qty, shopStock(product)) : qty;
+          // Down as well as up: drop below the break and the line goes
+          // back to the shelf price, which is what the customer expects
+          // when they put two of the six back.
+          const priced = lineUnitPrice(product || item.product, next, item);
+          return { ...item, quantity: next,
+                   unit_price: priced.price, tier_label: priced.label };
+        })
       );
     }
   };
@@ -2355,6 +2455,9 @@ export default function POS() {
         unit_price: reason === 'wrong_price'
           ? shopPrice(prod)
           : (Number(it.unit_price) || shopPrice(prod)),
+        // Except for a wrong price, the line keeps what was charged — a
+        // volume tier must not quietly restate the original sale.
+        price_overridden: reason !== 'wrong_price',
         quantity: Number(it.qty ?? it.quantity) || 1,
         product: prod,
       });
@@ -2941,6 +3044,11 @@ export default function POS() {
         // The price keeps every place it has; the line is cash.
         unit_price: parseFloat(item.unit_price),
         total: lineTotal(item.unit_price, item.quantity),
+        // What was sold: singles, or packs of this size. The shelf moves
+        // by qty x pack_size, server-side and in the offline ledger.
+        ...(item.unit_kind === 'pack'
+          ? { unit_kind: 'pack', pack_size: item.pack_size }
+          : {}),
       })),
       subtotal: subtotal,
       discount: discountAmount,
@@ -3767,6 +3875,16 @@ export default function POS() {
                       <div style={S.cartItemName}>{item.name}</div>
                       <div style={S.cartItemPrice}>
                         {fmtUnitPrice(item.unit_price, 'zwd')} each
+                        {item.tier_label && (
+                          // The cashier must be able to tell the customer
+                          // WHY the price dropped, and see at a glance that
+                          // it was the shop's own rule, not a mis-key.
+                          <span style={{
+                            marginLeft: 6, padding: '1px 6px', borderRadius: 999,
+                            background: '#eef7f1', color: '#1a6b3a',
+                            fontSize: 10, fontWeight: 700,
+                          }}>{item.tier_label}</span>
+                        )}
                       </div>
                     </div>
                     <div style={S.cartItemRight}>

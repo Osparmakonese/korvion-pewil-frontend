@@ -280,11 +280,9 @@ export const NAV_ITEMS = [
   // Hardware / building supplies (Phase 3).
   { section: 'HARDWARE', module: 'retail', collapsible: true, items: [
     { key: 'Quotations', emoji: '\u{1F4DD}', label: 'Quotations', feature: 'quotations' },
-    { key: 'Bulk Units', emoji: '\u{1F4E6}', label: 'Bulk / Pack Units', feature: 'bulk_units' },
   ]},
   // Wholesale / distributor (Phase 3).
   { section: 'WHOLESALE', module: 'retail', collapsible: true, items: [
-    { key: 'Price Tiers', emoji: '\u{1F4CA}', label: 'Volume Pricing', feature: 'price_tiers' },
     { key: 'Credit Accounts', emoji: '\u{1F9FE}', label: 'Credit Accounts', feature: 'credit_accounts' },
   ]},
   // Electronics / phones (Phase 3).
@@ -309,6 +307,13 @@ export const NAV_ITEMS = [
     // working importer.
     { key: 'Import', emoji: '\u{1F4E5}', label: 'Import products', ownerOnly: true, managerOk: true },
     { key: 'Categories', emoji: '\u{1F5C2}', label: 'Categories' },
+    // Packs and volume pricing live with the catalogue, not in a vertical
+    // section a general shop never opens: buying by the carton and
+    // dropping the price on a dozen is ordinary shopkeeping (2026-11-08).
+    // Shown only to a shop that has switched them on — see
+    // core/verticals.py OPT_IN_FEATURES (2026-11-09).
+    { key: 'Bulk Units', emoji: '\u{1F4E6}', label: 'Packs & case sizes', feature: 'bulk_units' },
+    { key: 'Price Tiers', emoji: '\u{1F4CA}', label: 'Volume / wholesale prices', feature: 'price_tiers' },
     { key: 'Suppliers', emoji: '\u{1F4E6}', label: 'Suppliers & POs' },
     { key: 'WhatsApp PO', emoji: '\u{1F4AC}', label: 'WhatsApp PO' },
     { key: 'Stock Adjustments', emoji: '\u{1F504}', label: 'Stock Adjustments' },
